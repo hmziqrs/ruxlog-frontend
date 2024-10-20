@@ -43,7 +43,6 @@ import {
   GalleryVerticalEnd,
   LogOut
 } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
@@ -65,7 +64,6 @@ export default function AppSidebar({
   children: React.ReactNode;
 }) {
   const [mounted, setMounted] = React.useState(false);
-  const { data: session } = useSession();
   const pathname = usePathname();
   // Only render after first client-side mount
   React.useEffect(() => {
@@ -159,7 +157,7 @@ export default function AppSidebar({
                     size="lg"
                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
-                    <Avatar className="h-8 w-8 rounded-lg">
+                    {/* <Avatar className="h-8 w-8 rounded-lg">
                       <AvatarImage
                         src={session?.user?.image || ''}
                         alt={session?.user?.name || ''}
@@ -176,7 +174,7 @@ export default function AppSidebar({
                       <span className="truncate text-xs">
                         {session?.user?.email || ''}
                       </span>
-                    </div>
+                    </div> */}
                     <ChevronsUpDown className="ml-auto size-4" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
@@ -188,7 +186,7 @@ export default function AppSidebar({
                 >
                   <DropdownMenuLabel className="p-0 font-normal">
                     <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                      <Avatar className="h-8 w-8 rounded-lg">
+                      {/* <Avatar className="h-8 w-8 rounded-lg">
                         <AvatarImage
                           src={session?.user?.image || ''}
                           alt={session?.user?.name || ''}
@@ -206,7 +204,7 @@ export default function AppSidebar({
                           {' '}
                           {session?.user?.email || ''}
                         </span>
-                      </div>
+                      </div> */}
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
