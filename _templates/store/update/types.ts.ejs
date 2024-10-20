@@ -1,0 +1,18 @@
+---
+to: src/store/<%= h.changeCase.lower(name) %>/types.ts
+inject: true
+after: state: \{
+---
+    <%= newState %>: SubState;
+---
+to: src/store/<%= h.changeCase.lower(name) %>/types.ts
+inject: true
+after: data: \{
+---
+    <%= newState %>?: any | null;
+---
+to: src/store/<%= h.changeCase.lower(name) %>/types.ts
+inject: true
+after: actions: BaseActions & \{
+---
+    <%= newState %>: () => void;

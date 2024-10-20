@@ -1,0 +1,12 @@
+---
+to: src/store/<%= h.changeCase.lower(name) %>/data.ts
+inject: true
+after: state: \{
+---
+    <%= newState %>: {...subState},
+---
+to: src/store/<%= h.changeCase.lower(name) %>/data.ts
+inject: true
+after: data: \{
+---
+    <%= newState %>: null,
