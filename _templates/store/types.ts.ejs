@@ -1,0 +1,27 @@
+---
+to: src/store/<%= h.changeCase.lower(name) %>/types.ts
+---
+import {BaseActions, SubState} from 'store/types';
+
+export interface <%= h.changeCase.pascal(name) %>State {
+  state: {
+<% states.split(',').map(s => s.trim()).forEach(function(state) { %>
+    <%= state %>: SubState;
+<% }); %>
+  };
+  data: {
+<% states.split(',').map(s => s.trim()).forEach(function(state) { %>
+    <%= state %>?: any | null;
+<% }); %>
+  };
+}
+
+export interface <%= h.changeCase.pascal(name) %>Actions {
+  actions: BaseActions & {
+<% states.split(',').map(s => s.trim()).forEach(function(state) { %>
+    <%= state %>: () => void;
+<% }); %>
+  };
+}
+
+export interface <%= h.changeCase.pascal(name) %>Store extends <%= h.changeCase.pascal(name) %>State, <%= h.changeCase.pascal(name) %>Actions {}
