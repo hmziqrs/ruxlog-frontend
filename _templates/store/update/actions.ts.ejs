@@ -1,0 +1,29 @@
+---
+to: src/store/<%= h.changeCase.lower(name) %>/actions.ts
+inject: true
+after: import \{
+skip_if: <%= h.changeCase.pascal(newState) %>
+---
+  <%= h.changeCase.pascal(newState) %>,
+---
+to: src/store/<%= h.changeCase.lower(name) %>/actions.ts
+inject: true
+append: true
+---
+
+export const <%= newState %> = (set: ImmerAction<<%= h.changeCase.pascal(name) %>Store>) => async () => {
+  set(state => {
+    state.state.<%= newState %> = {...subState, loading: true};
+  });
+  try {
+    // Add your API call here
+    set(state => {
+      state.state.<%= newState %> = {...subState, success: true};
+      // Update state.data.<%= newState %> here
+    });
+  } catch (error) {
+    set(state => {
+      state.state.<%= newState %> = {...subState, error: true};
+    });
+  }
+};
