@@ -4,9 +4,9 @@ to: store/<%= h.changeCase.lower(name) %>/index.ts
 import {create} from 'zustand';
 import {immer} from 'zustand/middleware/immer';
 
+import * as actions from './actions';
 import {<%= h.changeCase.pascal(name) %>Store} from './types';
 import {<%= h.changeCase.lower(name) %>State} from './data';
-import * as actions from './actions';
 
 export const use<%= h.changeCase.pascal(name) %> = create(
   immer<<%= h.changeCase.pascal(name) %>Store>((set, get) => {
