@@ -1,26 +1,31 @@
 import { ImmerAction, ImmerState } from '@/store/types';
 import { subState } from '@/store/data';
-import { api, errorMessage } from '@/services/api';
+import { api } from '@/services/api';
 
-import { AuthStore } from './types';
+import { AuthLoginPayload, AuthStore } from './types';
 import { authState } from './data';
 
-export const login = (set: ImmerAction<AuthStore>) => async () => {
-  set((state) => {
-    state.state.login = { ...subState, loading: true };
-  });
-  try {
-    // Add your API call here
+export const login =
+  (set: ImmerAction<AuthStore>) => async (payload: AuthLoginPayload) => {
     set((state) => {
-      state.state.login = { ...subState, success: true };
-      // Update state.data.login here
+      state.state.login = { ...subState, loading: true };
     });
-  } catch (error) {
-    set((state) => {
-      state.state.login = { ...subState, error: true };
-    });
-  }
-};
+    try {
+      const res = await api.post('/auth/v1/log_in', payload);
+      const data = res.data;
+      console.log('DATA', data);
+      set((state) => {
+        state.state.login = { ...subState, success: true };
+        state.data.user = data;
+        // Update state.data.login here
+      });
+    } catch (error) {
+      console.log('ERROR', error);
+      set((state) => {
+        state.state.login = { ...subState, error: true };
+      });
+    }
+  };
 
 export const logout = (set: ImmerAction<AuthStore>) => async () => {
   set((state) => {
