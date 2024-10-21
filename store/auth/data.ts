@@ -3,17 +3,17 @@ import { AuthState } from './types';
 
 export const authState: AuthState = {
   state: {
-    logx: { ...subState },
+    login: { ...subState },
 
-    log: { ...subState },
+    logout: { ...subState },
 
-    login: { ...subState }
+    init: { ...subState }
   },
   data: {
-    logx: null,
+    login: null,
 
-    log: null,
+    logout: null,
 
-    login: null
+    init: null
   }
 };

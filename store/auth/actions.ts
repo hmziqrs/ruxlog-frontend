@@ -1,6 +1,7 @@
 import { ImmerAction, ImmerState } from '@/store/types';
 import { subState } from '@/store/data';
 import { api, errorMessage } from '@/services/api';
+
 import { AuthStore } from './types';
 import { authState } from './data';
 
@@ -21,36 +22,36 @@ export const login = (set: ImmerAction<AuthStore>) => async () => {
   }
 };
 
-export const log = (set: ImmerAction<AuthStore>) => async () => {
+export const logout = (set: ImmerAction<AuthStore>) => async () => {
   set((state) => {
-    state.state.log = { ...subState, loading: true };
+    state.state.logout = { ...subState, loading: true };
   });
   try {
     // Add your API call here
     set((state) => {
-      state.state.log = { ...subState, success: true };
-      // Update state.data.log here
+      state.state.logout = { ...subState, success: true };
+      // Update state.data.logout here
     });
   } catch (error) {
     set((state) => {
-      state.state.log = { ...subState, error: true };
+      state.state.logout = { ...subState, error: true };
     });
   }
 };
 
-export const logx = (set: ImmerAction<AuthStore>) => async () => {
+export const init = (set: ImmerAction<AuthStore>) => async () => {
   set((state) => {
-    state.state.logx = { ...subState, loading: true };
+    state.state.init = { ...subState, loading: true };
   });
   try {
     // Add your API call here
     set((state) => {
-      state.state.logx = { ...subState, success: true };
-      // Update state.data.logx here
+      state.state.init = { ...subState, success: true };
+      // Update state.data.init here
     });
   } catch (error) {
     set((state) => {
-      state.state.logx = { ...subState, error: true };
+      state.state.init = { ...subState, error: true };
     });
   }
 };
