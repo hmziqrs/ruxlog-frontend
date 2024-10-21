@@ -20,12 +20,14 @@ export interface AuthState {
     logout: EmptyStateDefault;
 
     init: EmptyStateDefault;
+
+    user: User | null;
   };
 }
 
 export interface AuthActions {
   actions: BaseActions & {
-    login: EmptyCallback;
+    login: (payload: AuthLoginPayload) => void;
 
     logout: EmptyCallback;
 
@@ -34,3 +36,24 @@ export interface AuthActions {
 }
 
 export interface AuthStore extends AuthState, AuthActions {}
+
+export type UserRoles =
+  | 'super-admin'
+  | 'admin'
+  | 'moderator'
+  | 'author'
+  | 'user';
+
+export interface User {
+  avatar: string | null;
+  email: string;
+  id: number;
+  is_verified: boolean;
+  name: string;
+  role: UserRoles;
+}
+
+export interface AuthLoginPayload {
+  email: string;
+  password: string;
+}
