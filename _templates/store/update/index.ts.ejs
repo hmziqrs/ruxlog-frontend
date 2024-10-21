@@ -1,0 +1,7 @@
+---
+to: store/<%= h.changeCase.lower(name) %>/index.ts
+inject: true
+after: "actions: {"
+skip_if: "<%= h.changeCase.camel(newState) %>"
+---
+        <%= h.changeCase.camel(newState) %>: actions.<%= h.changeCase.camel(newState) %>(set),

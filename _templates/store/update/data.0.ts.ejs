@@ -2,7 +2,7 @@
 to: store/<%= h.changeCase.lower(name) %>/data.ts
 inject: true
 after: "state: {"
-before: "reset: {"
-skip_if: "<%= h.changeCase.camel(newState) %>: {...subState},"
+before: "data: {"
+skip_if: "<%= h.changeCase.camel(newState) %>: { ...subState },"
 ---
-    <%= h.changeCase.camel(newState) %>: {...subState},
+    <%= h.changeCase.camel(newState) %>: { ...subState },
