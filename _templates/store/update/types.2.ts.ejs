@@ -2,6 +2,7 @@
 to: store/<%= h.changeCase.lower(name) %>/types.ts
 inject: true
 after: "actions: BaseActions"
-skip_if: "<%= h.changeCase.camel(newState) %>: SubState;"
+skip_if: >
+  "<%= h.changeCase.camel(newState) %>: ()"
 ---
     <%= h.changeCase.camel(newState) %>: () => void;
