@@ -1,8 +1,13 @@
+'use client';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import UserAuthForm from './user-auth-form';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useDidMount, usePrev } from '@/hooks/react-hooks';
+import { useAuth } from '@/store/auth';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 export const metadata: Metadata = {
   title: 'Authentication',
@@ -10,6 +15,36 @@ export const metadata: Metadata = {
 };
 
 export default function SignInViewPage() {
+  const auth = useAuth();
+  const initPrevState = usePrev(auth.state.init);
+  const loginPrevState = usePrev(auth.state.login);
+  const didMount = useDidMount();
+
+  useEffect(() => {
+    if (didMount) return;
+    auth.actions.init();
+  }, [didMount, auth.actions]);
+
+  useEffect(() => {
+    if (initPrevState?.loading && !auth.state.init.loading) {
+      if (auth.state.init.success) {
+        toast.success('Signed In Successfully!');
+      } else if (auth.state.init.error) {
+        toast.error(auth.state.init?.message ?? 'An error occurred!');
+      }
+    }
+  }, [auth.state.init, initPrevState, auth.actions]);
+
+  useEffect(() => {
+    if (loginPrevState?.loading && !auth.state.login.loading) {
+      if (auth.state.login.success) {
+        toast.success('Signed In Successfully!');
+      } else if (auth.state.login.error) {
+        toast.error(auth.state.login?.message ?? 'An error occurred!');
+      }
+    }
+  }, [auth.state.login, loginPrevState, auth.actions]);
+
   return (
     <div className="relative h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
       <Link

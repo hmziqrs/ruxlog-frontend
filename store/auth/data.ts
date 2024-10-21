@@ -14,6 +14,8 @@ export const authState: AuthState = {
 
     logout: null,
 
-    init: null
+    init: null,
+
+    user: null
   }
 };
