@@ -8,6 +8,8 @@ export const authState: AuthState = {
     login: { ...subState }
   },
   data: {
+    log: null,
+
     login: null
   }
 };
