@@ -55,57 +55,6 @@ export const logx = (set: ImmerAction<AuthStore>) => async () => {
   }
 };
 
-export const logxx = (set: ImmerAction<AuthStore>) => async () => {
-  set((state) => {
-    state.state.logxx = { ...subState, loading: true };
-  });
-  try {
-    // Add your API call here
-    set((state) => {
-      state.state.logxx = { ...subState, success: true };
-      // Update state.data.logxx here
-    });
-  } catch (error) {
-    set((state) => {
-      state.state.logxx = { ...subState, error: true };
-    });
-  }
-};
-
-export const logxa = (set: ImmerAction<AuthStore>) => async () => {
-  set((state) => {
-    state.state.logxa = { ...subState, loading: true };
-  });
-  try {
-    // Add your API call here
-    set((state) => {
-      state.state.logxa = { ...subState, success: true };
-      // Update state.data.logxa here
-    });
-  } catch (error) {
-    set((state) => {
-      state.state.logxa = { ...subState, error: true };
-    });
-  }
-};
-
-export const logg = (set: ImmerAction<AuthStore>) => async () => {
-  set((state) => {
-    state.state.logg = { ...subState, loading: true };
-  });
-  try {
-    // Add your API call here
-    set((state) => {
-      state.state.logg = { ...subState, success: true };
-      // Update state.data.logg here
-    });
-  } catch (error) {
-    set((state) => {
-      state.state.logg = { ...subState, error: true };
-    });
-  }
-};
-
 export const reset = (set: ImmerAction<AuthStore>) => async () => {
   set((state) => {
     state.state = { ...authState.state };
