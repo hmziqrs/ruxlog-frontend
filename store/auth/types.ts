@@ -1,19 +1,35 @@
-import { BaseActions, SubState } from '@/store/types';
+import {
+  BaseActions,
+  SubState,
+  EmptyCallback,
+  EmptyState,
+  EmptyDefaultState
+} from '@/store/types';
 
 export interface AuthState {
   state: {
+    logg: SubState;
+
+    logx: SubState;
+
     log: SubState;
 
     login: SubState;
   };
   data: {
-    login?: any | null;
+    logg: EmptyDefaultState;
+
+    log: EmptyDefaultState;
+
+    logx: EmptyDefaultState;
+
+    login: EmptyDefaultState;
   };
 }
 
 export interface AuthActions {
   actions: BaseActions & {
-    login: () => void;
+    login: EmptyCallback;
   };
 }
 
