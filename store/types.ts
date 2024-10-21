@@ -14,6 +14,12 @@ export type ImmerAction<T> = (
 
 export type ImmerState<T> = () => T;
 
+export type EmptyCallback = () => void;
+
+export type EmptyState = undefined | null;
+
+export type EmptyDefaultState = EmptyState & any;
+
 export interface BaseActions {
   reset: () => void;
 }
