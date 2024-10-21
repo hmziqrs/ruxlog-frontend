@@ -10,11 +10,11 @@ export const useAuth = create(
     return {
       ...authState,
       actions: {
-        logx: actions.logx(set),
-
-        log: actions.log(set),
-
         login: actions.login(set),
+
+        logout: actions.logout(set),
+
+        init: actions.init(set),
 
         reset: actions.reset(set)
       }
