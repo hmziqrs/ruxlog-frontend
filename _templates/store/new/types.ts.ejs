@@ -1,7 +1,7 @@
 ---
 to: store/<%= h.changeCase.lower(name) %>/types.ts
 ---
-import {BaseActions, SubState} from '@/store/types';
+import {BaseActions, SubState, EmptyCallback, EmptyState, EmptyStateDefault} from '@/store/types';
 
 export interface <%= h.changeCase.pascal(name) %>State {
   state: {
@@ -11,7 +11,7 @@ export interface <%= h.changeCase.pascal(name) %>State {
   };
   data: {
 <% states.split(',').map(s => s.trim()).forEach(function(state) { %>
-    <%= state %>?: any | null;
+    <%= state %>: EmptyStateDefault;
 <% }); %>
   };
 }
@@ -19,7 +19,7 @@ export interface <%= h.changeCase.pascal(name) %>State {
 export interface <%= h.changeCase.pascal(name) %>Actions {
   actions: BaseActions & {
 <% states.split(',').map(s => s.trim()).forEach(function(state) { %>
-    <%= state %>: () => void;
+    <%= state %>: EmptyCallback;
 <% }); %>
   };
 }

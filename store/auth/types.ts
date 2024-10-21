@@ -3,13 +3,11 @@ import {
   SubState,
   EmptyCallback,
   EmptyState,
-  EmptyDefaultState
+  EmptyStateDefault
 } from '@/store/types';
 
 export interface AuthState {
   state: {
-    logg: SubState;
-
     logx: SubState;
 
     log: SubState;
@@ -17,18 +15,20 @@ export interface AuthState {
     login: SubState;
   };
   data: {
-    logg: EmptyDefaultState;
+    logx: EmptyStateDefault;
 
-    log: EmptyDefaultState;
+    log: EmptyStateDefault;
 
-    logx: EmptyDefaultState;
-
-    login: EmptyDefaultState;
+    login: EmptyStateDefault;
   };
 }
 
 export interface AuthActions {
   actions: BaseActions & {
+    logx: EmptyCallback;
+
+    log: EmptyCallback;
+
     login: EmptyCallback;
   };
 }

@@ -18,7 +18,7 @@ export type EmptyCallback = () => void;
 
 export type EmptyState = undefined | null;
 
-export type EmptyDefaultState = EmptyState & any;
+export type EmptyStateDefault = EmptyState & any;
 
 export interface BaseActions {
   reset: () => void;
