@@ -2,6 +2,7 @@ import { ImmerAction, ImmerState } from '@/store/types';
 import { subState } from '@/store/data';
 import { api, errorMessage } from '@/services/api';
 import { AuthStore } from './types';
+import { authState } from './data';
 
 export const login = (set: ImmerAction<AuthStore>) => async () => {
   set((state) => {
