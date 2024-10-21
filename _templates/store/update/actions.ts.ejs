@@ -1,14 +1,8 @@
 ---
-to: src/store/<%= h.changeCase.lower(name) %>/actions.ts
-inject: true
-after: import \{
-skip_if: <%= h.changeCase.pascal(newState) %>
----
-  <%= h.changeCase.pascal(newState) %>,
----
-to: src/store/<%= h.changeCase.lower(name) %>/actions.ts
+to: store/<%= h.changeCase.lower(name) %>/actions.ts
 inject: true
 append: true
+before: export const reset
 ---
 
 export const <%= newState %> = (set: ImmerAction<<%= h.changeCase.pascal(name) %>Store>) => async () => {

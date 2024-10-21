@@ -1,17 +1,17 @@
 ---
-to: src/store/<%= h.changeCase.lower(name) %>/types.ts
+to: store/<%= h.changeCase.lower(name) %>/types.ts
 inject: true
-after: state: \{
+after: state:
 ---
     <%= newState %>: SubState;
 ---
-to: src/store/<%= h.changeCase.lower(name) %>/types.ts
+to: store/<%= h.changeCase.lower(name) %>/types.ts
 inject: true
 after: data: \{
 ---
     <%= newState %>?: any | null;
 ---
-to: src/store/<%= h.changeCase.lower(name) %>/types.ts
+to: store/<%= h.changeCase.lower(name) %>/types.ts
 inject: true
 after: actions: BaseActions & \{
 ---
