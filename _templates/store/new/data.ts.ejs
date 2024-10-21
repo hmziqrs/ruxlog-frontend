@@ -1,8 +1,8 @@
 ---
-to: src/store/<%= h.changeCase.lower(name) %>/data.ts
+to: store/<%= h.changeCase.lower(name) %>/data.ts
 ---
+import {subState} from '@/store/data';
 import {<%= h.changeCase.pascal(name) %>State} from './types';
-import {subState} from '../data';
 
 export const <%= h.changeCase.lower(name) %>State: <%= h.changeCase.pascal(name) %>State = {
   state: {

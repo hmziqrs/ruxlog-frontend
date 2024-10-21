@@ -1,11 +1,11 @@
 ---
-to: src/store/<%= h.changeCase.lower(name) %>/index.ts
+to: store/<%= h.changeCase.lower(name) %>/index.ts
 ---
 import {create} from 'zustand';
 import {immer} from 'zustand/middleware/immer';
-import {<%= h.changeCase.pascal(name) %>Store} from './types';
 
 import * as actions from './actions';
+import {<%= h.changeCase.pascal(name) %>Store} from './types';
 import {<%= h.changeCase.lower(name) %>State} from './data';
 
 export const use<%= h.changeCase.pascal(name) %> = create(

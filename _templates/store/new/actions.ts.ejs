@@ -1,13 +1,12 @@
 ---
-to: src/store/<%= h.changeCase.lower(name) %>/actions.ts
+to: store/<%= h.changeCase.lower(name) %>/actions.ts
 ---
 
-import {ImmerAction, ImmerState} from 'store/types';
-import {
-  <%= h.changeCase.pascal(name) %>Store,
-} from './types';
-import {subState} from 'store/data';
-import {api, errorMessage} from 'services/api';
+import {ImmerAction, ImmerState} from '@/store/types';
+import {subState} from '@/store/data';
+import {api, errorMessage} from '@/services/api';
+import {<%= h.changeCase.pascal(name) %>Store } from './types';
+import {<%= h.changeCase.camel(name) %>State} from './data';
 
 <% const stateArray = states.split(',').map(s => s.trim()) %>
 <% stateArray.forEach(function(state) { %>

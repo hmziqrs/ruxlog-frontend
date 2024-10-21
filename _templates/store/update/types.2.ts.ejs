@@ -1,0 +1,7 @@
+---
+to: store/<%= h.changeCase.lower(name) %>/types.ts
+inject: true
+after: "actions: BaseActions & {"
+skip_if: "<%= h.changeCase.camel(newState) %>: EmptyCallback"
+---
+    <%= h.changeCase.camel(newState) %>: EmptyCallback;
