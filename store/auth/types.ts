@@ -8,28 +8,28 @@ import {
 
 export interface AuthState {
   state: {
-    logx: SubState;
-
-    log: SubState;
-
     login: SubState;
+
+    logout: SubState;
+
+    init: SubState;
   };
   data: {
-    logx: EmptyStateDefault;
-
-    log: EmptyStateDefault;
-
     login: EmptyStateDefault;
+
+    logout: EmptyStateDefault;
+
+    init: EmptyStateDefault;
   };
 }
 
 export interface AuthActions {
   actions: BaseActions & {
-    logx: EmptyCallback;
-
-    log: EmptyCallback;
-
     login: EmptyCallback;
+
+    logout: EmptyCallback;
+
+    init: EmptyCallback;
   };
 }
 
