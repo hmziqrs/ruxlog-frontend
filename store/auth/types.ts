@@ -2,6 +2,8 @@ import { BaseActions, SubState } from '@/store/types';
 
 export interface AuthState {
   state: {
+    log: SubState;
+
     login: SubState;
   };
   data: {
