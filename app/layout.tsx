@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { Lato } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import './globals.css';
+import AuthGaurd from '@/components/layout/auth-gaurd';
 
 export const metadata: Metadata = {
   title: 'Next Shadcn',
@@ -16,7 +17,7 @@ const lato = Lato({
   display: 'swap'
 });
 
-export default async function RootLayout({
+export default function RootLayout({
   children
 }: {
   children: React.ReactNode;
@@ -27,8 +28,10 @@ export default async function RootLayout({
       <body className={'overflow-hidden'} suppressHydrationWarning={true}>
         <NextTopLoader showSpinner={false} />
         <Providers>
-          <Toaster />
-          {children}
+          <AuthGaurd>
+            <Toaster />
+            {children}
+          </AuthGaurd>
         </Providers>
       </body>
     </html>

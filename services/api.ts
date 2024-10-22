@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { camelizeKeys, decamelizeKeys } from 'humps';
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API,
@@ -10,10 +11,14 @@ export const api = axios.create({
   }
 });
 
+api.interceptors.request.use((config) => {
+  config.data = decamelizeKeys(config.data);
+  return config;
+});
+
 api.interceptors.response.use(
   (response) => {
-    console.log(response);
-    return response;
+    return camelizeKeys(response.data) as any;
   }, // Return successful responses as-is
   (error: AxiosError) => {
     if (error.response) {
