@@ -2,7 +2,8 @@ import { ImmerAction, ImmerState } from '@/store/types';
 import { subState } from '@/store/data';
 import { api } from '@/services/api';
 
-import { AuthLoginPayload, AuthStore } from './types';
+import { AuthLoginPayload, AuthStore, User } from './types';
+import * as utils from './utils';
 import { authState } from './data';
 
 export const login =
@@ -11,8 +12,14 @@ export const login =
       state.state.login = { ...subState, loading: true };
     });
     try {
-      const res = await api.post('/auth/v1/log_in', payload);
+      const res = await api.post<User>('/auth/v1/log_in', payload);
       const data = res.data;
+
+      if (!res.data.isVerified || res.data.role === 'user') {
+        utils.deleteCookie('id');
+        throw new Error('User not allowed to access this page.');
+      }
+
       set((state) => {
         state.state.login = { ...subState, success: true };
         state.data.user = data;
@@ -44,18 +51,27 @@ export const logout = (set: ImmerAction<AuthStore>) => async () => {
 
 export const init = (set: ImmerAction<AuthStore>) => async () => {
   set((state) => {
-    state.state.init = { ...subState, loading: true };
+    state.state.init = { ...subState, loading: true, init: true };
   });
   try {
-    const res = await api.get('/user/v1/get');
+    const res = await api.get<User>('/user/v1/get');
+    if (!res.data.isVerified || res.data.role === 'user') {
+      utils.deleteCookie('id');
+      throw new Error('User not allowed to access this page.');
+    }
     set((state) => {
-      state.state.init = { ...subState, success: true };
+      state.state.init = { ...subState, success: true, init: true };
       state.data.user = res.data;
       // Update state.data.init here
     });
   } catch (error) {
     set((state) => {
-      state.state.init = { ...subState, error: true };
+      state.state.init = {
+        ...subState,
+        error: true,
+        init: true,
+        message: error.message
+      };
     });
   }
 };

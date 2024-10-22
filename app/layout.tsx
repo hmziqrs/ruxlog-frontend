@@ -4,9 +4,13 @@ import type { Metadata } from 'next';
 import { Lato } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import './globals.css';
+<<<<<<< HEAD
 import { getServerSession } from 'next-auth';
 
 const inter = Inter({ subsets: ['latin'] });
+=======
+import AuthGaurd from '@/components/layout/auth-gaurd';
+>>>>>>> 7d11553 (cookie delete fix)
 
 export const metadata: Metadata = {
   title: 'Next Shadcn',
@@ -19,7 +23,7 @@ const lato = Lato({
   display: 'swap'
 });
 
-export default async function RootLayout({
+export default function RootLayout({
   children
 }: {
   children: React.ReactNode;
@@ -30,8 +34,10 @@ export default async function RootLayout({
       <body className={'overflow-hidden'} suppressHydrationWarning={true}>
         <NextTopLoader showSpinner={false} />
         <Providers>
-          <Toaster />
-          {children}
+          <AuthGaurd>
+            <Toaster />
+            {children}
+          </AuthGaurd>
         </Providers>
       </body>
     </html>

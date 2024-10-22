@@ -23,16 +23,19 @@ export default function SignInViewPage() {
   const didMount = useDidMount();
 
   useEffect(() => {
-    if (didMount) return;
+    if (initPrevState?.init || didMount) return;
+
     auth.actions.init();
-  }, [didMount, auth.actions]);
+  }, [initPrevState, auth.actions, didMount]);
 
   useEffect(() => {
+    console.log(auth.state.init, initPrevState);
     if (initPrevState?.loading && !auth.state.init.loading) {
       if (auth.state.init.success) {
         toast.success('Signed In Successfully!');
         redirect('/dashboard');
       } else if (auth.state.init.error) {
+        console.log('auth.state.init, error');
         toast.error(auth.state.init?.message ?? 'An error occurred!');
       }
     }
