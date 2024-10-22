@@ -13,14 +13,12 @@ export const login =
     try {
       const res = await api.post('/auth/v1/log_in', payload);
       const data = res.data;
-      console.log('DATA', data);
       set((state) => {
         state.state.login = { ...subState, success: true };
         state.data.user = data;
         // Update state.data.login here
       });
     } catch (error) {
-      console.log('ERROR', error);
       set((state) => {
         state.state.login = { ...subState, error: true };
       });
@@ -49,9 +47,10 @@ export const init = (set: ImmerAction<AuthStore>) => async () => {
     state.state.init = { ...subState, loading: true };
   });
   try {
-    // Add your API call here
+    const res = await api.get('/user/v1/get');
     set((state) => {
       state.state.init = { ...subState, success: true };
+      state.data.user = res.data;
       // Update state.data.init here
     });
   } catch (error) {
