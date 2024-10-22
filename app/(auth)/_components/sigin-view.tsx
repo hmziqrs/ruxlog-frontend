@@ -1,4 +1,5 @@
 'use client';
+
 import { Metadata } from 'next';
 import Link from 'next/link';
 import UserAuthForm from './user-auth-form';
@@ -8,6 +9,7 @@ import { useDidMount, usePrev } from '@/hooks/react-hooks';
 import { useAuth } from '@/store/auth';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: 'Authentication',
@@ -29,6 +31,7 @@ export default function SignInViewPage() {
     if (initPrevState?.loading && !auth.state.init.loading) {
       if (auth.state.init.success) {
         toast.success('Signed In Successfully!');
+        redirect('/dashboard');
       } else if (auth.state.init.error) {
         toast.error(auth.state.init?.message ?? 'An error occurred!');
       }
@@ -39,6 +42,7 @@ export default function SignInViewPage() {
     if (loginPrevState?.loading && !auth.state.login.loading) {
       if (auth.state.login.success) {
         toast.success('Signed In Successfully!');
+        redirect('/dashboard');
       } else if (auth.state.login.error) {
         toast.error(auth.state.login?.message ?? 'An error occurred!');
       }
