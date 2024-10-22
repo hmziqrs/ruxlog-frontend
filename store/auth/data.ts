@@ -7,7 +7,7 @@ export const authState: AuthState = {
 
     logout: { ...subState },
 
-    init: { ...subState }
+    init: { ...subState, init: false }
   },
   data: {
     login: null,

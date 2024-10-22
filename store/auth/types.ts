@@ -12,7 +12,7 @@ export interface AuthState {
 
     logout: SubState;
 
-    init: SubState;
+    init: SubState & { init: boolean };
   };
   data: {
     login: EmptyStateDefault;
@@ -48,7 +48,7 @@ export interface User {
   avatar: string | null;
   email: string;
   id: number;
-  is_verified: boolean;
+  isVerified: boolean;
   name: string;
   role: UserRoles;
 }
