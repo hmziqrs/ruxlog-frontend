@@ -63,16 +63,8 @@ export default function AppSidebar({
 }: {
   children: React.ReactNode;
 }) {
-  const [mounted, setMounted] = React.useState(false);
   const pathname = usePathname();
   // Only render after first client-side mount
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null; // or a loading skeleton
-  }
 
   return (
     <SidebarProvider>

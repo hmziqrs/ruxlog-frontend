@@ -1,9 +1,11 @@
+'use client';
+import { useAuth } from '@/store/auth';
 import { redirect } from 'next/navigation';
 
-export default async function Dashboard() {
-  const session = await auth();
+export default function Dashboard() {
+  const auth = useAuth();
 
-  if (!session?.user) {
+  if (!auth.data?.user) {
     return redirect('/');
   } else {
     redirect('/dashboard/overview');
