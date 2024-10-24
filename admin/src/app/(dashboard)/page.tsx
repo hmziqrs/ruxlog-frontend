@@ -1,3 +1,5 @@
+'use client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import {
   BarChart,
@@ -165,6 +167,68 @@ export default function Home() {
             </p>
           </div>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Page Views Chart */}
+        <Card className="bg-zinc-900/50 border-zinc-800">
+          <CardHeader>
+            <CardTitle className="text-zinc-100">Page Views</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AreaChart width={500} height={300} data={viewsData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
+              <XAxis dataKey="date" stroke="#71717a" />
+              <YAxis stroke="#71717a" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#18181b',
+                  border: '1px solid #3f3f46',
+                }}
+                labelStyle={{ color: '#e4e4e7' }}
+              />
+              <Legend />
+              <Area
+                type="monotone"
+                dataKey="views"
+                stroke="#8884d8"
+                fill="#8884d8"
+                fillOpacity={0.3}
+              />
+              <Area
+                type="monotone"
+                dataKey="unique"
+                stroke="#82ca9d"
+                fill="#82ca9d"
+                fillOpacity={0.3}
+              />
+            </AreaChart>
+          </CardContent>
+        </Card>
+
+        {/* Category Distribution */}
+        <Card className="bg-zinc-900/50 border-zinc-800">
+          <CardHeader>
+            <CardTitle className="text-zinc-100">Posts by Category</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <BarChart width={500} height={300} data={categoryData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
+              <XAxis dataKey="name" stroke="#71717a" />
+              <YAxis stroke="#71717a" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#18181b',
+                  border: '1px solid #3f3f46',
+                }}
+                labelStyle={{ color: '#e4e4e7' }}
+              />
+              <Legend />
+              <Bar dataKey="posts" fill="#8884d8" />
+              <Bar dataKey="views" fill="#82ca9d" />
+            </BarChart>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Posts */}
