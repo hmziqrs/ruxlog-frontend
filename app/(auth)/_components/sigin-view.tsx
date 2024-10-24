@@ -18,34 +18,13 @@ export const metadata: Metadata = {
 
 export default function SignInViewPage() {
   const auth = useAuth();
-  const initPrevState = usePrev(auth.state.init);
   const loginPrevState = usePrev(auth.state.login);
-  const didMount = useDidMount();
-
-  useEffect(() => {
-    if (initPrevState?.init || didMount) return;
-
-    auth.actions.init();
-  }, [initPrevState, auth.actions, didMount]);
-
-  useEffect(() => {
-    console.log(auth.state.init, initPrevState);
-    if (initPrevState?.loading && !auth.state.init.loading) {
-      if (auth.state.init.success) {
-        toast.success('Signed In Successfully!');
-        redirect('/dashboard');
-      } else if (auth.state.init.error) {
-        console.log('auth.state.init, error');
-        toast.error(auth.state.init?.message ?? 'An error occurred!');
-      }
-    }
-  }, [auth.state.init, initPrevState, auth.actions]);
 
   useEffect(() => {
     if (loginPrevState?.loading && !auth.state.login.loading) {
       if (auth.state.login.success) {
         toast.success('Signed In Successfully!');
-        redirect('/dashboard');
+        // redirect('/dashboard');
       } else if (auth.state.login.error) {
         toast.error(auth.state.login?.message ?? 'An error occurred!');
       }

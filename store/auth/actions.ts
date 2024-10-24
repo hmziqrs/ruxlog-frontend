@@ -1,10 +1,44 @@
 import { ImmerAction, ImmerState } from '@/store/types';
 import { subState } from '@/store/data';
+import { mapCatchError } from '@/store/utils';
 import { api } from '@/services/api';
 
 import { AuthLoginPayload, AuthStore, User } from './types';
-import * as utils from './utils';
 import { authState } from './data';
+import * as utils from './utils';
+
+export const init = (set: ImmerAction<AuthStore>) => async () => {
+  set((state) => {
+    state.state.init = { ...subState, loading: true, init: true };
+  });
+  try {
+    if (!utils.checkIdCookieExist()) {
+      set((state) => {
+        state.state.init = { ...subState, init: true };
+      });
+      return;
+    }
+    const res = await api.get<User>('/user/v1/get');
+    if (!res.data.isVerified || res.data.role === 'user') {
+      utils.deleteIdCookie();
+      throw new Error('User not allowed to access this page.');
+    }
+    set((state) => {
+      state.state.init = { ...subState, success: true, init: true };
+      state.data.user = res.data;
+      // Update state.data.init here
+    });
+  } catch (error) {
+    set((state) => {
+      state.state.init = {
+        ...subState,
+        error: true,
+        init: true,
+        message: mapCatchError(error)
+      };
+    });
+  }
+};
 
 export const login =
   (set: ImmerAction<AuthStore>) => async (payload: AuthLoginPayload) => {
@@ -16,18 +50,21 @@ export const login =
       const data = res.data;
 
       if (!res.data.isVerified || res.data.role === 'user') {
-        utils.deleteCookie('id');
+        utils.deleteIdCookie();
         throw new Error('User not allowed to access this page.');
       }
 
       set((state) => {
         state.state.login = { ...subState, success: true };
         state.data.user = data;
-        // Update state.data.login here
       });
     } catch (error) {
       set((state) => {
-        state.state.login = { ...subState, error: true };
+        state.state.login = {
+          ...subState,
+          error: true,
+          message: mapCatchError(error, 'Error while trying to login')
+        };
       });
     }
   };
@@ -45,33 +82,6 @@ export const logout = (set: ImmerAction<AuthStore>) => async () => {
   } catch (error) {
     set((state) => {
       state.state.logout = { ...subState, error: true };
-    });
-  }
-};
-
-export const init = (set: ImmerAction<AuthStore>) => async () => {
-  set((state) => {
-    state.state.init = { ...subState, loading: true, init: true };
-  });
-  try {
-    const res = await api.get<User>('/user/v1/get');
-    if (!res.data.isVerified || res.data.role === 'user') {
-      utils.deleteCookie('id');
-      throw new Error('User not allowed to access this page.');
-    }
-    set((state) => {
-      state.state.init = { ...subState, success: true, init: true };
-      state.data.user = res.data;
-      // Update state.data.init here
-    });
-  } catch (error) {
-    set((state) => {
-      state.state.init = {
-        ...subState,
-        error: true,
-        init: true,
-        message: error.message
-      };
     });
   }
 };

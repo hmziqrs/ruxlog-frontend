@@ -1,7 +1,10 @@
 'use client';
 
+import { useDidMount, usePrev } from '@/hooks/react-hooks';
 import { useAuth } from '@/store/auth';
 import { useRouter, usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 export default function AuthGaurd({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
@@ -12,26 +15,25 @@ export default function AuthGaurd({ children }: { children: React.ReactNode }) {
   // console.log('router', router);
   // console.log('pathname', pathname);
 
-  // const auth = useAuth();
-  // const initPrevState = usePrev(auth.state.init);
+  const initPrevState = usePrev(auth.state.init);
   // const loginPrevState = usePrev(auth.state.login);
-  // const didMount = useDidMount();
+  const didMount = useDidMount();
 
-  // useEffect(() => {
-  //   if (didMount) return;
-  //   auth.actions.init();
-  // }, [didMount, auth.actions]);
+  useEffect(() => {
+    if (initPrevState?.init || didMount) return;
 
-  // useEffect(() => {
-  //   if (initPrevState?.loading && !auth.state.init.loading) {
-  //     if (auth.state.init.success) {
-  //       toast.success('Signed In Successfully!');
-  //       redirect('/dashboard');
-  //     } else if (auth.state.init.error) {
-  //       toast.error(auth.state.init?.message ?? 'An error occurred!');
-  //     }
-  //   }
-  // }, [auth.state.init, initPrevState, auth.actions]);
+    auth.actions.init();
+  }, [initPrevState, auth.actions, didMount]);
+
+  useEffect(() => {
+    if (initPrevState?.loading && !auth.state.init.loading) {
+      if (auth.state.init.success) {
+        toast.success('Signed In Successfully!');
+      } else if (auth.state.init.error) {
+        toast.error(auth.state.init?.message ?? 'An error occurred!');
+      }
+    }
+  }, [auth.state.init, initPrevState, auth.actions]);
 
   // useEffect(() => {
   //   if (loginPrevState?.loading && !auth.state.login.loading) {
