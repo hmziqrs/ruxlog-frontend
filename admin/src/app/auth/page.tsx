@@ -63,7 +63,7 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
+              <Button disabled={brain.loading} type="submit" className="w-full">
                 Sign in
               </Button>
             </form>
