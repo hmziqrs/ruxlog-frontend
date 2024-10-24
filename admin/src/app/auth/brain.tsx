@@ -1,6 +1,10 @@
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { useAuth } from '@/store/auth';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
+import { usePrev } from '@/hooks/react-hooks';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -12,7 +16,7 @@ const formSchema = z.object({
 });
 
 export function useAuthBrain() {
-  // Initialize form with react-hook-form and zod resolver
+  const auth = useAuth();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -20,14 +24,27 @@ export function useAuthBrain() {
       password: 'hello',
     },
   });
+  const loginPrevState = usePrev(auth.state.login);
+  const { loading } = auth.state.login;
 
-  // Handle form submission
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
+    auth.actions.login(values);
     // Add your login logic here
   }
 
+  useEffect(() => {
+    if (loginPrevState?.loading && !auth.state.login.loading) {
+      if (auth.state.login.success) {
+        toast.success('Signed In Successfully!');
+      } else if (auth.state.login.error) {
+        toast.error(auth.state.login?.message ?? 'An error occurred!');
+      }
+    }
+  }, [auth.state.login, loginPrevState, auth.actions]);
+
   return {
+    loading,
     form,
     onSubmit,
   };
