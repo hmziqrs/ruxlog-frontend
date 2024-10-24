@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-const unAuthRoutes = ['/'];
+const unAuthRoutes = ['/auth'];
 
 export default function AuthGaurd({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
@@ -39,11 +39,14 @@ export default function AuthGaurd({ children }: { children: React.ReactNode }) {
   }, [auth.state.init, initPrevState, auth.actions]);
 
   useEffect(() => {
-    console.log(pathname);
+    if (auth.state.init.loading) return;
     if (unAuthRoutes.includes(pathname) && auth.data.user) {
-      router.push('/dashboard');
+      router.push('/');
     }
-  }, [auth.data.user, prevUser, router]);
+    if (!unAuthRoutes.includes(pathname) && !auth.data.user) {
+      router.push('/auth');
+    }
+  }, [auth.data.user, auth.state.init, prevUser, router]);
 
   return children;
 }
