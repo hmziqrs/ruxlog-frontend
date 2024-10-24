@@ -1,4 +1,5 @@
 'use client';
+
 import {
   SidebarInset,
   SidebarProvider,
@@ -15,8 +16,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { useDashboardLayout } from './brain';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const { breadcrumbs } = useDashboardLayout();
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -26,15 +30,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <Separator orientation="vertical" className="mr-2 h-4" />
           <Breadcrumb>
             <BreadcrumbList>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">
-                  Building Your Application
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block" />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-              </BreadcrumbItem>
+              {breadcrumbs.map((breadcrumb, index) => (
+                <BreadcrumbItem
+                  key={breadcrumb.href}
+                  className="cursor-pointer"
+                >
+                  {breadcrumb.isLast ? (
+                    <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
+                  ) : (
+                    <>
+                      <BreadcrumbLink href={breadcrumb.href}>
+                        {breadcrumb.label}
+                      </BreadcrumbLink>
+                      <BreadcrumbSeparator />
+                    </>
+                  )}
+                </BreadcrumbItem>
+              ))}
             </BreadcrumbList>
           </Breadcrumb>
         </header>
