@@ -6,6 +6,7 @@ import {
   FolderTree,
   Tags,
 } from 'lucide-react';
+import Link from 'next/link';
 
 import {
   Sidebar,
@@ -65,10 +66,10 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.href}>
+                    <Link href={item.href}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
