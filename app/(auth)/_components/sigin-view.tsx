@@ -5,11 +5,10 @@ import Link from 'next/link';
 import UserAuthForm from './user-auth-form';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useDidMount, usePrev } from '@/hooks/react-hooks';
+import { usePrev } from '@/hooks/react-hooks';
 import { useAuth } from '@/store/auth';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: 'Authentication',
@@ -24,7 +23,6 @@ export default function SignInViewPage() {
     if (loginPrevState?.loading && !auth.state.login.loading) {
       if (auth.state.login.success) {
         toast.success('Signed In Successfully!');
-        // redirect('/dashboard');
       } else if (auth.state.login.error) {
         toast.error(auth.state.login?.message ?? 'An error occurred!');
       }
@@ -42,7 +40,7 @@ export default function SignInViewPage() {
       >
         Login
       </Link>
-      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
+      <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
         <div className="absolute inset-0 bg-zinc-900" />
         <div className="relative z-20 flex items-center text-lg font-medium">
           <svg

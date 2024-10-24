@@ -22,7 +22,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // TODO: AUTH
   return (
     <html lang="en" className={`${lato.className}`}>
       <body className={'overflow-hidden'} suppressHydrationWarning={true}>
