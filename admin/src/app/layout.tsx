@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import './globals.css';
+import AuthGaurd from '@/containers/auth-gaurd';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -30,7 +31,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="dark">
-          {children}
+          <AuthGaurd>{children}</AuthGaurd>
         </ThemeProvider>
       </body>
     </html>
