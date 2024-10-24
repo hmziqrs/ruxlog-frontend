@@ -18,7 +18,8 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => {
-    return camelizeKeys(response.data) as any;
+    response.data = camelizeKeys(response.data) as any;
+    return response;
   }, // Return successful responses as-is
   (error: AxiosError) => {
     if (error.response) {
