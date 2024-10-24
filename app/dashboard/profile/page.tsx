@@ -9,6 +9,7 @@ export const metadata = {
   title: 'Dashboard : Profile'
 };
 
-export default async function Page({ searchParams }: pageProps) {
+export default async function Page(props: pageProps) {
+  const searchParams = await props.searchParams;
   return <ProfileViewPage />;
 }

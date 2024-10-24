@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 export function useDidMount() {
-  const mounted = useRef<boolean>();
+  const mounted = useRef<boolean>(undefined);
   useEffect(() => {
     if (!mounted.current) {
       // do componentDidMount logic
@@ -12,7 +12,7 @@ export function useDidMount() {
 }
 
 export function usePrev<K>(value: K): K | null {
-  const ref = useRef<K>();
+  const ref = useRef<K>(undefined);
   useEffect(() => {
     ref.current = value;
   }, [value]); // Only re-run if value changes
