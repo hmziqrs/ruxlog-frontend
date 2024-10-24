@@ -6,10 +6,13 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
+const unAuthRoutes = ['/'];
+
 export default function AuthGaurd({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const prevUser = usePrev(auth.data.user);
 
   // console.log('auth', auth);
   // console.log('router', router);
@@ -35,16 +38,12 @@ export default function AuthGaurd({ children }: { children: React.ReactNode }) {
     }
   }, [auth.state.init, initPrevState, auth.actions]);
 
-  // useEffect(() => {
-  //   if (loginPrevState?.loading && !auth.state.login.loading) {
-  //     if (auth.state.login.success) {
-  //       toast.success('Signed In Successfully!');
-  //       redirect('/dashboard');
-  //     } else if (auth.state.login.error) {
-  //       toast.error(auth.state.login?.message ?? 'An error occurred!');
-  //     }
-  //   }
-  // }, [auth.state.login, loginPrevState, auth.actions]);
+  useEffect(() => {
+    console.log(pathname);
+    if (unAuthRoutes.includes(pathname) && auth.data.user) {
+      router.push('/dashboard');
+    }
+  }, [auth.data.user, prevUser, router]);
 
   return children;
 }
