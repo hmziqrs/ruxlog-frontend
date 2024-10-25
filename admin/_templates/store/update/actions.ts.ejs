@@ -1,0 +1,23 @@
+---
+to: store/<%= h.changeCase.lower(name) %>/actions.ts
+inject: true
+before: export const reset
+skip_if: export const <%= h.changeCase.camel(newState) %> =
+---
+
+export const <%= h.changeCase.camel(newState) %> = (set: ImmerAction<<%= h.changeCase.pascal(name) %>Store>) => async () => {
+  set(state => {
+    state.state.<%= h.changeCase.camel(newState) %> = {...subState, loading: true};
+  });
+  try {
+    // Add your API call here
+    set(state => {
+      state.state.<%= h.changeCase.camel(newState) %> = {...subState, success: true};
+      // Update state.data.<%= h.changeCase.camel(newState) %> here
+    });
+  } catch (error) {
+    set(state => {
+      state.state.<%= h.changeCase.camel(newState) %> = {...subState, error: true};
+    });
+  }
+};

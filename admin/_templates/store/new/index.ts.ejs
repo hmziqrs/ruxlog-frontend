@@ -1,0 +1,23 @@
+---
+to: store/<%= h.changeCase.lower(name) %>/index.ts
+---
+import {create} from 'zustand';
+import {immer} from 'zustand/middleware/immer';
+
+import * as actions from './actions';
+import {<%= h.changeCase.pascal(name) %>Store} from './types';
+import {<%= h.changeCase.lower(name) %>State} from './data';
+
+export const use<%= h.changeCase.pascal(name) %> = create(
+  immer<<%= h.changeCase.pascal(name) %>Store>((set, get) => {
+    return {
+      ...<%= h.changeCase.lower(name) %>State,
+      actions: {
+<% states.split(',').map(s => s.trim()).forEach(function(state) { %>
+        <%= state %>: actions.<%= state %>(set),
+<% }); %>
+        reset: actions.reset(set),
+      },
+    };
+  }),
+);
