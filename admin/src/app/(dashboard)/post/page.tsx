@@ -180,9 +180,9 @@ export default function PostPage() {
     <div className="px-4 sm:px-6 lg:px-8 py-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold">Posts</h1>
-        <Link href="/posts/new">
+        <Link href="/post/create">
           <Button>
-            <Plus className="mr-2 h-4 w-4" /> New Post
+            <Plus className="mr-2 h-4 w-4" /> Create post
           </Button>
         </Link>
       </div>

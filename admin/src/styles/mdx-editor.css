@@ -1,0 +1,60 @@
+.dark-theme {
+    --accentBase: var(--slate-1);
+    --accentBgSubtle: var(--slate-2);
+    --accentBg: var(--slate-3);
+    --accentBgHover: var(--slate-4);
+    --accentBgActive: var(--slate-5);
+    --accentLine: var(--slate-6);
+    --accentBorder: var(--slate-7);
+    --accentBorderHover: var(--slate-8);
+    --accentSolid: var(--slate-9);
+    --accentSolidHover: var(--slate-10);
+    --accentText: var(--slate-11);
+    --accentTextContrast: var(--slate-12);
+
+    --baseBase: var(--slate-1);
+    --baseBgSubtle: var(--slate-2);
+    --baseBg: var(--slate-3);
+    --baseBgHover: var(--slate-4);
+    --baseBgActive: var(--slate-5);
+    --baseLine: var(--slate-6);
+    --baseBorder: var(--slate-7);
+    --baseBorderHover: var(--slate-8);
+    --baseSolid: var(--slate-9);
+    --baseSolidHover: var(--slate-10);
+    --baseText: var(--slate-11);
+    --baseTextContrast: var(--slate-12);
+
+    --admonitionTipBg: var(--cyan4);
+    --admonitionTipBorder: var(--cyan8);
+
+    --admonitionInfoBg: var(--grass4);
+    --admonitionInfoBorder: var(--grass8);
+
+    --admonitionCautionBg: var(--amber4);
+    --admonitionCautionBorder: var(--amber8);
+
+    --admonitionDangerBg: var(--red4);
+    --admonitionDangerBorder: var(--red8);
+
+    --admonitionNoteBg: var(--slate-4);
+    --admonitionNoteBorder: var(--slate-8);
+
+    color: var(--baseText);
+    --basePageBg: #020817;
+    background: var(--basePageBg);
+}
+
+.mdxeditor {
+    border: 1px solid var(--baseBorder);
+    border-radius: 0.5rem;
+    min-height: 400px;
+}
+
+@media (max-width: 640px) {
+    .mdxeditor-toolbar {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+}
