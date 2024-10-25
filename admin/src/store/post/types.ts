@@ -47,6 +47,23 @@ export interface PostActions {
   };
 }
 
+export interface PostAuthor {
+  id: number;
+  name: string;
+  email: string;
+  avatar: string | null;
+}
+
+export interface PostCategory {
+  id: number;
+  name: string;
+}
+
+export interface PostTag {
+  id: number;
+  name: string;
+}
+
 export interface Post {
   id: number;
   title: string;
@@ -59,8 +76,11 @@ export interface Post {
   createdAt: string;
   updatedAt: string;
   authorId: number;
+  author: PostAuthor;
   categoryId: number | null;
+  category: PostCategory | null;
   tagIds: number[];
+  tags: PostTag[];
   likesCount: number;
   viewCount: number;
 }
