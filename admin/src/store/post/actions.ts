@@ -3,7 +3,7 @@ import { mapCatchError } from '@/store/utils';
 import { subState } from '@/store/data';
 import { api } from '@/services/api';
 
-import { PostStore } from './types';
+import { Post, PostStore } from './types';
 import { postState } from './data';
 
 export const list = (set: ImmerAction<PostStore>) => async () => {
@@ -11,9 +11,10 @@ export const list = (set: ImmerAction<PostStore>) => async () => {
     state.state.list = { ...subState, loading: true };
   });
   try {
-    // Add your API call here
+    const res = await api.post<Post[]>('/post/v1/list/query', {});
     set((state) => {
       state.state.list = { ...subState, success: true };
+      state.data.list = res.data;
       // Update state.data.list here
     });
   } catch (error) {

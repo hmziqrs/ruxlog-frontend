@@ -1,23 +1,20 @@
-import {subState} from '@/store/data';
-import {PostState} from './types';
+import { subState } from '@/store/data';
+import { PostState } from './types';
 
 export const postState: PostState = {
   state: {
+    list: { ...subState },
 
-    list: {...subState},
+    add: { ...subState },
 
-    add: {...subState},
+    edit: { ...subState },
 
-    edit: {...subState},
+    remove: { ...subState },
 
-    remove: {...subState},
-
-    bulkRemove: {...subState},
-
+    bulkRemove: { ...subState },
   },
   data: {
-
-    list: null,
+    list: [],
 
     add: null,
 
@@ -27,5 +24,6 @@ export const postState: PostState = {
 
     bulkRemove: null,
 
+    filters: {},
   },
 };

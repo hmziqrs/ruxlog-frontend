@@ -5,9 +5,9 @@ export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API,
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
+    // 'Content-Type': 'application/json',
     'csrf-token': process.env.NEXT_PUBLIC_CSRF_TOKEN,
-    'Content-Encoding': 'gzip',
+    // 'Content-Encoding': 'gzip',
   },
 });
 
