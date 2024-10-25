@@ -51,11 +51,23 @@ export default function NewPostPage() {
                 name="slug"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Slug</FormLabel>
+                    <div className="flex justify-between items-center">
+                      <FormLabel>Slug</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">
+                          Auto-generate
+                        </span>
+                        <Switch
+                          checked={brain.autoSlug.bool}
+                          onCheckedChange={brain.autoSlug.toggle}
+                        />
+                      </div>
+                    </div>
                     <FormControl>
                       <Input
                         placeholder="post-slug"
                         {...field}
+                        disabled={brain.autoSlug.bool}
                         onBlur={(e) =>
                           field.onChange(brain.sanitizeSlug(e.target.value))
                         }

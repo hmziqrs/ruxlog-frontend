@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { usePost } from '@/store/post';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { usePrev } from '@/hooks/react-hooks';
+import { useBoolEngine, usePrev } from '@/hooks/react-hooks';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -29,6 +29,7 @@ const formSchema = z.object({
 export type NewPostFormValues = z.infer<typeof formSchema>;
 
 export function useNewPostBrain() {
+  const autoSlug = useBoolEngine(true);
   const post = usePost();
   const prevAddState = usePrev(post.state.add);
 
@@ -49,6 +50,8 @@ export function useNewPostBrain() {
 
   const { loading } = post.state.add;
 
+  const title = form.watch('title');
+
   async function onSubmit(values: NewPostFormValues) {
     console.log(values);
     // await post.actions.add(values);
@@ -62,6 +65,12 @@ export function useNewPostBrain() {
       .replace(/-+/g, '-') // replace multiple hyphens with single hyphen
       .replace(/^-+|-+$/g, ''); // remove leading and trailing hyphens
   }
+
+  useEffect(() => {
+    if (autoSlug.bool && title) {
+      form.setValue('slug', sanitizeSlug(title));
+    }
+  }, [title, autoSlug, form]);
 
   useEffect(() => {
     if (prevAddState?.loading && !post.state.add.loading) {
@@ -79,5 +88,6 @@ export function useNewPostBrain() {
     onSubmit,
     loading,
     sanitizeSlug,
+    autoSlug,
   };
 }
