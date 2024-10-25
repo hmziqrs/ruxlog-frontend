@@ -3,8 +3,9 @@ to: src/store/<%= h.changeCase.lower(name) %>/actions.ts
 ---
 
 import {ImmerAction, ImmerState} from '@/store/types';
+import { mapCatchError } from '@/store/utils';
 import {subState} from '@/store/data';
-import {api, errorMessage} from '@/services/api';
+import {api} from '@/services/api';
 
 import {<%= h.changeCase.pascal(name) %>Store } from './types';
 import {<%= h.changeCase.camel(name) %>State} from './data';
@@ -24,7 +25,11 @@ export const <%= state %> = (set: ImmerAction<<%= h.changeCase.pascal(name) %>St
     });
   } catch (error) {
     set(state => {
-      state.state.<%= state %> = {...subState, error: true};
+      state.state.<%= state %> = {
+        ...subState,
+        error: true,
+        message: mapCatchError(error),
+      };
     });
   }
 };
