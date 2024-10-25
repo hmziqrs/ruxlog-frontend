@@ -1,4 +1,5 @@
 import { Draft } from 'immer';
+import { StateCreator } from 'zustand';
 
 export interface SubState {
   success: boolean;
@@ -9,7 +10,7 @@ export interface SubState {
 
 export type ImmerAction<T> = (
   nextStateOrUpdater: T | Partial<T> | ((state: Draft<T>) => void),
-  shouldReplace?: boolean | undefined
+  shouldReplace?: false | undefined
 ) => void;
 
 export type ImmerState<T> = () => T;
