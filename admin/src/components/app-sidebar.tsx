@@ -32,9 +32,9 @@ const items = [
     href: '/users',
   },
   {
-    title: 'Blogs',
+    title: 'Post',
     icon: BookOpen,
-    href: '/blogs',
+    href: '/post',
   },
   {
     title: 'Comments',

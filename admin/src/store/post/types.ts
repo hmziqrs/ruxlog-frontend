@@ -1,8 +1,13 @@
-import {BaseActions, SubState, EmptyCallback, EmptyState, EmptyStateDefault} from '@/store/types';
+import {
+  BaseActions,
+  SubState,
+  EmptyCallback,
+  EmptyState,
+  EmptyStateDefault,
+} from '@/store/types';
 
 export interface PostState {
   state: {
-
     list: SubState;
 
     add: SubState;
@@ -12,11 +17,9 @@ export interface PostState {
     remove: SubState;
 
     bulkRemove: SubState;
-
   };
   data: {
-
-    list: EmptyStateDefault;
+    list: Post[];
 
     add: EmptyStateDefault;
 
@@ -26,12 +29,12 @@ export interface PostState {
 
     bulkRemove: EmptyStateDefault;
 
+    filters: PostFilters;
   };
 }
 
 export interface PostActions {
   actions: BaseActions & {
-
     list: EmptyCallback;
 
     add: EmptyCallback;
@@ -41,8 +44,38 @@ export interface PostActions {
     remove: EmptyCallback;
 
     bulkRemove: EmptyCallback;
-
   };
+}
+
+export interface Post {
+  id: number;
+  title: string;
+  content: string;
+  slug: string;
+  excerpt: string | null;
+  featuredImageUrl: string | null;
+  isPublished: boolean;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  authorId: number;
+  categoryId: number | null;
+  tagIds: number[];
+  likesCount: number;
+  viewCount: number;
+}
+
+export type PostSortBy =
+  | 'Title'
+  | 'UpdatedAt'
+  | 'PublishedAt'
+  | 'ViewCount'
+  | 'LikesCount';
+
+export interface PostFilters {
+  search?: string;
+  sortBy?: PostSortBy;
+  ascending?: boolean;
 }
 
 export interface PostStore extends PostState, PostActions {}
