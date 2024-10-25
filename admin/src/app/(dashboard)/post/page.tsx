@@ -63,7 +63,7 @@ const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
             />
             <Badge
               variant={post.isPublished ? 'default' : 'secondary'}
-              className="absolute bottom-2 left-2 shadow-md cursor-pointer"
+              className="absolute bottom-2 left-2 shadow-md cursor-pointer text-sm px-3 py-1"
             >
               {post.isPublished ? 'Published' : 'Draft'}
             </Badge>
@@ -71,7 +71,7 @@ const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
 
           {/* Content Section */}
           <div className="flex-1 p-4 flex-col">
-            <div className="mb-4 flex items-start gap-2">
+            <div className="flex items-start gap-2">
               <Checkbox
                 checked={isSelected}
                 onCheckedChange={(checked) => {
@@ -91,50 +91,14 @@ const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
             </div>
 
             {/* Meta Information */}
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <div className="flex flex-wrap gap-2">
-                <span className="flex items-center gap-1">
-                  <span className="font-medium">Author:</span>
-                  {post.author?.name || 'Anonymous'}
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <span className="font-medium">Category:</span>
-                  {post.category?.name || 'Uncategorized'}
-                </span>
-              </div>
-
-              <div className="flex flex-wrap gap-x-4 gap-y-1">
-                <span className="flex items-center gap-1">
-                  <span className="font-medium">Created:</span>
-                  {formatDate(post.createdAt)}
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="font-medium">Updated:</span>
-                  {formatDate(post.updatedAt)}
-                </span>
-                {post.publishedAt && (
-                  <span className="flex items-center gap-1">
-                    <span className="font-medium">Published:</span>
-                    {formatDate(post.publishedAt)}
-                  </span>
-                )}
-              </div>
-
-              {/* Tags */}
-              {post.tagIds && post.tagIds.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {post.tagIds.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full bg-secondary px-2 py-1 text-xs"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+            <Badge variant="secondary" className="font-semibold py-2 px-4">
+              {post.category?.name || 'Uncategorized'}
+            </Badge>
+            <div className="h-2" />
+            <span className="flex items-center gap-1">
+              <span className="font-medium">Author:</span>
+              {post.author?.name || 'Anonymous'}
+            </span>
           </div>
           <div className="flex items-center justify-between gap-2 px-4 mb-4">
             {/* Publish Toggle */}
