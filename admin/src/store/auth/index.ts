@@ -16,8 +16,8 @@ export const useAuth = create(
 
         init: actions.init(set),
 
-        reset: actions.reset(set)
-      }
+        reset: actions.reset(set),
+      },
     };
   })
 );
