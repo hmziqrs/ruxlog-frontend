@@ -1,0 +1,38 @@
+---
+to: store/<%= h.changeCase.lower(name) %>/actions.ts
+---
+
+import {ImmerAction, ImmerState} from '@/store/types';
+import {subState} from '@/store/data';
+import {api, errorMessage} from '@/services/api';
+
+import {<%= h.changeCase.pascal(name) %>Store } from './types';
+import {<%= h.changeCase.camel(name) %>State} from './data';
+
+
+<% const stateArray = states.split(',').map(s => s.trim()) %>
+<% stateArray.forEach(function(state) { %>
+export const <%= state %> = (set: ImmerAction<<%= h.changeCase.pascal(name) %>Store>) => async () => {
+  set(state => {
+    state.state.<%= state %> = {...subState, loading: true};
+  });
+  try {
+    // Add your API call here
+    set(state => {
+      state.state.<%= state %> = {...subState, success: true};
+      // Update state.data.<%= state %> here
+    });
+  } catch (error) {
+    set(state => {
+      state.state.<%= state %> = {...subState, error: true};
+    });
+  }
+};
+
+<% }); %>
+export const reset = (set: ImmerAction<<%= h.changeCase.pascal(name) %>Store>) => async () => {
+  set(state => {
+    state.state = {...<%= h.changeCase.lower(name) %>State.state};
+    state.data = {...<%= h.changeCase.lower(name) %>State.data};
+  });
+};

@@ -1,0 +1,7 @@
+---
+to: store/<%= h.changeCase.lower(name) %>/types.ts
+inject: true
+after: "data: {"
+skip_if: "<%= h.changeCase.camel(newState) %>: EmptyStateDefault;"
+---
+    <%= h.changeCase.camel(newState) %>: EmptyStateDefault;

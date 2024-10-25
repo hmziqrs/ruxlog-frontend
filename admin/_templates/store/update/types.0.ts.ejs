@@ -1,0 +1,7 @@
+---
+to: store/<%= h.changeCase.lower(name) %>/types.ts
+inject: true
+after: "state: {"
+skip_if: "<%= h.changeCase.camel(newState) %>: SubState;"
+---
+    <%= h.changeCase.camel(newState) %>: SubState;
