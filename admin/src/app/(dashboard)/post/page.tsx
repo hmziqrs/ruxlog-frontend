@@ -8,47 +8,143 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { Post } from '@/store/post/types';
 import { usePostBrain, PostBrain } from './brain';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
 import { LayoutGrid, List, Loader2, Pencil, Plus, Trash } from 'lucide-react';
-
 const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
-  const isSelected = brain.selectedPosts.includes(post.id);
+  // ... previous code remains the same until the Actions section ...
+
+  // Actions section replacement
+  const renderActions = () => (
+    <div className="mt-4 flex items-center justify-between">
+      {/* Status and Publish Toggle */}
+      <div className="flex items-center gap-2">
+        <Badge
+          variant={post.isPublished ? 'default' : 'secondary'}
+          className="h-6 cursor-pointer"
+        >
+          {post.isPublished ? 'Published' : 'Draft'}
+        </Badge>
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={post.isPublished}
+            // onCheckedChange={() => brain.handleTogglePublish?.(post.id)}
+            aria-label="Toggle publish status"
+          />
+          <span className="text-sm text-muted-foreground">
+            {post.isPublished ? 'Unpublish' : 'Publish'}
+          </span>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex items-center gap-2">
+        <Link href={`/posts/${post.id}/edit`}>
+          <Button size="sm" variant="outline">
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit
+          </Button>
+        </Link>
+
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-muted-foreground"
+          asChild
+        >
+          <Link href={`/preview/${post.id}`}>Preview</Link>
+        </Button>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button size="sm" variant="destructive">
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete
+                &quot;{post.title}&quot; and remove it from our servers.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => brain.handleDelete?.(post.id)}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </div>
+  );
 
   return (
-    <Card className="relative">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-4">
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={(checked) => {
-              brain.setSelectedPosts(
-                checked
-                  ? [...brain.selectedPosts, post.id]
-                  : brain.selectedPosts.filter((id) => id !== post.id)
-              );
-            }}
-          />
-          <div className="flex-1">
-            <h3 className="font-semibold">{post.title}</h3>
-            <p className="text-sm text-gray-500">{post.excerpt}</p>
-            <div className="mt-2 flex items-center gap-2">
-              <Button
-                variant={post.isPublished ? 'default' : 'outline'}
-                size="sm"
-                // onClick={() => brain.handleTogglePublish(post.id)}
-              >
-                {post.isPublished ? 'Published' : 'Draft'}
-              </Button>
-              <Link href={`/posts/${post.id}/edit`}>
-                <Button size="sm" variant="ghost">
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              </Link>
+    <Card className="relative overflow-hidden">
+      <CardContent className="p-0">
+        <div className="flex flex-col">
+          {/* Image Section */}
+          <div className="relative h-48 w-full">
+            <img
+              src={
+                post.featuredImageUrl ||
+                'https://placehold.co/600x400/e2e8f0/94a3b8'
+              }
+              alt={post.title}
+              className="h-full w-full object-cover"
+            />
+          </div>
+
+          {/* Content Section */}
+          <div className="flex-1 p-4">
+            <div className="mb-4 flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    // checked={isSelected}
+                    onCheckedChange={(checked) => {
+                      brain.setSelectedPosts(
+                        checked
+                          ? [...brain.selectedPosts, post.id]
+                          : brain.selectedPosts.filter((id) => id !== post.id)
+                      );
+                    }}
+                  />
+                  <h3 className="font-semibold line-clamp-1">{post.title}</h3>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+                  {post.excerpt}
+                </p>
+              </div>
             </div>
+
+            {/* Meta Information */}
+            {/* ... previous meta information code remains the same ... */}
+
+            {/* Actions */}
+            {renderActions()}
           </div>
         </div>
       </CardContent>
@@ -60,7 +156,7 @@ export default function PostPage() {
   const brain = usePostBrain();
 
   return (
-    <div className="container py-8">
+    <div className=" py-8">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Posts</h1>
         <Link href="/posts/new">
