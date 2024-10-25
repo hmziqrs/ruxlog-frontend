@@ -9,7 +9,15 @@ import { usePrev } from '@/hooks/react-hooks';
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   content: z.string().min(1, 'Content is required'),
-  slug: z.string().min(1, 'Slug is required'),
+  slug: z
+    .string()
+    .min(1, 'Slug is required')
+    .regex(
+      // /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      /^[a-z0-9-_]+$/,
+      'Slug can only contain lowercase letters, numbers, and hyphens'
+    )
+    .transform((value) => value.toLowerCase()),
   excerpt: z.string().nullable(),
   featuredImageUrl: z.string().nullable(),
   isPublished: z.boolean().default(false),
@@ -46,6 +54,15 @@ export function useNewPostBrain() {
     // await post.actions.add(values);
   }
 
+  function sanitizeSlug(text: string): string {
+    return text
+      .toLowerCase() // convert to lowercase
+      .replace(/[^\w\s-]/g, '') // remove special characters
+      .replace(/\s+/g, '-') // replace spaces with hyphens
+      .replace(/-+/g, '-') // replace multiple hyphens with single hyphen
+      .replace(/^-+|-+$/g, ''); // remove leading and trailing hyphens
+  }
+
   useEffect(() => {
     if (prevAddState?.loading && !post.state.add.loading) {
       if (post.state.add.success) {
@@ -61,5 +78,6 @@ export function useNewPostBrain() {
     form,
     onSubmit,
     loading,
+    sanitizeSlug,
   };
 }

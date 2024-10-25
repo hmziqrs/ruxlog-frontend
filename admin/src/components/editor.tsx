@@ -46,7 +46,7 @@ const InitializedMDXEditor = forwardRef<any, EditorProps>(
     }, []);
 
     return (
-      <div className="relative w-full">
+      <div className="relative w-full min-h-[200px] h-auto">
         <MDXEditor
           ref={ref}
           className={`w-full prose dark:prose-invert ${className} ${
