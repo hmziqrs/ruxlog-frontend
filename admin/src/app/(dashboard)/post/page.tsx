@@ -49,8 +49,8 @@ const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
 
   return (
     <Card className="relative overflow-hidden">
-      <CardContent className="p-0">
-        <div className="flex flex-col">
+      <CardContent className="flex flex-grow w-full h-full overflow-hidden p-0">
+        <div className="flex flex-col w-full ">
           {/* Image Section with Status Badge */}
           <div className="relative h-48 w-full">
             <img
@@ -70,7 +70,7 @@ const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
           </div>
 
           {/* Content Section */}
-          <div className="flex-1 p-4">
+          <div className="flex-1 p-4 flex-col">
             <div className="mb-4 flex items-start gap-2">
               <Checkbox
                 checked={isSelected}
@@ -120,7 +120,6 @@ const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
                   </span>
                 )}
               </div>
-              <div className="flex flex-grow" />
 
               {/* Tags */}
               {post.tagIds && post.tagIds.length > 0 && (
@@ -136,22 +135,22 @@ const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
                 </div>
               )}
             </div>
+          </div>
+          <div className="flex items-center justify-between gap-2 px-4 mb-4">
+            {/* Publish Toggle */}
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={post.isPublished}
+                onCheckedChange={() => brain.handleTogglePublish?.(post.id)}
+                aria-label="Toggle publish status"
+              />
+              <span className="text-sm text-muted-foreground">
+                {post.isPublished ? 'Unpublish' : 'Publish'}
+              </span>
+            </div>
 
-            {/* Actions */}
-            <div className="mt-4 flex items-center justify-between gap-2">
-              {/* Publish Toggle */}
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={post.isPublished}
-                  onCheckedChange={() => brain.handleTogglePublish?.(post.id)}
-                  aria-label="Toggle publish status"
-                />
-                <span className="text-sm text-muted-foreground">
-                  {post.isPublished ? 'Unpublish' : 'Publish'}
-                </span>
-              </div>
-
-              {/* Action Buttons */}
+            {/* Action Buttons */}
+            <div className="px-4">
               <div className="flex items-center gap-2">
                 <Link href={`/posts/${post.id}/edit`}>
                   <Button size="sm" variant="outline">
