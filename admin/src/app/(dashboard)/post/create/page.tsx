@@ -14,16 +14,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNewPostBrain } from './brain';
-// import { MDXEditor } from '@/components/mdx-editor';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
 import { Editor } from '@/components/editor';
 
 export default function NewPostPage() {
@@ -31,7 +21,7 @@ export default function NewPostPage() {
   const [date, setDate] = useState<Date>();
 
   return (
-    <div className="container py-10">
+    <div className="container py-10 m-auto">
       <Card>
         <CardHeader>
           <CardTitle>Create New Post</CardTitle>
@@ -42,70 +32,39 @@ export default function NewPostPage() {
               onSubmit={brain.form.handleSubmit(brain.onSubmit)}
               className="space-y-8"
             >
-              <div className="grid gap-6 md:grid-cols-2">
-                <FormField
-                  control={brain.form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Post title" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={brain.form.control}
-                  name="slug"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Slug</FormLabel>
-                      <FormControl>
-                        <Input placeholder="post-slug" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
               <FormField
                 control={brain.form.control}
-                name="content"
+                name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Content</FormLabel>
+                    <FormLabel>Title</FormLabel>
                     <FormControl>
-                      <Editor
-                        markdown={field.value}
-                        onChange={field.onChange}
-                      />
+                      <Input placeholder="Post title" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* <FormField
+              <FormField
                 control={brain.form.control}
-                name="content"
+                name="slug"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Content</FormLabel>
+                    <FormLabel>Slug</FormLabel>
                     <FormControl>
-                      <MDXEditor
-                        markdown={field.value}
-                        onChange={field.onChange}
-                        className="min-h-[400px]"
+                      <Input
+                        placeholder="post-slug"
+                        {...field}
+                        onBlur={(e) =>
+                          field.onChange(brain.sanitizeSlug(e.target.value))
+                        }
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
-              /> */}
+              />
 
               <FormField
                 control={brain.form.control}
@@ -164,49 +123,23 @@ export default function NewPostPage() {
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={brain.form.control}
-                  name="publishedAt"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Publish Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={'outline'}
-                              className={cn(
-                                'w-full pl-3 text-left font-normal',
-                                !field.value && 'text-muted-foreground'
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, 'PPP')
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={new Date(field.value || '')}
-                            onSelect={(date) =>
-                              field.onChange(date?.toISOString() || null)
-                            }
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
-
+              <FormField
+                control={brain.form.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Content</FormLabel>
+                    <FormControl>
+                      <Editor
+                        markdown={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <div className="flex justify-end gap-4">
                 <Button variant="outline" type="button">
                   Cancel
