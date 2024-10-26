@@ -17,6 +17,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { useDashboardLayout } from './brain';
+import { Fragment } from 'react';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { breadcrumbs } = useDashboardLayout();
@@ -34,9 +35,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
               </BreadcrumbItem>
               {breadcrumbs.map((breadcrumb, index) => (
-                <>
+                <Fragment key={`${breadcrumb.href}`}>
                   <BreadcrumbSeparator />
-                  <BreadcrumbItem key={`${breadcrumb.href}-${index}`}>
+                  <BreadcrumbItem>
                     {breadcrumb.isLast ? (
                       <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
                     ) : (
@@ -45,7 +46,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       </BreadcrumbLink>
                     )}
                   </BreadcrumbItem>
-                </>
+                </Fragment>
               ))}
             </BreadcrumbList>
           </Breadcrumb>
