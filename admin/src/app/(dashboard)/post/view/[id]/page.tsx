@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Markdown } from '@/components/markdown';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,13 +38,15 @@ export default function PreviewPage({ params }: { params: { id: string } }) {
 
   if (brain.loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex justify-center items-center min-h-screen flex-col-reverse">
+        <Loader2 className="h-14 w-14 animate-spin" />
+        <div className="h-4" />
+        <Image alt="Logo" src="/logo.png" width={200} height={200} />
       </div>
     );
   }
 
-  if (brain.error) {
+  if (!brain.error) {
     return (
       <div className="container mx-auto p-4">
         <Alert
