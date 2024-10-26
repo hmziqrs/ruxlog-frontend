@@ -6,12 +6,35 @@ import { usePost } from '@/store/post';
 
 export type PostBrain = ReturnType<typeof usePostBrain>;
 
+export function usePostItemBrain(id: number) {
+  const posts = usePost();
+  const editState = posts.state.edit[id] ?? {};
+  const prevEditState = usePrev(editState);
+
+  function togglePublish(status: boolean) {
+    posts.actions.edit(id, { isPublished: status });
+  }
+
+  useEffect(() => {
+    if (prevEditState?.loading && !editState.loading) {
+      if (editState.success) {
+        toast.success('Post updated successfully!');
+      } else if (editState.error) {
+        toast.error(editState.message ?? 'Failed to update post');
+      }
+    }
+  }, [posts.state.edit, prevEditState]);
+
+  return {
+    togglePublish,
+    loading: editState.loading,
+  };
+}
+
 export function usePostBrain() {
   const posts = usePost();
   const [selectedPosts, setSelectedPosts] = useState<number[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  // const prevDeleteState = usePrev(posts.state.delete);
-  // const prevToggleState = usePrev(posts.state.togglePublish);
 
   const didMount = useDidMount();
 
@@ -61,10 +84,6 @@ export function usePostBrain() {
   //   posts.actions.list(newFilters);
   // };
 
-  // const handleTogglePublish = (id: number) => {
-  //   posts.actions.togglePublish(id);
-  // };
-
   // const handleDelete = () => {
   //   if (posts.data.selectedPosts.length === 0) return;
   //   posts.actions.delete(posts.data.selectedPosts);
@@ -81,7 +100,6 @@ export function usePostBrain() {
     setSelectedPosts,
     // handleSearch,
     // handleSort,
-    // handleTogglePublish,
     // handleDelete,
     // setViewMode: posts.actions.setViewMode,
     // setSelectedPosts: posts.actions.setSelectedPosts,

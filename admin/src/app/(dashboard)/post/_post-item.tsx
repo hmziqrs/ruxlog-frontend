@@ -14,13 +14,23 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Post } from '@/store/post/types';
-import { usePostBrain, PostBrain } from './brain';
+import { PostBrain, usePostItemBrain } from './brain';
 import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
-import { Pencil, Trash, Eye, Heart, Folder, User, User2 } from 'lucide-react';
+import {
+  Pencil,
+  Trash,
+  Eye,
+  Heart,
+  Folder,
+  User2,
+  BookDashed,
+  BookCheck,
+} from 'lucide-react';
+import { ContentLoader } from '@/components/content-loader';
 
 export const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
+  const postItemBrain = usePostItemBrain(post.id);
   const isSelected = brain.selectedPosts.includes(post.id);
 
   const formatDate = (date: string) => {
@@ -33,7 +43,7 @@ export const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
 
   return (
     <Card className="relative overflow-hidden">
-      <CardContent className="flex flex-grow w-full h-full overflow-hidden p-0">
+      <CardContent className="flex flex-grow w-full h-full overflow-hidden p-0 bg-zinc-900/50">
         <div className="flex flex-col w-full ">
           {/* Image Section with Status Badge */}
           <div className="relative h-48 w-full">
@@ -49,32 +59,22 @@ export const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
 
           {/* Content Section */}
           <div className="flex-1 p-4 flex-col">
-            <div className="flex items-start gap-2">
-              <Checkbox
-                checked={isSelected}
-                onCheckedChange={(checked) => {
-                  brain.setSelectedPosts(
-                    checked
-                      ? [...brain.selectedPosts, post.id]
-                      : brain.selectedPosts.filter((id) => id !== post.id)
-                  );
-                }}
-              />
-              <div className="flex-1">
-                <h3 className="font-semibold line-clamp-1">{post.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
-                  {post.excerpt}
-                </p>
-              </div>
-            </div>
+            <h3 className="font-semibold line-clamp-1">{post.title}</h3>
+            <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+              {post.excerpt}
+            </p>
 
             {/* Meta Information */}
-            <div className="flex-row gap-2">
+            <div className="flex-row gap-2 mt-4">
               <Badge
                 variant={post.isPublished ? 'default' : 'secondary'}
                 className="font-semibold py-2 px-4 gap-2 mr-3 mb-3"
               >
-                <Folder className="h-4 w-4" />
+                {post.isPublished ? (
+                  <BookCheck className="h-4 w-4" />
+                ) : (
+                  <BookDashed className="h-4 w-4" />
+                )}
 
                 <span>{post.isPublished ? 'Published' : 'Draft'}</span>
               </Badge>
@@ -119,7 +119,9 @@ export const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
             <div className="flex items-center gap-2">
               <Switch
                 checked={post.isPublished}
-                onCheckedChange={() => brain.handleTogglePublish?.(post.id)}
+                onCheckedChange={() =>
+                  postItemBrain.togglePublish(!post.isPublished)
+                }
                 aria-label="Toggle publish status"
               />
               <span className="text-sm text-muted-foreground">
@@ -183,6 +185,7 @@ export const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
           </div>
         </div>
       </CardContent>
+      {postItemBrain.loading && <ContentLoader absolute size="sm" />}
     </Card>
   );
 };
