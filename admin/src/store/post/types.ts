@@ -16,12 +16,12 @@ export interface PostState {
 
     edit: { [id: number]: SubState };
 
-    remove: SubState;
+    remove: { [id: number]: SubState };
 
     bulkRemove: SubState;
   };
   data: {
-    view: { [id: number]: Post };
+    view: { [id: number]: Post | null };
 
     list: Post[];
 
@@ -47,7 +47,7 @@ export interface PostActions {
 
     edit: (id: number, payload: PostEditPayload) => void;
 
-    remove: EmptyCallback;
+    remove: (id: number) => void;
 
     bulkRemove: EmptyCallback;
   };

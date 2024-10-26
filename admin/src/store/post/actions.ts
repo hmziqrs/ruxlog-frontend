@@ -80,26 +80,31 @@ export const edit =
     }
   };
 
-export const remove = (set: ImmerAction<PostStore>) => async () => {
-  set((state) => {
-    state.state.remove = { ...subState, loading: true };
-  });
-  try {
-    // Add your API call here
-    set((state) => {
-      state.state.remove = { ...subState, success: true };
-      // Update state.data.remove here
-    });
-  } catch (error) {
+export const remove =
+  (set: ImmerAction<PostStore>) => async (postId: number) => {
     set((state) => {
       state.state.remove = {
-        ...subState,
-        error: true,
-        message: mapCatchError(error),
+        ...state.state.remove,
+        [postId]: { ...subState, loading: true },
       };
     });
-  }
-};
+    try {
+      await api.post('/post/v1/delete/3');
+      set((state) => {
+        state.state.remove[postId] = { ...subState, success: true };
+        state.data.list = state.data.list.filter((item) => item.id !== postId);
+        state.data.view[postId] = null;
+      });
+    } catch (error) {
+      set((state) => {
+        state.state.remove[postId] = {
+          ...subState,
+          error: true,
+          message: mapCatchError(error),
+        };
+      });
+    }
+  };
 
 export const bulkRemove = (set: ImmerAction<PostStore>) => async () => {
   set((state) => {
