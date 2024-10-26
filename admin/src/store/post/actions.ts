@@ -3,7 +3,7 @@ import { mapCatchError } from '@/store/utils';
 import { subState } from '@/store/data';
 import { api } from '@/services/api';
 
-import { Post, PostCreatePayload, PostStore } from './types';
+import { Post, PostCreatePayload, PostEditPayload, PostStore } from './types';
 import { postState } from './data';
 
 export const list = (set: ImmerAction<PostStore>) => async () => {
@@ -49,26 +49,33 @@ export const add =
     }
   };
 
-export const edit = (set: ImmerAction<PostStore>) => async () => {
-  set((state) => {
-    state.state.edit = { ...subState, loading: true };
-  });
-  try {
-    // Add your API call here
-    set((state) => {
-      state.state.edit = { ...subState, success: true };
-      // Update state.data.edit here
-    });
-  } catch (error) {
+export const edit =
+  (set: ImmerAction<PostStore>) =>
+  async (id: number, payload: PostEditPayload) => {
     set((state) => {
       state.state.edit = {
-        ...subState,
-        error: true,
-        message: mapCatchError(error),
+        ...state.state.edit,
+        [id]: { ...subState, loading: true },
       };
     });
-  }
-};
+    try {
+      const res = await api.post<Post>(`/post/v1/update/${id}`, payload);
+      set((state) => {
+        state.state.edit[id] = { ...subState, success: true };
+        state.data.list = state.data.list.map((item) =>
+          item.id === id ? { ...item, ...res.data } : item
+        );
+      });
+    } catch (error) {
+      set((state) => {
+        state.state.edit[id] = {
+          ...subState,
+          error: true,
+          message: mapCatchError(error),
+        };
+      });
+    }
+  };
 
 export const remove = (set: ImmerAction<PostStore>) => async () => {
   set((state) => {

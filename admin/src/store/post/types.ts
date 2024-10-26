@@ -14,7 +14,7 @@ export interface PostState {
 
     add: SubState;
 
-    edit: SubState;
+    edit: { [id: number]: SubState };
 
     remove: SubState;
 
@@ -45,7 +45,7 @@ export interface PostActions {
 
     add: (payload: PostCreatePayload) => void;
 
-    edit: EmptyCallback;
+    edit: (id: number, payload: PostEditPayload) => void;
 
     remove: EmptyCallback;
 
@@ -116,3 +116,5 @@ export interface PostCreatePayload {
   categoryId?: null | number;
   tagIds?: number[];
 }
+
+export interface PostEditPayload extends Partial<PostCreatePayload> {}

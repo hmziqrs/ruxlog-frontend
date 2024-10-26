@@ -9,7 +9,7 @@ export const postState: PostState = {
 
     add: { ...subState },
 
-    edit: { ...subState },
+    edit: {},
 
     remove: { ...subState },
 
