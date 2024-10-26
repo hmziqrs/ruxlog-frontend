@@ -3,6 +3,8 @@ import { PostState } from './types';
 
 export const postState: PostState = {
   state: {
+    view: { ...subState },
+
     list: { ...subState },
 
     add: { ...subState },
@@ -14,6 +16,8 @@ export const postState: PostState = {
     bulkRemove: { ...subState },
   },
   data: {
+    view: null,
+
     list: [],
 
     add: null,

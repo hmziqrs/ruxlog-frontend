@@ -112,6 +112,23 @@ export const bulkRemove = (set: ImmerAction<PostStore>) => async () => {
   }
 };
 
+export const view = (set: ImmerAction<PostStore>) => async () => {
+  set(state => {
+    state.state.view = {...subState, loading: true};
+  });
+  try {
+    // Add your API call here
+    set(state => {
+      state.state.view = {...subState, success: true};
+      // Update state.data.view here
+    });
+  } catch (error) {
+    set(state => {
+      state.state.view = {...subState, error: true};
+    });
+  }
+};
+
 export const reset = (set: ImmerAction<PostStore>) => async () => {
   set((state) => {
     state.state = { ...postState.state };
