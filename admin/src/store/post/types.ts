@@ -21,7 +21,7 @@ export interface PostState {
     bulkRemove: SubState;
   };
   data: {
-    view: EmptyStateDefault;
+    view: { [id: number]: Post };
 
     list: Post[];
 
@@ -39,7 +39,7 @@ export interface PostState {
 
 export interface PostActions {
   actions: BaseActions & {
-    view: EmptyCallback;
+    view: (postId: number) => void;
 
     list: EmptyCallback;
 
