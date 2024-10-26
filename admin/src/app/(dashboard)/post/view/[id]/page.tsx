@@ -1,11 +1,10 @@
 'use client';
-
+import { use } from 'react';
 import { usePreviewBrain } from './brain';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Markdown } from '@/components/markdown';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -23,23 +22,22 @@ import {
 import {
   Pencil,
   Trash,
-  RefreshCw,
   Clock,
   Calendar,
   User,
   Tag,
   Folder,
   Book,
-  Loader2,
-  AlertTriangle,
-  ArrowLeft,
-  FileQuestion,
 } from 'lucide-react';
 import { ContentLoader } from '@/components/content-loader';
 import { ContentError } from '@/components/content-error';
 import { ContentNotFound } from '@/components/content-not-found';
+import { useParams } from 'next/navigation';
 
-export default function PreviewPage({ params }: { params: { id: string } }) {
+// export default function PreviewPage({ params }: { params: { id: string } }) {
+export default function PreviewPage() {
+  const params = useParams<{ id: string }>();
+
   const brain = usePreviewBrain(Number(params.id));
 
   if (brain.loading) {
