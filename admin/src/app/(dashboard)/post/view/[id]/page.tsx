@@ -31,50 +31,41 @@ import {
   Folder,
   Book,
   Loader2,
+  AlertTriangle,
+  ArrowLeft,
+  FileQuestion,
 } from 'lucide-react';
+import { ContentLoader } from '@/components/content-loader';
+import { ContentError } from '@/components/content-error';
+import { ContentNotFound } from '@/components/content-not-found';
 
 export default function PreviewPage({ params }: { params: { id: string } }) {
   const brain = usePreviewBrain(Number(params.id));
 
   if (brain.loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen flex-col-reverse">
-        <Loader2 className="h-14 w-14 animate-spin" />
-        <div className="h-4" />
-        <Image alt="Logo" src="/logo.png" width={200} height={200} />
-      </div>
-    );
+    return <ContentLoader text="Loading post..." />;
   }
 
-  if (!brain.error) {
+  if (brain.error) {
     return (
-      <div className="container mx-auto p-4">
-        <Alert
-          variant="destructive"
-          className="flex items-center justify-between"
-        >
-          <AlertDescription>Failed to load post.</AlertDescription>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.location.reload()}
-            className="ml-4"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Try again
-          </Button>
-        </Alert>
-      </div>
+      <ContentError
+        title="Failed to load post"
+        desc="There was an error loading the post. Please try again."
+        onRetry={() => {}}
+        onBackLink="/post"
+        onBackLabel="Go back"
+      />
     );
   }
 
   if (!brain.post) {
     return (
-      <div className="container mx-auto p-4">
-        <Alert>
-          <AlertDescription>Post not found</AlertDescription>
-        </Alert>
-      </div>
+      <ContentNotFound
+        title="Post not found"
+        desc="The post you're looking for doesn't exist or has been removed."
+        onBackLabel="Back to posts"
+        onBackLink="/post"
+      />
     );
   }
 
