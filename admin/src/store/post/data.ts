@@ -11,7 +11,7 @@ export const postState: PostState = {
 
     edit: {},
 
-    remove: { ...subState },
+    remove: {},
 
     bulkRemove: { ...subState },
   },
