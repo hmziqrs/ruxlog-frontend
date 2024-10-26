@@ -20,6 +20,7 @@ import { useDashboardLayout } from './brain';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { breadcrumbs } = useDashboardLayout();
+  console.log('breadcrumbs', breadcrumbs);
 
   return (
     <SidebarProvider>
@@ -30,11 +31,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <Separator orientation="vertical" className="mr-2 h-4" />
           <Breadcrumb>
             <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
+                {breadcrumbs.length > 0 && <BreadcrumbSeparator />}
+              </BreadcrumbItem>
               {breadcrumbs.map((breadcrumb, index) => (
-                <BreadcrumbItem
-                  key={breadcrumb.href}
-                  className="cursor-pointer"
-                >
+                <BreadcrumbItem key={`${breadcrumb.href}-${index}`}>
                   {breadcrumb.isLast ? (
                     <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
                   ) : (
