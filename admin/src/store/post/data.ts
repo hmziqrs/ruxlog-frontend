@@ -16,7 +16,7 @@ export const postState: PostState = {
     bulkRemove: { ...subState },
   },
   data: {
-    view: null,
+    view: {},
 
     list: [],
 
