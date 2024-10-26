@@ -21,6 +21,7 @@ import {
   sandpackPlugin,
   KitchenSinkToolbar,
   diffSourcePlugin,
+  DirectiveNode,
 } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
 import { forwardRef, useCallback } from 'react';
@@ -84,6 +85,15 @@ export const virtuosoSampleSandpackConfig: SandpackConfig = {
   ],
 };
 
+interface YoutubeDirectiveNode {
+  type: 'leafDirective';
+  name: string;
+  attributes: {
+    id: string;
+  };
+  children: any[];
+}
+
 export const YoutubeDirectiveDescriptor: DirectiveDescriptor<YoutubeDirectiveNode> =
   {
     name: 'youtube',
@@ -117,7 +127,7 @@ export const YoutubeDirectiveDescriptor: DirectiveDescriptor<YoutubeDirectiveNod
             height="315"
             src={`https://www.youtube.com/embed/${mdastNode.attributes.id}`}
             title="YouTube video player"
-            frameBorder="0"
+            style={{ border: 0 }}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           ></iframe>
         </div>
@@ -137,12 +147,13 @@ const InitializedMDXEditor = forwardRef<any, EditorProps>(
     }, []);
 
     return (
-      <div className="relative w-full min-h-[200px] h-auto">
+      <div className="border rounded-md">
         <MDXEditor
           ref={ref}
-          className={`w-full max-w-none prose dark:prose-invert ${className} ${
+          className={`w-full h-full max-w-none prose dark:prose-invert ${className} ${
             isDark ? 'dark-theme' : ''
           }`}
+          contentEditableClassName="min-h-[200px] sm:min-h-[260px] md:min-h-[320px]"
           markdown={markdown}
           onChange={onChange}
           readOnly={readOnly}
