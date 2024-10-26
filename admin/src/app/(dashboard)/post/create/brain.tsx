@@ -21,7 +21,6 @@ const formSchema = z.object({
   excerpt: z.string().nullable(),
   featuredImageUrl: z.string().nullable(),
   isPublished: z.boolean().default(false),
-  publishedAt: z.string().nullable(),
   categoryId: z.number().nullable(),
   tagIds: z.array(z.number()).default([]),
 });
@@ -36,13 +35,12 @@ export function useNewPostBrain() {
   const form = useForm<NewPostFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
-      content: '',
-      slug: '',
-      excerpt: null,
+      title: 'Hellow World!',
+      content: '# Welcome to my blog!',
+      slug: 'hello-world',
+      excerpt: "This is the post's excerpt",
       featuredImageUrl: null,
       isPublished: false,
-      publishedAt: null,
       categoryId: null,
       tagIds: [],
     },
@@ -53,8 +51,7 @@ export function useNewPostBrain() {
   const title = form.watch('title');
 
   async function onSubmit(values: NewPostFormValues) {
-    console.log(values);
-    // await post.actions.add(values);
+    post.actions.add(values);
   }
 
   function sanitizeSlug(text: string): string {
@@ -74,9 +71,9 @@ export function useNewPostBrain() {
 
   useEffect(() => {
     if (prevAddState?.loading && !post.state.add.loading) {
+      console.log('side effecting');
       if (post.state.add.success) {
         toast.success('Post created successfully!');
-        // Optionally redirect to post list
       } else if (post.state.add.error) {
         toast.error(post.state.add.message ?? 'Failed to create post');
       }

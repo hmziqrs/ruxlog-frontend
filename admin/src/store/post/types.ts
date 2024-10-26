@@ -37,7 +37,7 @@ export interface PostActions {
   actions: BaseActions & {
     list: EmptyCallback;
 
-    add: EmptyCallback;
+    add: (payload: PostCreatePayload) => void;
 
     edit: EmptyCallback;
 
@@ -99,3 +99,14 @@ export interface PostFilters {
 }
 
 export interface PostStore extends PostState, PostActions {}
+
+export interface PostCreatePayload {
+  title: string;
+  content: string;
+  slug: string;
+  excerpt?: null | string;
+  featuredImageUrl?: null | string;
+  isPublished?: boolean;
+  categoryId?: null | number;
+  tagIds?: number[];
+}
