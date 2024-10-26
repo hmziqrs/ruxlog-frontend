@@ -1,5 +1,4 @@
 'use client';
-
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -19,7 +18,7 @@ import { usePostBrain, PostBrain } from './brain';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
-import { Pencil, Trash, Eye } from 'lucide-react';
+import { Pencil, Trash, Eye, Heart, Folder, User, User2 } from 'lucide-react';
 
 export const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
   const isSelected = brain.selectedPosts.includes(post.id);
@@ -46,12 +45,6 @@ export const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
               alt={post.title}
               className="h-full w-full object-cover"
             />
-            <Badge
-              variant={post.isPublished ? 'default' : 'secondary'}
-              className="absolute bottom-2 left-2 shadow-md cursor-pointer text-sm px-3 py-1"
-            >
-              {post.isPublished ? 'Published' : 'Draft'}
-            </Badge>
           </div>
 
           {/* Content Section */}
@@ -76,14 +69,50 @@ export const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
             </div>
 
             {/* Meta Information */}
-            <Badge variant="secondary" className="font-semibold py-2 px-4">
-              {post.category?.name || 'Uncategorized'}
-            </Badge>
-            <div className="h-2" />
-            <span className="flex items-center gap-1">
-              <span className="font-medium">Author:</span>
-              {post.author?.name || 'Anonymous'}
-            </span>
+            <div className="flex-row gap-2">
+              <Badge
+                variant={post.isPublished ? 'default' : 'secondary'}
+                className="font-semibold py-2 px-4 gap-2 mr-3 mb-3"
+              >
+                <Folder className="h-4 w-4" />
+
+                <span>{post.isPublished ? 'Published' : 'Draft'}</span>
+              </Badge>
+              <Badge
+                variant="secondary"
+                className="font-semibold py-2 px-4 gap-2 mr-3 mb-3"
+              >
+                <Folder className="h-4 w-4" />
+                {post.category?.name || 'Uncategorized'}f
+              </Badge>
+              <Badge
+                variant="secondary"
+                className="font-semibold py-2 px-4 gap-2 mr-3 mb-3"
+              >
+                <span className="flex items-center gap-1">
+                  <User2 className="h-4 w-4" />
+                  {post.author?.name || 'Anonymous'}
+                </span>
+              </Badge>
+              <Badge
+                variant="secondary"
+                className="font-semibold py-2 px-4 gap-2 mr-3 mb-3"
+              >
+                <span className="flex items-center gap-1">
+                  <Eye className="h-4 w-4" />
+                  {post.viewCount} views
+                </span>
+              </Badge>
+              <Badge
+                variant="secondary"
+                className="font-semibold py-2 px-4 gap-2 mr-3 mb-3"
+              >
+                <span className="flex items-center gap-1">
+                  <Heart className="h-4 w-4" />
+                  {post.likesCount} likes
+                </span>
+              </Badge>
+            </div>
           </div>
           <div className="flex items-center justify-between gap-2 px-4 mb-4">
             {/* Publish Toggle */}
@@ -114,12 +143,6 @@ export const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
                   className="text-muted-foreground"
                   asChild
                 >
-                  {/* <Link
-                    href={{
-                      pathname: '/post/view/[id]',
-                      query: { id: post.id },
-                    }}
-                  > */}
                   <Link href={`/post/view/${post.id}`}>
                     <Eye className="h-4 w-4" />
                     <span className="hidden sm:inline ">View</span>
