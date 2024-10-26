@@ -130,7 +130,7 @@ export const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
             </div>
 
             {/* Action Buttons */}
-            <div className="px-4">
+            <div className="">
               <div className="flex items-center gap-2">
                 <Link href={`/posts/${post.id}/edit`}>
                   <Button size="sm" variant="outline">

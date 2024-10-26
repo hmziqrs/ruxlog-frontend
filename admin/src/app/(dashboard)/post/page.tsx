@@ -18,15 +18,6 @@ export default function PostPage() {
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold">Posts</h1>
-        <Link href="/post/create">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Create post
-          </Button>
-        </Link>
-      </div>
-
       <div className="mb-6 flex items-center gap-4">
         <Input
           placeholder="Search posts..."
@@ -50,22 +41,11 @@ export default function PostPage() {
           </SelectContent>
         </Select>
         <div className="flex-1" />
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => brain.setViewMode('grid')}
-          className={brain.viewMode === 'grid' ? 'bg-accent' : ''}
-        >
-          <LayoutGrid className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => brain.setViewMode('list')}
-          className={brain.viewMode === 'list' ? 'bg-accent' : ''}
-        >
-          <List className="h-4 w-4" />
-        </Button>
+        <Link href="/post/create">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" /> Create post
+          </Button>
+        </Link>
         {brain.selectedPosts.length > 0 && (
           <Button
             variant="destructive"
@@ -84,9 +64,7 @@ export default function PostPage() {
       ) : (
         <div
           className={
-            brain.viewMode === 'grid'
-              ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'
-              : 'flex flex-col gap-4'
+            'grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
           }
         >
           {brain.posts.map((post) => (

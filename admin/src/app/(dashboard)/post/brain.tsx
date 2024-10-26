@@ -34,7 +34,6 @@ export function usePostItemBrain(id: number) {
 export function usePostBrain() {
   const posts = usePost();
   const [selectedPosts, setSelectedPosts] = useState<number[]>([]);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const didMount = useDidMount();
 
@@ -93,9 +92,6 @@ export function usePostBrain() {
     posts: posts.data.list ?? [],
     filters: posts.data.filters,
     loading: posts.state.list.loading,
-
-    viewMode,
-    setViewMode,
     selectedPosts,
     setSelectedPosts,
     // handleSearch,
