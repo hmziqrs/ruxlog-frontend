@@ -65,6 +65,9 @@ export const edit =
         state.data.list = state.data.list.map((item) =>
           item.id === id ? { ...item, ...res.data } : item
         );
+        if (state.data.view[id]) {
+          state.data.view[id] = { ...state.data.view[id], ...res.data };
+        }
       });
     } catch (error) {
       set((state) => {
