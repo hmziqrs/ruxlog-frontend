@@ -5,6 +5,7 @@ import { usePost } from '@/store/post';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { useBoolEngine, usePrev } from '@/hooks/react-hooks';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -31,6 +32,7 @@ export function useNewPostBrain() {
   const autoSlug = useBoolEngine(true);
   const post = usePost();
   const prevAddState = usePrev(post.state.add);
+  const router = useRouter();
 
   const form = useForm<NewPostFormValues>({
     resolver: zodResolver(formSchema),
@@ -73,6 +75,8 @@ export function useNewPostBrain() {
     if (prevAddState?.loading && !post.state.add.loading) {
       console.log('side effecting');
       if (post.state.add.success) {
+        router.push('/post');
+        post.actions.list();
         toast.success('Post created successfully!');
       } else if (post.state.add.error) {
         toast.error(post.state.add.message ?? 'Failed to create post');
