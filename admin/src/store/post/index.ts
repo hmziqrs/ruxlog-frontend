@@ -10,6 +10,8 @@ export const usePost = create(
     return {
       ...postState,
       actions: {
+        view: actions.view(set),
+
 
         list: actions.list(set),
 

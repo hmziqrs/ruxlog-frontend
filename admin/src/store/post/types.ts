@@ -8,6 +8,8 @@ import {
 
 export interface PostState {
   state: {
+    view: SubState;
+
     list: SubState;
 
     add: SubState;
@@ -19,6 +21,8 @@ export interface PostState {
     bulkRemove: SubState;
   };
   data: {
+    view: EmptyStateDefault;
+
     list: Post[];
 
     add: EmptyStateDefault;
@@ -35,6 +39,8 @@ export interface PostState {
 
 export interface PostActions {
   actions: BaseActions & {
+    view: EmptyCallback;
+
     list: EmptyCallback;
 
     add: (payload: PostCreatePayload) => void;
