@@ -114,9 +114,15 @@ export const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
                   className="text-muted-foreground"
                   asChild
                 >
-                  <Link href={`/preview/${post.id}`}>
+                  {/* <Link
+                    href={{
+                      pathname: '/post/view/[id]',
+                      query: { id: post.id },
+                    }}
+                  > */}
+                  <Link href={`/post/view/${post.id}`}>
                     <Eye className="h-4 w-4" />
-                    <span className="hidden sm:inline ml-2">Preview</span>
+                    <span className="hidden sm:inline ">View</span>
                   </Link>
                 </Button>
 
