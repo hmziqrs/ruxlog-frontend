@@ -26,21 +26,28 @@ export const TagItem = ({ tag }: { tag: Tag; brain: TagBrain }) => {
         <div className="text-sm font-medium text-zinc-100">{tag.name}</div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">
+        {tag.slug}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">
         {tag.description}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">
+        {new Date(tag.createdAt).toLocaleDateString()}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">
+        {new Date(tag.updatedAt).toLocaleDateString()}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-400">
         <div className="flex items-center gap-2">
           <Link href={`/tag/update/${tag.id}`}>
             <Button size="sm" variant="outline">
               <Pencil className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">Edit</span>
             </Button>
           </Link>
 
           <Button size="sm" variant="outline" asChild>
             <Link href={`/tag/view/${tag.id}`}>
               <Eye className="h-4 w-4" />
-              <span className="hidden sm:inline ">View</span>
             </Link>
           </Button>
 
@@ -48,7 +55,6 @@ export const TagItem = ({ tag }: { tag: Tag; brain: TagBrain }) => {
             <AlertDialogTrigger asChild>
               <Button size="sm" variant="destructive">
                 <Trash className="h-4 w-4" />
-                <span className="hidden sm:inline ml-2">Delete</span>
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>

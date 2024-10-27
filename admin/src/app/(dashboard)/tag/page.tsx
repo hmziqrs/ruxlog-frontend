@@ -38,7 +38,16 @@ export default function TagPage() {
                   Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                  Slug
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                   Description
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                  Created At
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                  Updated At
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
                   Actions
