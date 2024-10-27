@@ -131,7 +131,7 @@ export const PostItem = ({ post }: { post: Post; brain: PostBrain }) => {
             {/* Action Buttons */}
             <div className="">
               <div className="flex items-center gap-2">
-                <Link href={`/posts/${post.id}/edit`}>
+                <Link href={`/post/update/${post.id}`}>
                   <Button size="sm" variant="outline">
                     <Pencil className="h-4 w-4" />
                     <span className="hidden sm:inline ml-2">Edit</span>

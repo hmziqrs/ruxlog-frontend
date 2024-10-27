@@ -34,10 +34,8 @@ import { ContentError } from '@/components/content-error';
 import { ContentNotFound } from '@/components/content-not-found';
 import { useParams } from 'next/navigation';
 
-// export default function PreviewPage({ params }: { params: { id: string } }) {
 export default function PreviewPage() {
   const params = useParams<{ id: string }>();
-
   const brain = usePreviewBrain(Number(params.id));
 
   if (brain.loading) {

@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useBlogFormBrain } from './brain';
+import { useBlogFormBrain, BlogFormValues } from './brain';
 import { Editor } from '@/components/editor';
 
 export function BlogForm({
@@ -22,13 +22,15 @@ export function BlogForm({
   submitLabel,
   loading,
   onSubmit,
+  post,
 }: {
+  post: BlogFormValues;
   title: string;
   submitLabel: string;
   loading: boolean;
   onSubmit: (data: any) => void;
 }) {
-  const brain = useBlogFormBrain({ onSubmit });
+  const brain = useBlogFormBrain({ onSubmit, defaultValues: post });
   return (
     <Card>
       <CardHeader>
