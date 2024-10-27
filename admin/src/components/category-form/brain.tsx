@@ -24,10 +24,10 @@ export type CategoryFormValues = z.infer<typeof formSchema>;
 const _defaultValues: CategoryFormValues = {
   name: '',
   slug: '',
-  description: '',
-  // coverImage: null,
-  // logoImage: null,
-  // parentId: null,
+  description: null,
+  coverImage: null,
+  logoImage: null,
+  parentId: null,
 };
 
 export function useCategoryFormBrain({
@@ -39,7 +39,7 @@ export function useCategoryFormBrain({
 }) {
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: defaultValues ?? _defaultValues,
+    defaultValues: { ..._defaultValues, ...defaultValues },
   });
   const name = form.watch('name');
   const onFormSubmit = form.handleSubmit(onSubmit);
@@ -62,6 +62,6 @@ export function useCategoryFormBrain({
   return {
     form,
     sanitizeSlug,
-    onSubmit: onFormSubmit,
+    onFormSubmit,
   };
 }
