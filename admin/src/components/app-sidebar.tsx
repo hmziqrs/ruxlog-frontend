@@ -49,7 +49,7 @@ const items = [
   {
     title: 'Tags',
     icon: Tags,
-    href: '/tags',
+    href: '/tag',
   },
 ];
 
