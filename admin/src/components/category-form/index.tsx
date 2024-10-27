@@ -35,10 +35,7 @@ export function CategoryForm({
       </CardHeader>
       <CardContent>
         <Form {...brain.form}>
-          <form
-            onSubmit={brain.form.handleSubmit(brain.onSubmit)}
-            className="space-y-8"
-          >
+          <form onSubmit={brain.onFormSubmit} className="space-y-8">
             <FormField
               control={brain.form.control}
               name="name"
