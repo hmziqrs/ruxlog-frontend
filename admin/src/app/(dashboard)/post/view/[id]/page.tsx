@@ -1,5 +1,4 @@
 'use client';
-import { use } from 'react';
 import { usePreviewBrain } from './brain';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -7,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Markdown } from '@/components/markdown';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,7 +36,7 @@ export default function PreviewPage() {
   const params = useParams<{ id: string }>();
   const brain = usePreviewBrain(Number(params.id));
 
-  if (brain.loading) {
+  if (brain.loading && !brain.post) {
     return <ContentLoader text="Loading post..." />;
   }
 
@@ -73,109 +71,112 @@ export default function PreviewPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      {/* Control Bar */}
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-4">
-          <Switch
-            checked={brain.post.isPublished}
-            onCheckedChange={brain.handleTogglePublish}
-          />
-          <span className="text-sm text-muted-foreground">
-            {brain.post.isPublished ? 'Published' : 'Draft'}
-          </span>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href={`/post/${params.id}/edit`}>
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit
-            </Link>
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">
-                <Trash className="h-4 w-4 mr-2" />
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete
-                  this post and remove it from our servers.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+    <>
+      <div className="container mx-auto py-8 px-4">
+        {/* Control Bar */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-4">
+            <Switch
+              checked={brain.post.isPublished}
+              onCheckedChange={brain.handleTogglePublish}
+            />
+            <span className="text-sm text-muted-foreground">
+              {brain.post.isPublished ? 'Published' : 'Draft'}
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href={`/post/update/${params.id}`}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit
+              </Link>
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">
+                  <Trash className="h-4 w-4 mr-2" />
                   Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    this post and remove it from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
-      </div>
 
-      {/* Featured Image */}
-      {brain.post.featuredImageUrl && (
-        <div className="mb-8">
-          <img
-            src={brain.post.featuredImageUrl}
-            alt={brain.post.title}
-            className="w-full h-[400px] object-cover rounded-lg"
-          />
-        </div>
-      )}
+        {/* Featured Image */}
+        {brain.post.featuredImageUrl && (
+          <div className="mb-8">
+            <img
+              src={brain.post.featuredImageUrl}
+              alt={brain.post.title}
+              className="w-full h-[400px] object-cover rounded-lg"
+            />
+          </div>
+        )}
 
-      {/* Content */}
-      <Card className="p-8">
-        <h1 className="text-4xl font-bold mb-6">{brain.post.title}</h1>
+        {/* Content */}
+        <Card className="p-8">
+          <h1 className="text-4xl font-bold mb-6">{brain.post.title}</h1>
 
-        {/* Meta Information */}
-        <div className="flex flex-wrap gap-4 mb-8 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <User className="h-4 w-4" />
-            {brain.post.author?.name ?? 'Anonymous'}
-          </div>
-          <div className="flex items-center gap-1">
-            <Calendar className="h-4 w-4" />
-            {new Date(brain.post.createdAt).toLocaleDateString()}
-          </div>
-          <div className="flex items-center gap-1">
-            <Clock className="h-4 w-4" />
-            {new Date(brain.post.updatedAt).toLocaleDateString()}
-          </div>
-          <div className="flex items-center gap-1">
-            <Book className="h-4 w-4" />
-            {calculateReadingTime(brain.post.content)}
-          </div>
-          {brain.post.category && (
+          {/* Meta Information */}
+          <div className="flex flex-wrap gap-4 mb-8 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
-              <Folder className="h-4 w-4" />
-              <Badge variant="secondary">{brain.post.category.name}</Badge>
+              <User className="h-4 w-4" />
+              {brain.post.author?.name ?? 'Anonymous'}
             </div>
-          )}
-          {brain.post?.tags?.length > 0 && (
             <div className="flex items-center gap-1">
-              <Tag className="h-4 w-4" />
-              <div className="flex gap-1">
-                {brain.post.tags.map((tag) => (
-                  <Badge key={tag.id} variant="outline">
-                    {tag.name}
-                  </Badge>
-                ))}
+              <Calendar className="h-4 w-4" />
+              {new Date(brain.post.createdAt).toLocaleDateString()}
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="h-4 w-4" />
+              {new Date(brain.post.updatedAt).toLocaleDateString()}
+            </div>
+            <div className="flex items-center gap-1">
+              <Book className="h-4 w-4" />
+              {calculateReadingTime(brain.post.content)}
+            </div>
+            {brain.post.category && (
+              <div className="flex items-center gap-1">
+                <Folder className="h-4 w-4" />
+                <Badge variant="secondary">{brain.post.category.name}</Badge>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+            {brain.post?.tags?.length > 0 && (
+              <div className="flex items-center gap-1">
+                <Tag className="h-4 w-4" />
+                <div className="flex gap-1">
+                  {brain.post.tags.map((tag) => (
+                    <Badge key={tag.id} variant="outline">
+                      {tag.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
-        {/* Markdown Content */}
-        <div className="prose dark:prose-invert max-w-none">
-          <Markdown>{brain.post.content}</Markdown>
-        </div>
-      </Card>
-    </div>
+          {/* Markdown Content */}
+          <div className="prose dark:prose-invert max-w-none">
+            <Markdown>{brain.post.content}</Markdown>
+          </div>
+        </Card>
+      </div>
+      {brain.loading && <ContentLoader text="Loading post..." absolute />}
+    </>
   );
 }
