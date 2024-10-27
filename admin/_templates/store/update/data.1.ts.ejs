@@ -1,5 +1,5 @@
 ---
-to: store/<%= h.changeCase.lower(name) %>/data.ts
+to: src/store/<%= h.changeCase.lower(name) %>/data.ts
 inject: true
 after: "data: {"
 skip_if: "<%= h.changeCase.camel(newState) %>: null"

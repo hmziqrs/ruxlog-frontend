@@ -1,6 +1,6 @@
 import { ImmerAction, ImmerState } from '@/store/types';
-import { subState } from '@/store/data';
 import { mapCatchError } from '@/store/utils';
+import { subState } from '@/store/data';
 import { api } from '@/services/api';
 
 import { AuthLoginPayload, AuthStore, User } from './types';
@@ -34,7 +34,7 @@ export const init = (set: ImmerAction<AuthStore>) => async () => {
         ...subState,
         error: true,
         init: true,
-        message: mapCatchError(error)
+        message: mapCatchError(error),
       };
     });
   }
@@ -63,7 +63,7 @@ export const login =
         state.state.login = {
           ...subState,
           error: true,
-          message: mapCatchError(error, 'Error while trying to login')
+          message: mapCatchError(error, 'Error while trying to login'),
         };
       });
     }
