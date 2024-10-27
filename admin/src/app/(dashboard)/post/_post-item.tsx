@@ -29,9 +29,8 @@ import {
 } from 'lucide-react';
 import { ContentLoader } from '@/components/content-loader';
 
-export const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
+export const PostItem = ({ post }: { post: Post; brain: PostBrain }) => {
   const postItemBrain = usePostItemBrain(post.id);
-  const isSelected = brain.selectedPosts.includes(post.id);
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -139,12 +138,7 @@ export const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
                   </Button>
                 </Link>
 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-muted-foreground"
-                  asChild
-                >
+                <Button size="sm" variant="outline" asChild>
                   <Link href={`/post/view/${post.id}`}>
                     <Eye className="h-4 w-4" />
                     <span className="hidden sm:inline ">View</span>
@@ -173,7 +167,7 @@ export const PostItem = ({ post, brain }: { post: Post; brain: PostBrain }) => {
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        onClick={() => brain.handleDelete?.(post.id)}
+                        onClick={() => postItemBrain.removePost()}
                       >
                         Delete
                       </AlertDialogAction>
