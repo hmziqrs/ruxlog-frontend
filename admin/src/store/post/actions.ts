@@ -89,7 +89,7 @@ export const remove =
       };
     });
     try {
-      await api.post('/post/v1/delete/3');
+      await api.post(`/post/v1/delete/${postId}`);
       set((state) => {
         state.state.remove[postId] = { ...subState, success: true };
         state.data.list = state.data.list.filter((item) => item.id !== postId);

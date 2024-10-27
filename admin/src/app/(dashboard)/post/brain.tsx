@@ -9,10 +9,16 @@ export type PostBrain = ReturnType<typeof usePostBrain>;
 export function usePostItemBrain(id: number) {
   const posts = usePost();
   const editState = posts.state.edit[id] ?? {};
+  const removeState = posts.state.remove[id] ?? {};
   const prevEditState = usePrev(editState);
+  const prevRemoveState = usePrev(removeState);
 
   function togglePublish(status: boolean) {
     posts.actions.edit(id, { isPublished: status });
+  }
+
+  function removePost() {
+    posts.actions.remove(id);
   }
 
   useEffect(() => {
@@ -25,9 +31,20 @@ export function usePostItemBrain(id: number) {
     }
   }, [posts.state.edit, prevEditState]);
 
+  useEffect(() => {
+    if (prevRemoveState?.loading && !removeState.loading) {
+      if (removeState.success) {
+        toast.success('Post deleted successfully!');
+      } else if (removeState.error) {
+        toast.error(removeState.message ?? 'Failed to delete post');
+      }
+    }
+  }, [posts.state.remove, prevRemoveState]);
+
   return {
+    removePost,
     togglePublish,
-    loading: editState.loading,
+    loading: editState.loading || removeState.loading,
   };
 }
 

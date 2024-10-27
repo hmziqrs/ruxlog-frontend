@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select';
 import { usePostBrain } from './brain';
 import Link from 'next/link';
-import { LayoutGrid, List, Loader2, Plus, Trash, Eye } from 'lucide-react';
+import { Loader2, Plus, Trash } from 'lucide-react';
 import { PostItem } from './_post-item';
 
 export default function PostPage() {
@@ -63,9 +63,7 @@ export default function PostPage() {
         </div>
       ) : (
         <div
-          className={
-            'grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-          }
+          className={'grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}
         >
           {brain.posts.map((post) => (
             <PostItem key={post.id} post={post} brain={brain} />
