@@ -17,6 +17,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { useDashboardLayout } from './brain';
+import { Fragment } from 'react';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { breadcrumbs } = useDashboardLayout();
@@ -29,23 +30,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <Breadcrumb>
-            <BreadcrumbList>
+            <BreadcrumbList key={`bd-list ${Breadcrumb.length}`}>
+              <BreadcrumbItem key={`bd-item init ${Breadcrumb.length}`}>
+                <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
+              </BreadcrumbItem>
               {breadcrumbs.map((breadcrumb, index) => (
-                <BreadcrumbItem
-                  key={breadcrumb.href}
-                  className="cursor-pointer"
-                >
-                  {breadcrumb.isLast ? (
-                    <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
-                  ) : (
-                    <>
+                <Fragment key={`${breadcrumb.href}`}>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    {breadcrumb.isLast ? (
+                      <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
+                    ) : (
                       <BreadcrumbLink href={breadcrumb.href}>
                         {breadcrumb.label}
                       </BreadcrumbLink>
-                      <BreadcrumbSeparator />
-                    </>
-                  )}
-                </BreadcrumbItem>
+                    )}
+                  </BreadcrumbItem>
+                </Fragment>
               ))}
             </BreadcrumbList>
           </Breadcrumb>

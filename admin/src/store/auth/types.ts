@@ -3,7 +3,7 @@ import {
   SubState,
   EmptyCallback,
   EmptyState,
-  EmptyStateDefault
+  EmptyStateDefault,
 } from '@/store/types';
 
 export interface AuthState {
