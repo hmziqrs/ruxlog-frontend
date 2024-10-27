@@ -32,7 +32,7 @@ const items = [
     href: '/users',
   },
   {
-    title: 'Post',
+    title: 'Posts',
     icon: BookOpen,
     href: '/post',
   },
@@ -44,7 +44,7 @@ const items = [
   {
     title: 'Categories',
     icon: FolderTree,
-    href: '/categories',
+    href: '/category',
   },
   {
     title: 'Tags',
