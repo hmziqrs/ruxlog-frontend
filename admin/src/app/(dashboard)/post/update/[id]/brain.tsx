@@ -18,7 +18,7 @@ export function useUpdatePostBrain(postId: number) {
   const post = posts.data.view[postId];
 
   function onSubmit(data: any) {
-    console.log('asa', data);
+    posts.actions.edit(postId, data);
   }
 
   useEffect(() => {

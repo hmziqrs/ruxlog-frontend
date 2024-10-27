@@ -48,9 +48,7 @@ export function useBlogFormBrain({
     defaultValues: defaultValues ?? _defaultValues,
   });
   const title = form.watch('title');
-  function onFormSubmit() {
-    form.handleSubmit(onSubmit);
-  }
+  const onFormSubmit = form.handleSubmit(onSubmit);
 
   function sanitizeSlug(text: string): string {
     return text
