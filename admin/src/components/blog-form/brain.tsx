@@ -48,7 +48,6 @@ export function useBlogFormBrain({
     defaultValues: defaultValues ?? _defaultValues,
   });
   const title = form.watch('title');
-
   function onFormSubmit() {
     form.handleSubmit(onSubmit);
   }

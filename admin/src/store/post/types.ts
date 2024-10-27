@@ -8,7 +8,7 @@ import {
 
 export interface PostState {
   state: {
-    view: SubState;
+    view: { [id: number]: SubState };
 
     list: SubState;
 
