@@ -1,9 +1,10 @@
 import { ImmerAction, ImmerState } from '@/store/types';
 import { mapCatchError } from '@/store/utils';
+import { User } from '@/store/user/types';
 import { subState } from '@/store/data';
 import { api } from '@/services/api';
 
-import { AuthLoginPayload, AuthStore, User } from './types';
+import { AuthLoginPayload, AuthStore } from './types';
 import { authState } from './data';
 import * as utils from './utils';
 
