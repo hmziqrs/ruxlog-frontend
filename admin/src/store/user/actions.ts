@@ -1,71 +1,81 @@
-import {ImmerAction, ImmerState} from '@/store/types';
+import { ImmerAction, ImmerState } from '@/store/types';
 import { mapCatchError } from '@/store/utils';
-import {subState} from '@/store/data';
-import {api} from '@/services/api';
+import { subState } from '@/store/data';
+import { api } from '@/services/api';
 
-import {UserStore } from './types';
-import {userState} from './data';
+import { User, UserAddPayload, UserEditPayload, UserStore } from './types';
+import { userState } from './data';
 
-
-
-
-export const add = (set: ImmerAction<UserStore>) => async () => {
-  set(state => {
-    state.state.add = {...subState, loading: true};
-  });
-  try {
-    // Add your API call here
-    set(state => {
-      state.state.add = {...subState, success: true};
-      // Update state.data.add here
+export const add =
+  (set: ImmerAction<UserStore>) => async (payload: UserAddPayload) => {
+    set((state) => {
+      state.state.add = { ...subState, loading: true };
     });
-  } catch (error) {
-    set(state => {
-      state.state.add = {
-        ...subState,
-        error: true,
-        message: mapCatchError(error),
-      };
-    });
-  }
-};
+    try {
+      const res = await api.post<User>('/admin/user/v1/create', payload);
+      set((state) => {
+        state.state.add = { ...subState, success: true };
+        state.data.list = [res.data, ...state.data.list];
+      });
+    } catch (error) {
+      set((state) => {
+        state.state.add = {
+          ...subState,
+          error: true,
+          message: mapCatchError(error),
+        };
+      });
+    }
+  };
 
-
-export const edit = (set: ImmerAction<UserStore>) => async () => {
-  set(state => {
-    state.state.edit = {...subState, loading: true};
-  });
-  try {
-    // Add your API call here
-    set(state => {
-      state.state.edit = {...subState, success: true};
-      // Update state.data.edit here
-    });
-  } catch (error) {
-    set(state => {
+export const edit =
+  (set: ImmerAction<UserStore>) =>
+  async (id: number, payload: UserEditPayload) => {
+    set((state) => {
       state.state.edit = {
-        ...subState,
-        error: true,
-        message: mapCatchError(error),
+        ...state.state.edit,
+        [id]: { ...subState, loading: true },
       };
     });
-  }
-};
+    try {
+      const res = await api.post<User>(`/admin/user/v1/update/${id}`, payload);
+      set((state) => {
+        state.state.edit[id] = { ...subState, success: true };
+        state.data.list = state.data.list.map((user) =>
+          user.id === id ? res.data : user
+        );
+        if (state.data.view[id]) {
+          state.data.view[id] = res.data;
+        }
+      });
+    } catch (error) {
+      set((state) => {
+        state.state.edit[id] = {
+          ...subState,
+          error: true,
+          message: mapCatchError(error),
+        };
+      });
+    }
+  };
 
-
-export const remove = (set: ImmerAction<UserStore>) => async () => {
-  set(state => {
-    state.state.remove = {...subState, loading: true};
+export const remove = (set: ImmerAction<UserStore>) => async (id: number) => {
+  set((state) => {
+    state.state.remove = {
+      ...state.state.remove,
+      [id]: { ...subState, loading: true },
+    };
   });
   try {
-    // Add your API call here
-    set(state => {
-      state.state.remove = {...subState, success: true};
-      // Update state.data.remove here
+    await api.post(`/admin/user/v1/delete/${id}`);
+    set((state) => {
+      state.state.remove[id] = { ...subState, success: true };
+      state.data.list = state.data.list.filter((user) => user.id !== id);
+      delete state.data.view[id];
     });
   } catch (error) {
-    set(state => {
-      state.state.remove = {
+    set((state) => {
+      state.state.remove[id] = {
         ...subState,
         error: true,
         message: mapCatchError(error),
@@ -73,20 +83,19 @@ export const remove = (set: ImmerAction<UserStore>) => async () => {
     });
   }
 };
-
 
 export const list = (set: ImmerAction<UserStore>) => async () => {
-  set(state => {
-    state.state.list = {...subState, loading: true};
+  set((state) => {
+    state.state.list = { ...subState, loading: true };
   });
   try {
-    // Add your API call here
-    set(state => {
-      state.state.list = {...subState, success: true};
-      // Update state.data.list here
+    const res = await api.get<User[]>('/admin/user/v1/list');
+    set((state) => {
+      state.state.list = { ...subState, success: true };
+      state.data.list = res.data;
     });
   } catch (error) {
-    set(state => {
+    set((state) => {
       state.state.list = {
         ...subState,
         error: true,
@@ -96,20 +105,22 @@ export const list = (set: ImmerAction<UserStore>) => async () => {
   }
 };
 
-
-export const view = (set: ImmerAction<UserStore>) => async () => {
-  set(state => {
-    state.state.view = {...subState, loading: true};
+export const view = (set: ImmerAction<UserStore>) => async (id: number) => {
+  set((state) => {
+    state.state.view = {
+      ...state.state.view,
+      [id]: { ...subState, loading: true },
+    };
   });
   try {
-    // Add your API call here
-    set(state => {
-      state.state.view = {...subState, success: true};
-      // Update state.data.view here
+    const res = await api.get<User>(`/admin/user/v1/view/${id}`);
+    set((state) => {
+      state.state.view[id] = { ...subState, success: true };
+      state.data.view[id] = res.data;
     });
   } catch (error) {
-    set(state => {
-      state.state.view = {
+    set((state) => {
+      state.state.view[id] = {
         ...subState,
         error: true,
         message: mapCatchError(error),
@@ -117,33 +128,10 @@ export const view = (set: ImmerAction<UserStore>) => async () => {
     });
   }
 };
-
-
-export const change_password = (set: ImmerAction<UserStore>) => async () => {
-  set(state => {
-    state.state.change_password = {...subState, loading: true};
-  });
-  try {
-    // Add your API call here
-    set(state => {
-      state.state.change_password = {...subState, success: true};
-      // Update state.data.change_password here
-    });
-  } catch (error) {
-    set(state => {
-      state.state.change_password = {
-        ...subState,
-        error: true,
-        message: mapCatchError(error),
-      };
-    });
-  }
-};
-
 
 export const reset = (set: ImmerAction<UserStore>) => async () => {
-  set(state => {
-    state.state = {...userState.state};
-    state.data = {...userState.data};
+  set((state) => {
+    state.state = { ...userState.state };
+    state.data = { ...userState.data };
   });
 };
