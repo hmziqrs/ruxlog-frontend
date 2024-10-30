@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <header className="bg-zinc-900/50 p-4">
-        <div className="container mx-auto flex  items-center">
+      <header className="dark:bg-zinc-900/50 p-4">
+        <div className="container mx-auto flex items-center">
           <Link href="/" className="flex justify-center items-center">
             <Image src="/logo.png" width={60} height={60} alt="logo" />
           </Link>
@@ -21,11 +22,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               Contact
             </Link>
             <span>Profile Icon</span>
+            <ThemeToggle />
           </div>
         </div>
       </header>
       <div className="flex flex-grow container mx-auto">{children}</div>
-      <footer className="bg-zinc-900/50 p-8">
+      <footer className="dark:bg-zinc-900/50 p-8">
         <div className="container mx-auto flex flex-col items-center">
           <div className="font-mono text-sm">
             &copy; {new Date().getFullYear()}, Built with Tailwind CSS, Next.js

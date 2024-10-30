@@ -7,10 +7,8 @@ export function ThemeToggle() {
 
   useEffect(() => {
     const root = window.document.documentElement;
-    const initialColorValue = root.style.getPropertyValue(
-      '--initial-color-mode'
-    );
-    setIsDarkMode(initialColorValue === 'dark');
+    const initialColorValue = root.classList.contains('dark');
+    setIsDarkMode(initialColorValue);
   }, []);
 
   useEffect(() => {
