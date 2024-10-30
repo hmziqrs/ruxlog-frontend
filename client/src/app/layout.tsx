@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
-import { ThemeToggle } from '@/components/theme-toggle';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -25,38 +24,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                function getInitialColorMode() {
-                  const persistedColorPreference = window.localStorage.getItem('theme');
-                  const hasPersistedPreference = typeof persistedColorPreference === 'string';
-                  if (hasPersistedPreference) {
-                    return persistedColorPreference;
-                  }
-                  const mql = window.matchMedia('(prefers-color-scheme: dark)');
-                  const hasMediaQueryPreference = typeof mql.matches === 'boolean';
-                  if (hasMediaQueryPreference) {
-                    return mql.matches ? 'dark' : 'light';
-                  }
-                  return 'light';
-                }
-                const colorMode = getInitialColorMode();
-                const root = document.documentElement;
-                root.style.setProperty('--initial-color-mode', colorMode);
-                if (colorMode === 'dark') root.classList.add('dark');
-              })();
-            `,
-          }}
-        />
-      </head>
+    <html lang="en" className="dark h-full" style={{ colorScheme: 'dark' }}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full flex flex-col dark:text-white text-black`}
       >
-        <ThemeToggle />
         {children}
       </body>
     </html>
