@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@radix-ui/react-switch';
 
 export function UserForm({
   title,
@@ -35,6 +36,7 @@ export function UserForm({
   onSubmit: (data: any) => void;
 }) {
   const brain = useUserFormBrain({ onSubmit, defaultValues: user });
+  const isUpdate = !!user;
   return (
     <Card>
       <CardHeader>
@@ -73,6 +75,20 @@ export function UserForm({
 
             <FormField
               control={brain.form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password {isUpdate && '(optional)'}</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="Password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={brain.form.control}
               name="role"
               render={({ field }) => (
                 <FormItem>
@@ -99,35 +115,22 @@ export function UserForm({
               )}
             />
 
-            <FormField
+            {/* <FormField
               control={brain.form.control}
               name="avatar"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Avatar URL</FormLabel>
                   <FormControl>
-                    {/* <Input placeholder="Avatar URL" {...field} /> */}
+                    <Input placeholder="Avatar URL" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
-            />
-
-            <FormField
-              control={brain.form.control}
-              name="isVerified"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Verified</FormLabel>
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+            /> */}
+            <Switch
+              checked={true}
+              // onCheckedChange={brain.handleTogglePublish}
             />
 
             <div className="flex justify-end gap-4">

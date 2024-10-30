@@ -89,7 +89,7 @@ export const list = (set: ImmerAction<UserStore>) => async () => {
     state.state.list = { ...subState, loading: true };
   });
   try {
-    const res = await api.get<User[]>('/admin/user/v1/list');
+    const res = await api.post<User[]>('/admin/user/v1/list', {});
     set((state) => {
       state.state.list = { ...subState, success: true };
       state.data.list = res.data;
