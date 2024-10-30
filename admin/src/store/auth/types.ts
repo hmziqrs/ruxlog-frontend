@@ -5,6 +5,7 @@ import {
   EmptyState,
   EmptyStateDefault,
 } from '@/store/types';
+import { User } from '@/store/user/types';
 
 export interface AuthState {
   state: {
@@ -36,22 +37,6 @@ export interface AuthActions {
 }
 
 export interface AuthStore extends AuthState, AuthActions {}
-
-export type UserRoles =
-  | 'super-admin'
-  | 'admin'
-  | 'moderator'
-  | 'author'
-  | 'user';
-
-export interface User {
-  avatar: string | null;
-  email: string;
-  id: number;
-  isVerified: boolean;
-  name: string;
-  role: UserRoles;
-}
 
 export interface AuthLoginPayload {
   email: string;

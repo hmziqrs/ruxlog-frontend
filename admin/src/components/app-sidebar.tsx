@@ -29,7 +29,7 @@ const items = [
   {
     title: 'Users',
     icon: Users,
-    href: '/users',
+    href: '/user',
   },
   {
     title: 'Posts',
