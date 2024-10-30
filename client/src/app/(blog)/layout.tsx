@@ -1,23 +1,26 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <header className="bg-zinc-900/50 p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <div className="text-lg">Geist</div>
-            <div className="flex space-x-4">
-              <a href="#" className="hover:underline">
-                About
-              </a>
-              <a href="#" className="hover:underline">
-                Contact
-              </a>
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="text-lg">Profile Icon</div>
+        <div className="container mx-auto flex  items-center">
+          <Link href="/" className="flex justify-center items-center">
+            <Image src="/logo.png" width={60} height={60} alt="logo" />
+          </Link>
+          <div className="flex-grow" />
+          <div className="space-x-4 text-md">
+            {/* <Link href="/" className="hover:underline">
+              Home
+            </Link> */}
+            <Link href="/about" className="hover:underline">
+              About
+            </Link>
+            <Link href="/contact" className="hover:underline">
+              Contact
+            </Link>
+            <span>Profile Icon</span>
           </div>
         </div>
       </header>
