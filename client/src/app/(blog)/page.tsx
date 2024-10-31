@@ -56,7 +56,7 @@ export default async function BlogPage({ searchParams }: Props) {
       <main className="container mx-auto py-8 px-5">
         <div className="space-y-6">
           {posts.map((post) => (
-            <Link href={`/blog/${post.slug}`} key={post.id}>
+            <a href={`/post/${post.slug}`} key={post.id}>
               <article
                 key={post.id}
                 className="p-5 bg-zinc-50/50 dark:bg-zinc-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow"
@@ -98,7 +98,7 @@ export default async function BlogPage({ searchParams }: Props) {
                   ))}
                 </footer>
               </article>
-            </Link>
+            </a>
           ))}
         </div>
 
