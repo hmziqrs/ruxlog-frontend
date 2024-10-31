@@ -37,9 +37,7 @@ export default async function BlogPage({ searchParams }: Props) {
 
     const response = await api.post<PostListResponse>(
       '/post/v1/list/published',
-      {
-        page,
-      }
+      { page }
     );
 
     const { data: posts, total, perPage } = response;
@@ -58,47 +56,49 @@ export default async function BlogPage({ searchParams }: Props) {
       <main className="container mx-auto py-8 px-5">
         <div className="space-y-6">
           {posts.map((post) => (
-            <article
-              key={post.id}
-              className="p-5 bg-zinc-50/50 dark:bg-zinc-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-            >
-              <header className="">
-                <h2 className="text-2xl font-semibold">{post.title}</h2>
-                <p className="font-mono text-sm text-zinc-400">
-                  {post.excerpt}
-                </p>
-                <div className="flex flex-wrap gap-3 text-sm ">
-                  <span>By {post.author.name}</span>
-                  <span>•</span>
-                  <span>
-                    {Math.ceil(post.content.split(' ').length / 200)} min read
-                  </span>
-                  {post.publishedAt && (
-                    <>
-                      <span>•</span>
-                      <time dateTime={post.publishedAt || ''}>
-                        {new Date(post.publishedAt).toLocaleDateString()}
-                      </time>
-                    </>
+            <Link href={`/blog/${post.slug}`} key={post.id}>
+              <article
+                key={post.id}
+                className="p-5 bg-zinc-50/50 dark:bg-zinc-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              >
+                <header className="">
+                  <h2 className="text-2xl font-semibold">{post.title}</h2>
+                  <p className="font-mono text-sm text-zinc-400">
+                    {post.excerpt}
+                  </p>
+                  <div className="flex flex-wrap gap-3 text-sm ">
+                    <span>By {post.author.name}</span>
+                    <span>•</span>
+                    <span>
+                      {Math.ceil(post.content.split(' ').length / 200)} min read
+                    </span>
+                    {post.publishedAt && (
+                      <>
+                        <span>•</span>
+                        <time dateTime={post.publishedAt || ''}>
+                          {new Date(post.publishedAt).toLocaleDateString()}
+                        </time>
+                      </>
+                    )}
+                  </div>
+                </header>
+                <footer className="flex flex-wrap gap-2">
+                  {post.category && (
+                    <span className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full text-sm">
+                      {post.category.name}
+                    </span>
                   )}
-                </div>
-              </header>
-              <footer className="flex flex-wrap gap-2">
-                {post.category && (
-                  <span className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full text-sm">
-                    {post.category.name}
-                  </span>
-                )}
-                {post.tags.map((tag) => (
-                  <span
-                    key={tag.id}
-                    className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full text-sm"
-                  >
-                    #{tag.name}
-                  </span>
-                ))}
-              </footer>
-            </article>
+                  {post.tags.map((tag) => (
+                    <span
+                      key={tag.id}
+                      className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full text-sm"
+                    >
+                      #{tag.name}
+                    </span>
+                  ))}
+                </footer>
+              </article>
+            </Link>
           ))}
         </div>
 
