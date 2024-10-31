@@ -2,8 +2,10 @@ const API_URL = process.env.NEXT_PUBLIC_API;
 const CSRF_TOKEN = process.env.NEXT_PUBLIC_CSRF_TOKEN;
 
 interface FetchOptions extends RequestInit {
-  params?: Record<string, string | number | boolean>;
+  params?: _Params;
 }
+
+type _Params = Record<string, string | number | boolean>;
 
 class FetchClient {
   private static instance: FetchClient;
@@ -44,18 +46,20 @@ class FetchClient {
     return response.json();
   }
 
-  async get<T>(
-    endpoint: string,
-    params?: Record<string, string | number>
-  ): Promise<T> {
+  async get<T>(endpoint: string, params?: _Params): Promise<T> {
     return this.fetch<T>(endpoint, { params });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async post<T>(endpoint: string, data?: any): Promise<T> {
+  async post<T>(
+    endpoint: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    body?: any,
+    options: RequestInit = {}
+  ): Promise<T> {
     return this.fetch<T>(endpoint, {
       method: 'POST',
-      body: JSON.stringify(data),
+      ...options,
+      body: JSON.stringify(body),
     });
   }
 }
