@@ -8,6 +8,11 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
+    const cache = localStorage.getItem('theme');
+    if (cache) {
+      setIsDarkMode(cache === 'dark');
+      return;
+    }
     const root = window.document.documentElement;
     const initialColorValue = root.classList.contains('dark');
     setIsDarkMode(initialColorValue);
