@@ -1,54 +1,63 @@
-import axios, { AxiosError } from 'axios';
-import { camelizeKeys, decamelizeKeys } from 'humps';
+const API_URL = process.env.NEXT_PUBLIC_API;
+const CSRF_TOKEN = process.env.NEXT_PUBLIC_CSRF_TOKEN;
 
-export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API,
-  withCredentials: true,
-  headers: {
-    // 'Content-Type': 'application/json',
-    'csrf-token': process.env.NEXT_PUBLIC_CSRF_TOKEN,
-    // 'Content-Encoding': 'gzip',
-  },
-});
+interface FetchOptions extends RequestInit {
+  params?: Record<string, string | number | boolean>;
+}
 
-api.interceptors.request.use((config) => {
-  config.data = decamelizeKeys(config.data);
-  return config;
-});
+class FetchClient {
+  private static instance: FetchClient;
 
-api.interceptors.response.use(
-  (response) => {
-    response.data = camelizeKeys(response.data) as any;
-    return response;
-  }, // Return successful responses as-is
-  (error: AxiosError) => {
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      const { data } = error.response;
+  private constructor() {}
 
-      if (typeof data === 'string') {
-        try {
-          // Try to parse the string as JSON
-          const jsonData = JSON.parse(data);
+  static getInstance(): FetchClient {
+    if (!this.instance) {
+      this.instance = new FetchClient();
+    }
+    return this.instance;
+  }
 
-          // Check if the parsed JSON has the expected format
-          if (
-            jsonData &&
-            typeof jsonData === 'object' &&
-            'message' in jsonData
-          ) {
-            // Replace the original error data with the parsed JSON
-            error.response.data = jsonData;
-          }
-        } catch (parseError) {
-          // If parsing fails, leave the original error as is
-          console.warn('Error parsing response as JSON:', parseError);
-        }
-      }
+  async fetch<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
+    const { params, ...fetchOptions } = options;
+
+    const url = new URL(`${API_URL}${endpoint}`);
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        url.searchParams.append(key, String(value));
+      });
     }
 
-    // Return the error for further error handling
-    return Promise.reject(error);
+    const response = await fetch(url, {
+      ...fetchOptions,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'csrf-token': CSRF_TOKEN ?? '',
+        ...fetchOptions.headers,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
   }
-);
+
+  async get<T>(
+    endpoint: string,
+    params?: Record<string, string | number>
+  ): Promise<T> {
+    return this.fetch<T>(endpoint, { params });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async post<T>(endpoint: string, data?: any): Promise<T> {
+    return this.fetch<T>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+}
+
+export const api = FetchClient.getInstance();
