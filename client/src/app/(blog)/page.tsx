@@ -53,16 +53,18 @@ export default async function BlogPage({ searchParams }: Props) {
       notFound();
     }
 
+
     return (
-      <main className="container mx-auto py-8 px-4">
-        <div className="space-y-8">
+      <main className="container mx-auto py-8 px-6">
+        <div className="space-y-6">
           {posts.map((post) => (
             <article
               key={post.id}
-              className="p-6 bg-white dark:bg-zinc-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              className="p-6 bg-zinc-50/50 dark:bg-zinc-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow"
             >
               <header className="mb-4">
-                <h2 className="text-2xl font-semibold mb-2">{post.title}</h2>
+                <h2 className="text-2xl font-semibold">{post.title}</h2>
+                <p className="font-mono text-sm">{post.excerpt}</p>
                 <div className="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
                   <span>By {post.author.name}</span>
                   <span>•</span>
@@ -79,9 +81,6 @@ export default async function BlogPage({ searchParams }: Props) {
                   )}
                 </div>
               </header>
-
-              <p className="mb-4">{post.excerpt}</p>
-
               <footer className="flex flex-wrap gap-2">
                 {post.category && (
                   <span className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 text-blue-800 dark:text-blue-100 rounded-full text-sm">
