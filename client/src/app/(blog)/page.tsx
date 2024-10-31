@@ -62,8 +62,10 @@ export default async function BlogPage({ searchParams }: Props) {
                 className="p-5 bg-zinc-50/50 dark:bg-zinc-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow"
               >
                 <header className="">
-                  <h2 className="text-2xl font-semibold">{post.title}</h2>
-                  <p className="font-mono text-sm text-zinc-400">
+                  <h2 className="text-2xl font-semibold line-clamp-1">
+                    {post.title}
+                  </h2>
+                  <p className="font-mono text-sm text-zinc-400 line-clamp-1">
                     {post.excerpt}
                   </p>
                   <div className="flex flex-wrap gap-3 text-sm ">
