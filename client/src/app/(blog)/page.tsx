@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { Link } from 'next/link';
 import { api } from '@/services/api';
 import { Post } from '@/types';
 import { Metadata } from 'next';
@@ -53,19 +54,20 @@ export default async function BlogPage({ searchParams }: Props) {
       notFound();
     }
 
-
     return (
-      <main className="container mx-auto py-8 px-6">
+      <main className="container mx-auto py-8 px-5">
         <div className="space-y-6">
           {posts.map((post) => (
             <article
               key={post.id}
-              className="p-6 bg-zinc-50/50 dark:bg-zinc-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              className="p-5 bg-zinc-50/50 dark:bg-zinc-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow"
             >
-              <header className="mb-4">
+              <header className="">
                 <h2 className="text-2xl font-semibold">{post.title}</h2>
-                <p className="font-mono text-sm">{post.excerpt}</p>
-                <div className="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
+                <p className="font-mono text-sm text-zinc-400">
+                  {post.excerpt}
+                </p>
+                <div className="flex flex-wrap gap-3 text-sm ">
                   <span>By {post.author.name}</span>
                   <span>•</span>
                   <span>
@@ -83,16 +85,16 @@ export default async function BlogPage({ searchParams }: Props) {
               </header>
               <footer className="flex flex-wrap gap-2">
                 {post.category && (
-                  <span className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 text-blue-800 dark:text-blue-100 rounded-full text-sm">
+                  <span className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full text-sm">
                     {post.category.name}
                   </span>
                 )}
                 {post.tags.map((tag) => (
                   <span
                     key={tag.id}
-                    className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 rounded-full text-sm"
+                    className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full text-sm"
                   >
-                    {tag.name}
+                    #{tag.name}
                   </span>
                 ))}
               </footer>
