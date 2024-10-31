@@ -59,7 +59,7 @@ export default async function BlogPage({ searchParams }: Props) {
           {posts.map((post) => (
             <article
               key={post.id}
-              className="p-6 bg-white dark:bg-zinc-900 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              className="p-6 bg-white dark:bg-zinc-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow"
             >
               <header className="mb-4">
                 <h2 className="text-2xl font-semibold mb-2">{post.title}</h2>
@@ -69,29 +69,29 @@ export default async function BlogPage({ searchParams }: Props) {
                   <span>
                     {Math.ceil(post.content.split(' ').length / 200)} min read
                   </span>
-                  <span>•</span>
-                  <time dateTime={post.publishedAt || ''}>
-                    {post.publishedAt
-                      ? new Date(post.publishedAt).toLocaleDateString()
-                      : 'Draft'}
-                  </time>
+                  {post.publishedAt && (
+                    <>
+                      <span>•</span>
+                      <time dateTime={post.publishedAt || ''}>
+                        {new Date(post.publishedAt).toLocaleDateString()}
+                      </time>
+                    </>
+                  )}
                 </div>
               </header>
 
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                {post.excerpt}
-              </p>
+              <p className="mb-4">{post.excerpt}</p>
 
               <footer className="flex flex-wrap gap-2">
                 {post.category && (
-                  <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 rounded-full text-sm">
+                  <span className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 text-blue-800 dark:text-blue-100 rounded-full text-sm">
                     {post.category.name}
                   </span>
                 )}
                 {post.tags.map((tag) => (
                   <span
                     key={tag.id}
-                    className="px-3 py-1 bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 rounded-full text-sm"
+                    className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 rounded-full text-sm"
                   >
                     {tag.name}
                   </span>
@@ -109,7 +109,7 @@ export default async function BlogPage({ searchParams }: Props) {
             {page > 1 && (
               <a
                 href={`?page=${page - 1}`}
-                className="px-4 py-2 bg-white dark:bg-zinc-900 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+                className="px-4 py-2 bg-zinc-50 dark:bg-zinc-900 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                 rel="prev"
               >
                 Previous
@@ -118,7 +118,7 @@ export default async function BlogPage({ searchParams }: Props) {
             {page < totalPages && (
               <a
                 href={`?page=${page + 1}`}
-                className="px-4 py-2 bg-white dark:bg-zinc-900 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+                className="px-4 py-2 bg-zinc-50 dark:bg-zinc-900 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                 rel="next"
               >
                 Next
