@@ -17,12 +17,12 @@ export default function Error({ error, reset }: ErrorProps) {
     <div className="container mx-auto py-16 px-4">
       <div className="max-w-xl mx-auto text-center">
         <h2 className="text-2xl font-bold mb-4">Something went wrong!</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-zinc-600 dark:text-zinc-400 mb-6">
           {error.message || 'Failed to load blog posts'}
         </p>
         <button
           onClick={reset}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          className="px-4 py-2 bg-zinc-300 hover:bg-zinc-200 dark:bg-zinc-800/50 dark:hover:bg-zinc-800 dark:text-white rounded-lg transition-colors duration-300"
         >
           Try again
         </button>
