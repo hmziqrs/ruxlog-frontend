@@ -1,6 +1,7 @@
 // import Link from 'next/link';
 import { Metadata } from 'next';
 import { cn } from '@/lib/utils';
+import { ArrowDownIcon } from 'lucide-react';
 
 interface ChangelogEntry {
   date: Date;
@@ -88,9 +89,13 @@ export default function ChangelogPage() {
           <details
             key={entry.version}
             className="group"
-            open={entry.version === changelog[0].version} // Latest version open by default
+            open={entry.version === changelog[0].version}
           >
-            <summary className="flex items-center gap-3 cursor-pointer list-none border-l-2 border-zinc-200 dark:border-zinc-800 pl-6 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900">
+            <summary
+              className="flex items-center gap-3 cursor-pointer
+              list-none border-l-2 border-zinc-200 dark:border-zinc-800
+              pl-6 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+            >
               <span className="font-mono text-xl">
                 {entry.date.toLocaleDateString('en-US', {
                   year: 'numeric',
@@ -102,17 +107,17 @@ export default function ChangelogPage() {
                 v{entry.version}
               </span>
               <span className="ml-auto text-zinc-400 group-open:rotate-180 transition-transform">
-                ▼
+                <ArrowDownIcon />
               </span>
             </summary>
 
-            <div className="mt-4 space-y-4 border-l-2 border-zinc-200 dark:border-zinc-800 pl-6">
+            <div className="space-y-4 border-l-2  border-zinc-200 dark:border-zinc-800">
               {entry.changes.map((change, index) => (
-                <div key={index} className="flex items-start gap-3">
+                <div key={index} className="flex items-start gap-3 py-2 pl-10">
                   <span
                     className={cn(
                       getChangeTypeStyles(change.type),
-                      'px-3 py-1 rounded-full text-sm border'
+                      'px-3 py-1 rounded-full text-sm border font-mono'
                     )}
                   >
                     {change.type}
