@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import ReactMarkdown from 'react-markdown';
 import { api } from '@/services/api';
 import { Post } from '@/types';
+import { PostView } from './post-view';
 
 interface PostProps {
   params: {
@@ -143,7 +144,7 @@ export default async function PostPage({ params }: PostProps) {
         name="copyright"
         content={`© ${new Date().getFullYear()} ${process.env.NEXT_PUBLIC_SITE_NAME}`}
       />
-
+      <PostView id={post.id} />
       <article className="container mx-auto px-4 py-8">
         {post.featuredImageUrl && (
           <img
