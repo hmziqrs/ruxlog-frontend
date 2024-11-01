@@ -13,10 +13,10 @@ export default function PrivacyPolicyPage() {
       </h1>
 
       <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-        This Privacy Policy describes how [Your Site Name] ("we", "us", or
-        "our") collects, uses, discloses, and protects your personal information
-        when you visit and interact with our website [Your Site URL] (the
-        "Site").
+        This Privacy Policy describes how [Your Site Name] (&quot;we&quot;,
+        &quot;us&quot;, or &quot;our&quot;) collects, uses, discloses, and
+        protects your personal information when you visit and interact with our
+        website [Your Site URL] (the &quot;Site&quot;).
       </p>
 
       <h2 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">
@@ -173,7 +173,7 @@ export default function PrivacyPolicyPage() {
       </ul>
 
       <h2 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">
-        6. Children's Privacy
+        6. Children&apos;s Privacy
       </h2>
 
       <p className="text-zinc-600 dark:text-zinc-400 mb-4">
