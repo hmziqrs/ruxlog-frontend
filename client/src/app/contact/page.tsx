@@ -48,8 +48,8 @@ export default function ContactPage() {
           Looking for an Engineer?
         </h1>
         <p className="text-zinc-500 dark:text-zinc-200 px-4">
-          I am always looking to work on exciting projects where I can utilize
-          my skills to build and ship software
+          I am always looking to work on projects where I can use my skills to
+          accelerate development and ship software.
         </p>
       </section>
 
