@@ -20,7 +20,6 @@ const stack = [
       'sonner',
     ],
   },
-
   {
     label: 'Backend',
     tools: [
@@ -48,20 +47,20 @@ export default function AboutPage() {
         integration of common modules like authentication, database, logging,
         rate limiting, abuse limiting, account verification, etc. I have some
         ideas for projects that I want to build with Rust. However, I could not
-        decide on libraries, frameworks, and structure. I planned to build a
-        blog. When I started integrating the libraries together the vision
-        became clearer.
+        decide on libraries, frameworks, and structure to use. I planned to
+        build a blog. When I started integrating the libraries together, the
+        vision became clearer.
       </p>
       <div className="h-2" />
       <p className="">
         I always wanted to have a blog to document my learning process and
-        thoughts. Well, this is my second attempt at building a blog, the first
-        attempt was to build a completely static and hosted on a GitHub
-        repository using GitHub pages. The goal was to have two repositories
-        containing NextJS code with custom installable themes and another with
-        blog content. I abandoned that project because I got hired for a
-        full-time job and I did not have time to work on it. It is open source
-        and can be found below.
+        thoughts. This is my second attempt at building a blog; the first
+        attempt was to build a completely static site hosted on a GitHub
+        repository using GitHub Pages. The goal was to have two repositories:
+        one containing NextJS code with custom installable themes and another
+        with blog content. I abandoned that project because I got hired for a
+        full-time job and did not have time to work on it. It is open source and
+        can be found below.
       </p>
       <div className="h-4" />
       <div className="p-4 border border-zinc-800 rounded-lg w-fit">
@@ -97,10 +96,10 @@ export default function AboutPage() {
       <h3 className="font-mono font-semibold text-3xl">Goal</h3>
       <div className="h-2" />
       <p className="">
-        I have a lot of experience with frontend from development to production
-        management. I have built backend servers but little to no production
-        experience. My plan is to keep iterating on this project and add
-        features. and off course write blog posts.
+        I have a lot of experience with frontend, from development to production
+        management. I have built backend servers but have little to no
+        production experience. My plan is to keep iterating on this project,
+        adding features, and, of course, writing blog posts.
       </p>
       <div className="h-4" />
       <h3 className="font-mono font-semibold text-3xl">Tech Stack</h3>
