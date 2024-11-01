@@ -1,60 +1,67 @@
 import Link from 'next/link';
 
+const stack = [
+  {
+    label: 'Frontend client',
+    tools: ['next.js', 'tailwindcss', 'typescript', 'react-markdown'],
+  },
+  {
+    label: 'Admin client',
+    tools: [
+      'next.js',
+      'tailwindcss',
+      'typescript',
+      'shadcn',
+      'radix-ui',
+      'zustand',
+      'immer',
+      'axios',
+      'mdxeditor',
+      'sonner',
+    ],
+  },
+
+  {
+    label: 'Backend',
+    tools: [
+      'rust',
+      'axum',
+      'axum-login',
+      'tower-http',
+      'validator',
+      'serde',
+      'lettre',
+      'diesel',
+      'postgres',
+      'redis',
+    ],
+  },
+];
+
 export default function AboutPage() {
-  const frontendTools = [
-    'next.js',
-    'tailwindcss',
-    'typescript',
-    'react-markdown',
-  ];
-  const adminTools = [
-    'next.js',
-    'tailwindcss',
-    'typescript',
-    'shadcn',
-    'radix-ui',
-    'zustand',
-    'immer',
-    'axios',
-    'mdxeditor',
-    'sonner',
-  ];
-
-  const backendTools = [
-    'rust',
-    'axum',
-    'axum-login',
-    'tower-http',
-    'validator',
-    'serde',
-    'lettre',
-    'diesel',
-    'postgres',
-    'redis',
-  ];
-
   return (
     <main className="container mx-auto py-8 px-5">
       <h3 className="font-mono font-semibold text-3xl">History</h3>
       <div className="h-2" />
       <p>
-        I originally wanted to build a rust backend boilerplate with basic
+        I originally wanted to build a Rust backend boilerplate with basic
         integration of common modules like authentication, database, logging,
         rate limiting, abuse limiting, account verification, etc. I have some
-        ideas for projects which I want to build with rust. However I could not
-        decide on libraries, framework and structure to use. I planned to build
-        a blog. When I started integrating the vision I have became more clear.
+        ideas for projects that I want to build with Rust. However, I could not
+        decide on libraries, frameworks, and structure. I planned to build a
+        blog. When I started integrating the libraries together the vision
+        became clearer.
       </p>
       <div className="h-2" />
       <p className="">
-        I always wanted to have a blog where I can document my learning process
-        and my thoughts. Well this is my second attempt at building a blog,
-        first attempt was to build a completely static and hosted on a github
-        repository using github pages. The goal was two have two repositories a
-        contains next code with custom installable themes and another with
-        contents of the blog. I abandoned that project because I got hired for a
-        full time job and I did not have time to work on it. It is open source
-        can be found below.
+        I always wanted to have a blog to document my learning process and
+        thoughts. Well, this is my second attempt at building a blog, the first
+        attempt was to build a completely static and hosted on a GitHub
+        repository using GitHub pages. The goal was to have two repositories
+        containing NextJS code with custom installable themes and another with
+        blog content. I abandoned that project because I got hired for a
+        full-time job and I did not have time to work on it. It is open source
+        and can be found below.
       </p>
       <div className="h-4" />
       <div className="p-4 border border-zinc-800 rounded-lg w-fit">
@@ -87,53 +94,29 @@ export default function AboutPage() {
       <div className="h-2" />
       <p className="">
         I have a lot of experience with frontend from development to production
-        management. I have built backend servers but little to none production
-        experience. My plan is keep iterating on this project and add features.
-        and off course write blog posts.
+        management. I have built backend servers but little to no production
+        experience. My plan is to keep iterating on this project and add
+        features. and off course write blog posts.
       </p>
       <div className="h-4" />
       <h3 className="font-mono font-semibold text-3xl">Tech Stack</h3>
       <div className="h-2" />
-      <div>
-        <p className="font-mono font-semibold mb-2">Frontend client:</p>
-        <div className="flex flex-wrap gap-3">
-          {frontendTools.map((tool) => (
-            <span
-              key={tool}
-              className="cursor-pointer px-4 py-2 bg-zinc-100 hover:bg-zinc-100/50 dark:bg-zinc-800 hover:dark:bg-zinc-800/50 rounded-full text-sm"
-            >
-              {tool}
-            </span>
-          ))}
-        </div>
-      </div>
-      <div className="h-4" />
-      <div>
-        <p className="font-mono font-semibold mb-2">Admin client:</p>
-        <div className="flex flex-wrap gap-3">
-          {adminTools.map((tool) => (
-            <span
-              key={tool}
-              className="cursor-pointer px-4 py-2 bg-zinc-100 hover:bg-zinc-100/50 dark:bg-zinc-800 hover:dark:bg-zinc-800/50 rounded-full text-sm"
-            >
-              {tool}
-            </span>
-          ))}
-        </div>
-      </div>
-      <div className="h-4" />
-      <div>
-        <p className="font-mono font-semibold mb-2">Backend:</p>
-        <div className="flex flex-wrap gap-3">
-          {backendTools.map((tool) => (
-            <span
-              key={tool}
-              className="cursor-pointer px-4 py-2 bg-zinc-100 hover:bg-zinc-100/50 dark:bg-zinc-800 hover:dark:bg-zinc-800/50 rounded-full text-sm"
-            >
-              {tool}
-            </span>
-          ))}
-        </div>
+      <div className="flex flex-col gap-y-5">
+        {stack.map(({ label, tools }) => (
+          <div className="mt-0" key={label}>
+            <p className="font-mono font-semibold mb-2">{label}:</p>
+            <div className="flex flex-wrap gap-3">
+              {tools.map((tool) => (
+                <span
+                  key={tool}
+                  className="cursor-pointer px-4 py-2 bg-zinc-100 hover:bg-zinc-100/50 dark:bg-zinc-800 hover:dark:bg-zinc-800/50 rounded-full text-sm"
+                >
+                  {tool}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </main>
   );
