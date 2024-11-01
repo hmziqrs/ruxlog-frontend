@@ -5,6 +5,7 @@ import {
   SiTelegram,
   SiGmail,
 } from '@icons-pack/react-simple-icons';
+import Image from 'next/image';
 
 export default function ContactPage() {
   const links = [
@@ -41,33 +42,58 @@ export default function ContactPage() {
   ];
 
   return (
-    <div className="container py-10">
-      <div className="flex flex-col items-center justify-center space-y-8">
-        
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-            Lets Connect
-          </h1>
-          <p className="text-zinc-500 dark:text-zinc-400">
-            Feel free to reach out through any of these platforms
-          </p>
+    <div className="container py-10 flex flex-col items-center">
+      <div className="text-center max-w-lg">
+        {/* <h1 className="text-4xl font-semibold tracking-tighter ">
+          Like my work?
+        </h1>
+        <div className="h-1" /> */}
+        <p className="font-mono text-2xl sm:text-3xl font-semibold text-zinc-800 dark:text-zinc-200">
+          looking for an engineer?
+        </p>
+        <div className="h-2" />
+        <p className=" text-zinc-500 dark:text-zinc-200 px-4">
+          I am always looking to work on exciting projects where I can utilize
+          my skills to build and ship software
+        </p>
+      </div>
+      <div className="h-12" />
+      <div className="flex flex-col sm:flex-row gap-x-6 gap-y-4 px-4 sm:px-0 max-w-3xl">
+        <div className="min-w-[200px] self-center">
+          <Image
+            src="/avatar.png"
+            width={200}
+            height={200}
+            alt="hmziqrs's avatar"
+            className="rounded-full"
+          />
         </div>
-
-        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {links.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-3 rounded-lg border border-zinc-200 p-4 
-                transition-colors hover:bg-zinc-100 dark:border-zinc-800 
-                dark:hover:bg-zinc-800"
-            >
-              <link.icon />
-              <span className="font-medium">{link.username}</span>
-            </a>
-          ))}
+        <div className="flex flex-col text-center sm:text-left">
+          <p>
+            Full stack engineer with 7+ years of experience in building
+            mobile/web apps and backend.
+          </p>
+          <p>You can find me @hmziqrs</p>
+          <div className="h-4" />
+          <div className="flex flex-row flex-wrap gap-3">
+            {links.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
+                    flex items-center gap-3 py-2.5 px-5 rounded-lg
+                    text-sm
+                    border border-zinc-200 
+                    transition-colors hover:bg-zinc-100 dark:border-zinc-800 
+                    dark:hover:bg-zinc-800"
+              >
+                <link.icon size={14} />
+                <span className="">{link.username}</span>
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </div>
