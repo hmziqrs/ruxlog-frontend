@@ -35,3 +35,9 @@ export interface Post {
   updatedAt: string;
   viewCount: number;
 }
+
+export interface PostSiteMap {
+  slug: string;
+  updatedAt: string;
+  publishedAt: string;
+}
