@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | [Your Site Name]',
-  description: 'Learn how [Your Site Name] collects and uses your data.',
+  title: 'Privacy Policy | ' + process.env.NEXT_PUBLIC_SITE_NAME,
+  description: `Learn how ${process.env.NEXT_PUBLIC_SITE_NAME} collects and uses your data.`,
 };
 
 export default function PrivacyPolicyPage() {
@@ -13,10 +13,11 @@ export default function PrivacyPolicyPage() {
       </h1>
 
       <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-        This Privacy Policy describes how [Your Site Name] (&quot;we&quot;,
-        &quot;us&quot;, or &quot;our&quot;) collects, uses, discloses, and
-        protects your personal information when you visit and interact with our
-        website [Your Site URL] (the &quot;Site&quot;).
+        This Privacy Policy describes how {process.env.NEXT_PUBLIC_SITE_NAME}{' '}
+        (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) collects, uses,
+        discloses, and protects your personal information when you visit and
+        interact with our website {process.env.NEXT_PUBLIC_SITE_URL} (the
+        &quot;Site&quot;).
       </p>
 
       <h2 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">
@@ -184,26 +185,69 @@ export default function PrivacyPolicyPage() {
       </p>
 
       <h2 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">
-        7. Updates to this Privacy Policy
+        7. Data Retention
       </h2>
 
       <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-        We may update this Privacy Policy from time to time. We will post any
-        changes on the Site. We encourage you to review this Privacy Policy
-        periodically.
+        We retain your personal information for as long as necessary to fulfill
+        the purposes outlined in this Privacy Policy, unless a longer retention
+        period is required or permitted by law. When we no longer need your
+        information, we will securely delete or anonymize it.
       </p>
 
       <h2 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">
-        8. Contact Us
+        8. International Data Transfers
+      </h2>
+
+      <p className="text-zinc-600 dark:text-zinc-400 mb-4">
+        Your information may be transferred to and processed in countries other
+        than your country of residence. These countries may have different data
+        protection laws. When we transfer your information, we will take
+        appropriate measures to protect it.
+      </p>
+
+      <h2 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">
+        9. Your Privacy Rights
+      </h2>
+
+      <p className="text-zinc-600 dark:text-zinc-400 mb-4">
+        Depending on your location, you may have certain rights regarding your
+        personal information:
+      </p>
+
+      <ul className="list-disc pl-6 text-zinc-600 dark:text-zinc-400 mb-4">
+        <li>The right to access your personal information</li>
+        <li>The right to correct or update your personal information</li>
+        <li>The right to delete your personal information</li>
+        <li>
+          The right to restrict or object to our processing of your personal
+          information
+        </li>
+        <li>The right to data portability</li>
+        <li>The right to withdraw consent</li>
+      </ul>
+
+      <p className="text-zinc-600 dark:text-zinc-400 mb-4">
+        To exercise these rights, please contact us using the information
+        provided below.
+      </p>
+
+      <h2 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">
+        10. Contact Us
       </h2>
 
       <p className="text-zinc-600 dark:text-zinc-400 mb-4">
         If you have any questions about this Privacy Policy, please contact us
-        at [Your Email Address].
+        at {process.env.NEXT_PUBLIC_CONTACT_EMAIL}.
       </p>
 
       <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-        Last Updated: [Date]
+        Last Updated:{' '}
+        {new Date('2024-11-01').toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        })}
       </p>
     </main>
   );
