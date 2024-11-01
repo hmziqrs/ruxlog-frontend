@@ -72,6 +72,8 @@ export default function AboutPage() {
           <Link
             className="hover:text-zinc-300 hover:underline"
             href="https://github.com/hmziqrs/next-blog"
+            aria-label="@hmziqrs next-blog"
+            title="@hmziqrs next-blog"
             target="_blank"
           >
             https://github.com/hmziqrs/next-blog
@@ -83,6 +85,8 @@ export default function AboutPage() {
           <Link
             className="hover:text-zinc-300 hover:underline"
             href="https://github.com/hmziqrs/blog-posts"
+            aria-label="@hmziqrs blog-posts"
+            title="@hmziqrs blog-posts"
             target="_blank"
           >
             https://github.com/hmziqrs/blog-posts
@@ -109,6 +113,7 @@ export default function AboutPage() {
               {tools.map((tool) => (
                 <span
                   key={tool}
+                  title={tool}
                   className="cursor-pointer px-4 py-2 bg-zinc-100 hover:bg-zinc-100/50 dark:bg-zinc-800 hover:dark:bg-zinc-800/50 rounded-full text-sm"
                 >
                   {tool}
