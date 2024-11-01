@@ -122,6 +122,49 @@ export default function AboutPage() {
           </div>
         ))}
       </div>
+      <div className="h-4" />
+      <div className="p-4 border border-zinc-800 rounded-lg w-fit">
+        <span>
+          <h5 className="font-mono text-xl font-semibold">Source code</h5>
+          <div className="h-1" />
+          <span className="font-mono">backend: </span>
+          <Link
+            className="hover:text-zinc-300 hover:underline"
+            href="https://github.com/hmziqrs/next-blog"
+            aria-label="@hmziqrs next-blog"
+            title="@hmziqrs next-blog"
+            target="_blank"
+          >
+            https://github.com/hmziqrs/next-blog
+          </Link>
+        </span>
+        <br />
+        <span>
+          <span className="font-mono">admin: </span>
+          <Link
+            className="hover:text-zinc-300 hover:underline"
+            href="https://github.com/hmziqrs/blog-posts"
+            aria-label="@hmziqrs blog-posts"
+            title="@hmziqrs blog-posts"
+            target="_blank"
+          >
+            https://github.com/hmziqrs/blog-posts
+          </Link>
+        </span>
+        <br />
+        <span>
+          <span className="font-mono">client: </span>
+          <Link
+            className="hover:text-zinc-300 hover:underline"
+            href="https://github.com/hmziqrs/blog-posts"
+            aria-label="@hmziqrs blog-posts"
+            title="@hmziqrs blog-posts"
+            target="_blank"
+          >
+            https://github.com/hmziqrs/blog-posts
+          </Link>
+        </span>
+      </div>
     </main>
   );
 }
