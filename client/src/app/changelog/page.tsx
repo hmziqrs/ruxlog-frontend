@@ -1,5 +1,6 @@
-import Link from 'next/link';
+// import Link from 'next/link';
 import { Metadata } from 'next';
+import { cn } from '@/lib/utils';
 
 interface ChangelogEntry {
   date: Date;
@@ -77,39 +78,42 @@ const changelog: ChangelogEntry[] = [
   },
 ];
 
-
 export default function ChangelogPage() {
   return (
     <main className="container mx-auto py-8 px-5">
       <h1 className="font-mono text-3xl font-semibold mb-8">Changelog</h1>
 
-      <div className="space-y-12">
+      <div className="space-y-6">
         {changelog.map((entry) => (
-          <section
+          <details
             key={entry.version}
-            className="border-l-2 border-zinc-200 dark:border-zinc-800 pl-6"
+            className="group"
+            open={entry.version === changelog[0].version} // Latest version open by default
           >
-            <div className="flex items-center gap-3 mb-4">
-              <h2 className="font-mono text-xl font-semibold">
+            <summary className="flex items-center gap-3 cursor-pointer list-none border-l-2 border-zinc-200 dark:border-zinc-800 pl-6 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900">
+              <span className="font-mono text-xl">
                 {entry.date.toLocaleDateString('en-US', {
                   year: 'numeric',
-                  day: 'numeric',
                   month: 'short',
+                  day: 'numeric',
                 })}
-              </h2>
+              </span>
               <span className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full text-sm">
                 v{entry.version}
               </span>
-            </div>
+              <span className="ml-auto text-zinc-400 group-open:rotate-180 transition-transform">
+                ▼
+              </span>
+            </summary>
 
-            <div className="space-y-4">
+            <div className="mt-4 space-y-4 border-l-2 border-zinc-200 dark:border-zinc-800 pl-6">
               {entry.changes.map((change, index) => (
                 <div key={index} className="flex items-start gap-3">
                   <span
-                    className={`
-                    px-3 py-1 rounded-full text-sm
-                    ${getChangeTypeStyles(change.type)}
-                  `}
+                    className={cn(
+                      getChangeTypeStyles(change.type),
+                      'px-3 py-1 rounded-full text-sm border'
+                    )}
                   >
                     {change.type}
                   </span>
@@ -119,7 +123,7 @@ export default function ChangelogPage() {
                 </div>
               ))}
             </div>
-          </section>
+          </details>
         ))}
       </div>
     </main>
