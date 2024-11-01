@@ -1,3 +1,5 @@
+import { camelizeKeys, decamelizeKeys } from 'humps';
+
 const API_URL = process.env.NEXT_PUBLIC_API;
 const CSRF_TOKEN = process.env.NEXT_PUBLIC_CSRF_TOKEN;
 
@@ -43,7 +45,9 @@ class FetchClient {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return response.json();
+    const json = await response.json();
+
+    return camelizeKeys(json);
   }
 
   async get<T>(endpoint: string, params?: _Params): Promise<T> {
@@ -59,7 +63,7 @@ class FetchClient {
     return this.fetch<T>(endpoint, {
       method: 'POST',
       ...options,
-      body: JSON.stringify(body),
+      body: decamelizeKeys(JSON.stringify(body)),
     });
   }
 }
