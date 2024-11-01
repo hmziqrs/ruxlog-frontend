@@ -47,7 +47,7 @@ class FetchClient {
 
     const json = await response.json();
 
-    return camelizeKeys(json);
+    return camelizeKeys(json) as T;
   }
 
   async get<T>(endpoint: string, params?: _Params): Promise<T> {
