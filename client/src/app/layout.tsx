@@ -60,13 +60,19 @@ export default function RootLayout({
           </div>
         </header>
         <div className="flex flex-grow container mx-auto">{children}</div>
-        <footer className="dark:bg-zinc-900/50 bg-zinc-100/50 p-8">
-          <div className="container mx-auto flex flex-col items-center">
+        <footer className="dark:bg-zinc-900/50 bg-zinc-100/50 p-6">
+          <div className="container mx-auto text-center">
             <div className="font-mono text-sm">
               &copy; {new Date().getFullYear()}, Built with Tailwind CSS,
               Next.js and ❤️ by hmziqrs
             </div>
-            <div className="h-4" />
+            <div className="h-2" />
+            <Link href="/changelog">
+              <p className="text-sm dark:text-zinc-200 text-zinc-800">
+                version 1.0.0 - ( <span className="underline">changelog</span> )
+              </p>
+            </Link>
+            <div className="h-2" />
             <div className="space-x-4 text-xs dark:text-zinc-700">
               <Link href="#" className="hover:underline">
                 Privacy Policy
