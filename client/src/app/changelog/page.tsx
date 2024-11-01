@@ -30,7 +30,21 @@ const getChangeTypeStyles = (type: ChangelogEntry['changes'][0]['type']) => {
 
 const changelog: ChangelogEntry[] = [
   {
-    date: new Date('2024-11-07'),
+    date: new Date('2024-01-15'),
+    version: '1.1.0',
+    changes: [
+      {
+        type: 'new',
+        description: 'Added markdown support in blog posts',
+      },
+      {
+        type: 'improved',
+        description: 'Enhanced code syntax highlighting',
+      },
+    ],
+  },
+  {
+    date: new Date('2023-12-25'),
     version: '1.0.0',
     changes: [
       {
@@ -47,7 +61,22 @@ const changelog: ChangelogEntry[] = [
       },
     ],
   },
+  {
+    date: new Date('2023-12-01'),
+    version: '0.9.0-beta',
+    changes: [
+      {
+        type: 'new',
+        description: 'Beta release of the blog platform',
+      },
+      {
+        type: 'new',
+        description: 'Added basic authentication system',
+      },
+    ],
+  },
 ];
+
 
 export default function ChangelogPage() {
   return (
