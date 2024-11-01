@@ -81,10 +81,12 @@ const changelog: ChangelogEntry[] = [
 
 export default function ChangelogPage() {
   return (
-    <main className="container mx-auto py-8 px-5">
-      <h1 className="font-mono text-3xl font-semibold mb-8">Changelog</h1>
+    <main className="container mx-auto py-4 sm:py-8 px-3 sm:px-4">
+      <h1 className="font-mono text-2xl sm:text-3xl font-semibold mb-4 sm:mb-8">
+        Changelog
+      </h1>
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {changelog.map((entry) => (
           <details
             key={entry.version}
@@ -92,37 +94,40 @@ export default function ChangelogPage() {
             open={entry.version === changelog[0].version}
           >
             <summary
-              className="flex items-center gap-3 cursor-pointer
+              className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 cursor-pointer
               list-none border-l-2 border-zinc-200 dark:border-zinc-800
-              pl-6 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+              pl-4 sm:pl-6 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900"
             >
-              <span className="font-mono text-xl">
+              <span className="font-mono text-base sm:text-xl">
                 {entry.date.toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'short',
                   day: 'numeric',
                 })}
               </span>
-              <span className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full text-sm">
+              <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full text-xs sm:text-sm">
                 v{entry.version}
               </span>
               <span className="ml-auto text-zinc-400 group-open:rotate-180 transition-transform">
-                <ArrowDownIcon />
+                <ArrowDownIcon className="w-5 h-5 sm:w-6 sm:h-6" />
               </span>
             </summary>
 
-            <div className="space-y-4 border-l-2  border-zinc-200 dark:border-zinc-800">
+            <div className="space-y-3 sm:space-y-4 border-l-2 border-zinc-200 dark:border-zinc-800">
               {entry.changes.map((change, index) => (
-                <div key={index} className="flex items-start gap-3 py-2 pl-10">
+                <div
+                  key={index}
+                  className="flex flex-row items-start gap-2 sm:gap-3 py-2 pl-6 sm:pl-10"
+                >
                   <span
                     className={cn(
                       getChangeTypeStyles(change.type),
-                      'px-3 py-1 rounded-full text-sm border font-mono'
+                      'px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm border font-mono w-fit'
                     )}
                   >
                     {change.type}
                   </span>
-                  <p className="text-zinc-600 dark:text-zinc-400 pt-1">
+                  <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 sm:pt-1">
                     {change.description}
                   </p>
                 </div>
