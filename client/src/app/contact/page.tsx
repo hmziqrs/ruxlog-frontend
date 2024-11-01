@@ -42,39 +42,34 @@ export default function ContactPage() {
   ];
 
   return (
-    <div className="container py-10 flex flex-col items-center">
-      <div className="text-center max-w-lg">
-        {/* <h1 className="text-4xl font-semibold tracking-tighter ">
-          Like my work?
+    <main className="container py-12 flex flex-col items-center">
+      <section className="text-center max-w-lg">
+        <h1 className="font-mono text-2xl sm:text-3xl font-semibold text-zinc-800 dark:text-zinc-200 mb-4">
+          Looking for an Engineer?
         </h1>
-        <div className="h-1" /> */}
-        <p className="font-mono text-2xl sm:text-3xl font-semibold text-zinc-800 dark:text-zinc-200">
-          looking for an engineer?
-        </p>
-        <div className="h-2" />
-        <p className=" text-zinc-500 dark:text-zinc-200 px-4">
+        <p className="text-zinc-500 dark:text-zinc-200 px-4">
           I am always looking to work on exciting projects where I can utilize
           my skills to build and ship software
         </p>
-      </div>
-      <div className="h-12" />
-      <div className="flex flex-col sm:flex-row gap-x-6 gap-y-4 px-4 sm:px-0 max-w-3xl">
+      </section>
+
+      <section className="mt-12 flex flex-col sm:flex-row gap-x-8 gap-y-6 px-4 sm:px-0 max-w-3xl">
         <div className="min-w-[200px] self-center">
           <Image
             src="/avatar.png"
             width={200}
             height={200}
-            alt="hmziqrs's avatar"
+            alt="hmziqrs's profile picture"
             className="rounded-full"
           />
         </div>
         <div className="flex flex-col text-center sm:text-left">
-          <p>
+          <h2 className="text-lg font-semibold mb-2 font-mono">About Me</h2>
+          <p className="mb-2">
             Full stack engineer with 7+ years of experience in building
             mobile/web apps and backend.
           </p>
-          <p>You can find me @hmziqrs</p>
-          <div className="h-4" />
+          <p className="mb-6">You can find me @hmziqrs</p>
           <div className="flex flex-row flex-wrap gap-3">
             {links.map((link) => (
               <a
@@ -82,6 +77,7 @@ export default function ContactPage() {
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label={`Connect on ${link.label}`}
                 className="
                     flex items-center gap-3 py-2.5 px-5 rounded-lg
                     text-sm
@@ -89,13 +85,13 @@ export default function ContactPage() {
                     transition-colors hover:bg-zinc-100 dark:border-zinc-800 
                     dark:hover:bg-zinc-800"
               >
-                <link.icon size={14} />
-                <span className="">{link.username}</span>
+                <link.icon size={14} aria-hidden="true" />
+                <span>{link.username}</span>
               </a>
             ))}
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
