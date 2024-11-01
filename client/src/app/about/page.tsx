@@ -12,6 +12,7 @@ export default function AboutPage() {
     'tailwindcss',
     'typescript',
     'shadcn',
+    'radix-ui',
     'zustand',
     'immer',
     'axios',
@@ -99,7 +100,7 @@ export default function AboutPage() {
           {frontendTools.map((tool) => (
             <span
               key={tool}
-              className="cursor-pointer px-4 py-2 bg-zinc-800 rounded-full text-sm"
+              className="cursor-pointer px-4 py-2 bg-zinc-100 hover:bg-zinc-100/50 dark:bg-zinc-800 hover:dark:bg-zinc-800/50 rounded-full text-sm"
             >
               {tool}
             </span>
@@ -113,7 +114,7 @@ export default function AboutPage() {
           {adminTools.map((tool) => (
             <span
               key={tool}
-              className="cursor-pointer px-4 py-2 bg-zinc-800 rounded-full text-sm"
+              className="cursor-pointer px-4 py-2 bg-zinc-100 hover:bg-zinc-100/50 dark:bg-zinc-800 hover:dark:bg-zinc-800/50 rounded-full text-sm"
             >
               {tool}
             </span>
@@ -127,7 +128,7 @@ export default function AboutPage() {
           {backendTools.map((tool) => (
             <span
               key={tool}
-              className="cursor-pointer px-4 py-2 bg-zinc-800 rounded-full text-sm"
+              className="cursor-pointer px-4 py-2 bg-zinc-100 hover:bg-zinc-100/50 dark:bg-zinc-800 hover:dark:bg-zinc-800/50 rounded-full text-sm"
             >
               {tool}
             </span>
