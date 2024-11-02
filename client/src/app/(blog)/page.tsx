@@ -4,6 +4,7 @@ import { api } from '@/services/api';
 import { Post } from '@/types';
 import { Metadata } from 'next';
 import { Folder, User2, Calendar, Clock, Heart, Eye } from 'lucide-react';
+import { MetaPill } from '@/components/MetaPill';
 
 interface Props {
   searchParams: { page?: string };
@@ -30,7 +31,7 @@ export function generateMetadata(): Metadata {
 
 export default async function BlogPage({ searchParams }: Props) {
   try {
-    const page = Math.min(1, Number(searchParams?.page) || 1);
+    const page = Math.max(1, Number(searchParams?.page) || 1);
 
     const response = await api.post<PostListResponse>(
       '/post/v1/list/published',
@@ -87,7 +88,7 @@ export default async function BlogPage({ searchParams }: Props) {
               >
                 <article className="h-full bg-white dark:bg-zinc-900 rounded-lg sm:rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
                   <div className="p-4 sm:p-6 flex flex-col h-full">
-                    <h2 className="text-xl font-bold group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors line-clamp-2">
+                    <h2 className="text-xl font-semibold group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors line-clamp-2">
                       {post.title}
                     </h2>
                     <div className="h-1" />
@@ -96,56 +97,37 @@ export default async function BlogPage({ searchParams }: Props) {
                     </p>
 
                     <div className="mt-auto">
-                      <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm">
+                      <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 text-xs sm:text-sm">
                         {post.category && (
-                          <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-md">
-                            <Folder className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            {post.category.name}
-                          </span>
+                          <MetaPill icon={Folder} label={post.category.name} />
                         )}
-                        <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-md">
-                          <User2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                          {post.author.name}
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-md">
-                          <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                          {Math.ceil(post.content.split(' ').length / 200)} min
-                        </span>
+                        <MetaPill icon={User2} label={post.author.name} />
+                        <MetaPill
+                          icon={Clock}
+                          label={Math.ceil(post.content.split(' ').length / 80)}
+                          suffix="min"
+                        />
                         {post.publishedAt && (
-                          <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-md">
-                            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            <time
-                              dateTime={post.publishedAt}
-                              className="font-mono"
-                            >
-                              {new Intl.DateTimeFormat('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                              }).format(new Date(post.publishedAt))}
-                            </time>
-                          </span>
+                          <MetaPill
+                            icon={Calendar}
+                            label={new Intl.DateTimeFormat('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            }).format(new Date(post.publishedAt))}
+                          />
                         )}
-                        <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-md">
-                          <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                          {post.likesCount || 0} likes
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-md">
-                          <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                          {post.viewCount || 0} views
-                        </span>
+                        <MetaPill
+                          icon={Heart}
+                          label={post.likesCount || 0}
+                          suffix="likes"
+                        />
+                        <MetaPill
+                          icon={Eye}
+                          label={post.viewCount || 0}
+                          suffix="views"
+                        />
                       </div>
-
-                      {/* <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                        {post.tags.map((tag) => (
-                          <span
-                            key={tag.id}
-                            className="px-2 sm:px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full text-xs font-medium"
-                          >
-                            #{tag.name}
-                          </span>
-                        ))}
-                      </div> */}
                     </div>
                   </div>
                 </article>
