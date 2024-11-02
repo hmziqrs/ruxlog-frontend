@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { api } from '@/services/api';
 import { Post } from '@/types';
 import { Metadata } from 'next';
-import { Folder, User2, Calendar, Clock } from 'lucide-react';
+import { Folder, User2, Calendar, Clock, Heart, Eye } from 'lucide-react';
 
 interface Props {
   searchParams: { page?: string };
@@ -87,11 +87,6 @@ export default async function BlogPage({ searchParams }: Props) {
               >
                 <article className="h-full bg-white dark:bg-zinc-900 rounded-lg sm:rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
                   <div className="p-4 sm:p-6 flex flex-col h-full">
-                    {post.category && (
-                      <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-2">
-                        {post.category.name}
-                      </span>
-                    )}
                     <h2 className="text-xl font-bold group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors line-clamp-2">
                       {post.title}
                     </h2>
@@ -101,35 +96,47 @@ export default async function BlogPage({ searchParams }: Props) {
                     </p>
 
                     <div className="mt-auto">
-                      <div className="flex flex-wrap items-center gap-2 text-xs mb-4">
+                      <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm">
                         {post.category && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md">
-                            <Folder className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-md">
+                            <Folder className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             {post.category.name}
                           </span>
                         )}
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md">
-                          <User2 className="w-3.5 h-3.5" />
+                        <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-md">
+                          <User2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           {post.author.name}
                         </span>
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md">
-                          <Clock className="w-3.5 h-3.5" />
+                        <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-md">
+                          <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           {Math.ceil(post.content.split(' ').length / 200)} min
                         </span>
                         {post.publishedAt && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md">
-                            <Calendar className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-md">
+                            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             <time
                               dateTime={post.publishedAt}
                               className="font-mono"
                             >
-                              {new Date(post.publishedAt).toLocaleDateString()}
+                              {new Intl.DateTimeFormat('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              }).format(new Date(post.publishedAt))}
                             </time>
                           </span>
                         )}
+                        <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-md">
+                          <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          {post.likesCount || 0} likes
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-md">
+                          <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          {post.viewCount || 0} views
+                        </span>
                       </div>
 
-                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      {/* <div className="flex flex-wrap gap-1.5 sm:gap-2">
                         {post.tags.map((tag) => (
                           <span
                             key={tag.id}
@@ -138,7 +145,7 @@ export default async function BlogPage({ searchParams }: Props) {
                             #{tag.name}
                           </span>
                         ))}
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </article>
