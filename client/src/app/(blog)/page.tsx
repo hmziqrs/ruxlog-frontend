@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { api } from '@/services/api';
 import { Post } from '@/types';
 import { Metadata } from 'next';
+import { Folder, User2, Calendar, Clock } from 'lucide-react';
 
 interface Props {
   searchParams: { page?: string };
@@ -29,11 +30,7 @@ export function generateMetadata(): Metadata {
 
 export default async function BlogPage({ searchParams }: Props) {
   try {
-    const page = Number(searchParams?.page) || 1;
-
-    if (page < 1) {
-      throw new Error('Invalid page number');
-    }
+    const page = Math.min(1, Number(searchParams?.page) || 1);
 
     const response = await api.post<PostListResponse>(
       '/post/v1/list/published',
@@ -95,31 +92,40 @@ export default async function BlogPage({ searchParams }: Props) {
                         {post.category.name}
                       </span>
                     )}
-                    <h2 className="text-xl font-bold mb-3 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
+                    <h2 className="text-xl font-bold group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors line-clamp-2">
                       {post.title}
                     </h2>
-                    <p className="text-zinc-600 dark:text-zinc-400 text-sm mb-4 line-clamp-2">
+                    <div className="h-1" />
+                    <p className="font-mono text-zinc-600 dark:text-zinc-400 text-sm mb-4 line-clamp-2">
                       {post.excerpt}
                     </p>
 
                     <div className="mt-auto">
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm text-zinc-500 dark:text-zinc-400 mb-3 sm:mb-4">
-                        <span className="font-medium">{post.author.name}</span>
-                        <span>•</span>
-                        <span>
+                      <div className="flex flex-wrap items-center gap-2 text-xs mb-4">
+                        {post.category && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md">
+                            <Folder className="w-3.5 h-3.5" />
+                            {post.category.name}
+                          </span>
+                        )}
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md">
+                          <User2 className="w-3.5 h-3.5" />
+                          {post.author.name}
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md">
+                          <Clock className="w-3.5 h-3.5" />
                           {Math.ceil(post.content.split(' ').length / 200)} min
-                          read
                         </span>
                         {post.publishedAt && (
-                          <>
-                            <span>•</span>
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-md">
+                            <Calendar className="w-3.5 h-3.5" />
                             <time
                               dateTime={post.publishedAt}
                               className="font-mono"
                             >
                               {new Date(post.publishedAt).toLocaleDateString()}
                             </time>
-                          </>
+                          </span>
                         )}
                       </div>
 
