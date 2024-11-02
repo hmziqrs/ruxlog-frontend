@@ -80,16 +80,16 @@ export default async function BlogPage({ searchParams }: Props) {
 
     return (
       <main className="min-h-screen">
-        <div className="container mx-auto px-5 py-12">
-          <div className="grid gap-8 md:grid-cols-2">
+        <div className="container mx-auto px-4 sm:px-5 py-6 sm:py-12">
+          <div className="grid gap-4 sm:gap-8 md:grid-cols-2">
             {posts.map((post) => (
               <Link
                 key={post.id}
                 href={`/post/${post.slug}`}
                 className="group block"
               >
-                <article className="h-full bg-white dark:bg-zinc-900 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
-                  <div className="p-6 flex flex-col h-full">
+                <article className="h-full bg-white dark:bg-zinc-900 rounded-lg sm:rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
+                  <div className="p-4 sm:p-6 flex flex-col h-full">
                     {post.category && (
                       <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-2">
                         {post.category.name}
@@ -103,7 +103,7 @@ export default async function BlogPage({ searchParams }: Props) {
                     </p>
 
                     <div className="mt-auto">
-                      <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm text-zinc-500 dark:text-zinc-400 mb-3 sm:mb-4">
                         <span className="font-medium">{post.author.name}</span>
                         <span>•</span>
                         <span>
@@ -123,11 +123,11 @@ export default async function BlogPage({ searchParams }: Props) {
                         )}
                       </div>
 
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
                         {post.tags.map((tag) => (
                           <span
                             key={tag.id}
-                            className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full text-xs font-medium"
+                            className="px-2 sm:px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full text-xs font-medium"
                           >
                             #{tag.name}
                           </span>
@@ -142,18 +142,18 @@ export default async function BlogPage({ searchParams }: Props) {
 
           {totalPages > 1 && (
             <nav
-              className="mt-12 flex justify-center gap-2"
+              className="mt-8 sm:mt-12 flex justify-center gap-1 sm:gap-2"
               aria-label="Pagination"
             >
               <a
                 href="?page=1"
-                className={`px-3 py-2 bg-white dark:bg-zinc-900 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 transition-colors ${
+                className={`px-2 sm:px-3 py-2 bg-white dark:bg-zinc-900 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 transition-colors ${
                   page === 1 ? 'pointer-events-none opacity-50' : ''
                 }`}
                 aria-label="First page"
               >
                 <svg
-                  className="w-5 h-5"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -169,14 +169,14 @@ export default async function BlogPage({ searchParams }: Props) {
 
               {getPageNumbers(page, totalPages).map((pageNum, idx) =>
                 pageNum === '...' ? (
-                  <span key={`ellipsis-${idx}`} className="px-3 py-2">
+                  <span key={`ellipsis-${idx}`} className="px-2 sm:px-3 py-2">
                     ...
                   </span>
                 ) : (
                   <a
                     key={`page-${pageNum}`}
                     href={`?page=${pageNum}`}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
+                    className={`px-3 sm:px-4 py-2 rounded-lg transition-colors ${
                       pageNum === page
                         ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900'
                         : 'bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800'
@@ -189,13 +189,13 @@ export default async function BlogPage({ searchParams }: Props) {
 
               <a
                 href={`?page=${totalPages}`}
-                className={`px-3 py-2 bg-white dark:bg-zinc-900 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 transition-colors ${
+                className={`px-2 sm:px-3 py-2 bg-white dark:bg-zinc-900 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 transition-colors ${
                   page === totalPages ? 'pointer-events-none opacity-50' : ''
                 }`}
                 aria-label="Last page"
               >
                 <svg
-                  className="w-5 h-5"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
