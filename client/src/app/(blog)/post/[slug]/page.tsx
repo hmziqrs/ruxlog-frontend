@@ -64,8 +64,8 @@ export async function generateMetadata({
       title: post.title,
       description: post.excerpt,
       images: post.featuredImageUrl ? [post.featuredImageUrl] : [],
-      creator: '@yourtwitterhandle',
-      site: '@yourwebsitetwitter',
+      creator: `@${process.env.NEXT_PUBLIC_USERNAME}`,
+      site: `@${process.env.NEXT_PUBLIC_USERNAME}`,
     },
     // Additional Meta Tags
     other: {
