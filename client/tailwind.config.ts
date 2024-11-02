@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import colors from 'tailwindcss/colors';
 
 const config: Config = {
   darkMode: 'class',
@@ -12,6 +13,7 @@ const config: Config = {
       colors: {
         background: 'var(--background)',
         foreground: 'var(--foreground)',
+        primary: colors.indigo, // Using Tailwind's built-in sky color palette
       },
       fontFamily: {
         sans: ['var(--font-geist-sans)'],
@@ -24,4 +26,5 @@ const config: Config = {
   },
   plugins: [require('@tailwindcss/typography')],
 };
+
 export default config;
