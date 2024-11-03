@@ -1,5 +1,7 @@
 import { Metadata } from 'next';
 import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { api } from '@/services/api';
 import { Post } from '@/types';
 import { PostView } from './post-view';
@@ -11,6 +13,10 @@ interface PostProps {
     slug: string;
   };
 }
+
+const languageMap: Record<string, string> = {
+  rs: 'rust',
+};
 
 export async function generateMetadata({
   params,
@@ -189,7 +195,31 @@ export default async function PostPage({ params }: PostProps) {
         </header>
 
         <div className="prose dark:prose-invert max-w-full">
-          <ReactMarkdown>{post.content}</ReactMarkdown>
+          <ReactMarkdown
+            components={{
+              code({ className, children, ...props }) {
+                console.log('className', className);
+                const match = /language-(\w+)/.exec(className || '');
+                const lang = match ? match[1] : '';
+                return match ? (
+                  <SyntaxHighlighter
+                    {...props}
+                    PreTag="div"
+                    language={languageMap[lang] || lang}
+                    style={dracula}
+                  >
+                    {String(children).replace(/\n$/, '')}
+                  </SyntaxHighlighter>
+                ) : (
+                  <code className={className} {...props}>
+                    {children}
+                  </code>
+                );
+              },
+            }}
+          >
+            {post.content}
+          </ReactMarkdown>
         </div>
         <div className="h-4" />
         <div className="flex flex-wrap gap-3">
