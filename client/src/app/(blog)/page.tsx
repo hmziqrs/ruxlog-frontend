@@ -98,7 +98,7 @@ export default async function BlogPage({ searchParams }: Props) {
                     </p>
 
                     <div className="mt-auto">
-                      <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 text-xs sm:text-sm">
+                      <div className="flex flex-wrap items-center gap-2.5 sm:gap-4">
                         {post.category && (
                           <MetaPill icon={Folder} label={post.category.name} />
                         )}

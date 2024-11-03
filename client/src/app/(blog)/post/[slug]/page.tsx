@@ -173,10 +173,10 @@ export default async function PostPage({ params }: PostProps) {
             {post.title}
           </h1>
 
-          <div className="flex flex-wrap items-center gap-4 mb-6">
+          <div className="flex flex-wrap items-center sm:gap-4 gap-2.5 mb-6">
             <MetaPill
               icon={Folder}
-              label={post.category?.name || 'Uncategorized'}
+              label={post.category?.name || 'un categorized'}
             />
 
             <MetaPill icon={User} label={post.author.name} />
@@ -198,12 +198,10 @@ export default async function PostPage({ params }: PostProps) {
           <ReactMarkdown
             components={{
               code({ className, children, ...props }) {
-                console.log('className', className);
                 const match = /language-(\w+)/.exec(className || '');
                 const lang = match ? match[1] : '';
                 return match ? (
                   <SyntaxHighlighter
-                    {...props}
                     PreTag="div"
                     language={languageMap[lang] || lang}
                     style={dracula}
