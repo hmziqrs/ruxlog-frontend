@@ -15,7 +15,8 @@ interface PostProps {
 export async function generateMetadata({
   params,
 }: PostProps): Promise<Metadata> {
-  const post = await api.post<Post>(`/post/v1/view/${params.slug}`);
+  const { slug } = await params;
+  const post = await api.post<Post>(`/post/v1/view/${slug}`);
   const publishDate = post.publishedAt || post.createdAt;
 
   return {
@@ -89,9 +90,9 @@ export async function generateMetadata({
 }
 
 export default async function PostPage({ params }: PostProps) {
-  const post = await api.post<Post>(`/post/v1/view/${params.slug}`, null, {
+  const { slug } = await params;
+  const post = await api.post<Post>(`/post/v1/view/${slug}`, null, {
     next: { revalidate: 60 * 60 * 24 },
-    // cache: 'default',
   });
 
   const jsonLd = {
@@ -149,9 +150,9 @@ export default async function PostPage({ params }: PostProps) {
         content={`© ${new Date().getFullYear()} ${process.env.NEXT_PUBLIC_SITE_NAME}`}
       />
       <PostView id={post.id} />
-      <article className="container mx-auto px-4 py-8">
+      <article className="px-4 py-8">
         {post.featuredImageUrl && (
-          <div className="relative h-[400px] mb-8 rounded-xl overflow-hidden">
+          <div className="relative h-[300px] mb-8 rounded-xl overflow-hidden">
             <img
               src={post.featuredImageUrl}
               alt={post.title}
@@ -187,7 +188,7 @@ export default async function PostPage({ params }: PostProps) {
           </div>
         </header>
 
-        <div className="prose dark:prose-invert ">
+        <div className="prose dark:prose-invert">
           <ReactMarkdown>{post.content}</ReactMarkdown>
         </div>
         <div className="h-4" />
