@@ -1,8 +1,12 @@
 import { Metadata } from 'next';
 import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { dracula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { api } from '@/services/api';
 import { Post } from '@/types';
 import { PostView } from './post-view';
+import { Clock, Calendar, Heart, Eye, User, Folder } from 'lucide-react';
+import { MetaPill } from '@/components/MetaPill';
 
 interface PostProps {
   params: {
@@ -10,10 +14,15 @@ interface PostProps {
   };
 }
 
+const languageMap: Record<string, string> = {
+  rs: 'rust',
+};
+
 export async function generateMetadata({
   params,
 }: PostProps): Promise<Metadata> {
-  const post = await api.post<Post>(`/post/v1/view/${params.slug}`);
+  const { slug } = await params;
+  const post = await api.post<Post>(`/post/v1/view/${slug}`);
   const publishDate = post.publishedAt || post.createdAt;
 
   return {
@@ -64,8 +73,8 @@ export async function generateMetadata({
       title: post.title,
       description: post.excerpt,
       images: post.featuredImageUrl ? [post.featuredImageUrl] : [],
-      creator: '@yourtwitterhandle',
-      site: '@yourwebsitetwitter',
+      creator: `@${process.env.NEXT_PUBLIC_USERNAME}`,
+      site: `@${process.env.NEXT_PUBLIC_USERNAME}`,
     },
     // Additional Meta Tags
     other: {
@@ -87,9 +96,9 @@ export async function generateMetadata({
 }
 
 export default async function PostPage({ params }: PostProps) {
-  const post = await api.post<Post>(`/post/v1/view/${params.slug}`, null, {
+  const { slug } = await params;
+  const post = await api.post<Post>(`/post/v1/view/${slug}`, null, {
     next: { revalidate: 60 * 60 * 24 },
-    cache: 'default',
   });
 
   const jsonLd = {
@@ -123,6 +132,8 @@ export default async function PostPage({ params }: PostProps) {
     wordCount: post.content.split(/\s+/).length,
   };
 
+  const readingTime = Math.ceil(post.content.split(/\s+/).length / 80);
+
   return (
     <>
       {/* Add more structured data for different platforms */}
@@ -145,62 +156,79 @@ export default async function PostPage({ params }: PostProps) {
         content={`© ${new Date().getFullYear()} ${process.env.NEXT_PUBLIC_SITE_NAME}`}
       />
       <PostView id={post.id} />
-      <article className="container mx-auto px-4 py-8">
+      <article className="px-4 py-8">
         {post.featuredImageUrl && (
-          <img
-            src={post.featuredImageUrl}
-            alt={post.title}
-            className="w-full h-64 object-cover rounded-lg mb-8"
-          />
+          <div className="relative h-[300px] mb-8 rounded-xl overflow-hidden">
+            <img
+              src={post.featuredImageUrl}
+              alt={post.title}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          </div>
         )}
 
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 dark:text-white">
+        <header>
+          <h1 className="text-2xl sm:text-3xl font-semibold mb-6  leading-tight">
             {post.title}
           </h1>
 
-          <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
-            <div className="flex items-center">
-              {post.author.avatar && (
-                <img
-                  src={post.author.avatar}
-                  alt={post.author.name}
-                  className="w-6 h-6 rounded-full mr-2"
-                />
-              )}
-              <span>{post.author.name}</span>
-            </div>
-            <time dateTime={post.createdAt}>
-              {new Date(post.createdAt).toLocaleDateString()}
-            </time>
-            <div>👁 {post.viewCount} views</div>
-            <div>❤️ {post.likesCount} likes</div>
+          <div className="flex flex-wrap items-center sm:gap-4 gap-2.5 mb-6">
+            <MetaPill
+              icon={Folder}
+              label={post.category?.name || 'un categorized'}
+            />
+
+            <MetaPill icon={User} label={post.author.name} />
+            <MetaPill
+              icon={Calendar}
+              label={new Date(post.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            />
+            <MetaPill icon={Clock} label={`${readingTime} min read`} />
+            <MetaPill icon={Eye} label={`${post.viewCount} views`} />
+            <MetaPill icon={Heart} label={`${post.likesCount} likes`} />
           </div>
-
-          {post.category && (
-            <div className="mb-2">
-              <span className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full text-sm">
-                {post.category.name}
-              </span>
-            </div>
-          )}
-
-          {post.tags.length > 0 && (
-            <div className="flex gap-2 flex-wrap">
-              {post.tags.map((tag) => (
-                <span
-                  key={tag.id}
-                  className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full text-xs"
-                >
-                  #{tag.name}
-                </span>
-              ))}
-            </div>
-          )}
         </header>
 
-        <div className="prose dark:prose-invert prose-sm max-w-none">
-          <ReactMarkdown>{post.content}</ReactMarkdown>
+        <div className="prose dark:prose-invert max-w-full">
+          <ReactMarkdown
+            components={{
+              code({ className, children, ...props }) {
+                const match = /language-(\w+)/.exec(className || '');
+                const lang = match ? match[1] : '';
+                return match ? (
+                  <SyntaxHighlighter
+                    PreTag="div"
+                    language={languageMap[lang] || lang}
+                    style={dracula}
+                  >
+                    {String(children).replace(/\n$/, '')}
+                  </SyntaxHighlighter>
+                ) : (
+                  <code className={className} {...props}>
+                    {children}
+                  </code>
+                );
+              },
+            }}
+          >
+            {post.content}
+          </ReactMarkdown>
+        </div>
+        <div className="h-4" />
+        <div className="flex flex-wrap gap-3">
+          {post.tags.map((tag) => (
+            <span
+              key={tag.id}
+              className="bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full text-sm"
+            >
+              #{tag.name}
+            </span>
+          ))}
         </div>
       </article>
     </>
