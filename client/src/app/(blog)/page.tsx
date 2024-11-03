@@ -44,6 +44,7 @@ export default async function BlogPage({ searchParams }: Props) {
       notFound();
     }
 
+    // const totalPages = 12;
     const totalPages = Math.ceil(total / perPage);
 
     if (page > totalPages) {
@@ -91,7 +92,7 @@ export default async function BlogPage({ searchParams }: Props) {
                     <h2 className="text-xl font-semibold group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors line-clamp-2">
                       {post.title}
                     </h2>
-                    <div className="h-1" />
+                    <div className="h-2" />
                     <p className="font-mono text-zinc-600 dark:text-zinc-400 text-sm mb-4 line-clamp-2">
                       {post.excerpt}
                     </p>
@@ -134,75 +135,35 @@ export default async function BlogPage({ searchParams }: Props) {
               </Link>
             ))}
           </div>
-
           {totalPages > 1 && (
             <nav
-              className="mt-8 sm:mt-12 flex justify-center gap-1 sm:gap-2"
+              className="flex justify-center sm:gap-3 gap-2 mt-6 sm:text-base text-xs"
               aria-label="Pagination"
             >
-              <a
-                href="?page=1"
-                className={`px-2 sm:px-3 py-2 bg-white dark:bg-zinc-900 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 transition-colors ${
-                  page === 1 ? 'pointer-events-none opacity-50' : ''
-                }`}
-                aria-label="First page"
-              >
-                <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                  />
-                </svg>
-              </a>
-
               {getPageNumbers(page, totalPages).map((pageNum, idx) =>
                 pageNum === '...' ? (
-                  <span key={`ellipsis-${idx}`} className="px-2 sm:px-3 py-2">
+                  <span
+                    key={`ellipsis-${idx}`}
+                    className="sm:px-3 px-1 py-1 rounded"
+                  >
                     ...
                   </span>
                 ) : (
-                  <a
+                  <Link
                     key={`page-${pageNum}`}
                     href={`?page=${pageNum}`}
-                    className={`px-3 sm:px-4 py-2 rounded-lg transition-colors ${
-                      pageNum === page
-                        ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900'
-                        : 'bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800'
-                    }`}
+                    className={`transition-colors rounded w-8 h-8 sm:w-10 sm:h-10
+                      flex items-center justify-center
+                       ${
+                         pageNum === page
+                           ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900'
+                           : 'bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800'
+                       }`}
                   >
-                    {pageNum}
-                  </a>
+                    <span>{pageNum}</span>
+                  </Link>
                 )
               )}
-
-              <a
-                href={`?page=${totalPages}`}
-                className={`px-2 sm:px-3 py-2 bg-white dark:bg-zinc-900 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 transition-colors ${
-                  page === totalPages ? 'pointer-events-none opacity-50' : ''
-                }`}
-                aria-label="Last page"
-              >
-                <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 5l7 7-7 7M5 5l7 7-7 7"
-                  />
-                </svg>
-              </a>
             </nav>
           )}
         </div>
