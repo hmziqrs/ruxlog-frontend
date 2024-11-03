@@ -188,7 +188,7 @@ export default async function PostPage({ params }: PostProps) {
           </div>
         </header>
 
-        <div className="prose dark:prose-invert">
+        <div className="prose dark:prose-invert max-w-full">
           <ReactMarkdown>{post.content}</ReactMarkdown>
         </div>
         <div className="h-4" />
