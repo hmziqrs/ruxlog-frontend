@@ -1,6 +1,9 @@
+import { isServer } from '@/utils';
 import { camelizeKeys, decamelizeKeys } from 'humps';
 
-const API_URL = process.env.NEXT_PUBLIC_API;
+const PUBLIC_API = process.env.NEXT_PUBLIC_API;
+const INERNAL_API = process.env.INTERNAL_API;
+
 const CSRF_TOKEN = process.env.NEXT_PUBLIC_CSRF_TOKEN;
 
 interface FetchOptions extends RequestInit {
@@ -14,6 +17,15 @@ class FetchClient {
 
   private constructor() {}
 
+  private getApiUrl() {
+    if (!isServer()) {
+      // Server-side
+      return PUBLIC_API;
+    }
+    return INERNAL_API;
+    // Client-side
+  }
+
   static getInstance(): FetchClient {
     if (!this.instance) {
       this.instance = new FetchClient();
@@ -24,7 +36,7 @@ class FetchClient {
   async fetch<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
     const { params, ...fetchOptions } = options;
 
-    const url = new URL(`${API_URL}${endpoint}`);
+    const url = new URL(`${this.getApiUrl()}${endpoint}`);
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         url.searchParams.append(key, String(value));

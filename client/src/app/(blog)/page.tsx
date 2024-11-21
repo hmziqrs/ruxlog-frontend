@@ -88,7 +88,7 @@ export default async function BlogPage({ searchParams }: Props) {
                 href={`/post/${post.slug}`}
                 className="group block"
               >
-                <article className="h-full bg-white dark:bg-zinc-900 rounded-lg sm:rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <article className="h-full bg-white dark:bg-zinc-900 rounded-lg sm:rounded-xl shadow hover:shadow-xl transition-all duration-300 overflow-hidden">
                   <div className="p-4 sm:p-6 flex flex-col h-full">
                     <h2 className="text-xl font-semibold group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors line-clamp-2">
                       {post.title}
