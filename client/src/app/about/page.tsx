@@ -88,24 +88,17 @@ export default function AboutPage() {
       <h3 className="font-mono font-semibold text-3xl">History</h3>
       <div className="h-2" />
       <p>
-        I originally wanted to build a Rust backend boilerplate with basic
-        integration of common modules like authentication, database, logging,
-        rate limiting, abuse limiting, account verification, etc. I have some
-        ideas for projects that I want to build with Rust. However, I could not
-        decide on libraries, frameworks, and structure to use. I planned to
-        build a blog. When I started integrating the libraries together, the
-        vision became clearer.
+        I wanted to build a Rust backend boilerplate with common features like
+        auth and database. I had ideas for Rust projects but was not sure which
+        tools to use. Building this blog helped me figure out the right
+        approach.
       </p>
       <div className="h-2" />
       <p className="">
-        I always wanted to have a blog to document my learning process and
-        thoughts. This is my second attempt at building a blog; the first
-        attempt was to build a completely static site hosted on a GitHub
-        repository using GitHub Pages. The goal was to have two repositories:
-        one containing NextJS code with custom installable themes and another
-        with blog content. I abandoned that project because I got hired for a
-        full-time job and did not have time to work on it. It is open source and
-        can be found below.
+        I wanted a blog to share what I learn and think about. My first try was
+        a static site on GitHub Pages with two repos - one for code, one for
+        content. I stopped working on it when I got a full-time job, but the
+        code is still available below.
       </p>
       <div className="h-4" />
       <div className="p-4 border border-zinc-800 rounded-lg w-fit">
@@ -119,16 +112,16 @@ export default function AboutPage() {
           </span>
         ))}
       </div>
-      <div className="h-4" />
+      <div className="h-8" />
       <h3 className="font-mono font-semibold text-3xl">Goal</h3>
       <div className="h-2" />
       <p className="">
-        I have a lot of experience with frontend, from development to production
-        management. I have built backend servers but have little to no
-        production experience. My plan is to keep iterating on this project,
-        adding features, and, of course, writing blog posts.
+        I am experienced with frontend development and managing production
+        sites. While I have built backend servers, I do not have much real-world
+        experience with them. I want to grow this project by adding features and
+        sharing through blog posts.
       </p>
-      <div className="h-4" />
+      <div className="h-8" />
       <h3 className="font-mono font-semibold text-3xl">Tech Stack</h3>
       <div className="h-2" />
       <div className="flex flex-col gap-y-5">

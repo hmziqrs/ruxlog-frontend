@@ -47,8 +47,7 @@ export default function ContactPage() {
           />
         </div>
         <div className="flex flex-col text-center sm:text-left">
-          <h2 className="text-lg font-semibold mb-2 font-mono">Contacts:</h2>
-          <p className="mb-6">You can find me @hmziqrs</p>
+          <h1 className="text-2xl font-semibold mb-2 font-mono">Contacts:</h1>
           <div className="flex flex-row flex-wrap gap-3">
             {links.map((link) => (
               <a
