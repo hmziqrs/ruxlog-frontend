@@ -1,5 +1,6 @@
 'use client';
 
+import { isServer } from '@/utils';
 import { initializeApp } from 'firebase/app';
 
 const firebaseConfig = {
@@ -13,4 +14,4 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-export const firebase = initializeApp(firebaseConfig);
+export const firebase = !isServer() ? initializeApp(firebaseConfig) : null;
