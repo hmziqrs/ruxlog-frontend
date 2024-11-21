@@ -7,7 +7,7 @@ import { Folder, User2, Calendar, Clock, Heart, Eye } from 'lucide-react';
 import { MetaPill } from '@/components/MetaPill';
 
 interface Props {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }
 
 interface PostListResponse {
@@ -31,23 +31,24 @@ export function generateMetadata(): Metadata {
 
 export default async function BlogPage({ searchParams }: Props) {
   try {
-    const page = Math.max(1, Number(searchParams?.page) || 1);
+    const { page } = await searchParams;
+    const paneNo = Math.max(1, Number(page) || 1);
 
     const response = await api.post<PostListResponse>(
       '/post/v1/list/published',
-      { page }
+      { page: paneNo }
     );
 
     const { data: posts, total, perPage } = response;
 
-    if (!posts?.length && page !== 1) {
+    if (!posts?.length && paneNo !== 1) {
       notFound();
     }
 
     // const totalPages = 12;
     const totalPages = Math.ceil(total / perPage);
 
-    if (page > totalPages) {
+    if (paneNo > totalPages) {
       notFound();
     }
 
@@ -140,7 +141,7 @@ export default async function BlogPage({ searchParams }: Props) {
               className="flex justify-center sm:gap-3 gap-2 mt-6 sm:text-base text-xs"
               aria-label="Pagination"
             >
-              {getPageNumbers(page, totalPages).map((pageNum, idx) =>
+              {getPageNumbers(paneNo, totalPages).map((pageNum, idx) =>
                 pageNum === '...' ? (
                   <span
                     key={`ellipsis-${idx}`}

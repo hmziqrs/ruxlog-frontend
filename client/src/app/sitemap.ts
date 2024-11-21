@@ -2,50 +2,53 @@ import { api } from '@/services/api';
 import { PostSiteMap } from '@/types';
 import type { MetadataRoute } from 'next';
 
-export const revalidate = 60 * 60 * 24; // 1 hour
+// export const revalidate = 60 * 60 * 24; // 1 hour
+
+export const dynamic = 'force-dynamic';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = 'https://blog.hmziq.rs';
   const posts = await api.post<PostSiteMap[]>(`/post/v1/sitemap`);
 
   const sitemapItems: MetadataRoute.Sitemap = [
     {
-      url: '/',
-      lastModified: new Date('2024-11-01'),
+      url: `${baseUrl}`,
+      lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1,
     },
     {
-      url: '/about',
-      lastModified: new Date('2024-11-01'),
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
-      url: '/contact',
-      lastModified: new Date('2024-11-01'),
+      url: `${baseUrl}/contact`,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
-      url: '/changelog',
-      lastModified: new Date('2024-11-01'),
+      url: `${baseUrl}/changelog`,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
-      url: '/privacy-policy',
-      lastModified: new Date('2024-11-01'),
+      url: `${baseUrl}/privacy-policy`,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
-      url: '/terms-of-service',
-      lastModified: new Date('2024-11-01'),
+      url: `${baseUrl}/terms-of-service`,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     ...posts.map((post) => ({
-      url: `/post/${post.slug}`,
+      url: `${baseUrl}/post/${post.slug}`,
       lastModified: new Date(post.updatedAt),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
