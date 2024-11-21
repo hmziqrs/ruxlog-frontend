@@ -7,16 +7,13 @@ import { Post } from '@/types';
 import { PostView } from './post-view';
 import { Clock, Calendar, Heart, Eye, User, Folder } from 'lucide-react';
 import { MetaPill } from '@/components/MetaPill';
+import Image from 'next/image';
 
 interface PostProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
-
-const languageMap: Record<string, string> = {
-  rs: 'rust',
-};
 
 export async function generateMetadata({
   params,
@@ -97,6 +94,10 @@ export async function generateMetadata({
 
 export default async function PostPage({ params }: PostProps) {
   const { slug } = await params;
+  const languageMap: Record<string, string> = {
+    rs: 'rust',
+  };
+
   const post = await api.post<Post>(`/post/v1/view/${slug}`, null, {
     next: { revalidate: 60 * 60 * 24 },
   });
@@ -159,7 +160,7 @@ export default async function PostPage({ params }: PostProps) {
       <article className="px-4 py-8">
         {post.featuredImageUrl && (
           <div className="relative h-[300px] mb-8 rounded-xl overflow-hidden">
-            <img
+            <Image
               src={post.featuredImageUrl}
               alt={post.title}
               className="absolute inset-0 w-full h-full object-cover"

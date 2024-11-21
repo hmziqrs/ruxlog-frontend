@@ -37,6 +37,51 @@ const stack = [
   },
 ];
 
+const oldRepoLinks = [
+  {
+    type: 'code',
+    href: 'https://github.com/hmziqrs/next-blog',
+    label: '@hmziqrs next-blog',
+  },
+  {
+    type: 'data',
+    href: 'https://github.com/hmziqrs/blog-posts',
+    label: '@hmziqrs blog-posts',
+  },
+];
+
+const sourceCodeLinks = [
+  {
+    type: 'backend',
+    href: 'https://github.com/hmziqrs/ruxlog-backend',
+    label: '@hmziqrs next-blog',
+  },
+  {
+    type: 'admin/client',
+    href: 'https://github.com/hmziqrs/ruxlog-frontend',
+    label: '@hmziqrs blog-posts',
+  },
+];
+
+interface ExternalLinkProps {
+  href: string;
+  label: string;
+}
+
+function ExternalLink({ href, label }: ExternalLinkProps) {
+  return (
+    <Link
+      className="hover:text-zinc-300 hover:underline"
+      href={href}
+      aria-label={label}
+      title={label}
+      target="_blank"
+    >
+      {href}
+    </Link>
+  );
+}
+
 export default function AboutPage() {
   return (
     <main className="container mx-auto py-8 px-5">
@@ -64,33 +109,15 @@ export default function AboutPage() {
       </p>
       <div className="h-4" />
       <div className="p-4 border border-zinc-800 rounded-lg w-fit">
-        <span>
-          <h5 className="font-mono text-xl font-semibold">Old repository</h5>
-          <div className="h-1" />
-          <span className="font-mono">code: </span>
-          <Link
-            className="hover:text-zinc-300 hover:underline"
-            href="https://github.com/hmziqrs/next-blog"
-            aria-label="@hmziqrs next-blog"
-            title="@hmziqrs next-blog"
-            target="_blank"
-          >
-            https://github.com/hmziqrs/next-blog
-          </Link>
-        </span>
-        <br />
-        <span>
-          <span className="font-mono">data: </span>
-          <Link
-            className="hover:text-zinc-300 hover:underline"
-            href="https://github.com/hmziqrs/blog-posts"
-            aria-label="@hmziqrs blog-posts"
-            title="@hmziqrs blog-posts"
-            target="_blank"
-          >
-            https://github.com/hmziqrs/blog-posts
-          </Link>
-        </span>
+        <h5 className="font-mono text-xl font-semibold">Old repository</h5>
+        <div className="h-1" />
+        {oldRepoLinks.map(({ type, href, label }) => (
+          <span key={type}>
+            <span className="font-mono">{type}: </span>
+            <ExternalLink href={href} label={label} />
+            <br />
+          </span>
+        ))}
       </div>
       <div className="h-4" />
       <h3 className="font-mono font-semibold text-3xl">Goal</h3>
@@ -124,46 +151,15 @@ export default function AboutPage() {
       </div>
       <div className="h-4" />
       <div className="p-4 border border-zinc-800 rounded-lg w-fit">
-        <span>
-          <h5 className="font-mono text-xl font-semibold">Source code</h5>
-          <div className="h-1" />
-          <span className="font-mono">backend: </span>
-          <Link
-            className="hover:text-zinc-300 hover:underline"
-            href="https://github.com/hmziqrs/next-blog"
-            aria-label="@hmziqrs next-blog"
-            title="@hmziqrs next-blog"
-            target="_blank"
-          >
-            https://github.com/hmziqrs/next-blog
-          </Link>
-        </span>
-        <br />
-        <span>
-          <span className="font-mono">admin: </span>
-          <Link
-            className="hover:text-zinc-300 hover:underline"
-            href="https://github.com/hmziqrs/blog-posts"
-            aria-label="@hmziqrs blog-posts"
-            title="@hmziqrs blog-posts"
-            target="_blank"
-          >
-            https://github.com/hmziqrs/blog-posts
-          </Link>
-        </span>
-        <br />
-        <span>
-          <span className="font-mono">client: </span>
-          <Link
-            className="hover:text-zinc-300 hover:underline"
-            href="https://github.com/hmziqrs/blog-posts"
-            aria-label="@hmziqrs blog-posts"
-            title="@hmziqrs blog-posts"
-            target="_blank"
-          >
-            https://github.com/hmziqrs/blog-posts
-          </Link>
-        </span>
+        <h5 className="font-mono text-xl font-semibold">Source code</h5>
+        <div className="h-1" />
+        {sourceCodeLinks.map(({ type, href, label }) => (
+          <span key={type}>
+            <span className="font-mono">{type}: </span>
+            <ExternalLink href={href} label={label} />
+            <br />
+          </span>
+        ))}
       </div>
     </main>
   );
