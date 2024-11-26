@@ -45,7 +45,7 @@ export function useBlogFormBrain({
   const autoSlug = useBoolEngine(true);
   const form = useForm<BlogFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: defaultValues ?? _defaultValues,
+    defaultValues: { ..._defaultValues, ...defaultValues },
   });
   const title = form.watch('title');
   const onFormSubmit = form.handleSubmit(onSubmit);
@@ -69,6 +69,6 @@ export function useBlogFormBrain({
     form,
     sanitizeSlug,
     autoSlug,
-    onSubmit: onFormSubmit,
+    onFormSubmit,
   };
 }

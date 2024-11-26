@@ -20,8 +20,8 @@ export function useAuthBrain() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: 'hmzi@gmail.rs',
-      password: 'hello',
+      email: 'superadmin@blog.hmziq.rs',
+      password: 'hamza@gamil.com',
     },
   });
   const loginPrevState = usePrev(auth.state.login);

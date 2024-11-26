@@ -11,7 +11,7 @@ export function useNewPostBrain() {
   const { loading } = post.state.add;
 
   function onSubmit(data: any) {
-    console.log('asa', data);
+    post.actions.add(data);
   }
 
   useEffect(() => {

@@ -24,7 +24,7 @@ export function BlogForm({
   onSubmit,
   post,
 }: {
-  post: BlogFormValues;
+  post?: BlogFormValues;
   title: string;
   submitLabel: string;
   loading: boolean;
@@ -39,7 +39,7 @@ export function BlogForm({
       <CardContent>
         <Form {...brain.form}>
           <form
-            onSubmit={brain.form.handleSubmit(brain.onSubmit)}
+            onSubmit={brain.onFormSubmit}
             className="space-y-8"
           >
             <FormField
