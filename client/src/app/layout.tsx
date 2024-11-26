@@ -5,6 +5,7 @@ import { LayoutFooter } from '@/components/layout-footer';
 
 import './globals.css';
 import { LayoutHeader } from '@/components/layout-header';
+import { Suspense } from 'react';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -29,7 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <>
-      <ScreenTracker />
+      <Suspense>
+        <ScreenTracker />
+      </Suspense>
       <html lang="en" className="dark h-full">
         <head>
           <link
