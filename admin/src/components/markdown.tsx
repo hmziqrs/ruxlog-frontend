@@ -8,11 +8,11 @@ export function Markdown({ children }: { children: string }) {
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       components={{
-        code({ node, inline, className, children, ...props }) {
+        code({ node, className, children, ...props }) {
           const match = /language-(\w+)/.exec(className || '');
-          return !inline && match ? (
-            <SyntaxHighlighter
-              {...props}
+          return  match ? (
+            <SyntaxHighlighter 
+              // {...props}
               style={vscDarkPlus}
               language={match[1]}
               PreTag="div"
