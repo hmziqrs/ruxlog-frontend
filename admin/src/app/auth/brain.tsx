@@ -21,7 +21,7 @@ export function useAuthBrain() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: 'superadmin@blog.hmziq.rs',
-      password: 'hamza@gamil.com',
+      password: 'test@gamil.com',
     },
   });
   const loginPrevState = usePrev(auth.state.login);
