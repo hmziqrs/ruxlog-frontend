@@ -20,4 +20,4 @@ services:
 networks:
   network:
     name: ${PROJECT}_network
-    driver: bridge
+    external: true

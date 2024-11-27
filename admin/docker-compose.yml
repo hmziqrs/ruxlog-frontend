@@ -9,7 +9,7 @@ services:
     container_name: ${PROJECT}_admin
     restart: always
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3001:3000"
     networks:
       - network
     env_file:
@@ -22,4 +22,4 @@ services:
 networks:
   network:
     name: ${PROJECT}_network
-    driver: bridge
+    external: true
