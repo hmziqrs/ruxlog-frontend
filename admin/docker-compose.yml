@@ -13,7 +13,7 @@ services:
     networks:
       - network
     env_file:
-      - .env.docker
+      - .env.prod
     security_opt:
       - no-new-privileges:true
     # volumes:
