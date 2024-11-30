@@ -1,4 +1,4 @@
-version: "0.1"
+version: '0.1'
 name: ${PROJECT}
 
 services:
@@ -9,15 +9,13 @@ services:
     container_name: ${PROJECT}_admin
     restart: always
     ports:
-      - "127.0.0.1:3001:3000"
+      - '127.0.0.1:3001:3000'
     networks:
       - network
     env_file:
-      - .env.prod
+      - .env.docker
     security_opt:
       - no-new-privileges:true
-    # volumes:
-    #   - ./src
 
 networks:
   network:

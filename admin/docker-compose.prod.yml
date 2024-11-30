@@ -2,18 +2,16 @@ version: '0.1'
 name: ${PROJECT}
 
 services:
-  client:
+  admin:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ${PROJECT}_client
+    container_name: ${PROJECT}_admin
     restart: always
-    ports:
-      - '127.0.0.1:3000:3000'
     networks:
       - network
     env_file:
-      - .env.docker
+      - .env.prod
     security_opt:
       - no-new-privileges:true
 
