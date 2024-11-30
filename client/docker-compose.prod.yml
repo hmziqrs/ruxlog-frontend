@@ -8,12 +8,10 @@ services:
       dockerfile: Dockerfile
     container_name: ${PROJECT}_client
     restart: always
-    ports:
-      - '127.0.0.1:3000:3000'
     networks:
       - network
     env_file:
-      - .env.docker
+      - .env.prod
     security_opt:
       - no-new-privileges:true
 
