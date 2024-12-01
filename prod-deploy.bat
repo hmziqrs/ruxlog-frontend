@@ -6,7 +6,7 @@ setlocal enabledelayedexpansion
 set "ORIGINAL_DIR=%CD%"
 set "BASE_DIR=%CD%"
 set SERVICES=client admin
-set PROJECT=rux_prod
+set PROJECT=rux
 
 echo Starting production deployment process...
 
@@ -22,15 +22,15 @@ for %%s in (%SERVICES%) do (
 
         :: Down the container
         echo Stopping %%s containers...
-        docker compose -f docker-compose.prod.yml down
+        docker compose --env-file .env.prod -f docker-compose.prod.yml down
 
         :: Rebuild
         echo Rebuilding %%s...
-        docker compose -f docker-compose.prod.yml build
+        docker compose --env-file .env.prod -f docker-compose.prod.yml build
 
         :: Start
         echo Starting %%s...
-        set "PROJECT=%PROJECT%" && docker compose -f docker-compose.prod.yml up -d
+        set "PROJECT=%PROJECT%" && docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 
         :: Return to original directory
         cd "%ORIGINAL_DIR%"

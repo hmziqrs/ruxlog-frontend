@@ -1,4 +1,3 @@
-
 #!/bin/bash
 # deploy-prod.sh
 
@@ -7,7 +6,7 @@ set -e
 
 BASE_DIR="./ruxlog-frontend"
 SERVICES=("client" "admin")
-export PROJECT="rux_prod"
+export PROJECT="rux"
 
 echo "Starting production deployment process..."
 
@@ -21,15 +20,15 @@ for SERVICE in "${SERVICES[@]}"; do
 
     # Down the container
     echo "Stopping $SERVICE containers..."
-    docker compose -f docker-compose.prod.yml down
+    docker compose --env-file .env.prod -f docker-compose.prod.yml down
 
     # Rebuild
     echo "Rebuilding $SERVICE..."
-    docker compose -f docker-compose.prod.yml build
+    docker compose --env-file .env.prod -f docker-compose.prod.yml build
 
     # Start
     echo "Starting $SERVICE..."
-    docker compose -f docker-compose.prod.yml up -d
+    docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 
     cd -
 done
