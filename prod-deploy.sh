@@ -4,7 +4,7 @@
 # Exit on any error
 set -e
 
-BASE_DIR="./ruxlog-frontend"
+BASE_DIR="./"
 SERVICES=("client" "admin")
 export PROJECT="rux"
 
