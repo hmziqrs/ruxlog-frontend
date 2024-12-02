@@ -9,13 +9,13 @@ services:
     container_name: ${PROJECT}_admin
     restart: always
     networks:
-      - network
+      - external_network
     env_file:
       - .env.prod
     security_opt:
       - no-new-privileges:true
 
 networks:
-  network:
+  external_network:
     name: ${PROJECT}_network
     external: true
