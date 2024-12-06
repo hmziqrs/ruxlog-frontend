@@ -18,11 +18,19 @@ for SERVICE in "${SERVICES[@]}"; do
 
     cd "$BASE_DIR/$SERVICE"
 
-    # Down the container
-    echo "Stopping $SERVICE containers..."
-    docker compose --env-file .env.prod -f docker-compose.prod.yml down
+    # Down the container and remove volumes
+    echo "Stopping $SERVICE containers and cleaning up..."
+    docker compose --env-file .env.prod -f docker-compose.prod.yml down -v
 
-    # Rebuild
+    # Remove old images
+    echo "Removing old images for $SERVICE..."
+    docker image prune -f --filter "label=com.docker.compose.project=${PROJECT}"
+
+    # Clean build cache
+    echo "Cleaning build cache..."
+    docker builder prune -f
+
+    # Rebuild with no cache
     echo "Rebuilding $SERVICE..."
     docker compose --env-file .env.prod -f docker-compose.prod.yml build --no-cache
 
