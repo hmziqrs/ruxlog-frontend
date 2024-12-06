@@ -24,7 +24,7 @@ for SERVICE in "${SERVICES[@]}"; do
 
     # Rebuild
     echo "Rebuilding $SERVICE..."
-    docker compose --env-file .env.prod -f docker-compose.prod.yml build
+    docker compose --env-file .env.prod -f docker-compose.prod.yml build --no-cache
 
     # Start
     echo "Starting $SERVICE..."
