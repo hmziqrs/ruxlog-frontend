@@ -15,9 +15,10 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+COPY .env.prod .env.production
 
 # Run the build script using bun
-RUN bun run build
+RUN NODE_ENV=production bun run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
