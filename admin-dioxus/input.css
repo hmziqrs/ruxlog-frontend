@@ -1,3 +1,30 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+    --background: #ffffff;
+    --foreground: #171717;
+    --font-geist-sans: "Geist";
+    --font-geist-mono: "Geist Mono";
+    /* --font-geist-sans: "geistSans", "geistSans Fallback"; */
+    --font-sans: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+    --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
+        Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Removed system preference detection to allow manual theme control */
+.dark {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+}
+
+html,
+body {
+    font-family: var(--font-sans);
+}
+
+body {
+    color: var(--foreground);
+    background: var(--background);
+}
