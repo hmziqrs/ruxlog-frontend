@@ -1,5 +1,5 @@
 use crate::hooks::{OxForm, OxFormModel};
-use dioxus::{logger::tracing, prelude::*};
+use dioxus::prelude::*;
 
 #[derive(Props, PartialEq, Eq, Clone)]
 pub struct AppInputProps<T: OxFormModel + 'static> {
@@ -9,6 +9,8 @@ pub struct AppInputProps<T: OxFormModel + 'static> {
     label: Option<String>,
     #[props(default = None)]
     placeholder: Option<String>,
+    #[props(default = String::from("text"))]
+    r#type: String,
 }
 
 #[component]
@@ -32,6 +34,7 @@ where
                 }
             }
             input {
+                r#type: props.r#type,
                 class: "w-full px-4 py-2 input",
                 value: field.value.clone(),
                 placeholder: if props.placeholder.is_some() { props.placeholder.unwrap() },

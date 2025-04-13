@@ -33,6 +33,7 @@ pub fn LoginScreen() -> Element {
                         form: ox_form,
                         label: "Password",
                         placeholder: "Please input your password",
+                        r#type: "password",
                     }
                     div {
                         class: "flex items-center justify-between",
