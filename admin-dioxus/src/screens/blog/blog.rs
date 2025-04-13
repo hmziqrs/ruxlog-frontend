@@ -21,6 +21,13 @@ pub fn BlogScreen() -> Element {
                         form,
                         label: "Title",
                         placeholder: "Post title",
+                        onblur: move |_| {
+                            if !*auto_slug.read() {
+                                let title_value = form.peek().get_field("title").unwrap().value.clone();
+                                let sanitized = BlogForm::sanitize_slug(&title_value);
+                                form.write().update_field("slug", sanitized);
+                            }
+                        },
                     }
 
                     // Slug field with auto-generate option
@@ -42,20 +49,12 @@ pub fn BlogScreen() -> Element {
                                 }
                             }
                         }
-                        input {
-                            class: "w-full px-4 py-2 input",
-                            value: form.read().data.slug.clone(),
-                            disabled: *auto_slug.read(),
-                            placeholder: "post-slug",
-                            onchange: move |event| {
-                                form.write().update_field("slug", event.value());
-                            },
-                                                // onblur: move |event| {
-                        //     if !*auto_slug.read() {
-                        //         let sanitized = BlogForm::sanitize_slug(&event.value());
-                        //         form.write().update_field("slug", sanitized);
-                        //     }
-                        // },
+                        AppInput {
+                            form,
+                            name: "slug",
+                            r#type: "text",
+                            readonly: *auto_slug.read(),
+                            placeholder: "Post slug",
                         }
                     }
 
