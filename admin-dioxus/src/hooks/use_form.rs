@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use dioxus::logger::tracing;
 use validator::{Validate, ValidationErrors};
 
 #[derive(Debug, Clone)]
@@ -44,9 +45,9 @@ pub trait OxFormModel: Validate + Clone + PartialEq {
 
 #[derive(Debug, Clone)]
 pub struct OxForm<T: OxFormModel> {
-    data: T,
-    fields: HashMap<String, OxFieldFrame>,
-    has_errors: bool,
+    pub data: T,
+    pub fields: HashMap<String, OxFieldFrame>,
+    pub has_errors: bool,
     pub active_field: Option<String>,
 
     pub submit_count: u32,
@@ -158,6 +159,8 @@ impl<T: OxFormModel> OxForm<T> {
 
     pub fn on_submit(&mut self, callback: impl Fn(T)) {
         self.submit_count += 1;
+
+        tracing::info!("pub fn on_submit(&");
 
         if self.validate() {
             callback(self.data.clone());

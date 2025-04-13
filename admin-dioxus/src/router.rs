@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 
 use crate::screens::HomeScreen;
 use crate::screens::LoginScreen;
+use crate::screens::BlogScreen;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -13,34 +14,25 @@ pub enum Route {
 
     #[route("/login")]
     LoginScreen {},
+    
+    #[route("/blog/new")]
+    BlogScreen {},
 }
 
 #[component]
 fn NavBar() -> Element {
     rsx! {
-        div {
-            class: "bg-zinc-800 text-white py-4 px-6 flex justify-between items-center shadow-lg",
-            h1 {
-                class: "text-2xl font-bold tracking-tight",
-                "Admin Dioxus"
-            }
-            ul {
-                class: "flex space-x-6",
-                li {
-                    class: "hover:text-zinc-300 transition-colors duration-200",
-                    Link {
-                        class: "font-medium",
-                        to: Route::HomeScreen {  },
-                        "Home"
-                    }
+        div { class: "bg-zinc-800 text-white py-4 px-6 flex justify-between items-center shadow-lg",
+            h1 { class: "text-2xl font-bold tracking-tight", "Admin Dioxus" }
+            ul { class: "flex space-x-6",
+                li { class: "hover:text-zinc-300 transition-colors duration-200",
+                    Link { class: "font-medium", to: Route::HomeScreen {}, "Home" }
                 }
-                li {
-                    class: "hover:text-zinc-300 transition-colors duration-200",
-                    Link {
-                        class: "font-medium",
-                        to: Route::LoginScreen {  },
-                        "Login"
-                    }
+                li { class: "hover:text-zinc-300 transition-colors duration-200",
+                    Link { class: "font-medium", to: Route::LoginScreen {}, "Login" }
+                }
+                li { class: "hover:text-zinc-300 transition-colors duration-200",
+                    Link { class: "font-medium", to: Route::BlogScreen {}, "New Blog Post" }
                 }
             }
         }
@@ -52,9 +44,6 @@ fn NavBar() -> Element {
 fn Footer() -> Element {
     rsx! {
         Outlet::<Route> {}
-        div {
-            class: "footer",
-            "Copyright © 2025 Admin Dioxus"
-        }
+        div { class: "footer", "Copyright © 2025 Admin Dioxus" }
     }
 }
