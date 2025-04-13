@@ -1,57 +1,81 @@
-use super::{AuthState, AuthStateAction, AuthStateChannel};
 use crate::store::StateFrame;
-use dioxus::logger::tracing;
-use dioxus_radio::hooks::{use_radio, ChannelSelection, DataAsyncReducer, Radio};
+use gloo_storage::{errors::StorageError, LocalStorage, Storage};
+use super::{AuthState, User};
+use dioxus::prelude::*;
+
+
+const CACHE_AUTH_KEY: &str = "app/auth_user";
+
+impl User {
+    pub fn new(id: i32, name: String, email: String) -> Self {
+        User { id, name, email }
+    }
+
+    pub fn dev() -> Self {
+        User::new(1, "Dev User".to_string(), "dev@example.com".to_string())
+    }
+}
 
 impl AuthState {
     pub fn new() -> Self {
         AuthState {
-            login_status: StateFrame::<bool>::new(),
+            user: GlobalSignal::new(|| None),
+            login_status: GlobalSignal::new(|| StateFrame::<bool>::new()),
+            logout_status: GlobalSignal::new(|| StateFrame::<bool>::new()),
+            signup_status: GlobalSignal::new(|| StateFrame::<bool>::new()),
+            init_status: GlobalSignal::new(|| StateFrame::<bool>::new()),
         }
     }
 
-    pub async fn login(&mut self, username: String, password: String) {
-        self.login_status.set_loading(None);
-        tracing::info!("loading: {:?}", self.login_status);
+    pub async fn logout(&self) {
+        self.logout_status.write().set_loading(None);
 
-        gloo_timers::future::TimeoutFuture::new(2000).await;
+        LocalStorage::delete(CACHE_AUTH_KEY);
 
-        self.login_status.set_success(Some(true), None);
-        tracing::info!("success: {:?}", self.login_status);
+        gloo_timers::future::TimeoutFuture::new(1000).await;
+
+        self.logout_status.write().set_success(None, None);
+        *self.user.write() = None;
     }
-}
 
-impl DataAsyncReducer for AuthState {
-    type Channel = AuthStateChannel;
-    type Action = AuthStateAction;
+    pub async fn init(&self) {
+        self.init_status.write().set_loading(None);
 
-    async fn async_reduce(
-        radio: &mut Radio<AuthState, Self::Channel>,
-        action: Self::Action,
-    ) -> ChannelSelection<Self::Channel> {
-        match action {
-            AuthStateAction::Login(username, password) => {
-                radio
-                    .write_channel(AuthStateChannel::Main)
-                    .login_status
-                    .set_loading(None);
+        let cache: Result<String, StorageError> = LocalStorage::get(CACHE_AUTH_KEY);
 
-                gloo_timers::future::TimeoutFuture::new(2000).await;
+        gloo_timers::future::TimeoutFuture::new(1000).await;
 
-                let mut r = use_radio::<AuthState, AuthStateChannel>(AuthStateChannel::Main);
+        match cache {
+            Ok(cached_user) => {
+                let user: User = serde_json::from_str(&cached_user).unwrap();
+                *self.user.write() = Some(user);
+                self.init_status.write().set_success(None, None);
+            }
+            Err(_) => {
+                self.init_status.write().set_failed(None);
+            }
+        }
+    }
 
-                r.write().login_status.set_failed(None);
+    pub async fn login(&self, email: String, password: String) {
+        self.login_status.write().set_loading(None);
 
-                gloo_timers::future::TimeoutFuture::new(2000).await;
-                radio
-                    .write_silently()
-                    .login_status
-                    .set_success(Some(true), None);
+        let response = reqwest::get("http://localhost:3000").await;
 
-                // radio.async_apply(action);
+        match response {
+            Ok(_) => {
+                let user = User::dev();
 
-                ChannelSelection::Select(AuthStateChannel::Main)
+                let user_json = serde_json::to_string(&user).unwrap();
+                LocalStorage::set(CACHE_AUTH_KEY, user_json).unwrap();
+
+                *self.user.write() = Some(user);
+                self.login_status.write().set_success(None, None);
+            }
+            Err(_) => {
+                self.login_status.write().set_failed(None);
             }
         }
     }
 }
+

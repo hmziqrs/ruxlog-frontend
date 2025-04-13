@@ -1,27 +1,29 @@
-use dioxus_radio::{
-    self,
-    hooks::{ChannelSelection, DataAsyncReducer, Radio, RadioAsyncReducer, RadioChannel},
-};
+use gloo_storage::{errors::StorageError, LocalStorage, Storage};
+use serde::{Deserialize, Serialize};
+use std::sync::OnceLock;
+use dioxus::prelude::*;
 
 use crate::store::StateFrame;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthState {
-    // pub user: GlobalSignal<Option<User>>,
-    pub login_status: StateFrame<bool>,
-    // pub logout_status: GlobalSignal<StateFrame<bool>>,
+    pub user: GlobalSignal<Option<User>>,
 
-    // pub init_status: GlobalSignal<StateFrame<bool>>,
+    pub login_status: GlobalSignal<StateFrame<bool>>,
+    pub logout_status: GlobalSignal<StateFrame<bool>>,
+
+    pub signup_status: GlobalSignal<StateFrame<bool>>,
+    pub init_status: GlobalSignal<StateFrame<bool>>,
 }
 
-#[derive(PartialEq, Eq, Clone, Debug, Copy)]
-pub enum AuthStateChannel {
-    Main,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct User {
+    pub id: i32,
+    pub name: String,
+    pub email: String,
 }
 
-pub enum AuthStateAction {
-    // with username and password
-    Login(String, String),
-}
+static AUTH_STATE: OnceLock<AuthState> = OnceLock::new();
 
-impl RadioChannel<AuthState> for AuthStateChannel {}
+pub fn use_auth() -> &'static AuthState {
+    AUTH_STATE.get_or_init(|| AuthState::new())
+}
