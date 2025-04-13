@@ -4,7 +4,7 @@ use super::form::{use_tag_form, TagForm};
 use crate::components::AppInput;
 
 #[component]
-pub fn TagScreen() -> Element {
+pub fn TagFormContainer() -> Element {
     let initial_tag_form = TagForm::new();
     let tag_form_hook = use_tag_form(initial_tag_form);
     let mut form = tag_form_hook.form;

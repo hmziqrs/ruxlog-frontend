@@ -4,7 +4,7 @@ use crate::screens::HomeScreen;
 use crate::screens::LoginScreen;
 use crate::screens::AddBlogScreen;
 use crate::screens::AddCategoryScreen;
-use crate::screens::TagScreen;
+use crate::screens::AddTagScreen;
 use crate::screens::UserScreen;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
@@ -25,7 +25,7 @@ pub enum Route {
     AddCategoryScreen {},
 
     #[route("/tag/new")]
-    TagScreen {},
+    AddTagScreen {},
 
     #[route("/user/new")]
     UserScreen {},
@@ -50,7 +50,7 @@ fn NavBar() -> Element {
                     Link { class: "font-medium", to: Route::AddCategoryScreen {}, "New Category" }
                 }
                 li { class: "hover:text-zinc-300 transition-colors duration-200",
-                    Link { class: "font-medium", to: Route::TagScreen {}, "New Tag" }
+                    Link { class: "font-medium", to: Route::AddTagScreen {}, "New Tag" }
                 }
                 li { class: "hover:text-zinc-300 transition-colors duration-200",
                     Link { class: "font-medium", to: Route::UserScreen {}, "New User" }
