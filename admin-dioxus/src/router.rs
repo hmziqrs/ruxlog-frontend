@@ -4,6 +4,7 @@ use crate::screens::HomeScreen;
 use crate::screens::LoginScreen;
 use crate::screens::BlogScreen;
 use crate::screens::CategoryScreen;
+use crate::screens::TagScreen;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -21,6 +22,9 @@ pub enum Route {
 
     #[route("/category/new")]
     CategoryScreen {},
+
+    #[route("/tag/new")]
+    TagScreen {},
 }
 
 #[component]
@@ -40,6 +44,9 @@ fn NavBar() -> Element {
                 }
                 li { class: "hover:text-zinc-300 transition-colors duration-200",
                     Link { class: "font-medium", to: Route::CategoryScreen {}, "New Category" }
+                }
+                li { class: "hover:text-zinc-300 transition-colors duration-200",
+                    Link { class: "font-medium", to: Route::TagScreen {}, "New Tag" }
                 }
             }
         }
