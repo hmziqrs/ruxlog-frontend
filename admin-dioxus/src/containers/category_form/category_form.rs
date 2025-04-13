@@ -4,7 +4,7 @@ use super::form::{use_category_form, CategoryForm};
 use crate::components::AppInput;
 
 #[component]
-pub fn CategoryScreen() -> Element {
+pub fn CategoryFormContainer() -> Element {
     let initial_category_form = CategoryForm::new();
     let category_form_hook = use_category_form(initial_category_form);
     let mut form = category_form_hook.form;
