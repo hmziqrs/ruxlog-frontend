@@ -5,7 +5,9 @@
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.0.17",
-    "tailwindcss": "^4.0.17"
+    "@tailwindcss/typography": "tailwindcss/typography",
+    "tailwindcss": "^4.0.17",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "daisyui": "^5.0.9"
