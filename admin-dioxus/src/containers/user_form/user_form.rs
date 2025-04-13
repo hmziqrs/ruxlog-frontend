@@ -1,10 +1,10 @@
 use dioxus::{logger::tracing, prelude::*};
 
-use super::form::{use_user_form, UserForm, UserRole};
+use super::form::{use_user_form, UserForm};
 use crate::components::AppInput;
 
 #[component]
-pub fn UserScreen() -> Element {
+pub fn UserFormContainer() -> Element {
     let initial_user_form = UserForm::new();
     let mut form = use_user_form(initial_user_form);
     let is_update = form.read().data.is_update;
