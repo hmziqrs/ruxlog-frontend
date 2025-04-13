@@ -1,5 +1,5 @@
 use crate::hooks::{OxForm, OxFormModel};
-use dioxus::prelude::*;
+use dioxus::{logger::tracing, prelude::*};
 
 #[derive(Props, PartialEq, Clone)]
 pub struct AppInputProps<T: OxFormModel + 'static> {

@@ -3,6 +3,7 @@ use dioxus::prelude::*;
 use crate::screens::HomeScreen;
 use crate::screens::LoginScreen;
 use crate::screens::BlogScreen;
+use crate::screens::CategoryScreen;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -17,6 +18,9 @@ pub enum Route {
     
     #[route("/blog/new")]
     BlogScreen {},
+
+    #[route("/category/new")]
+    CategoryScreen {},
 }
 
 #[component]
@@ -33,6 +37,9 @@ fn NavBar() -> Element {
                 }
                 li { class: "hover:text-zinc-300 transition-colors duration-200",
                     Link { class: "font-medium", to: Route::BlogScreen {}, "New Blog Post" }
+                }
+                li { class: "hover:text-zinc-300 transition-colors duration-200",
+                    Link { class: "font-medium", to: Route::CategoryScreen {}, "New Category" }
                 }
             }
         }
