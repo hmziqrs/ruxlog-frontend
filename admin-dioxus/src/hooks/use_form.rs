@@ -143,7 +143,7 @@ impl<T: OxFormModel> OxForm<T> {
 
     fn apply_validation_errors(&mut self, errors: ValidationErrors) {
         for (field_name, field_errors) in errors.field_errors() {
-            if let Some(field) = self.fields.get_mut(field_name) {
+            if let Some(field) = self.fields.get_mut(field_name.as_ref()) {
                 if let Some(first_error) = field_errors.first() {
                     // Get the error message
                     let message = match &first_error.message {
