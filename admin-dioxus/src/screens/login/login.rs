@@ -44,7 +44,6 @@ pub fn LoginScreen() -> Element {
                         }
                     }
                     button {
-                        // disabled: is_loading,
                         class: "w-full btn btn-primary",
                         onclick: move |e| {
                             e.prevent_default();
