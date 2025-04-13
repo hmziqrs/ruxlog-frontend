@@ -1,6 +1,4 @@
 use dioxus::{ prelude::*};
-use dioxus_radio::hooks::{use_init_radio_station, use_radio};
-use store::{AuthState, AuthStateChannel};
 
 pub mod containers;
 pub mod components;
@@ -15,7 +13,6 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    use_init_radio_station::<AuthState, AuthStateChannel>(AuthState::new);
 
     rsx! {
         document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
