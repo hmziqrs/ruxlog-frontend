@@ -4,7 +4,7 @@ use super::form::{use_blog_form, BlogForm};
 use crate::components::AppInput;
 
 #[component]
-pub fn BlogScreen() -> Element {
+pub fn BlogFormContainer() -> Element {
     let initial_blog_form = BlogForm::new();
     let blog_form_hook = use_blog_form(initial_blog_form);
     let mut form = blog_form_hook.form;

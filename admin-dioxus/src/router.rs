@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 use crate::screens::HomeScreen;
 use crate::screens::LoginScreen;
-use crate::screens::BlogScreen;
+use crate::screens::AddBlogScreen;
 use crate::screens::CategoryScreen;
 use crate::screens::TagScreen;
 use crate::screens::UserScreen;
@@ -19,7 +19,7 @@ pub enum Route {
     LoginScreen {},
     
     #[route("/blog/new")]
-    BlogScreen {},
+    AddBlogScreen {},
 
     #[route("/category/new")]
     CategoryScreen {},
@@ -44,7 +44,7 @@ fn NavBar() -> Element {
                     Link { class: "font-medium", to: Route::LoginScreen {}, "Login" }
                 }
                 li { class: "hover:text-zinc-300 transition-colors duration-200",
-                    Link { class: "font-medium", to: Route::BlogScreen {}, "New Blog Post" }
+                    Link { class: "font-medium", to: Route::AddBlogScreen {}, "New Blog Post" }
                 }
                 li { class: "hover:text-zinc-300 transition-colors duration-200",
                     Link { class: "font-medium", to: Route::CategoryScreen {}, "New Category" }
