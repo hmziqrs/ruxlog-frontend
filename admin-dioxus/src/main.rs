@@ -1,4 +1,6 @@
-use dioxus::{ prelude::*};
+// use components::{ToastManager, ToastProvider};
+use dioxus::prelude::*;
+
 
 pub mod containers;
 pub mod components;
@@ -15,7 +17,8 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-
+    let toast = use_context_provider(|| Signal::new(dioxus_toast::ToastManager::default()));
+    
     rsx! {
         document::Link { rel: "preconnect", href: "https://fonts.googleapis.com" }
         document::Link {
@@ -29,5 +32,6 @@ fn App() -> Element {
         }
         document::Link { rel: "stylesheet", href: asset!("/assets/tailwind.css") }
         Router::<crate::router::Route> {}
+        dioxus_toast::ToastFrame { manager: toast }
     }
 }
