@@ -155,15 +155,20 @@ impl AuthState {
     }
 
     pub async fn login(&self, email: String, password: String) {
+        tracing::info!("Login attempt with email");
         self.login_status.write().set_loading(None);
 
         // Make actual API call for login
-        let url = format!("{}/auth/v1/log_in", crate::env::APP_API_URL);
+        let url = format!("http://{}/auth/v1/log_in", crate::env::APP_API_URL);
 
         let payload = LoginPayload { email, password };
 
+        tracing::info!("Payload: {:?}", payload);
+
         let client = reqwest::Client::new();
         let result = client.post(&url).json(&payload).send().await;
+
+        tracing::info!("Login result: {:?}", result);
 
         match result {
             Ok(response) => {
