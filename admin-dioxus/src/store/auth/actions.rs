@@ -1,12 +1,10 @@
 use super::{ApiError, AuthState, LoginPayload, User};
-use crate::config::Config;
+use crate::services::reqwest;
 use crate::store::StateFrame;
 use dioxus::{logger::tracing, prelude::*};
-// use gloo_storage::{LocalStorage, Storage};
 #[cfg(target_arch = "wasm32")]
 use wasm_cookies::{CookieOptions, SameSite};
 
-const CACHE_AUTH_KEY: &str = "app/auth_user";
 const USER_ID_COOKIE: &str = "ux_id";
 
 impl User {
@@ -70,15 +68,13 @@ impl AuthState {
     pub async fn logout(&self) {
         self.logout_status.write().set_loading(None);
 
-        // Delete auth data
+        // Delete auth cookie
         Self::delete_id_cookie();
 
-        // Make actual API call for logout
-        let api_url = Config::api_base_url();
-        let url = format!("{}/auth/v1/log_out", api_url);
-
-        let client = reqwest::Client::new();
-        let result = client.post(&url).send().await;
+        // Make API call for logout using our singleton reqwest service
+        let result = reqwest::delete("/auth/v1/log_out")
+            .send()
+            .await;
 
         match result {
             Ok(_) => {
@@ -104,12 +100,10 @@ impl AuthState {
             return;
         }
 
-        // Try to fetch user data from API
-        let api_url = Config::api_base_url();
-        let url = format!("{}/user/v1/get", api_url);
-
-        let client = reqwest::Client::new();
-        let result = client.get(&url).send().await;
+        // Try to fetch user data from API using our singleton reqwest service
+        let result = reqwest::get::<User>("/user/v1/get")
+            .send()
+            .await;
 
         match result {
             Ok(response) => {
@@ -158,15 +152,13 @@ impl AuthState {
         tracing::info!("Login attempt with email");
         self.login_status.write().set_loading(None);
 
-        // Make actual API call for login
-        let url = format!("http://{}/auth/v1/log_in", crate::env::APP_API_URL);
-
         let payload = LoginPayload { email, password };
-
         tracing::info!("Payload: {:?}", payload);
 
-        let client = reqwest::Client::new();
-        let result = client.post(&url).json(&payload).send().await;
+        // Use our singleton reqwest service for the login request
+        let result = reqwest::post::<LoginPayload>("/auth/v1/log_in", &payload)
+            .send()
+            .await;
 
         tracing::info!("Login result: {:?}", result);
 
@@ -193,7 +185,6 @@ impl AuthState {
                                     same_site: SameSite::Lax,
                                     expires: None,
                                 };
-
 
                                 wasm_cookies::set(USER_ID_COOKIE, &user.id.to_string(), &options);
                             }
