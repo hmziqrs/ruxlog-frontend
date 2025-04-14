@@ -158,8 +158,7 @@ impl AuthState {
         self.login_status.write().set_loading(None);
 
         // Make actual API call for login
-        let api_url = Config::api_base_url();
-        let url = format!("{}/auth/v1/log_in", api_url);
+        let url = format!("{}/auth/v1/log_in", crate::env::APP_API_URL);
 
         let payload = LoginPayload { email, password };
 

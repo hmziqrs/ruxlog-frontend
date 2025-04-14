@@ -11,7 +11,7 @@ static CONFIG: OnceLock<Config> = OnceLock::new();
 
 impl Config {
     fn new() -> Self {
-        // Try to load .env file
+        // // Try to load .env file
         let _ = dotenv();
 
         let mut values = HashMap::new();
