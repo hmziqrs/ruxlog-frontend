@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 
+use crate::containers::AuthGuard;
 use crate::screens::HomeScreen;
 use crate::screens::LoginScreen;
 use crate::screens::AddBlogScreen;
@@ -10,8 +11,8 @@ use crate::screens::AddUserScreen;
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
+    #[layout(AuthGuard)]
     #[layout(NavBar)]
-    #[layout(Footer)]
     #[route("/")]
     HomeScreen {},
 
@@ -61,10 +62,3 @@ fn NavBar() -> Element {
     }
 }
 
-#[component]
-fn Footer() -> Element {
-    rsx! {
-        Outlet::<Route> {}
-        div { class: "footer", "Copyright © 2025 Admin Dioxus" }
-    }
-}

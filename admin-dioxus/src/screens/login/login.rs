@@ -1,11 +1,13 @@
 use dioxus::{logger::tracing, prelude::*};
 
 use super::form::{use_login_form, LoginForm};
-use crate::components::AppInput;
+use crate::{components::AppInput, store::use_auth};
 
 #[component]
 pub fn LoginScreen() -> Element {
     let mut ox_form = use_login_form(LoginForm::dev());
+    let auth_store = use_auth();
+    let login_status = auth_store.login_status.read();
     // let auth = use_auth();
     // let login_status = auth.login_status.read();
     // let is_loading = login_status.is_loading();
@@ -44,6 +46,7 @@ pub fn LoginScreen() -> Element {
                         }
                     }
                     button {
+                        disabled: login_status.is_loading(),
                         class: "w-full btn btn-primary",
                         onclick: move |e| {
                             e.prevent_default();
@@ -51,11 +54,16 @@ pub fn LoginScreen() -> Element {
                                 .write()
                                 .on_submit(move |val| {
                                     tracing::info!("Login form submitted: {:?}", val);
+                                    spawn(async move {
+                                        let email = val.email.clone();
+                                        let password = val.password.clone();
+                                        auth_store.login(email, password).await;
+                                    });
                                 });
                         },
-                        // if is_loading {
-                        //     div { class: "loading loading-spinner loading-xs" }
-                        // }
+                        if login_status.is_loading() {
+                            div { class: "loading loading-spinner loading-xs" }
+                        }
                         span { "Login" }
                     }
                 }

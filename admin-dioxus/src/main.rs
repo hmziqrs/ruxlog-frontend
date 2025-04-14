@@ -7,6 +7,7 @@ pub mod router;
 pub mod screens;
 pub mod store;
 mod config;
+pub mod env;
 
 fn main() {
     dioxus::launch(App);
