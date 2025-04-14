@@ -11,7 +11,6 @@ pub struct AuthState {
     pub login_status: GlobalSignal<StateFrame<bool>>,
     pub logout_status: GlobalSignal<StateFrame<bool>>,
 
-    pub signup_status: GlobalSignal<StateFrame<bool>>,
     pub init_status: GlobalSignal<StateFrame<bool>>,
 }
 
@@ -20,6 +19,21 @@ pub struct User {
     pub id: i32,
     pub name: String,
     pub email: String,
+    pub role: String,
+    #[serde(rename = "isVerified")]
+    pub is_verified: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ApiError {
+    pub message: String,
+    pub status: Option<u16>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct LoginPayload {
+    pub email: String,
+    pub password: String,
 }
 
 static AUTH_STATE: OnceLock<AuthState> = OnceLock::new();
