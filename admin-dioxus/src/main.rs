@@ -10,6 +10,7 @@ pub mod screens;
 pub mod store;
 mod config;
 pub mod env;
+pub mod services;
 
 fn main() {
     dioxus::launch(App);

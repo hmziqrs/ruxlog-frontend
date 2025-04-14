@@ -30,6 +30,7 @@ dependencies = [
  "gloo-utils",
  "hmziq-dioxus-free-icons",
  "log",
+ "once_cell",
  "regex",
  "reqwest",
  "serde",
