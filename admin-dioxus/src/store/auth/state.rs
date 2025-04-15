@@ -20,7 +20,6 @@ pub struct User {
     pub name: String,
     pub email: String,
     pub role: String,
-    #[serde(rename = "isVerified")]
     pub is_verified: bool,
 }
 
