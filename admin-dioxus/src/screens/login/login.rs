@@ -5,7 +5,6 @@ use dioxus::{logger::tracing, prelude::*};
 use dioxus_toast::{ToastInfo, ToastManager};
 
 use super::form::{use_login_form, LoginForm};
-use crate::components::AnimatedBlob;
 use crate::hooks::use_previous;
 use crate::{components::AppInput, store::use_auth};
 
@@ -42,14 +41,11 @@ pub fn LoginScreen() -> Element {
 
     rsx! {
         div { class: "relative flex items-center justify-center min-h-screen bg-neutral-950 overflow-hidden",
-            // AnimatedBlob component remains outside the card for a background effect
-            AnimatedBlob {}
-
             // Container for the card with visible overflow for the moving blob effect
             div { class: "relative w-full max-w-md",
-                // Blob that follows mouse position
+                // Blob that follows mouse position using div with radial gradient
                 div {
-                    class: "absolute pointer-events-none",
+                    class: "absolute pointer-events-none transition-all duration-300 ease-out",
                     style: format!(
                         "left: {}px; top: {}px; transform: translate(-50%, -50%); width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(244,244,245,0.6) 0%, rgba(113,113,122,0) 70%); filter: blur(60px); opacity: 0.6; z-index: 0;",
                         mouse_pos().0,
@@ -75,7 +71,7 @@ pub fn LoginScreen() -> Element {
                             mouse_pos.set((x as i32, y as i32));
                         }
                     },
-                    // Basic card outline border
+                    // Base border - always visible but subtle
                     div {
                         class: "absolute inset-0 rounded-2xl pointer-events-none",
                         style: "background: transparent; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);",
@@ -138,7 +134,7 @@ pub fn LoginScreen() -> Element {
                             }
                             button {
                                 disabled: login_status.is_loading(),
-                                class: "w-full btn btn-primary btn-lg shadow-md hover:shadow-lg transition-all duration-150 flex items-center justify-center gap-2 ",
+                                class: "w-full btn btn-lg shadow-md hover:shadow-lg transition-all duration-150 flex items-center justify-center gap-2 bg-neutral-700 hover:bg-neutral-600 text-white border-none",
                                 onclick: move |e| {
                                     e.prevent_default();
                                     ox_form
