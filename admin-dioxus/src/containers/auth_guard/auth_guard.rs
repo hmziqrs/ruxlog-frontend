@@ -17,7 +17,6 @@ pub fn AuthGuard() -> Element {
     let init_status_hook = init_status.clone();
 
     use_effect(move || {
-        tracing::info!("AuthGuard: use_hook init_status = {:?}", init_status_hook);
         if init_status_hook.is_init() {
             spawn(async move {
                 auth_store.init().await;
@@ -33,7 +32,6 @@ pub fn AuthGuard() -> Element {
     let route_for_logic = route.clone();
 
     use_effect(use_reactive!(|(route_for_logic)| {
-        tracing::info!("AuthGuard: use_effect ");
         let init_status = auth_store.init_status.read();
         if init_status.is_success() {
             let user = auth_store.user.read().clone();

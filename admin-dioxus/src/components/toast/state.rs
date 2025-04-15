@@ -42,7 +42,6 @@ impl ToastManager {
         toast_type: ToastType,
         timeout: Option<ChronoDuration>,
     ) -> &mut Self {
-        tracing::info!("Adding toast: {:?}", title);
         let id = self.next_id;
         self.next_id += 1;
 
