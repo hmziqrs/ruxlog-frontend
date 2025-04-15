@@ -21,7 +21,7 @@ pub fn LoginScreen() -> Element {
 
     use_effect(use_reactive!(|(is_loading,)| {
         
-        tracing::info!("prev: {:?} | current: {:?}", prev_loading, is_loading);
+        // tracing::info!("prev: {:?} | current: {:?}", prev_loading, is_loading);
         if  prev_loading != Some(is_loading) {
             toast.write().popup(ToastInfo::simple("Hello"));
 
@@ -71,9 +71,6 @@ pub fn LoginScreen() -> Element {
                                     spawn(async move {
                                         let email = val.email.clone();
                                         let password = val.password.clone();
-                                        tracing::info!(
-                                            "Login with email: {} and password: {}", email, password
-                                        );
                                         auth_store.login(email, password).await;
                                     });
                                 });
