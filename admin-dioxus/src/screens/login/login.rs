@@ -1,13 +1,14 @@
+use std::rc::Rc;
 use std::time::Duration;
 
+use dioxus::html::geometry::euclid::Rect;
 use dioxus::{logger::tracing, prelude::*};
 use dioxus_toast::{ToastInfo, ToastManager};
-// use dioxus_toast::ToastManager;
 
 use super::form::{use_login_form, LoginForm};
 use crate::components::AnimatedBlob;
-use crate::{components::AppInput, store::use_auth};
 use crate::hooks::use_previous;
+use crate::{components::AppInput, store::use_auth};
 
 #[component]
 pub fn LoginScreen() -> Element {
@@ -19,32 +20,61 @@ pub fn LoginScreen() -> Element {
     let prev_loading = use_previous(is_loading);
     let mut toast: Signal<ToastManager> = use_context();
     let mut mouse_pos = use_signal(|| (200, 200)); // default center
+    let mut card_ref = use_signal(|| None as Option<Rc<MountedData>>);
+    let mut card_dimensions = use_signal(Rect::zero);
+    // let mut ca
+
+
+    let calculate = use_callback(move |_: ()| {
+        // Read the current value of div_element
+        spawn(async move {
+            let read = card_ref.read();
+
+            // Get the client rectangle from the read data
+            let client_rect = read.as_ref().map(|el| el.get_client_rect());
+            let client_offset = read.as_ref().map(|el| el.get_scroll_offset());
+
+            // tracing::info!("client_offset: {:?}", client_offset);
+
+            // Check if there's a client rectangle
+            if let Some(client_rect) = client_rect {
+                if let Ok(rect) = client_rect.await {
+                    card_dimensions.set(rect);
+                }
+            }
+            if let Some(client_offset) = client_offset {
+                if let Ok(offset) = client_offset.await {
+                    // Update the mouse position b
+                    tracing::info!("client_offset: {:?}", offset);
+                }
+            }
+        });
+    });
 
     use_effect(use_reactive!(|(is_loading,)| {
-        
         // tracing::info!("prev: {:?} | current: {:?}", prev_loading, is_loading);
-        if  prev_loading != Some(is_loading) {
+        if prev_loading != Some(is_loading) {
             toast.write().popup(ToastInfo::simple("Hello"));
-
         }
     }));
 
     rsx! {
         div { class: "relative flex items-center justify-center min-h-screen bg-neutral-950 overflow-visible",
-            // Animated neutral blob
             AnimatedBlob {}
 
-            // Card with border highlight
             div {
-                class: "relative w-full max-w-md overflow-visible rounded-2xl border border-neutral-800 bg-neutral-900/70 backdrop-blur-md shadow-xl",
-                onmousemove: move |evt| {
-                    let cords = evt.data.coordinates();
-                    let c_cords = evt.data.client_coordinates();
-                    let e_cords = evt.data.element_coordinates();
-                    tracing::info!("Mouse position: {:?} | {:?} | {:?}", cords, c_cords, e_cords);
-                    mouse_pos.set((e_cords.x as i32, e_cords.y as i32));
+                onmounted: move |cx| card_ref.set(Some(cx.data())),
+                onresize: move |_| {
+                    calculate.call(());
                 },
-                // Border highlight overlay
+                class: "relative w-full max-w-md overflow-visible rounded-2xl border border-neutral-800 bg-neutral-900/70 backdrop-blur-md shadow-xl",
+                // onmousemove: move |evt| {
+                //     if let Some(card_element) = &*card_ref.read() {
+                //         let x = evt.data.client_coordinates().x as f64 - card_element
+                //         let y = evt.data.client_coordinates().y as f64 - card_element.top();
+                //         mouse_pos.set((x as i32, y as i32));
+                //     }
+                // },
                 div {
                     class: "pointer-events-none absolute inset-0 rounded-2xl transition-all duration-300 z-10",
                     style: format!(
@@ -58,7 +88,7 @@ pub fn LoginScreen() -> Element {
                     // Logo or icon placeholder
                     div { class: "flex justify-center mb-2",
                         img {
-                            class: "h-26 w-26 rounded-full shadow-md border border-neutral-800 bg-neutral-900",
+                            class: "h-26 w-26",
                             src: asset!("/assets/logo.png"),
                             alt: "Logo",
                         }
