@@ -29,40 +29,57 @@ pub fn LoginScreen() -> Element {
     }));
 
     rsx! {
-        div { class: "flex items-center justify-center min-h-screen bg-base-200/30",
-            div { class: "w-full max-w-md p-8 space-y-3 rounded-xl bg-base-100 shadow-2xl",
-                h1 { class: "text-2xl font-bold text-center text-primary", "Login" }
-                form { class: "space-y-6",
+        div { class: "relative flex items-center justify-center min-h-screen bg-gradient-to-br from-base-200/60 to-base-100/80 overflow-hidden",
+            // Animated gradient blob behind the card
+            div { class: "absolute -z-10 left-1/2 top-1/2 w-[480px] h-[320px] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-tr from-primary/30 via-secondary/20 to-accent/30 rounded-full blur-3xl opacity-70 animate-pulse" }
+            div { class: "w-full max-w-md p-8 space-y-6 rounded-2xl bg-base-100/80 shadow-xl border border-base-200 backdrop-blur-md transition-all duration-300 hover:border-primary/70 hover:shadow-2xl focus-within:border-primary/90",
+                // Logo or icon placeholder
+                div { class: "flex justify-center mb-2",
+                    img {
+                        class: "h-26 w-26 rounded-full shadow-md border border-base-200 bg-base-100",
+                        src: asset!("/assets/logo.png"),
+                        alt: "Logo",
+                                        // fallback: use a placeholder if logo not available
+                    // onerror: "this.style.display='none'",
+                    }
+                }
+                h1 { class: "text-3xl font-extrabold text-center text-primary tracking-tight",
+                    "Admin Login"
+                }
+                p { class: "text-center text-base-content/70 text-sm mb-4",
+                    "Sign in to your admin dashboard"
+                }
+                form { class: "space-y-5",
                     AppInput {
                         name: "email",
                         form: ox_form,
                         label: "Email",
-                        placeholder: "Please input your email",
+                        placeholder: "Enter your email",
                     }
                     AppInput {
                         name: "password",
                         form: ox_form,
                         label: "Password",
-                        placeholder: "Please input your password",
+                        placeholder: "Enter your password",
                         r#type: "password",
                     }
-                    div { class: "flex items-center justify-between",
-                        label { class: "flex items-center",
+                    div { class: "flex items-center justify-between text-xs text-base-content/70",
+                        label { class: "flex items-center gap-2 select-none cursor-pointer",
                             input {
                                 class: "checkbox checkbox-primary",
                                 r#type: "checkbox",
                             }
-                            span { class: "ml-2 text-sm text-primary", "Remember me" }
+                            span { "Remember me" }
                         }
                         a {
-                            class: "text-sm text-primary hover:underline",
+                            class: "hover:underline text-primary font-medium transition-colors duration-150",
                             href: "#",
                             "Forgot password?"
                         }
                     }
                     button {
                         disabled: login_status.is_loading(),
-                        class: "w-full btn btn-primary",
+                        class: "w-full btn btn-primary btn-lg shadow-md hover:shadow-lg transition-all duration-150 flex items-center justify-center gap-2",
                         onclick: move |e| {
                             e.prevent_default();
                             ox_form
@@ -81,9 +98,13 @@ pub fn LoginScreen() -> Element {
                         span { "Login" }
                     }
                 }
-                p { class: "text-sm text-center text-primary",
+                p { class: "text-sm text-center text-base-content/70 mt-4",
                     "Don't have an account? "
-                    a { class: "text-primary hover:underline", href: "#", "Sign up" }
+                    a {
+                        class: "text-primary font-semibold hover:underline transition-colors duration-150",
+                        href: "#",
+                        "Sign up"
+                    }
                 }
             }
         }
