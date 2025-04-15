@@ -114,6 +114,8 @@ impl AuthState {
                                 .set_failed(Some(format!("Failed to parse user data: {}", e)));
                         }
                     }
+                } else if response.status() == 401 {
+                    self.init_status.write().set_success(None, None);
                 } else {
                     match response.json::<ApiError>().await {
                         Ok(api_error) => {
@@ -141,10 +143,7 @@ impl AuthState {
         let payload = LoginPayload { email, password };
 
         // Use our singleton http_client service for the login request
-        let result = http_client::post("/auth/v1/log_in", &payload)
-            .send()
-            .await;
-
+        let result = http_client::post("/auth/v1/log_in", &payload).send().await;
 
         match result {
             Ok(response) => {
