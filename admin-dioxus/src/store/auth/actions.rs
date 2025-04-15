@@ -89,14 +89,6 @@ impl AuthState {
     pub async fn init(&self) {
         self.init_status.write().set_loading(None);
 
-        // Check if ID cookie exists
-        // if !Self::check_id_cookie_exist() {
-        //     self.init_status
-        //         .write()
-        //         .set_success(None, None);
-        //     return;
-        // }
-
         // Try to fetch user data from API using our singleton http_client service
         let result = http_client::get("/user/v1/get").send().await;
 
@@ -105,7 +97,6 @@ impl AuthState {
                 if (200..300).contains(&response.status()) {
                     match response.json::<User>().await {
                         Ok(user) => {
-                            tracing::info!("User data: {:?}", user);
                             if !user.is_verified || user.role != "admin" {
                                 Self::delete_id_cookie();
                                 self.init_status.write().set_failed(Some(
@@ -154,7 +145,6 @@ impl AuthState {
             .send()
             .await;
 
-        tracing::info!("Login result: {:?}", result);
 
         match result {
             Ok(response) => {
