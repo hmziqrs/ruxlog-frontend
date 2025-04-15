@@ -27,7 +27,11 @@ dotenvy = "0.15.7"
 log = "0.4.20"
 dioxus-toast = { version = "0.6.0", default-features = false, features = ["web"] }
 once_cell = "1.19.0"
-gloo-net = "0.6.0"
+gloo-net = {version = "0.6.0", default-features = true }
+web-sys = {version = "0.3.77", features = [
+    "RequestCredentials",
+]}
+# gloo-net = {version = "0.6.0", features = ["RequestCredentials"] }
 
 [features]
 default = ["web"]

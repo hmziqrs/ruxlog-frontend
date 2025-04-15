@@ -39,6 +39,7 @@ dependencies = [
  "validator",
  "wasm-bindgen",
  "wasm-cookies",
+ "web-sys",
 ]
 
 [[package]]
