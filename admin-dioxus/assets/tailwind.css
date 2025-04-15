@@ -23,7 +23,10 @@
     --color-zinc-800: oklch(27.4% 0.006 286.033);
     --color-zinc-950: oklch(14.1% 0.005 285.823);
     --color-neutral-100: oklch(97% 0 0);
+    --color-neutral-300: oklch(87% 0 0);
     --color-neutral-400: oklch(70.8% 0 0);
+    --color-neutral-600: oklch(43.9% 0 0);
+    --color-neutral-700: oklch(37.1% 0 0);
     --color-neutral-800: oklch(26.9% 0 0);
     --color-neutral-900: oklch(20.5% 0 0);
     --color-neutral-950: oklch(14.5% 0 0);
@@ -706,6 +709,9 @@
     & ~ .validator-hint {
       visibility: hidden;
     }
+  }
+  .visible {
+    visibility: visible;
   }
   .toast {
     position: fixed;
@@ -1800,6 +1806,13 @@
       }
     }
   }
+  .mask {
+    display: inline-block;
+    vertical-align: middle;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+  }
   .block {
     display: block;
   }
@@ -2009,6 +2022,10 @@
     border-left-style: var(--tw-border-style);
     border-left-width: 4px;
   }
+  .border-none {
+    --tw-border-style: none;
+    border-style: none;
+  }
   .border-base-200 {
     border-color: var(--color-base-200);
   }
@@ -2027,6 +2044,9 @@
   .border-yellow-500 {
     border-color: var(--color-yellow-500);
   }
+  .bg-\[\#ff5277\] {
+    background-color: #ff5277;
+  }
   .bg-base-100 {
     background-color: var(--color-base-100);
   }
@@ -2042,8 +2062,17 @@
   .bg-green-100 {
     background-color: var(--color-green-100);
   }
+  .bg-neutral-700 {
+    background-color: var(--color-neutral-700);
+  }
   .bg-neutral-900 {
     background-color: var(--color-neutral-900);
+  }
+  .bg-neutral-900\/50 {
+    background-color: color-mix(in srgb, oklch(20.5% 0 0) 50%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-neutral-900) 50%, transparent);
+    }
   }
   .bg-neutral-900\/70 {
     background-color: color-mix(in srgb, oklch(20.5% 0 0) 70%, transparent);
@@ -2211,6 +2240,9 @@
     color: var(--color-primary-content);
     --input-color: var(--color-primary);
   }
+  .text-\[\#ff5277\] {
+    color: #ff5277;
+  }
   .text-base-content {
     color: var(--color-base-content);
   }
@@ -2234,6 +2266,9 @@
   }
   .text-neutral-100 {
     color: var(--color-neutral-100);
+  }
+  .text-neutral-300 {
+    color: var(--color-neutral-300);
   }
   .text-neutral-400 {
     color: var(--color-neutral-400);
@@ -2366,6 +2401,34 @@
         @supports (color: color-mix(in lab, red, red)) {
           border-color: color-mix(in oklab, var(--color-primary) 70%, transparent);
         }
+      }
+    }
+  }
+  .hover\:bg-\[\#ff3a65\] {
+    &:hover {
+      @media (hover: hover) {
+        background-color: #ff3a65;
+      }
+    }
+  }
+  .hover\:bg-neutral-600 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-neutral-600);
+      }
+    }
+  }
+  .hover\:text-\[\#ff7291\] {
+    &:hover {
+      @media (hover: hover) {
+        color: #ff7291;
+      }
+    }
+  }
+  .hover\:text-neutral-100 {
+    &:hover {
+      @media (hover: hover) {
+        color: var(--color-neutral-100);
       }
     }
   }
