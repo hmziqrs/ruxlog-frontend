@@ -29,23 +29,11 @@ pub fn LoginScreen() -> Element {
         // Read the current value of div_element
         spawn(async move {
             let read = card_ref.read();
-
-            // Get the client rectangle from the read data
             let client_rect = read.as_ref().map(|el| el.get_client_rect());
-            let client_offset = read.as_ref().map(|el| el.get_scroll_offset());
-
-            // tracing::info!("client_offset: {:?}", client_offset);
-
-            // Check if there's a client rectangle
             if let Some(client_rect) = client_rect {
                 if let Ok(rect) = client_rect.await {
                     card_dimensions.set(rect);
-                }
-            }
-            if let Some(client_offset) = client_offset {
-                if let Ok(offset) = client_offset.await {
-                    // Update the mouse position b
-                    tracing::info!("client_offset: {:?}", offset);
+                    tracing::info!("dimensions: {:?} | {:?}", rect.origin, rect.size);
                 }
             }
         });
@@ -68,13 +56,14 @@ pub fn LoginScreen() -> Element {
                     calculate.call(());
                 },
                 class: "relative w-full max-w-md overflow-visible rounded-2xl border border-neutral-800 bg-neutral-900/70 backdrop-blur-md shadow-xl",
-                // onmousemove: move |evt| {
-                //     if let Some(card_element) = &*card_ref.read() {
-                //         let x = evt.data.client_coordinates().x as f64 - card_element
-                //         let y = evt.data.client_coordinates().y as f64 - card_element.top();
-                //         mouse_pos.set((x as i32, y as i32));
-                //     }
-                // },
+                onmousemove: move |evt| {
+                    if let Some(card_element) = &*card_ref.read() {
+                        let d = card_dimensions.peek().origin;
+                        let x = evt.data.client_coordinates().x as f64 - d.x;
+                        let y = evt.data.client_coordinates().y as f64 - d.y;
+                        mouse_pos.set((x as i32, y as i32));
+                    }
+                },
                 div {
                     class: "pointer-events-none absolute inset-0 rounded-2xl transition-all duration-300 z-10",
                     style: format!(
