@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[component]
-pub fn AuthGuard() -> Element {
+pub fn AuthGuardContainer() -> Element {
     let render_blocked = use_signal(|| true);
 
     let auth_store = use_auth();
