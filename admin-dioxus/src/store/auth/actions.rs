@@ -72,9 +72,7 @@ impl AuthState {
         Self::delete_id_cookie();
 
         // Make API call for logout using our singleton reqwest service
-        let result = reqwest::delete("/auth/v1/log_out")
-            .send()
-            .await;
+        let result = reqwest::delete("/auth/v1/log_out").send().await;
 
         match result {
             Ok(_) => {
@@ -101,9 +99,7 @@ impl AuthState {
         }
 
         // Try to fetch user data from API using our singleton reqwest service
-        let result = reqwest::get::<User>("/user/v1/get")
-            .send()
-            .await;
+        let result = reqwest::get::<User>("/user/v1/get").send().await;
 
         match result {
             Ok(response) => {
@@ -149,11 +145,9 @@ impl AuthState {
     }
 
     pub async fn login(&self, email: String, password: String) {
-        tracing::info!("Login attempt with email");
         self.login_status.write().set_loading(None);
 
         let payload = LoginPayload { email, password };
-        tracing::info!("Payload: {:?}", payload);
 
         // Use our singleton reqwest service for the login request
         let result = reqwest::post::<LoginPayload>("/auth/v1/log_in", &payload)
@@ -181,7 +175,7 @@ impl AuthState {
                                 let options = CookieOptions {
                                     path: Some("/"),
                                     domain: None,
-                                    secure: false, 
+                                    secure: false,
                                     same_site: SameSite::Lax,
                                     expires: None,
                                 };
@@ -195,7 +189,6 @@ impl AuthState {
                                     "Cookie operations not available in non-wasm environment"
                                 );
                             }
-
 
                             *self.user.write() = Some(user);
                             self.login_status.write().set_success(None, None);
