@@ -25,8 +25,8 @@ impl LoginForm {
 
     pub fn dev() -> Self {
         LoginForm {
-            email: String::from("santa_quidem@yahoo.com"),
-            password: String::from("santa_quidem@yahoo.com"),
+            email: String::from("hmzi@gmail.rs"),
+            password: String::from("hello"),
         }
     }
 }

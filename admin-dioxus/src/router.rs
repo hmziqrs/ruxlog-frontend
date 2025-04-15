@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use std::sync::LazyLock;
 
 use crate::containers::AuthGuard;
 use crate::screens::HomeScreen;
@@ -31,6 +32,9 @@ pub enum Route {
     #[route("/user/new")]
     AddUserScreen {},
 }
+pub static OPEN_ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| vec![
+    Route::LoginScreen {},
+]);
 
 #[component]
 fn NavBar() -> Element {

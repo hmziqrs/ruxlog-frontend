@@ -93,7 +93,7 @@ impl AuthState {
         if (!Self::check_id_cookie_exist()) {
             self.init_status
                 .write()
-                .set_failed(Some("User authentication cookie not found".to_string()));
+                .set_success(None, None);
             return;
         }
 
