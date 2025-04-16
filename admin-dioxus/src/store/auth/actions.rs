@@ -67,11 +67,11 @@ impl AuthState {
     pub async fn logout(&self) {
         self.logout_status.write().set_loading(None);
 
-        // Delete auth cookie
-        Self::delete_id_cookie();
+
 
         // Make API call for logout using our singleton reqwest service
-        let result = http_client::delete("/auth/v1/log_out").send().await;
+        let empty_body = {};
+        let result = http_client::post("/auth/v1/log_out", &empty_body).send().await;
 
         match result {
             Ok(_) => {
