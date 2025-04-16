@@ -11,6 +11,7 @@ pub mod store;
 mod config;
 pub mod env;
 pub mod services;
+pub mod ui;
 
 fn main() {
     dioxus::launch(App);

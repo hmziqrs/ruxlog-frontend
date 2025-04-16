@@ -1,5 +1,6 @@
 use crate::components::shadcn_ui::*;
 use crate::store::{use_post, Post};
+use crate::ui::shadcn::Button;
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::icons::ld_icons::{
     LdCalendar, LdEye, LdLayoutGrid, LdHeart, LdLayoutList, LdMessageSquare, 
@@ -70,7 +71,7 @@ pub fn BlogListScreen() -> Element {
                         div { class: "flex items-center gap-2",
                             // TODO: ThemeToggle
                             // ThemeToggle {}
-                            Card { "Create Post" }
+                            Button { "Create post" }
                         }
                     }
                     // Search and view mode
