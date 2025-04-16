@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum StateFrameStatus {
     Init,
@@ -79,4 +81,12 @@ impl<T: Clone> StateFrame<T> {
         self.status = StateFrameStatus::Failed;
         self.message = message;
     }
+}
+
+
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ApiError {
+    pub message: String,
+    pub status: Option<u16>,
 }
