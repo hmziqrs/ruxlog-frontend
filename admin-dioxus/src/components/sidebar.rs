@@ -30,22 +30,22 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
         // Sidebar container
         aside {
             class: format_args!(
-                "fixed inset-y-0 left-0 z-40 w-64 bg-zinc-800 shadow-lg transition-transform duration-300 transform {} sm:translate-x-0",
+                "fixed inset-y-0 left-0 z-40 w-64 bg-zinc-200 dark:bg-zinc-800 shadow-lg transition-all duration-300 transform {} sm:translate-x-0",
                 if expanded() { "translate-x-0" } else { "-translate-x-full" },
             ),
             // Sidebar header
-            div { class: "flex h-16 items-center justify-between border-b border-zinc-700 px-4",
+            div { class: "flex h-16 items-center justify-between border-b border-zinc-300 dark:border-zinc-700 px-4 transition-colors duration-300",
                 div { class: "flex items-center space-x-2",
                     img {
                         class: "h-8 w-8",
                         src: asset!("/assets/logo.png"),
                         alt: "Logo",
                     }
-                    h1 { class: "text-lg font-bold text-white", "Ruxlog Admin" }
+                    h1 { class: "text-lg font-bold text-zinc-800 dark:text-white transition-colors duration-300", "Ruxlog Admin" }
                 }
                 // Close sidebar button (mobile only)
                 button {
-                    class: "rounded-md p-2 text-gray-400 hover:bg-zinc-700 hover:text-white sm:hidden",
+                    class: "rounded-md p-2 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 sm:hidden",
                     onclick: move |_| toggle.call(()),
                     "×"
                 }
@@ -57,11 +57,11 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                 div { class: "space-y-1",
                     Link {
                         class: format_args!(
-                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors",
+                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
                             if is_active(Route::HomeScreen {}) {
-                                "bg-zinc-700 text-white"
+                                "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
                             } else {
-                                "text-zinc-300 hover:bg-zinc-700 hover:text-white"
+                                "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
                             },
                         ),
                         to: Route::HomeScreen {},
@@ -71,11 +71,11 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
 
                     Link {
                         class: format_args!(
-                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors",
+                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
                             if is_active(Route::AddBlogScreen {}) {
-                                "bg-zinc-700 text-white"
+                                "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
                             } else {
-                                "text-zinc-300 hover:bg-zinc-700 hover:text-white"
+                                "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
                             },
                         ),
                         to: Route::AddBlogScreen {},
@@ -85,11 +85,11 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
 
                     Link {
                         class: format_args!(
-                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors",
+                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
                             if is_active(Route::AddCategoryScreen {}) {
-                                "bg-zinc-700 text-white"
+                                "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
                             } else {
-                                "text-zinc-300 hover:bg-zinc-700 hover:text-white"
+                                "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
                             },
                         ),
                         to: Route::AddCategoryScreen {},
@@ -99,11 +99,11 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
 
                     Link {
                         class: format_args!(
-                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors",
+                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
                             if is_active(Route::AddTagScreen {}) {
-                                "bg-zinc-700 text-white"
+                                "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
                             } else {
-                                "text-zinc-300 hover:bg-zinc-700 hover:text-white"
+                                "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
                             },
                         ),
                         to: Route::AddTagScreen {},
@@ -113,11 +113,11 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
 
                     Link {
                         class: format_args!(
-                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors",
+                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
                             if is_active(Route::AddUserScreen {}) {
-                                "bg-zinc-700 text-white"
+                                "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
                             } else {
-                                "text-zinc-300 hover:bg-zinc-700 hover:text-white"
+                                "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
                             },
                         ),
                         to: Route::AddUserScreen {},
@@ -127,9 +127,9 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                 }
             }
             // Sidebar footer with logout button
-            div { class: "absolute bottom-0 left-0 right-0 border-t border-zinc-700 p-4",
+            div { class: "absolute bottom-0 left-0 right-0 border-t border-zinc-300 dark:border-zinc-700 p-4 transition-colors duration-300",
                 button {
-                    class: "flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white",
+                    class: "flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200",
                     onclick: move |_| {
                         spawn(async move {
                             auth_store.logout().await;
