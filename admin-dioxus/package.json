@@ -11,6 +11,5 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "daisyui": "^5.0.9"
   }
 }
