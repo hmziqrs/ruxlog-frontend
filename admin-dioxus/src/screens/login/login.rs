@@ -47,7 +47,7 @@ pub fn LoginScreen() -> Element {
                 div {
                     class: "absolute pointer-events-none transition-all duration-300 ease-out",
                     style: format!(
-                        "left: {}px; top: {}px; transform: translate(-50%, -50%); width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(244,244,245,0.6) 0%, rgba(113,113,122,0) 70%); filter: blur(60px); opacity: 0.6; z-index: 0;",
+                        "left: {}px; top: {}px; transform: translate(-50%, -50%); width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(244,244,245,0.5) 0%, rgba(113,113,122,0) 70%); filter: blur(20px); opacity: 0.5; z-index: 0;",
                         mouse_pos().0,
                         mouse_pos().1,
                     ),
@@ -74,13 +74,13 @@ pub fn LoginScreen() -> Element {
                     // Base border - always visible but subtle
                     div {
                         class: "absolute inset-0 rounded-2xl pointer-events-none",
-                        style: "background: transparent; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);",
+                        style: "background: transparent; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);",
                     }
-                    // Radial border highlight that follows mouse
+                    // Radial border highlight that follows mouse - much lighter now
                     div {
                         class: "absolute inset-0 rounded-2xl pointer-events-none overflow-hidden",
                         style: format!(
-                            "mask: radial-gradient(circle 100px at {}px {}px, white, transparent); -webkit-mask: radial-gradient(circle 100px at {}px {}px, white, transparent); box-shadow: inset 0 0 0 1px rgba(244,244,245,0.3); transition: opacity 0.15s; opacity: {};",
+                            "mask: radial-gradient(circle 100px at {}px {}px, white, transparent); -webkit-mask: radial-gradient(circle 100px at {}px {}px, white, transparent); box-shadow: inset 0 0 0 1px rgba(244,244,245,0.1); transition: opacity 0.15s; opacity: {};",
                             mouse_pos().0,
                             mouse_pos().1,
                             mouse_pos().0,
