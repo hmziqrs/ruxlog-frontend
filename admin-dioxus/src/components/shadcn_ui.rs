@@ -5,35 +5,31 @@ pub struct ChildProps {
     pub children: Element,
 }
 
-
-
 #[component]
 pub fn Card(props: ChildProps) -> Element {
     rsx! {
-        div { class: "rounded-xl border bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow",
-            {props.children}
-        }
+        div { class: "rounded-lg border bg-card text-card-foreground shadow-sm", {props.children} }
     }
 }
 
 #[component]
 pub fn CardHeader(props: ChildProps) -> Element {
     rsx! {
-        div { class: "p-4 pb-0", {props.children} }
+        div { class: "flex flex-col space-y-1.5 p-6", {props.children} }
     }
 }
 
 #[component]
 pub fn CardContent(props: ChildProps) -> Element {
     rsx! {
-        div { class: "p-4 pt-2", {props.children} }
+        div { class: "p-6 pt-0", {props.children} }
     }
 }
 
 #[component]
 pub fn CardFooter(props: ChildProps) -> Element {
     rsx! {
-        div { class: "p-4 pt-0 flex items-center justify-between", {props.children} }
+        div { class: "flex items-center p-6 pt-0", {props.children} }
     }
 }
 
@@ -44,17 +40,16 @@ pub fn DropdownMenu(props: ChildProps) -> Element {
     let mut open = use_context_provider(|| Signal::new(DropdownContext(false)));
 
     rsx! {
-        div { class: "relative", {props.children} }
+        div { class: "relative inline-block text-left", {props.children} }
     }
 }
-
 
 #[component]
 pub fn DropdownMenuTrigger(props: ChildProps) -> Element {
     let mut open = use_context::<Signal<DropdownContext>>();
     rsx! {
         button {
-            class: "h-8 w-8",
+            class: "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10",
             onclick: move |_| {
                 let is_open = open.peek().0;
                 open.set(DropdownContext(!is_open));
@@ -71,8 +66,8 @@ pub fn DropdownMenuContent(props: ChildProps) -> Element {
     rsx! {
         div {
             class: format!(
-                "absolute right-0 mt-2 w-40 rounded-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg z-50 {}",
-                if open.0 { "block" } else { "hidden visible" },
+                "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 absolute right-0 mt-2 w-56 origin-top-right {} ",
+                if open.0 { "block" } else { "hidden" },
             ),
             {props.children}
         }
@@ -82,29 +77,25 @@ pub fn DropdownMenuContent(props: ChildProps) -> Element {
 #[component]
 pub fn DropdownMenuItem(props: ChildProps) -> Element {
     rsx! {
-        div { class: "px-4 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer",
+        div { class: "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
             {props.children}
         }
     }
 }
 
-
-
-// Badge
 #[component]
 pub fn Badge(props: ChildProps) -> Element {
     rsx! {
-        span { class: "inline-block rounded px-2 py-0.5 text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200",
+        span { class: "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
             {props.children}
         }
     }
 }
 
-// Avatar
 #[component]
 pub fn Avatar(props: ChildProps) -> Element {
     rsx! {
-        span { class: "inline-flex items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800 h-6 w-6 overflow-hidden",
+        span { class: "relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full",
             {props.children}
         }
     }
@@ -113,14 +104,18 @@ pub fn Avatar(props: ChildProps) -> Element {
 #[component]
 pub fn AvatarImage(src: String, alt: String) -> Element {
     rsx! {
-        img { src, alt, class: "h-full w-full object-cover" }
+        img {
+            src,
+            alt,
+            class: "aspect-square h-full w-full object-cover",
+        }
     }
 }
 
 #[component]
 pub fn AvatarFallback(props: ChildProps) -> Element {
     rsx! {
-        span { class: "text-xs bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center h-full w-full",
+        span { class: "flex h-full w-full items-center justify-center rounded-full bg-muted text-muted-foreground",
             {props.children}
         }
     }
