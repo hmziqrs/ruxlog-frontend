@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use crate::ui::custom::AppPortal;
+use crate::ui::{custom::AppPortal, shadcn::Button};
 
 /// Props for AlertDialog root component
 #[derive(Props, PartialEq, Clone)]
@@ -49,7 +49,7 @@ pub struct AlertDialogPortalProps {
 /// Portal component for dialog content
 #[component]
 pub fn AlertDialogPortal(props: AlertDialogPortalProps) -> Element {
-    let open = use_context::<Signal<AlertDialogState>>();
+    let open: Signal<AlertDialogState> = use_context::<Signal<AlertDialogState>>();
 
     if open.read().0 {
         rsx! {
@@ -129,7 +129,11 @@ pub fn AlertDialogDescription(props: AlertDialogDescriptionProps) -> Element {
 #[derive(Props, PartialEq, Clone)]
 pub struct AlertDialogActionProps {
     pub children: Element,
-    #[props(default)] pub class: Option<String>,
+    #[props(default)]
+    pub class: Option<String>,
+    #[props(optional)]
+    onclick: Option<EventHandler<MouseEvent>>,
+
 }
 
 /// Action button closes dialog
@@ -137,9 +141,14 @@ pub struct AlertDialogActionProps {
 pub fn AlertDialogAction(props: AlertDialogActionProps) -> Element {
     let mut open = use_context::<Signal<AlertDialogState>>();
     rsx! {
-        button {
+        Button {
             class: props.class.clone().unwrap_or_else(|| "ml-auto".to_string()),
-            onclick: move |_| open.set(AlertDialogState(false)),
+            onclick: move |e| {
+                if let Some(handler) = &props.onclick {
+                    handler.call(e);
+                }
+                open.set(AlertDialogState(false));
+            },
             {props.children}
         }
     }
@@ -156,7 +165,7 @@ pub struct AlertDialogCancelProps {
 pub fn AlertDialogCancel(props: AlertDialogCancelProps) -> Element {
     let mut open = use_context::<Signal<AlertDialogState>>();
     rsx! {
-        button {
+        Button {
             class: props.class.clone().unwrap_or_else(|| "mr-2".to_string()),
             onclick: move |_| open.set(AlertDialogState(false)),
             {props.children}
