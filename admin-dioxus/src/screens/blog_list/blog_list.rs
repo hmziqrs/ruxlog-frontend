@@ -1,6 +1,12 @@
 use crate::components::shadcn_ui::*;
 use crate::store::{use_post, Post};
+use dioxus::html::div;
 use dioxus::prelude::*;
+use hmziq_dioxus_free_icons::icons::ld_icons::{
+    LdCalendar, LdEye, LdLayoutGrid, LdHeart, LdLayoutList, LdMessageSquare, 
+    LdEllipsis, LdSearch, LdTag
+};
+use hmziq_dioxus_free_icons::Icon;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum LayoutType {
@@ -63,19 +69,36 @@ pub fn BlogListScreen() -> Element {
                     }
                     // Search and view mode
                     div { class: "flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
-                        div { class: "relative w-full md:w-96" }
+                        div { class: "relative w-full md:w-96",
+                            div { class: "absolute left-2.5 top-2.5 h-4 w-4 text-zinc-500 dark:text-zinc-400",
+                                div { class: "w-4 h-4",
+                                    Icon { icon: LdSearch {} }
+                                }
+                            }
+                            input {
+                                class: "w-full pl-8 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded border px-3 py-2 text-sm",
+                                r#type: "search",
+                                placeholder: "Search posts...",
+                                value: "{search_query}",
+                                oninput: move |e| search_query.set(e.value()),
+                            }
+                        }
                         div { class: "flex items-center gap-2",
-                            Card {
-                                button {
-                                    class: if *layout_type.read() == LayoutType::Grid { "h-9 w-9 bg-zinc-900 text-white rounded" } else { "h-9 w-9 border rounded" },
-                                    onclick: move |_| layout_type.set(LayoutType::Grid),
-                                    "Grid"
+                            button {
+                                class: if *layout_type.read() == LayoutType::Grid { "h-9 w-9 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "h-9 w-9 border border-zinc-200 dark:border-zinc-800 rounded flex items-center justify-center" },
+                                onclick: move |_| layout_type.set(LayoutType::Grid),
+                                div { class: "w-4 h-4",
+                                    Icon { icon: LdLayoutGrid {} }
                                 }
-                                button {
-                                    class: if *layout_type.read() == LayoutType::List { "h-9 w-9 bg-zinc-900 text-white rounded" } else { "h-9 w-9 border rounded" },
-                                    onclick: move |_| layout_type.set(LayoutType::List),
-                                    "List"
+                                span { class: "sr-only", "Grid view" }
+                            }
+                            button {
+                                class: if *layout_type.read() == LayoutType::List { "h-9 w-9 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "h-9 w-9 border border-zinc-200 dark:border-zinc-800 rounded flex items-center justify-center" },
+                                onclick: move |_| layout_type.set(LayoutType::List),
+                                div { class: "w-4 h-4",
+                                    Icon { icon: LdLayoutList {} }
                                 }
+                                span { class: "sr-only", "List view" }
                             }
                         }
                     }
