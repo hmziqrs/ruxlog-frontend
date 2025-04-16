@@ -6,6 +6,7 @@ use hmziq_dioxus_free_icons::icons::ld_icons::{
     LdBell, LdChevronLeft, LdChevronRight, LdMenu, LdMoon, LdSearch, LdSettings, LdSun,
 };
 
+use crate::config::DarkMode;
 use crate::{components::Sidebar, router::Route, store::use_auth};
 
 #[component]
@@ -13,7 +14,7 @@ pub fn NavBarContainer() -> Element {
     let auth_store = use_auth();
     let auth_user = auth_store.user.read();
     let mut sidebar_open = use_signal(|| false);
-    let mut dark_theme = use_signal(|| false); // Default to light mode
+    let mut dark_theme = use_context_provider(|| Signal::new(DarkMode(true)));
 
     use_effect(move || {
         spawn(async move {
@@ -23,13 +24,13 @@ pub fn NavBarContainer() -> Element {
                     .unwrap()
                     .to_string();
             tracing::info!("Dark mode is: {}", is_dark);
-            dark_theme.set(is_dark.parse::<bool>().unwrap_or(false));
+            dark_theme.set(DarkMode(is_dark.parse::<bool>().unwrap_or(false)));
         });
     });
 
     // Toggle dark mode
     let toggle_dark_mode = move |_: MouseEvent| {
-        dark_theme.toggle();
+        dark_theme.write().toggle();
         spawn(async move {
             _ = document::eval("document.documentElement.classList.toggle('dark');").await;
             _ = document::eval("localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');").await;
@@ -118,7 +119,7 @@ pub fn NavBarContainer() -> Element {
                                 onclick: toggle_dark_mode,
                                 class: "rounded-full p-1 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-200 dark:focus:ring-offset-zinc-800",
                                 div { class: "w-4 h-4",
-                                    if *dark_theme.read() {
+                                    if (*dark_theme.read()).0 {
                                         Icon { icon: LdSun }
                                     } else {
                                         Icon { icon: LdMoon }
@@ -140,7 +141,9 @@ pub fn NavBarContainer() -> Element {
                 }
 
                 // Page content
-                main { class: "p-6 bg-zinc-100 dark:bg-zinc-900 transition-colors duration-300", Outlet::<Route> {} }
+                main { class: "p-6 bg-zinc-100 dark:bg-zinc-900 transition-colors duration-300",
+                    Outlet::<Route> {}
+                }
             }
         }
     }

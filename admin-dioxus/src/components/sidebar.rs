@@ -41,7 +41,9 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                         src: asset!("/assets/logo.png"),
                         alt: "Logo",
                     }
-                    h1 { class: "text-lg font-bold text-zinc-800 dark:text-white transition-colors duration-300", "Ruxlog Admin" }
+                    h1 { class: "text-lg font-bold text-zinc-800 dark:text-white transition-colors duration-300",
+                        "Ruxlog Admin"
+                    }
                 }
                 // Close sidebar button (mobile only)
                 button {

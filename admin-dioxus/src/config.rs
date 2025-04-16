@@ -3,6 +3,16 @@ use dotenvy::dotenv;
 use std::env;
 use std::collections::HashMap;
 
+#[derive(Clone, PartialEq)]
+pub struct DarkMode(pub bool);
+
+impl DarkMode {
+    pub fn toggle(&mut self) {
+        self.0 = !self.0;
+    }
+}
+
+
 pub struct Config {
     values: HashMap<String, String>
 }
