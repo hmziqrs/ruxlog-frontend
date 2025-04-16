@@ -1,12 +1,18 @@
 use crate::components::shadcn_ui::*;
 use crate::store::{use_post, Post};
-use dioxus::html::div;
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::icons::ld_icons::{
     LdCalendar, LdEye, LdLayoutGrid, LdHeart, LdLayoutList, LdMessageSquare, 
     LdEllipsis, LdSearch, LdTag
 };
 use hmziq_dioxus_free_icons::Icon;
+
+// Helper function for avatar fallback
+fn generate_avatar_fallback(name: &str) -> String {
+    name.split_whitespace()
+        .filter_map(|word| word.chars().next())
+        .collect::<String>()
+}
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum LayoutType {
@@ -128,16 +134,43 @@ pub fn BlogListScreen() -> Element {
 #[component]
 fn PostGridCard(post: Post) -> Element {
     rsx! {
-        Card {
-            // TODO: Featured image
-            CardHeader {
+        Card { class: "overflow-hidden transition-all hover:shadow-md dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800",
+            // Featured image
+            if let Some(featured_image) = &post.featured_image_url {
+                div { class: "aspect-video w-full overflow-hidden",
+                    img {
+                        src: "{featured_image}",
+                        alt: "{post.title}",
+                        class: "h-full w-full object-cover transition-transform hover:scale-105",
+                    }
+                }
+            } else {
+                div { class: "aspect-video w-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center",
+                    div { class: "w-10 h-10 text-zinc-400 dark:text-zinc-600",
+                        Icon { icon: LdMessageSquare {} }
+                    }
+                }
+            }
+
+            CardHeader { class: "p-4 pb-0",
                 div { class: "flex items-start justify-between",
                     div { class: "space-y-1.5",
-                        // TODO: Category badge
+                        // Category badge
+                        if let Some(category) = &post.category {
+                            Badge { class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800",
+                                "{category.name}"
+                            }
+                        }
                         h3 { class: "font-semibold text-lg line-clamp-2", "{post.title}" }
                     }
                     DropdownMenu {
-                        DropdownMenuTrigger { "⋮" }
+                        DropdownMenuTrigger { class: "h-8 w-8",
+                            button { class: "h-8 w-8 flex items-center justify-center",
+                                div { class: "w-4 h-4",
+                                    Icon { icon: LdEllipsis {} }
+                                }
+                            }
+                        }
                         DropdownMenuContent {
                             DropdownMenuItem { "Edit" }
                             DropdownMenuItem { "Duplicate" }
@@ -146,26 +179,56 @@ fn PostGridCard(post: Post) -> Element {
                     }
                 }
             }
-            CardContent {
+            CardContent { class: "p-4 pt-2",
                 if let Some(excerpt) = &post.excerpt {
                     p { class: "text-zinc-500 dark:text-zinc-400 text-sm line-clamp-2 mt-1",
                         "{excerpt}"
                     }
                 }
-                        // TODO: Tags
+                // Tags
+                if !post.tags.is_empty() {
+                    div { class: "flex flex-wrap gap-1.5 mt-3",
+                        {post.tags.iter().take(3).map(|tag| rsx! {
+                            Badge { class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800",
+                                "{tag.name}"
+                            }
+                        })}
+                        if post.tags.len() > 3 {
+                            Badge { class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800",
+                                "+{post.tags.len() - 3}"
+                            }
+                        }
+                    }
+                }
             }
-            CardFooter {
+            CardFooter { class: "p-4 pt-0 flex items-center justify-between",
                 div { class: "flex items-center gap-2",
-                    Avatar {
+                    Avatar { class: "h-6 w-6",
                         AvatarImage {
                             src: post.author.avatar.clone().unwrap_or_default(),
                             alt: post.author.name.clone(),
                         }
-                        AvatarFallback { {"{post.author.name.chars().next().unwrap_or('U')}"} }
+                        AvatarFallback { class: "text-xs bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200",
+                            {generate_avatar_fallback(&post.author.name)}
+                        }
                     }
                     span { class: "text-xs text-zinc-500 dark:text-zinc-400", "{post.author.name}" }
                 }
-                        // TODO: Views, Likes
+                // Stats
+                div { class: "flex items-center gap-3 text-zinc-500 dark:text-zinc-400",
+                    div { class: "flex items-center gap-1 text-xs",
+                        div { class: "w-3.5 h-3.5",
+                            Icon { icon: LdEye {} }
+                        }
+                        span { "{post.view_count}" }
+                    }
+                    div { class: "flex items-center gap-1 text-xs",
+                        div { class: "w-3.5 h-3.5",
+                            Icon { icon: LdHeart {} }
+                        }
+                        span { "{post.likes_count}" }
+                    }
+                }
             }
         }
     }
@@ -174,17 +237,54 @@ fn PostGridCard(post: Post) -> Element {
 #[component]
 fn PostListItem(post: Post) -> Element {
     rsx! {
-        Card {
+        Card { class: "overflow-hidden transition-all hover:shadow-md dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800",
             div { class: "flex flex-col md:flex-row",
-                // TODO: Featured image
+                // Featured image
+                if let Some(featured_image) = &post.featured_image_url {
+                    div { class: "md:w-48 lg:w-60 aspect-video md:aspect-square overflow-hidden",
+                        img {
+                            src: "{featured_image}",
+                            alt: "{post.title}",
+                            class: "h-full w-full object-cover",
+                        }
+                    }
+                } else {
+                    div { class: "md:w-48 lg:w-60 aspect-video md:aspect-square bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center",
+                        div { class: "w-10 h-10 text-zinc-400 dark:text-zinc-600",
+                            Icon { icon: LdMessageSquare {} }
+                        }
+                    }
+                }
+
                 div { class: "flex-1 p-4",
                     div { class: "flex items-start justify-between",
                         div { class: "space-y-1",
-                            // TODO: Category badge, status
+                            div { class: "flex items-center gap-2",
+                                // Category badge
+                                if let Some(category) = &post.category {
+                                    Badge { class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800",
+                                        "{category.name}"
+                                    }
+                                }
+                                // Published status
+                                span { class: if post.is_published { "px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" } else { "px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
+                                    if post.is_published {
+                                        "Published"
+                                    } else {
+                                        "Draft"
+                                    }
+                                }
+                            }
                             h3 { class: "font-semibold text-lg", "{post.title}" }
                         }
                         DropdownMenu {
-                            DropdownMenuTrigger { "⋮" }
+                            DropdownMenuTrigger { class: "h-8 w-8",
+                                button { class: "h-8 w-8 flex items-center justify-center",
+                                    div { class: "w-4 h-4",
+                                        Icon { icon: LdEllipsis {} }
+                                    }
+                                }
+                            }
                             DropdownMenuContent {
                                 DropdownMenuItem { "Edit" }
                                 DropdownMenuItem { "Duplicate" }
@@ -192,26 +292,76 @@ fn PostListItem(post: Post) -> Element {
                             }
                         }
                     }
+
                     if let Some(excerpt) = &post.excerpt {
                         p { class: "text-zinc-500 dark:text-zinc-400 text-sm mt-2 line-clamp-2",
                             "{excerpt}"
                         }
                     }
-                    // TODO: Tags
+                    // Tags
+                    if !post.tags.is_empty() {
+                        div { class: "flex flex-wrap gap-1.5 mt-3",
+                            {post.tags.iter().take(5).map(|tag| rsx! {
+                                Badge { class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800",
+                                    "{tag.name}"
+                                }
+                            })}
+                            if post.tags.len() > 5 {
+                                Badge { class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800",
+                                    "+{post.tags.len() - 5}"
+                                }
+                            }
+                        }
+                    }
+                    // Author and stats
                     div { class: "flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800",
                         div { class: "flex items-center gap-2",
-                            Avatar {
+                            Avatar { class: "h-6 w-6",
                                 AvatarImage {
                                     src: post.author.avatar.clone().unwrap_or_default(),
                                     alt: post.author.name.clone(),
                                 }
-                                AvatarFallback { {"{post.author.name.chars().next().unwrap_or('U')}"} }
+                                AvatarFallback { class: "text-xs bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200",
+                                    {generate_avatar_fallback(&post.author.name)}
+                                }
                             }
                             span { class: "text-xs text-zinc-500 dark:text-zinc-400",
                                 "{post.author.name}"
                             }
                         }
-                                        // TODO: Date, Views, Likes, Tags count
+                        // Stats
+                        div { class: "flex items-center gap-4 mt-2 sm:mt-0 text-zinc-500 dark:text-zinc-400",
+                            div { class: "flex items-center gap-1 text-xs",
+                                div { class: "w-3.5 h-3.5",
+                                    Icon { icon: LdCalendar {} }
+                                }
+                                span {
+                                    if post.is_published && post.published_at.is_some() {
+                                        {post.published_at.clone()}
+                                    } else {
+                                        {post.created_at.clone()}
+                                    }
+                                }
+                            }
+                            div { class: "flex items-center gap-1 text-xs",
+                                div { class: "w-3.5 h-3.5",
+                                    Icon { icon: LdEye {} }
+                                }
+                                span { "{post.view_count}" }
+                            }
+                            div { class: "flex items-center gap-1 text-xs",
+                                div { class: "w-3.5 h-3.5",
+                                    Icon { icon: LdHeart {} }
+                                }
+                                span { "{post.likes_count}" }
+                            }
+                            div { class: "flex items-center gap-1 text-xs",
+                                div { class: "w-3.5 h-3.5",
+                                    Icon { icon: LdTag {} }
+                                }
+                                span { "{post.tags.len()}" }
+                            }
+                        }
                     }
                 }
             }
