@@ -1,11 +1,61 @@
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
-use hmziq_dioxus_free_icons::{Icon};
 use hmziq_dioxus_free_icons::icons::ld_icons::{
-    LdAreaChart, LdFileText, LdFolder, LdHome, LdLogOut, LdTag, LdUser
+    LdAreaChart, LdFileText, LdFolder, LdHome, LdLogOut, LdPlus, LdTag, LdUser
 };
+use hmziq_dioxus_free_icons::Icon;
 
 use crate::{router::Route, store::use_auth};
+
+#[derive(Props, PartialEq, Clone)]
+pub struct SidebarModuleLinkProps {
+    pub main_route: Route,
+    #[props(optional)]
+    pub add_route: Option<Route>,
+    pub icon: Element,
+    pub label: String,
+    pub is_active: bool,
+}
+
+#[component]
+pub fn SidebarModuleLink(props: SidebarModuleLinkProps) -> Element {
+    let  nav = use_navigator();
+    rsx! {
+        div { class: "flex flex-row w-full",
+            div {
+                class: format_args!(
+                    "flex items-center flex-1 rounded-md px-3 py-2 text-sm font-medium {} transition-colors duration-200",
+                    if props.is_active {
+                        "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
+                    } else {
+                        "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-900/90 dark:hover:text-white"
+                    },
+                ),
+                onclick: move |_| {
+                    nav.push(props.main_route.clone());
+                },
+                // to: ,
+                div { class: "h-4 w-4", {props.icon} }
+                span { class: "ml-3", "{props.label}" }
+                div { class: "flex-1" }
+                if let Some(add_route) = props.add_route {
+                    div {
+                        class: "self-end rounded hover:bg-zinc-300 dark:hover:bg-zinc-800/90 p-1",
+                        // to: add_route.clone(),
+                        onclick: move |e| {
+                            e.stop_propagation();
+                            nav.push(add_route.clone());
+                        },
+                        aria_label: format!("Add {}", props.label),
+                        div { class: "w-5 h-5",
+                            Icon { icon: LdPlus }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 #[component]
 pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
@@ -50,7 +100,7 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                 }
                 // Close sidebar button (mobile only)
                 button {
-                    class: "rounded-md p-2 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 sm:hidden",
+                    class: "rounded-md p-2 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-900/90 dark:hover:text-white transition-colors duration-200 sm:hidden",
                     onclick: move |_| toggle.call(()),
                     "×"
                 }
@@ -60,96 +110,64 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
             nav { class: "mt-4 px-2",
                 // Navigation items
                 div { class: "space-y-1",
-                    Link {
-                        class: format_args!(
-                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
-                            if is_active(Route::HomeScreen {}) {
-                                "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
-                            } else {
-                                "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
-                            },
-                        ),
-                        to: Route::HomeScreen {},
-                        Icon { icon: LdHome, width: 18, height: 18 }
-                        span { class: "ml-3", "Dashboard" }
+                    SidebarModuleLink {
+                        main_route: Route::HomeScreen {},
+                        icon: rsx! {
+                            Icon { icon: LdHome }
+                        },
+                        label: "Dashboard",
+                        is_active: is_active(Route::HomeScreen {}),
                     }
-
-                    // Posts
-                    Link {
-                        class: format_args!(
-                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
-                            if is_active(Route::BlogListScreen {}) {
-                                "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
-                            } else {
-                                "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
-                            },
-                        ),
-                        to: Route::BlogListScreen {},
-                        Icon { icon: LdFileText, width: 18, height: 18 }
-                        span { class: "ml-3", "Posts" }
+                    SidebarModuleLink {
+                        main_route: Route::BlogListScreen {},
+                        add_route: Some(Route::AddBlogScreen {}),
+                        icon: rsx! {
+                            Icon { icon: LdFileText }
+                        },
+                        label: "Posts",
+                        is_active: is_active(Route::BlogListScreen {}),
                     }
-                    // Categories
-                    Link {
-                        class: format_args!(
-                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
-                            if is_active(Route::CategoryListScreen {}) {
-                                "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
-                            } else {
-                                "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
-                            },
-                        ),
-                        to: Route::CategoryListScreen {},
-                        Icon { icon: LdFolder, width: 18, height: 18 }
-                        span { class: "ml-3", "Categories" }
+                    SidebarModuleLink {
+                        main_route: Route::CategoryListScreen {},
+                        add_route: Some(Route::AddCategoryScreen {}),
+                        icon: rsx! {
+                            Icon { icon: LdFolder }
+                        },
+                        label: "Categories",
+                        is_active: is_active(Route::CategoryListScreen {}),
                     }
-                    // Tags
-                    Link {
-                        class: format_args!(
-                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
-                            if is_active(Route::TagListScreen {}) {
-                                "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
-                            } else {
-                                "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
-                            },
-                        ),
-                        to: Route::TagListScreen {},
-                        Icon { icon: LdTag, width: 18, height: 18 }
-                        span { class: "ml-3", "Tags" }
+                    SidebarModuleLink {
+                        main_route: Route::TagListScreen {},
+                        add_route: Some(Route::AddTagScreen {}),
+                        icon: rsx! {
+                            Icon { icon: LdTag }
+                        },
+                        label: "Tags",
+                        is_active: is_active(Route::TagListScreen {}),
                     }
-                    // Users
-                    Link {
-                        class: format_args!(
-                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
-                            if is_active(Route::UserListScreen {}) {
-                                "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
-                            } else {
-                                "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
-                            },
-                        ),
-                        to: Route::UserListScreen {},
-                        Icon { icon: LdUser, width: 18, height: 18 }
-                        span { class: "ml-3", "Users" }
+                    SidebarModuleLink {
+                        main_route: Route::UserListScreen {},
+                        add_route: Some(Route::AddUserScreen {}),
+                        icon: rsx! {
+                            Icon { icon: LdUser }
+                        },
+                        label: "Users",
+                        is_active: is_active(Route::UserListScreen {}),
                     }
-
-                    Link {
-                        class: format_args!(
-                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
-                            if is_active(Route::AnalyticsScreen {}) {
-                                "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
-                            } else {
-                                "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
-                            },
-                        ),
-                        to: Route::AnalyticsScreen {},
-                        Icon { icon: LdAreaChart, width: 18, height: 18 }
-                        span { class: "ml-3", "Analytics" }
+                    SidebarModuleLink {
+                        main_route: Route::AnalyticsScreen {},
+                        icon: rsx! {
+                            Icon { icon: LdAreaChart }
+                        },
+                        label: "Analytics",
+                        is_active: is_active(Route::AnalyticsScreen {}),
                     }
                 }
             }
             // Sidebar footer with logout button
             div { class: "absolute bottom-0 left-0 right-0 border-t border-zinc-300 dark:border-zinc-700 p-4 transition-colors duration-300",
                 button {
-                    class: "flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200",
+                    class: "flex w-full items-center flex-1 rounded-md px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-900/90 dark:hover:text-white transition-colors duration-200",
                     onclick: move |_| {
                         spawn(async move {
                             auth_store.logout().await;
