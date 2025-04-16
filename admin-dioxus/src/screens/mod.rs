@@ -5,6 +5,10 @@ mod add_blog;
 mod add_category;
 mod add_tag;
 mod add_user;
+mod blog_list;
+mod category_list;
+mod tag_list;
+mod user_list;
 
 pub use home::*;
 pub use analytics::*;
@@ -13,3 +17,7 @@ pub use add_blog::*;
 pub use add_category::*;
 pub use add_tag::*;
 pub use add_user::*;
+pub use blog_list::*;
+pub use category_list::*;
+pub use tag_list::*;
+pub use user_list::*;

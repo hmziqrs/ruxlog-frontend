@@ -1,6 +1,6 @@
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
-use hmziq_dioxus_free_icons::{Icon, IconShape};
+use hmziq_dioxus_free_icons::{Icon};
 use hmziq_dioxus_free_icons::icons::ld_icons::{
     LdAreaChart, LdFileText, LdFolder, LdHome, LdLogOut, LdTag, LdUser
 };
@@ -74,58 +74,59 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                         span { class: "ml-3", "Dashboard" }
                     }
 
+                    // Posts
                     Link {
                         class: format_args!(
                             "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
-                            if is_active(Route::AddBlogScreen {}) {
+                            if is_active(Route::BlogListScreen {}) {
                                 "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
                             } else {
                                 "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
                             },
                         ),
-                        to: Route::AddBlogScreen {},
+                        to: Route::BlogListScreen {},
                         Icon { icon: LdFileText, width: 18, height: 18 }
                         span { class: "ml-3", "Posts" }
                     }
-
+                    // Categories
                     Link {
                         class: format_args!(
                             "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
-                            if is_active(Route::AddCategoryScreen {}) {
+                            if is_active(Route::CategoryListScreen {}) {
                                 "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
                             } else {
                                 "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
                             },
                         ),
-                        to: Route::AddCategoryScreen {},
+                        to: Route::CategoryListScreen {},
                         Icon { icon: LdFolder, width: 18, height: 18 }
                         span { class: "ml-3", "Categories" }
                     }
-
+                    // Tags
                     Link {
                         class: format_args!(
                             "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
-                            if is_active(Route::AddTagScreen {}) {
+                            if is_active(Route::TagListScreen {}) {
                                 "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
                             } else {
                                 "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
                             },
                         ),
-                        to: Route::AddTagScreen {},
+                        to: Route::TagListScreen {},
                         Icon { icon: LdTag, width: 18, height: 18 }
                         span { class: "ml-3", "Tags" }
                     }
-
+                    // Users
                     Link {
                         class: format_args!(
                             "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
-                            if is_active(Route::AddUserScreen {}) {
+                            if is_active(Route::UserListScreen {}) {
                                 "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
                             } else {
                                 "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
                             },
                         ),
-                        to: Route::AddUserScreen {},
+                        to: Route::UserListScreen {},
                         Icon { icon: LdUser, width: 18, height: 18 }
                         span { class: "ml-3", "Users" }
                     }
