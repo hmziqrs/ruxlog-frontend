@@ -1,7 +1,9 @@
 mod input;
-mod toast;
 mod animated_blob;
+mod toast;
+mod sidebar;
 
-pub use input::AppInput;
+pub use input::*;
+pub use animated_blob::*;
 pub use toast::*;
-pub use animated_blob::AnimatedBlob;
+pub use sidebar::*;
