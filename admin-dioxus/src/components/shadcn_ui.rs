@@ -37,25 +37,43 @@ pub fn CardFooter(props: ChildProps) -> Element {
     }
 }
 
-// DropdownMenu Components (skeleton, no logic)
+struct DropdownContext(bool);
+
 #[component]
 pub fn DropdownMenu(props: ChildProps) -> Element {
+    let mut open = use_context_provider(|| Signal::new(DropdownContext(false)));
+
     rsx! {
         div { class: "relative", {props.children} }
     }
 }
 
+
 #[component]
 pub fn DropdownMenuTrigger(props: ChildProps) -> Element {
+    let mut open = use_context::<Signal<DropdownContext>>();
     rsx! {
-        button { class: "h-8 w-8", {props.children} }
+        button {
+            class: "h-8 w-8",
+            onclick: move |_| {
+                let is_open = open.peek().0;
+                open.set(DropdownContext(!is_open));
+            },
+            {props.children}
+        }
     }
 }
 
 #[component]
 pub fn DropdownMenuContent(props: ChildProps) -> Element {
+    let signal_open = use_context::<Signal<DropdownContext>>();
+    let open = signal_open.read();
     rsx! {
-        div { class: "absolute right-0 mt-2 w-40 rounded-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg z-50",
+        div {
+            class: format!(
+                "absolute right-0 mt-2 w-40 rounded-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg z-50 {}",
+                if open.0 { "block" } else { "hidden visible" },
+            ),
             {props.children}
         }
     }
