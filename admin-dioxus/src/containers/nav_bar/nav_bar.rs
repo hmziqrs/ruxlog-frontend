@@ -58,92 +58,81 @@ pub fn NavBarContainer() -> Element {
             }
 
             // Main content area (with margin for sidebar on desktop)
-            div {
-                class: format_args!(
-                    "transition-all duration-300 ease-in-out {}",
-                    if *sidebar_open.read() { "sm:ml-64" } else { "ml-0" },
-                ),
-                // Top navigation bar
-                header { class: "bg-zinc-200 dark:bg-zinc-800 shadow transition-colors duration-300",
-                    div { class: "flex h-16 items-center justify-between px-4",
-                        div { class: "flex items-center",
-                            // Mobile menu button
-                            button {
-                                class: "rounded-md p-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 sm:hidden",
-                                onclick: move |_| sidebar_open.set(true),
+            header { class: "bg-zinc-200 dark:bg-zinc-800 shadow transition-colors duration-300",
+                div { class: "flex h-16 items-center justify-between px-4",
+                    div { class: "flex items-center",
+                        // Mobile menu button
+                        button {
+                            class: "rounded-md p-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 sm:hidden",
+                            onclick: move |_| sidebar_open.set(true),
+                            div { class: "w-4 h-4",
+                                Icon { icon: LdMenu }
+                            }
+                        }
+                        // Desktop sidebar toggle button
+                        button {
+                            class: "hidden rounded-md p-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 sm:flex",
+                            onclick: toggle_sidebar,
+                            div { class: "w-4 h-4",
+                                Icon { icon: LdMenu }
+                            }
+                        }
+                    }
+
+                    // Search bar (hidden on small screens)
+                    div { class: "hidden md:block flex-1 px-4 lg:px-6",
+                        div { class: "relative max-w-md",
+                            div { class: "pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3",
                                 div { class: "w-4 h-4",
-                                    Icon { icon: LdMenu }
+                                    Icon {
+                                        icon: LdSearch,
+                                        class: "text-zinc-500 dark:text-zinc-400",
+                                    }
                                 }
                             }
-                            // Desktop sidebar toggle button
-                            button {
-                                class: "hidden rounded-md p-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 sm:flex",
-                                onclick: toggle_sidebar,
-                                div { class: "w-4 h-4",
-                                    if *sidebar_open.read() {
-                                        Icon { icon: LdChevronLeft }
-                                    } else {
-                                        Icon { icon: LdChevronRight }
-                                    }
+                            input {
+                                class: "block w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-700 py-2 pl-10 pr-3 text-sm text-zinc-700 dark:text-zinc-200 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors duration-200",
+                                placeholder: "Search...",
+                                r#type: "text",
+                            }
+                        }
+                    }
+
+                    // Right side nav items
+                    div { class: "flex items-center space-x-4",
+                        button { class: "rounded-full p-1 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-200 dark:focus:ring-offset-zinc-800",
+                            div { class: "w-4 h-4",
+                                Icon { icon: LdBell }
+                            }
+                        }
+                        button {
+                            onclick: toggle_dark_mode,
+                            class: "rounded-full p-1 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-200 dark:focus:ring-offset-zinc-800",
+                            div { class: "w-4 h-4",
+                                if (*dark_theme.read()).0 {
+                                    Icon { icon: LdSun }
+                                } else {
+                                    Icon { icon: LdMoon }
                                 }
                             }
                         }
-
-                        // Search bar (hidden on small screens)
-                        div { class: "hidden md:block flex-1 px-4 lg:px-6",
-                            div { class: "relative max-w-md",
-                                div { class: "pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3",
-                                    div { class: "w-4 h-4",
-                                        Icon {
-                                            icon: LdSearch,
-                                            class: "text-zinc-500 dark:text-zinc-400",
-                                        }
-                                    }
-                                }
-                                input {
-                                    class: "block w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-700 py-2 pl-10 pr-3 text-sm text-zinc-700 dark:text-zinc-200 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors duration-200",
-                                    placeholder: "Search...",
-                                    r#type: "text",
-                                }
-                            }
-                        }
-
-                        // Right side nav items
-                        div { class: "flex items-center space-x-4",
-                            button { class: "rounded-full p-1 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-200 dark:focus:ring-offset-zinc-800",
-                                div { class: "w-4 h-4",
-                                    Icon { icon: LdBell }
-                                }
-                            }
-                            button {
-                                onclick: toggle_dark_mode,
-                                class: "rounded-full p-1 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-200 dark:focus:ring-offset-zinc-800",
-                                div { class: "w-4 h-4",
-                                    if (*dark_theme.read()).0 {
-                                        Icon { icon: LdSun }
-                                    } else {
-                                        Icon { icon: LdMoon }
-                                    }
-                                }
-                            }
-                            // User profile
-                            div { class: "relative ml-3",
-                                div { class: "flex rounded-full bg-zinc-200 dark:bg-zinc-700 text-sm focus:outline-none transition-colors duration-200",
-                                    img {
-                                        class: "h-8 w-8 rounded-full",
-                                        src: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-                                        alt: "User",
-                                    }
+                        // User profile
+                        div { class: "relative ml-3",
+                            div { class: "flex rounded-full bg-zinc-200 dark:bg-zinc-700 text-sm focus:outline-none transition-colors duration-200",
+                                img {
+                                    class: "h-8 w-8 rounded-full",
+                                    src: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+                                    alt: "User",
                                 }
                             }
                         }
                     }
                 }
+            }
 
-                // Page content
-                main { class: "p-6 bg-zinc-100 dark:bg-zinc-900 transition-colors duration-300",
-                    Outlet::<Route> {}
-                }
+            // Page content
+            main { class: "p-6 bg-zinc-100 dark:bg-zinc-900 transition-colors duration-300",
+                Outlet::<Route> {}
             }
         }
     }
