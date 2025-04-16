@@ -23,8 +23,8 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
     rsx! {
         // Sidebar overlay (only visible when expanded on mobile)
         div {
-            class: format_args!(
-                "fixed inset-0 bg-black/50 z-30 transition-opacity duration-300 {}",
+            class: format!(
+                "fixed inset-0 bg-black/30 z-30 transition-opacity duration-300 {} backdrop-blur-xs",
                 if expanded() { "opacity-100" } else { "opacity-0 pointer-events-none" },
             ),
             onclick: move |_| toggle.call(()),
@@ -33,7 +33,7 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
         // Sidebar container
         aside {
             class: format!(
-                "fixed inset-y-0 left-0 z-40 w-64 bg-zinc-200 dark:bg-zinc-800 shadow-lg transition-all duration-300 transform {}",
+                "fixed inset-y-0 left-0 z-40 w-64 bg-zinc-200 dark:bg-zinc-950/90 transition-all duration-300 transform {}",
                 if expanded() { "translate-x-0" } else { "-translate-x-full" },
             ),
             // Sidebar header

@@ -44,7 +44,7 @@ pub fn LoginScreen() -> Element {
     }));
 
     rsx! {
-        div { class: "relative flex items-center justify-center min-h-screen bg-zinc-100 dark:bg-zinc-950 overflow-hidden transition-colors duration-300",
+        div { class: "relative flex items-center justify-center min-h-screen overflow-hidden transition-colors duration-300",
             // Container for the card with visible overflow for the moving blob effect
             div { class: "relative w-full max-w-md",
                 // Blob that follows mouse position using div with radial gradient
