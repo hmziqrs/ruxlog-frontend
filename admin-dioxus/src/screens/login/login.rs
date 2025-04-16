@@ -44,7 +44,7 @@ pub fn LoginScreen() -> Element {
     }));
 
     rsx! {
-        div { class: "relative flex items-center justify-center min-h-screen bg-zinc-100 dark:bg-zinc-900 overflow-hidden transition-colors duration-300",
+        div { class: "relative flex items-center justify-center min-h-screen bg-zinc-100 dark:bg-zinc-950 overflow-hidden transition-colors duration-300",
             // Container for the card with visible overflow for the moving blob effect
             div { class: "relative w-full max-w-md",
                 // Blob that follows mouse position using div with radial gradient
@@ -68,7 +68,7 @@ pub fn LoginScreen() -> Element {
                     onresize: move |_| {
                         calculate.call(());
                     },
-                    class: "relative w-full overflow-visible rounded-2xl bg-zinc-200/40 dark:bg-zinc-800/50 backdrop-blur-md shadow-xl transition-colors duration-300",
+                    class: "relative w-full overflow-visible rounded-2xl bg-zinc-200/40 dark:bg-zinc-950/60 backdrop-blur-md shadow-xl transition-colors duration-300",
                     onmousemove: move |evt| {
                         if let Some(_) = &*card_ref.read() {
                             let d = card_dimensions.peek().origin;
@@ -91,7 +91,7 @@ pub fn LoginScreen() -> Element {
                             mouse_pos().1,
                             mouse_pos().0,
                             mouse_pos().1,
-                            if is_dark { "rgba(244,244,245,0.1)" } else { "rgba(39,39,42,0.1)" },
+                            if is_dark { "rgba(244,244,244,0.5)" } else { "rgba(39,39,42,0.4)" },
                             if mouse_pos().0 > 0 { "1" } else { "0" },
                         ),
                     }
