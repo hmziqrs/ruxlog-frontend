@@ -1,6 +1,7 @@
-use super::{ApiError, AuthState, LoginPayload, User};
-use crate::{services::http_client, store::StateFrame};
+use super::{AuthState, LoginPayload, User};
+use crate::{services::http_client, store::{StateFrame, ApiError}};
 use dioxus::{logger::tracing, prelude::*};
+use gloo_net::http::Response;
 #[cfg(target_arch = "wasm32")]
 use wasm_cookies::{CookieOptions, SameSite};
 
@@ -64,22 +65,32 @@ impl AuthState {
         }
     }
 
+    async fn handle_api_error(status_signal: &GlobalSignal<StateFrame<bool>>, response: &Response) {
+        match response.json::<ApiError>().await {
+            Ok(api_error) => {
+                status_signal.write().set_failed(Some(api_error.message));
+            }
+            Err(_) => {
+                status_signal.write().set_failed(Some("API error".to_string()));
+            }
+        }
+    }
+
     pub async fn logout(&self) {
         self.logout_status.write().set_loading(None);
-
-
-
-        // Make API call for logout using our singleton reqwest service
         let empty_body = {};
         let result = http_client::post("/auth/v1/log_out", &empty_body).send().await;
-
         match result {
-            Ok(_) => {
-                self.logout_status.write().set_success(None, None);
-                *self.user.write() = None;
+            Ok(response) => {
+                if (200..300).contains(&response.status()) {
+                    self.logout_status.write().set_success(None, None);
+                    *self.user.write() = None;
+                } else {
+                    Self::handle_api_error(&self.logout_status, &response).await;
+                    *self.user.write() = None;
+                }
             }
             Err(e) => {
-                // Even if API fails, we still clear local auth
                 self.logout_status.write().set_failed(Some(e.to_string()));
                 *self.user.write() = None;
             }
@@ -88,10 +99,7 @@ impl AuthState {
 
     pub async fn init(&self) {
         self.init_status.write().set_loading(None);
-
-        // Try to fetch user data from API using our singleton http_client service
         let result = http_client::get("/user/v1/get").send().await;
-
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
@@ -104,88 +112,53 @@ impl AuthState {
                                 ));
                                 return;
                             }
-
                             *self.user.write() = Some(user);
                             self.init_status.write().set_success(None, None);
                         }
                         Err(e) => {
-                            self.init_status
-                                .write()
-                                .set_failed(Some(format!("Failed to parse user data: {}", e)));
+                            self.init_status.write().set_failed(Some(format!("Failed to parse user data: {}", e)));
                         }
                     }
                 } else if response.status() == 401 {
                     self.init_status.write().set_success(None, None);
                 } else {
-                    match response.json::<ApiError>().await {
-                        Ok(api_error) => {
-                            self.init_status.write().set_failed(Some(api_error.message));
-                        }
-                        Err(_) => {
-                            self.init_status
-                                .write()
-                                .set_failed(Some(format!("API error ")));
-                        }
-                    }
+                    Self::handle_api_error(&self.init_status, &response).await;
                 }
             }
             Err(e) => {
-                self.init_status
-                    .write()
-                    .set_failed(Some(format!("Network error: {}", e)));
+                self.init_status.write().set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }
 
     pub async fn login(&self, email: String, password: String) {
         self.login_status.write().set_loading(None);
-
         let payload = LoginPayload { email, password };
-
-        // Use our singleton http_client service for the login request
         let result = http_client::post("/auth/v1/log_in", &payload).send().await;
-
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
                     match response.json::<User>().await {
                         Ok(user) => {
                             if !user.is_verified || user.role != "admin" {
-                                // Self::delete_id_cookie();
                                 self.login_status.write().set_failed(Some(
                                     "User not allowed to access this page.".to_string(),
                                 ));
                                 return;
                             }
-
                             *self.user.write() = Some(user);
                             self.login_status.write().set_success(None, None);
                         }
                         Err(e) => {
-                            self.login_status
-                                .write()
-                                .set_failed(Some(format!("Failed to parse user data: {}", e)));
+                            self.login_status.write().set_failed(Some(format!("Failed to parse user data: {}", e)));
                         }
                     }
                 } else {
-                    match response.json::<ApiError>().await {
-                        Ok(api_error) => {
-                            self.login_status
-                                .write()
-                                .set_failed(Some(api_error.message));
-                        }
-                        Err(_) => {
-                            self.login_status
-                                .write()
-                                .set_failed(Some(format!("API error")));
-                        }
-                    }
+                    Self::handle_api_error(&self.login_status, &response).await;
                 }
             }
             Err(e) => {
-                self.login_status
-                    .write()
-                    .set_failed(Some(format!("Network error: {}", e)));
+                self.login_status.write().set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }

@@ -24,12 +24,6 @@ pub struct User {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ApiError {
-    pub message: String,
-    pub status: Option<u16>,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LoginPayload {
     pub email: String,
     pub password: String,
