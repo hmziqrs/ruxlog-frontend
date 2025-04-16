@@ -1,6 +1,6 @@
-use dioxus::prelude::*;
-
+use crate::components::shadcn_ui::*;
 use crate::store::{use_post, Post};
+use dioxus::prelude::*;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum LayoutType {
@@ -9,33 +9,11 @@ pub enum LayoutType {
 }
 
 #[component]
-pub fn PostCard(post: Post, layout_type: LayoutType) -> Element {
-    let base_class = match layout_type {
-        LayoutType::Grid => "group border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 p-5 shadow hover:shadow-xl transition-all duration-200 flex flex-col gap-2 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900",
-        LayoutType::List => "group border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950 p-5 shadow hover:shadow-xl transition-all duration-200 flex flex-row gap-4 items-center cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900",
-    };
-    rsx! {
-        div { key: post.id, class: base_class,
-            h2 { class: "text-lg font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-150",
-                "{post.title}"
-            }
-            p { class: "text-sm text-zinc-500 dark:text-zinc-400 mb-1 line-clamp-2",
-                "{post.excerpt.clone().unwrap_or_default()}"
-            }
-            div { class: "flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500 mt-auto pt-2 border-t border-zinc-100 dark:border-zinc-800",
-                span { {"By {post.author.name}"} }
-                span { {"·"} }
-                span { {"{post.created_at}"} }
-            }
-        }
-    }
-}
-
-#[component]
 pub fn BlogListScreen() -> Element {
     let post_state = use_post();
     let list_signal = post_state.list.read();
-    let  mut layout_type = use_signal(|| LayoutType::Grid);
+    let mut layout_type = use_signal(|| LayoutType::Grid);
+    let mut search_query = use_signal(|| String::new());
 
     // Fetch posts on mount
     use_effect(move || {
@@ -46,89 +24,172 @@ pub fn BlogListScreen() -> Element {
 
     let frame = &*list_signal;
 
+    // Filter posts by search query
+    let filtered_posts = match &frame.data {
+        Some(posts) => posts
+            .iter()
+            .filter(|post| {
+                let q = search_query.read().to_lowercase();
+                post.title.to_lowercase().contains(&q)
+                    || post
+                        .excerpt
+                        .as_ref()
+                        .map(|e| e.to_lowercase().contains(&q))
+                        .unwrap_or(false)
+                    || post.author.name.to_lowercase().contains(&q)
+            })
+            .cloned()
+            .collect::<Vec<_>>(),
+        _ => vec![],
+    };
+
     rsx! {
-        div { class: "container mx-auto p-6 min-h-screen transition-colors duration-300",
-            // Header
-            div { class: "mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-2",
-                h1 { class: "text-3xl font-bold text-zinc-900 dark:text-zinc-100",
-                    "Posts"
-                }
-                div { class: "flex gap-2 items-center",
-                    button { class: "btn btn-primary px-5 py-2 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold shadow hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors duration-150",
-                        // TODO: Add navigation to new post
-                        "New Post"
+        div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
+            div { class: "container mx-auto py-8 px-4",
+                div { class: "flex flex-col gap-6",
+                    // Header
+                    div { class: "flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
+                        div {
+                            h1 { class: "text-3xl font-bold tracking-tight", "Posts" }
+                            p { class: "text-zinc-500 dark:text-zinc-400 mt-1",
+                                "Manage and view your blog posts"
+                            }
+                        }
+                        div { class: "flex items-center gap-2",
+                            // TODO: ThemeToggle
+                            // ThemeToggle {}
+                            Card { "Create Post" }
+                        }
                     }
-                    button {
-                        class: format!(
-                            "px-3 py-2 rounded-lg border text-xs font-semibold {}",
-                            if *layout_type.read() == LayoutType::Grid {
-                                "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                            } else {
-                                "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-800"
-                            },
-                        ),
-                        onclick: move |_| layout_type.set(LayoutType::Grid),
-                        "Grid"
+                    // Search and view mode
+                    div { class: "flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
+                        div { class: "relative w-full md:w-96" }
+                        div { class: "flex items-center gap-2",
+                            Card {
+                                button {
+                                    class: if *layout_type.read() == LayoutType::Grid { "h-9 w-9 bg-zinc-900 text-white rounded" } else { "h-9 w-9 border rounded" },
+                                    onclick: move |_| layout_type.set(LayoutType::Grid),
+                                    "Grid"
+                                }
+                                button {
+                                    class: if *layout_type.read() == LayoutType::List { "h-9 w-9 bg-zinc-900 text-white rounded" } else { "h-9 w-9 border rounded" },
+                                    onclick: move |_| layout_type.set(LayoutType::List),
+                                    "List"
+                                }
+                            }
+                        }
                     }
-                    button {
-                        class: format!(
-                            "px-3 py-2 rounded-lg border text-xs font-semibold {}",
-                            if *layout_type.read() == LayoutType::List {
-                                "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                            } else {
-                                "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-800"
-                            },
-                        ),
-                        onclick: move |_| layout_type.set(LayoutType::List),
-                        "List"
+                    // Posts
+                    match *layout_type.read() {
+                        LayoutType::Grid => rsx! {
+                            div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
+                                {filtered_posts.iter().map(|post| rsx! {
+                                    PostGridCard { post: post.clone() }
+                                })}
+                            }
+                        },
+                        LayoutType::List => rsx! {
+                            div { class: "flex flex-col gap-4",
+                                {filtered_posts.iter().map(|post| rsx! {
+                                    PostListItem { post: post.clone() }
+                                })}
+                            }
+                        },
                     }
                 }
             }
-            // Card container for posts
-            div { class: "bg-white/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-lg p-6 transition-colors duration-300",
-                match &frame.data {
-                    Some(posts) if !posts.is_empty() => rsx! {
-                        {
-                            match *layout_type.read() {
-                                LayoutType::Grid => rsx! {
-                                    div { class: "grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
-                                        {posts.iter().map(|post| rsx! {
-                                            PostCard { post: post.clone(), layout_type: LayoutType::Grid }
-                                        })}
-                                    }
-                                },
-                                LayoutType::List => rsx! {
-                                    div { class: "flex flex-col gap-4",
-                                        {posts.iter().map(|post| rsx! {
-                                            PostCard { post: post.clone(), layout_type: LayoutType::List }
-                                        })}
-                                    }
-                                },
+        }
+    }
+}
+
+#[component]
+fn PostGridCard(post: Post) -> Element {
+    rsx! {
+        Card {
+            // TODO: Featured image
+            CardHeader {
+                div { class: "flex items-start justify-between",
+                    div { class: "space-y-1.5",
+                        // TODO: Category badge
+                        h3 { class: "font-semibold text-lg line-clamp-2", "{post.title}" }
+                    }
+                    DropdownMenu {
+                        DropdownMenuTrigger { "⋮" }
+                        DropdownMenuContent {
+                            DropdownMenuItem { "Edit" }
+                            DropdownMenuItem { "Duplicate" }
+                            DropdownMenuItem { "Delete" }
+                        }
+                    }
+                }
+            }
+            CardContent {
+                if let Some(excerpt) = &post.excerpt {
+                    p { class: "text-zinc-500 dark:text-zinc-400 text-sm line-clamp-2 mt-1",
+                        "{excerpt}"
+                    }
+                }
+                        // TODO: Tags
+            }
+            CardFooter {
+                div { class: "flex items-center gap-2",
+                    Avatar {
+                        AvatarImage {
+                            src: post.author.avatar.clone().unwrap_or_default(),
+                            alt: post.author.name.clone(),
+                        }
+                        AvatarFallback { {"{post.author.name.chars().next().unwrap_or('U')}"} }
+                    }
+                    span { class: "text-xs text-zinc-500 dark:text-zinc-400", "{post.author.name}" }
+                }
+                        // TODO: Views, Likes
+            }
+        }
+    }
+}
+
+#[component]
+fn PostListItem(post: Post) -> Element {
+    rsx! {
+        Card {
+            div { class: "flex flex-col md:flex-row",
+                // TODO: Featured image
+                div { class: "flex-1 p-4",
+                    div { class: "flex items-start justify-between",
+                        div { class: "space-y-1",
+                            // TODO: Category badge, status
+                            h3 { class: "font-semibold text-lg", "{post.title}" }
+                        }
+                        DropdownMenu {
+                            DropdownMenuTrigger { "⋮" }
+                            DropdownMenuContent {
+                                DropdownMenuItem { "Edit" }
+                                DropdownMenuItem { "Duplicate" }
+                                DropdownMenuItem { "Delete" }
                             }
                         }
-                    },
-                    Some(_) => rsx! {
-                        p { class: "text-center text-zinc-400 py-12", "No posts found." }
-                    },
-                    None if frame.is_loading() => rsx! {
-                        div { class: if *layout_type.read() == LayoutType::Grid { "grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" } else { "flex flex-col gap-4" },
-                            {(0..6).map(|i| rsx! {
-                                div {
-                                    key: "skeleton-{i}",
-                                    class: "animate-pulse border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-100 dark:bg-zinc-900 p-5 shadow flex flex-col gap-2",
-                                    div { class: "h-5 w-3/4 bg-zinc-200 dark:bg-zinc-800 rounded mb-2" }
-                                    div { class: "h-3 w-full bg-zinc-200 dark:bg-zinc-800 rounded mb-1" }
-                                    div { class: "h-3 w-1/2 bg-zinc-200 dark:bg-zinc-800 rounded" }
-                                }
-                            })}
+                    }
+                    if let Some(excerpt) = &post.excerpt {
+                        p { class: "text-zinc-500 dark:text-zinc-400 text-sm mt-2 line-clamp-2",
+                            "{excerpt}"
                         }
-                    },
-                    None if frame.is_failed() => rsx! {
-                        p { class: "text-center text-red-500 py-12", "Failed to load posts." }
-                    },
-                    _ => rsx! {
-                        p { class: "text-center text-zinc-400 py-12", "No data." }
-                    },
+                    }
+                    // TODO: Tags
+                    div { class: "flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800",
+                        div { class: "flex items-center gap-2",
+                            Avatar {
+                                AvatarImage {
+                                    src: post.author.avatar.clone().unwrap_or_default(),
+                                    alt: post.author.name.clone(),
+                                }
+                                AvatarFallback { {"{post.author.name.chars().next().unwrap_or('U')}"} }
+                            }
+                            span { class: "text-xs text-zinc-500 dark:text-zinc-400",
+                                "{post.author.name}"
+                            }
+                        }
+                                        // TODO: Date, Views, Likes, Tags count
+                    }
                 }
             }
         }
