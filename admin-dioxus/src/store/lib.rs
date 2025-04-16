@@ -1,3 +1,4 @@
+use gloo_net::http::Response;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -81,9 +82,18 @@ impl<T: Clone> StateFrame<T> {
         self.status = StateFrameStatus::Failed;
         self.message = message;
     }
+
+    pub async fn set_api_error(&mut self, response: &Response) {
+        match response.json::<ApiError>().await {
+            Ok(api_error) => {
+                self.set_failed(Some(api_error.message));
+            }
+            Err(_) => {
+                self.set_failed(Some("API error".to_string()));
+            }
+        }
+    }
 }
-
-
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ApiError {
