@@ -9,6 +9,7 @@ use crate::screens::AddBlogScreen;
 use crate::screens::AddCategoryScreen;
 use crate::screens::AddTagScreen;
 use crate::screens::AddUserScreen;
+use crate::screens::AnalyticsScreen;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -32,6 +33,9 @@ pub enum Route {
 
     #[route("/user/new")]
     AddUserScreen {},
+
+    #[route("/analytics")]
+    AnalyticsScreen {},
 }
 pub static OPEN_ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| vec![
     Route::LoginScreen {},

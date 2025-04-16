@@ -2,7 +2,7 @@ use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::{Icon, IconShape};
 use hmziq_dioxus_free_icons::icons::ld_icons::{
-    LdHome, LdFileText, LdFolder, LdTag, LdUser, LdLogOut,
+    LdAreaChart, LdFileText, LdFolder, LdHome, LdLogOut, LdTag, LdUser
 };
 
 use crate::{router::Route, store::use_auth};
@@ -33,7 +33,7 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
         // Sidebar container
         aside {
             class: format!(
-                "fixed inset-y-0 left-0 z-40 w-64 bg-zinc-200 dark:bg-zinc-950/90 transition-all duration-300 transform {}",
+                "fixed inset-y-0 left-0 z-40 w-64 bg-zinc-200 dark:bg-zinc-950/95 transition-all duration-300 transform {}",
                 if expanded() { "translate-x-0" } else { "-translate-x-full" },
             ),
             // Sidebar header
@@ -128,6 +128,20 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                         to: Route::AddUserScreen {},
                         Icon { icon: LdUser, width: 18, height: 18 }
                         span { class: "ml-3", "Users" }
+                    }
+
+                    Link {
+                        class: format_args!(
+                            "flex items-center rounded-lg px-3 py-2 text-sm font-medium {} transition-colors duration-200",
+                            if is_active(Route::AnalyticsScreen {}) {
+                                "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
+                            } else {
+                                "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white"
+                            },
+                        ),
+                        to: Route::AnalyticsScreen {},
+                        Icon { icon: LdAreaChart, width: 18, height: 18 }
+                        span { class: "ml-3", "Analytics" }
                     }
                 }
             }
