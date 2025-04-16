@@ -781,6 +781,12 @@
   .border-zinc-300 {
     border-color: var(--color-zinc-300);
   }
+  .border-zinc-600\/50 {
+    border-color: color-mix(in srgb, oklch(44.2% 0.017 285.786) 50%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-zinc-600) 50%, transparent);
+    }
+  }
   .bg-\(--background\) {
     background-color: var(--background);
   }
