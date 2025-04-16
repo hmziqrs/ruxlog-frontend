@@ -1,3 +1,4 @@
+use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::{Icon, IconShape};
 use hmziq_dioxus_free_icons::icons::ld_icons::{
@@ -17,11 +18,13 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
         std::mem::discriminant(&current_route) == std::mem::discriminant(&route)
     };
 
+    tracing::info!("Sidebar rendered with expanded: {}", expanded());
+
     rsx! {
         // Sidebar overlay (only visible when expanded on mobile)
         div {
             class: format_args!(
-                "fixed inset-0 bg-black/50 z-30 transition-opacity duration-300 {} sm:hidden",
+                "fixed inset-0 bg-black/50 z-30 transition-opacity duration-300 {}",
                 if expanded() { "opacity-100" } else { "opacity-0 pointer-events-none" },
             ),
             onclick: move |_| toggle.call(()),
@@ -29,8 +32,8 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
 
         // Sidebar container
         aside {
-            class: format_args!(
-                "fixed inset-y-0 left-0 z-40 w-64 bg-zinc-200 dark:bg-zinc-800 shadow-lg transition-all duration-300 transform {} sm:translate-x-0",
+            class: format!(
+                "fixed inset-y-0 left-0 z-40 w-64 bg-zinc-200 dark:bg-zinc-800 shadow-lg transition-all duration-300 transform {}",
                 if expanded() { "translate-x-0" } else { "-translate-x-full" },
             ),
             // Sidebar header
