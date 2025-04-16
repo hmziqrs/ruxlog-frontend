@@ -65,17 +65,6 @@ impl AuthState {
         }
     }
 
-    async fn handle_api_error(status_signal: &GlobalSignal<StateFrame<bool>>, response: &Response) {
-        match response.json::<ApiError>().await {
-            Ok(api_error) => {
-                status_signal.write().set_failed(Some(api_error.message));
-            }
-            Err(_) => {
-                status_signal.write().set_failed(Some("API error".to_string()));
-            }
-        }
-    }
-
     pub async fn logout(&self) {
         self.logout_status.write().set_loading(None);
         let empty_body = {};
@@ -86,7 +75,7 @@ impl AuthState {
                     self.logout_status.write().set_success(None, None);
                     *self.user.write() = None;
                 } else {
-                    Self::handle_api_error(&self.logout_status, &response).await;
+                    self.logout_status.write().set_api_error(&response).await;
                     *self.user.write() = None;
                 }
             }
@@ -122,7 +111,7 @@ impl AuthState {
                 } else if response.status() == 401 {
                     self.init_status.write().set_success(None, None);
                 } else {
-                    Self::handle_api_error(&self.init_status, &response).await;
+                    self.init_status.write().set_api_error(&response).await;
                 }
             }
             Err(e) => {
@@ -154,7 +143,7 @@ impl AuthState {
                         }
                     }
                 } else {
-                    Self::handle_api_error(&self.login_status, &response).await;
+                    self.login_status.write().set_api_error(&response).await;
                 }
             }
             Err(e) => {
