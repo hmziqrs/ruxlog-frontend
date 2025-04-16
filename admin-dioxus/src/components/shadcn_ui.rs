@@ -3,6 +3,8 @@ use dioxus::prelude::*;
 #[derive(PartialEq, Clone, Props)]
 pub struct ChildProps {
     pub children: Element,
+    #[props(default = String::new())]
+    pub class: String,
 }
 
 #[component]
@@ -86,7 +88,11 @@ pub fn DropdownMenuItem(props: ChildProps) -> Element {
 #[component]
 pub fn Badge(props: ChildProps) -> Element {
     rsx! {
-        span { class: "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        span {
+            class: format!(
+                "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 {}",
+                props.class,
+            ),
             {props.children}
         }
     }
