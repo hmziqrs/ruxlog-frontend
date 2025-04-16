@@ -58,7 +58,7 @@ pub fn NavBarContainer() -> Element {
             }
 
             // Main content area (with margin for sidebar on desktop)
-            header { class: "bg-zinc-200 dark:bg-zinc-800 shadow transition-colors duration-300",
+            header { class: "bg-zinc-200 dark:bg-zinc-800 shadow transition-colors duration-300 sticky top-0 z-10",
                 div { class: "flex h-16 items-center justify-between px-4",
                     div { class: "flex items-center",
                         // Mobile menu button
