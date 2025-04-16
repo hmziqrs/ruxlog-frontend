@@ -10,7 +10,9 @@ pub struct ChildProps {
 #[component]
 pub fn Card(props: ChildProps) -> Element {
     rsx! {
-        div { class: "rounded-lg border bg-card text-card-foreground shadow-sm", {props.children} }
+        div { class: "rounded-lg border-zinc-600/50 border bg-card text-card-foreground shadow-sm",
+            {props.children}
+        }
     }
 }
 
