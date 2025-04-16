@@ -739,6 +739,9 @@
   .bg-red-500 {
     background-color: var(--color-red-500);
   }
+  .bg-white {
+    background-color: var(--color-white);
+  }
   .bg-yellow-100 {
     background-color: var(--color-yellow-100);
   }

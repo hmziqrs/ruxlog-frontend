@@ -6,7 +6,7 @@ use std::collections::HashMap;
 impl PostState {
     pub async fn list(&self) {
         self.list.write().set_loading(None);
-        let result = http_client::post("/post/v1/list/query", &()).send().await;
+        let result = http_client::post("/post/v1/list/query", &serde_json::json!({})).send().await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
