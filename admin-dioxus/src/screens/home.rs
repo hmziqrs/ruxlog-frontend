@@ -45,6 +45,56 @@ pub fn HomeScreen() -> Element {
                 }
             }
 
+            div { class: "grid grid-cols-1 md:grid-cols-3 gap-4 mb-8",
+                MiniStatCard {
+                    title: "Revenue",
+                    value: "$12,400",
+                    icon: "💰",
+                    color: "emerald-500",
+                }
+                MiniStatCard {
+                    title: "Active Users",
+                    value: "1,230",
+                    icon: "🟢",
+                    color: "sky-500",
+                }
+                MiniStatCard {
+                    title: "Bounce Rate",
+                    value: "32%",
+                    icon: "↩️",
+                    color: "rose-500",
+                }
+            }
+            div { class: "grid grid-cols-1 md:grid-cols-2 gap-4 mb-8",
+                ProgressCard {
+                    title: "Server Uptime",
+                    percent: 99,
+                    color: "bg-green-500",
+                }
+                ProgressCard {
+                    title: "Storage Used",
+                    percent: 68,
+                    color: "bg-yellow-500",
+                }
+            }
+            div { class: "mb-8",
+                NotificationCard {
+                    title: "New User",
+                    message: "Alice joined your platform.",
+                    icon: "👤",
+                }
+                NotificationCard {
+                    title: "System Update",
+                    message: "A new update is available.",
+                    icon: "⬆️",
+                }
+                NotificationCard {
+                    title: "Warning",
+                    message: "Storage is almost full.",
+                    icon: "⚠️",
+                }
+            }
+
             // Analytics/Charts (placeholder)
             div { class: "grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8",
                 div { class: "bg-zinc-200/40 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow flex flex-col justify-center items-center min-h-[260px] w-full",
@@ -272,6 +322,54 @@ fn RecentCommentRow(user: &'static str, comment: &'static str, post: &'static st
                 }
                 p { class: "text-xs text-zinc-400", "on {post}" }
                 p { class: "mt-1 text-sm text-zinc-700 dark:text-zinc-300", "{comment}" }
+            }
+        }
+    }
+}
+
+#[component]
+fn MiniStatCard(title: &'static str, value: &'static str, icon: &'static str, color: &'static str) -> Element {
+    rsx! {
+        div {
+            class: format!(
+                "flex flex-col items-start justify-between p-4 rounded-lg shadow bg-{} text-white min-w-[160px]",
+                color,
+            ),
+            div { class: "flex items-center gap-2 mb-2",
+                span { class: "text-xl", "{icon}" }
+                h4 { class: "text-sm font-semibold", "{title}" }
+            }
+            p { class: "text-2xl font-bold", "{value}" }
+        }
+    }
+}
+
+#[component]
+fn ProgressCard(title: &'static str, percent: u8, color: &'static str) -> Element {
+    rsx! {
+        div { class: "p-4 rounded-lg shadow bg-zinc-200/40 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 flex flex-col gap-2 min-w-[180px]",
+            h4 { class: "text-sm font-semibold text-zinc-700 dark:text-zinc-200", "{title}" }
+            div { class: "w-full bg-zinc-300 dark:bg-zinc-800 rounded-full h-2 overflow-hidden",
+                div {
+                    class: format!("h-2 rounded-full {}", color),
+                    style: format!("width: {}%", percent),
+                }
+            }
+            p { class: "text-xs text-zinc-500 dark:text-zinc-400 mt-1", "{percent}% complete" }
+        }
+    }
+}
+
+#[component]
+fn NotificationCard(title: &'static str, message: &'static str, icon: &'static str) -> Element {
+    rsx! {
+        div { class: "flex items-start gap-3 p-4 rounded-lg bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 mb-2",
+            span { class: "text-xl text-blue-500 dark:text-blue-300", "{icon}" }
+            div {
+                h5 { class: "font-semibold text-sm text-blue-900 dark:text-blue-100",
+                    "{title}"
+                }
+                p { class: "text-xs text-blue-800 dark:text-blue-200", "{message}" }
             }
         }
     }
