@@ -140,10 +140,10 @@ pub fn BlogListScreen() -> Element {
 #[component]
 fn PostGridCard(post: Post) -> Element {
     rsx! {
-        Card { class: "overflow-hidden transition-all hover:shadow-md dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800",
+        Card { class: "pt-0 pb-0 overflow-hidden transition-all hover:shadow-md dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800",
             // Featured image
             if let Some(featured_image) = &post.featured_image_url {
-                div { class: "aspect-video w-full overflow-hidden",
+                div { class: " aspect-video w-full overflow-hidden",
                     img {
                         src: "{featured_image}",
                         alt: "{post.title}",
@@ -158,7 +158,7 @@ fn PostGridCard(post: Post) -> Element {
                 }
             }
 
-            CardHeader { class: "p-4 pb-0",
+            CardHeader { class: "",
                 div { class: "flex items-start justify-between",
                     div { class: "space-y-1.5",
                         // Category badge
@@ -180,7 +180,7 @@ fn PostGridCard(post: Post) -> Element {
                         DropdownMenuContent {
                             DropdownMenuItem { "Edit" }
                             DropdownMenuItem { "Duplicate" }
-                            DropdownMenuItem { "Delete" }
+                            DropdownMenuItem { class: "text-red-500 dark:text-red-400", "Delete" }
                         }
                     }
                 }
@@ -288,7 +288,7 @@ fn PostListItem(post: Post) -> Element {
                             DropdownMenuContent {
                                 DropdownMenuItem { "Edit" }
                                 DropdownMenuItem { "Duplicate" }
-                                DropdownMenuItem { "Delete" }
+                                DropdownMenuItem { class: "text-red-500 dark:text-red-400", "Delete" }
                             }
                         }
                     }
