@@ -1,4 +1,7 @@
+use std::rc::Rc;
+
 use dioxus::prelude::*;
+use wasm_bindgen::JsValue;
 use crate::ui::custom::AppPortal;
 use super::command_score::command_score;
 use hmziq_dioxus_free_icons::{Icon, icons::ld_icons::LdX};
@@ -94,6 +97,8 @@ pub fn CommandDialog(props: CommandDialogProps) -> Element {
 #[component]
 pub fn Command(props: CommandProps) -> Element {
     let state = use_signal(CommandState::default);
+    let mut list_ref = use_signal(|| None as Option<Rc<MountedData>>);
+    let mut list_inner_ref = use_signal(|| None as Option<Rc<MountedData>>);
     let base_class = "flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground";
     let mut class = vec![base_class];
     
@@ -101,13 +106,226 @@ pub fn Command(props: CommandProps) -> Element {
         class.push(custom_class);
     }
 
+    // let on_keydown = move |e: Event<KeyboardData>| {
+    //     if e.modifiers().ctrl_key() && props.vim_bindings {
+    //         match e.key() {
+    //             "n" | "j" => {
+    //                 e.prevent_default();
+    //                 update_selected_by_item(&state, 1, props.loop_nav);
+    //             }
+    //             "p" | "k" => {
+    //                 e.prevent_default();
+    //                 update_selected_by_item(&state, -1, props.loop_nav);
+    //             }
+    //             _ => {}
+    //         }
+    //     } else {
+    //         match e.key() {
+    //             "ArrowDown" => {
+    //                 e.prevent_default();
+    //                 if e.modifiers().alt_key() {
+    //                     update_selected_by_group(&state, 1, props.loop_nav);
+    //                 } else {
+    //                     update_selected_by_item(&state, 1, props.loop_nav);
+    //                 }
+    //             }
+    //             "ArrowUp" => {
+    //                 e.prevent_default();
+    //                 if e.modifiers().alt_key() {
+    //                     update_selected_by_group(&state, -1, props.loop_nav);
+    //                 } else {
+    //                     update_selected_by_item(&state, -1, props.loop_nav);
+    //                 }
+    //             }
+    //             "Home" => {
+    //                 e.prevent_default();
+    //                 update_selected_to_index(&state, 0);
+    //             }
+    //             "End" => {
+    //                 e.prevent_default();
+    //                 update_selected_to_last(&state);
+    //             }
+    //             "Enter" => {
+    //                 e.prevent_default();
+    //                 if let Some(value) = state.read().value.clone() {
+    //                     if let Some(handler) = &props.onvalue_change {
+    //                         handler.call(value);
+    //                     }
+    //                 }
+    //             }
+    //             _ => {}
+    //         }
+    //     }
+    // };
+
     rsx! {
         div {
             "data-slot": "command",
             "role": "combobox",
+            tabindex: "-1",
             "aria-label": props.label.clone().unwrap_or_else(|| "Command Menu".to_string()),
             class: class.join(" "),
+            // onkeydown: on_keydown,
             {props.children}
+        }
+    }
+}
+
+// Helper functions for selection management 
+fn update_selected_by_item(mut state: Signal<CommandState>, change: i32, should_loop: bool) {
+    let items = get_valid_items();
+    let current_value = state.read().value.clone();
+    
+    let current_index = items.iter().position(|i| Some(i) == Some(&current_value));
+    
+    let new_index = match current_index {
+        Some(idx) => {
+            let new_idx = (idx as i32 + change) as i32;
+            if should_loop {
+                if new_idx < 0 {
+                    items.len() - 1
+                } else if new_idx >= items.len() as i32 {
+                    0
+                } else {
+                    new_idx as usize
+                }
+            } else {
+                new_idx.max(0).min(items.len() as i32 - 1) as usize
+            }
+        }
+        None => if change > 0 { 0 } else { items.len() - 1 },
+    };
+
+    if let Some(value) = items.get(new_index) {
+        state.write().value = value.clone();
+        scroll_item_into_view(value);
+    }
+}
+
+fn update_selected_by_group(state: Signal<CommandState>, change: i32, should_loop: bool) {
+    use wasm_bindgen::JsCast;
+    let window = web_sys::window().unwrap();
+    let document = window.document().unwrap();
+    
+    // First find the current group
+    let current_value = state.read().value.clone();
+    let mut current_group = None;
+    
+    let selector = format!("[data-slot='command-item'][data-value='{}']", current_value);
+    if let Some(element) = document.query_selector(&selector).unwrap() {
+            current_group = element.closest("[cmdk-group]").ok().flatten();
+    }
+    // if let Some(value) = current_value {
+    //     let selector = format!("[data-slot='command-item'][data-value='{}']", value);
+    //     if let Some(element) = document.query_selector(&selector).unwrap() {
+    //         current_group = element.closest("[cmdk-group]").ok().flatten();
+    //     }
+    // }
+    
+    // Get all groups
+    let groups = document.query_selector_all("[cmdk-group]").unwrap();
+    let mut group_vec = vec![];
+    for i in 0..groups.length() {
+        if let Some(group) = groups.get(i) {
+            group_vec.push(group);
+        }
+    }
+    
+    // Find the next/previous group
+    if let Some(current) = current_group {
+        let current_idx = group_vec.iter().position(|g| g.as_ref() == current.as_ref());
+        if let Some(idx) = current_idx {
+            let new_idx = if should_loop {
+                (idx as i32 + change).rem_euclid(group_vec.len() as i32) as usize
+            } else {
+                ((idx as i32 + change) as usize).min(group_vec.len() - 1)
+            };
+            
+            // Get the first valid item in the new group
+            if let Some(new_group) = group_vec.get(new_idx) {
+                let element = new_group.dyn_ref::<web_sys::Element>().ok_or_else(|| JsValue::from_str("Node is not an Element")).unwrap();
+
+                if let Some(items) = element.query_selector_all("[data-slot='command-item']").ok() {
+                    for i in 0..items.length() {
+                        if let Some(item) = items.get(i) {
+                            if let Some(element) = item.dyn_ref::<web_sys::HtmlElement>() {
+                                if element.get_attribute("data-disabled") != Some("true".to_string()) {
+                                    if let Some(value) = element.get_attribute("data-value") {
+                                        state.write().value = value;
+                                        scroll_item_into_view(&state.read().value);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn update_selected_to_index(mut state: Signal<CommandState>, index: usize) {
+    let items = get_valid_items();
+    if let Some(value) = items.get(index) {
+        state.write().value = value.clone();
+        scroll_item_into_view(value);
+    }
+}
+
+fn update_selected_to_last(mut state: Signal<CommandState>) {
+    let items = get_valid_items();
+    if let Some(value) = items.last() {
+        state.write().value = value.clone();
+        scroll_item_into_view(value);
+    }
+}
+
+fn get_valid_items() -> Vec<String> {
+    use wasm_bindgen::JsCast;
+    let window = web_sys::window().unwrap();
+    let document = window.document().unwrap();
+    
+    // Get all command items that aren't disabled
+    let selector = "[data-slot='command-item']:not([data-disabled='true'])";
+    let items = document.query_selector_all(selector).unwrap();
+    
+    let mut valid_items = Vec::new();
+    for i in 0..items.length() {
+        if let Some(item) = items.get(i) {
+            if let Some(element) = item.dyn_ref::<web_sys::HtmlElement>() {
+                if let Some(value) = element.get_attribute("data-value") {
+                    valid_items.push(value);
+                }
+            }
+        }
+    }
+    
+    valid_items
+}
+
+fn scroll_item_into_view(value: &str) {
+    use wasm_bindgen::JsCast;
+    let window = web_sys::window().unwrap();
+    let document = window.document().unwrap();
+    
+    let selector = format!("[data-slot='command-item'][data-value='{}']", value);
+    if let Some(element) = document.query_selector(&selector).unwrap() {
+        if let Some(html_element) = element.dyn_ref::<web_sys::HtmlElement>() {
+            html_element.scroll_into_view_with_bool(true);
+            
+            // Also scroll the group heading into view if this item is in a group
+            if let Some(group) = element.closest("[cmdk-group-items]").unwrap() {
+                if let Some(heading) = group
+                    .parent_element()
+                    .and_then(|g| g.query_selector("[cmdk-group-heading]").ok())
+                    .flatten() 
+                {
+                    if let Some(html_heading) = heading.dyn_ref::<web_sys::HtmlElement>() {
+                        html_heading.scroll_into_view_with_bool(true);
+                    }
+                }
+            }
         }
     }
 }
@@ -330,6 +548,155 @@ pub fn CommandSeparator(props: CommandSeparatorProps) -> Element {
             class: class.join(" "),
             "data-slot": "command-separator",
             role: "separator",
+        }
+    }
+}
+
+#[derive(Props, PartialEq, Clone)]
+pub struct CommandRadioGroupProps {
+    children: Element,
+    #[props(default)]
+    class: Option<String>,
+    #[props(default)]
+    value: Option<String>,
+    #[props(default)]
+    onvalue_change: Option<EventHandler<String>>,
+}
+
+#[component]
+pub fn CommandRadioGroup(props: CommandRadioGroupProps) -> Element {
+    let selected = use_signal(|| props.value.clone());
+
+    rsx! {
+        div { "data-slot": "command-radio-group", role: "radiogroup", {props.children} }
+    }
+}
+
+#[derive(Props, PartialEq, Clone)]
+pub struct CommandRadioItemProps {
+    children: Element,
+    #[props(default)]
+    class: Option<String>,
+    #[props(default)]
+    value: String,
+    #[props(default)]
+    disabled: bool,
+}
+
+#[component]
+pub fn CommandRadioItem(props: CommandRadioItemProps) -> Element {
+    let base_class = "relative flex cursor-default select-none items-center rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50";
+    let mut class = vec![base_class];
+    
+    if let Some(custom_class) = &props.class {
+        class.push(custom_class);
+    }
+
+    let state = use_context::<Signal<CommandState>>();
+    let selected = state.read().value == props.value;
+
+    rsx! {
+        div {
+            "data-slot": "command-radio-item",
+            "data-value": props.value.clone(),
+            "data-disabled": props.disabled.to_string(),
+            role: "radio",
+            class: class.join(" "),
+            "aria-checked": selected.to_string(),
+            span { class: "pointer-events-none absolute left-2 flex h-3.5 w-3.5 items-center justify-center",
+                if selected {
+                    Icon {
+                        icon: hmziq_dioxus_free_icons::icons::ld_icons::LdCircle {
+                        },
+                        class: "h-2 w-2 fill-current",
+                    }
+                }
+            }
+            {props.children}
+        }
+    }
+}
+
+#[derive(Props, PartialEq, Clone)]
+pub struct CommandCheckboxItemProps {
+    children: Element,
+    #[props(default)]
+    class: Option<String>,
+    #[props(default)]
+    checked: bool,
+    #[props(default)]
+    disabled: bool,
+    #[props(default)]
+    onvalue_change: Option<EventHandler<bool>>,
+}
+
+#[component]
+pub fn CommandCheckboxItem(props: CommandCheckboxItemProps) -> Element {
+    let base_class = "relative flex cursor-default select-none items-center rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50";
+    let mut class = vec![base_class];
+    
+    if let Some(custom_class) = &props.class {
+        class.push(custom_class);
+    }
+
+    rsx! {
+        div {
+            "data-slot": "command-checkbox-item",
+            "data-disabled": props.disabled.to_string(),
+            role: "checkbox",
+            class: class.join(" "),
+            "aria-checked": props.checked.to_string(),
+            onclick: move |_| {
+                if !props.disabled {
+                    if let Some(handler) = &props.onvalue_change {
+                        handler.call(!props.checked);
+                    }
+                }
+            },
+            span { class: "pointer-events-none absolute left-2 flex h-3.5 w-3.5 items-center justify-center",
+                if props.checked {
+                    Icon {
+                        icon: hmziq_dioxus_free_icons::icons::ld_icons::LdCheck {
+                        },
+                        class: "h-4 w-4",
+                    }
+                }
+            }
+            {props.children}
+        }
+    }
+}
+
+#[derive(Props, PartialEq, Clone)]
+pub struct CommandLoadingProps {
+    children: Element,
+    #[props(default)]
+    class: Option<String>,
+    #[props(default)]
+    progress: Option<i32>,
+    #[props(default = String::from("Loading..."))]
+    label: String,
+}
+
+#[component]
+pub fn CommandLoading(props: CommandLoadingProps) -> Element {
+    let base_class = "py-6 text-center text-sm";
+    let mut class = vec![base_class];
+    
+    if let Some(custom_class) = &props.class {
+        class.push(custom_class);
+    }
+
+    rsx! {
+        div {
+            class: class.join(" "),
+            "data-slot": "command-loading",
+            role: "progressbar",
+            "aria-valuenow": props.progress.map(|p| p.to_string()),
+            "aria-valuemin": "0",
+            "aria-valuemax": "100",
+            "aria-label": props.label,
+            div { "aria-hidden": "true", {props.children} }
         }
     }
 }
