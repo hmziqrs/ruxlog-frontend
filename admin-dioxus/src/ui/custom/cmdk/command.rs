@@ -1,10 +1,10 @@
 use std::rc::Rc;
 
-use dioxus::prelude::*;
-use wasm_bindgen::JsValue;
-use crate::ui::custom::AppPortal;
 use super::command_score::command_score;
-use hmziq_dioxus_free_icons::{Icon, icons::ld_icons::LdX};
+use crate::ui::custom::AppPortal;
+use dioxus::prelude::*;
+use hmziq_dioxus_free_icons::{icons::ld_icons::LdX, Icon};
+use wasm_bindgen::JsValue;
 
 // Context and state types
 #[derive(PartialEq, Clone)]
@@ -78,7 +78,7 @@ pub fn CommandDialog(props: CommandDialogProps) -> Element {
     let mut open = use_signal(|| props.open);
 
     if !*open.read() {
-        return rsx!{};
+        return rsx! {};
     }
 
     rsx! {
@@ -99,9 +99,10 @@ pub fn Command(props: CommandProps) -> Element {
     let state = use_signal(CommandState::default);
     let mut list_ref = use_signal(|| None as Option<Rc<MountedData>>);
     let mut list_inner_ref = use_signal(|| None as Option<Rc<MountedData>>);
-    let base_class = "flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground";
+    let base_class =
+        "flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground";
     let mut class = vec![base_class];
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class);
     }
@@ -171,13 +172,13 @@ pub fn Command(props: CommandProps) -> Element {
     }
 }
 
-// Helper functions for selection management 
+// Helper functions for selection management
 fn update_selected_by_item(mut state: Signal<CommandState>, change: i32, should_loop: bool) {
     let items = get_valid_items();
     let current_value = state.read().value.clone();
-    
+
     let current_index = items.iter().position(|i| Some(i) == Some(&current_value));
-    
+
     let new_index = match current_index {
         Some(idx) => {
             let new_idx = (idx as i32 + change) as i32;
@@ -193,7 +194,13 @@ fn update_selected_by_item(mut state: Signal<CommandState>, change: i32, should_
                 new_idx.max(0).min(items.len() as i32 - 1) as usize
             }
         }
-        None => if change > 0 { 0 } else { items.len() - 1 },
+        None => {
+            if change > 0 {
+                0
+            } else {
+                items.len() - 1
+            }
+        }
     };
 
     if let Some(value) = items.get(new_index) {
@@ -202,18 +209,18 @@ fn update_selected_by_item(mut state: Signal<CommandState>, change: i32, should_
     }
 }
 
-fn update_selected_by_group(state: Signal<CommandState>, change: i32, should_loop: bool) {
+fn update_selected_by_group(mut state: Signal<CommandState>, change: i32, should_loop: bool) {
     use wasm_bindgen::JsCast;
     let window = web_sys::window().unwrap();
     let document = window.document().unwrap();
-    
+
     // First find the current group
     let current_value = state.read().value.clone();
     let mut current_group = None;
-    
+
     let selector = format!("[data-slot='command-item'][data-value='{}']", current_value);
     if let Some(element) = document.query_selector(&selector).unwrap() {
-            current_group = element.closest("[cmdk-group]").ok().flatten();
+        current_group = element.closest("[cmdk-group]").ok().flatten();
     }
     // if let Some(value) = current_value {
     //     let selector = format!("[data-slot='command-item'][data-value='{}']", value);
@@ -221,7 +228,7 @@ fn update_selected_by_group(state: Signal<CommandState>, change: i32, should_loo
     //         current_group = element.closest("[cmdk-group]").ok().flatten();
     //     }
     // }
-    
+
     // Get all groups
     let groups = document.query_selector_all("[cmdk-group]").unwrap();
     let mut group_vec = vec![];
@@ -230,28 +237,38 @@ fn update_selected_by_group(state: Signal<CommandState>, change: i32, should_loo
             group_vec.push(group);
         }
     }
-    
+
     // Find the next/previous group
     if let Some(current) = current_group {
-        let current_idx = group_vec.iter().position(|g| g.as_ref() == current.as_ref());
+        let current_idx = group_vec
+            .iter()
+            .position(|g| *g.dyn_ref::<web_sys::Element>().unwrap() == current);
         if let Some(idx) = current_idx {
             let new_idx = if should_loop {
                 (idx as i32 + change).rem_euclid(group_vec.len() as i32) as usize
             } else {
                 ((idx as i32 + change) as usize).min(group_vec.len() - 1)
             };
-            
+
             // Get the first valid item in the new group
             if let Some(new_group) = group_vec.get(new_idx) {
-                let element = new_group.dyn_ref::<web_sys::Element>().ok_or_else(|| JsValue::from_str("Node is not an Element")).unwrap();
+                let element = new_group
+                    .dyn_ref::<web_sys::Element>()
+                    .ok_or_else(|| JsValue::from_str("Node is not an Element"))
+                    .unwrap();
 
-                if let Some(items) = element.query_selector_all("[data-slot='command-item']").ok() {
+                if let Some(items) = element
+                    .query_selector_all("[data-slot='command-item']")
+                    .ok()
+                {
                     for i in 0..items.length() {
                         if let Some(item) = items.get(i) {
                             if let Some(element) = item.dyn_ref::<web_sys::HtmlElement>() {
-                                if element.get_attribute("data-disabled") != Some("true".to_string()) {
+                                if element.get_attribute("data-disabled")
+                                    != Some("true".to_string())
+                                {
                                     if let Some(value) = element.get_attribute("data-value") {
-                                        state.write().value = value;
+                                        state.write().value = value.clone();
                                         scroll_item_into_view(&state.read().value);
                                         break;
                                     }
@@ -285,11 +302,11 @@ fn get_valid_items() -> Vec<String> {
     use wasm_bindgen::JsCast;
     let window = web_sys::window().unwrap();
     let document = window.document().unwrap();
-    
+
     // Get all command items that aren't disabled
     let selector = "[data-slot='command-item']:not([data-disabled='true'])";
     let items = document.query_selector_all(selector).unwrap();
-    
+
     let mut valid_items = Vec::new();
     for i in 0..items.length() {
         if let Some(item) = items.get(i) {
@@ -300,7 +317,7 @@ fn get_valid_items() -> Vec<String> {
             }
         }
     }
-    
+
     valid_items
 }
 
@@ -308,18 +325,18 @@ fn scroll_item_into_view(value: &str) {
     use wasm_bindgen::JsCast;
     let window = web_sys::window().unwrap();
     let document = window.document().unwrap();
-    
+
     let selector = format!("[data-slot='command-item'][data-value='{}']", value);
     if let Some(element) = document.query_selector(&selector).unwrap() {
         if let Some(html_element) = element.dyn_ref::<web_sys::HtmlElement>() {
             html_element.scroll_into_view_with_bool(true);
-            
+
             // Also scroll the group heading into view if this item is in a group
             if let Some(group) = element.closest("[cmdk-group-items]").unwrap() {
                 if let Some(heading) = group
                     .parent_element()
                     .and_then(|g| g.query_selector("[cmdk-group-heading]").ok())
-                    .flatten() 
+                    .flatten()
                 {
                     if let Some(html_heading) = heading.dyn_ref::<web_sys::HtmlElement>() {
                         html_heading.scroll_into_view_with_bool(true);
@@ -394,7 +411,7 @@ pub struct CommandListProps {
 pub fn CommandList(props: CommandListProps) -> Element {
     let base_class = "max-h-[300px] overflow-y-auto overflow-x-hidden";
     let mut class = vec![base_class];
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class);
     }
@@ -429,14 +446,14 @@ pub fn CommandItem(props: CommandItemProps) -> Element {
     let mut state = use_context::<Signal<CommandState>>();
     let base_class = "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50";
     let mut class = vec![base_class];
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class);
     }
 
     let value = props.value.clone().unwrap_or_else(|| "".to_string());
     let keywords = props.keywords.clone().unwrap_or_default();
-    
+
     let score = if !state.read().search.is_empty() {
         command_score(&value, &state.read().search, Some(&keywords))
     } else {
@@ -445,7 +462,7 @@ pub fn CommandItem(props: CommandItemProps) -> Element {
 
     // Don't render if filtered out
     if score == 0.0 {
-        return rsx!{};
+        return rsx! {};
     }
 
     let selected = state.read().value == value;
@@ -481,14 +498,14 @@ pub struct CommandEmptyProps {
 #[component]
 pub fn CommandEmpty(props: CommandEmptyProps) -> Element {
     let state = use_context::<Signal<CommandState>>();
-    
+
     if state.read().filtered.count > 0 {
-        return rsx!{};
+        return rsx! {};
     }
 
     let base_class = "py-6 text-center text-sm";
     let mut class = vec![base_class];
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class);
     }
@@ -513,7 +530,7 @@ pub struct CommandGroupProps {
 pub fn CommandGroup(props: CommandGroupProps) -> Element {
     let base_class = "overflow-hidden p-1 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground";
     let mut class = vec![base_class];
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class);
     }
@@ -538,7 +555,7 @@ pub struct CommandSeparatorProps {
 pub fn CommandSeparator(props: CommandSeparatorProps) -> Element {
     let base_class = "-mx-1 h-px bg-border";
     let mut class = vec![base_class];
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class);
     }
@@ -587,7 +604,7 @@ pub struct CommandRadioItemProps {
 pub fn CommandRadioItem(props: CommandRadioItemProps) -> Element {
     let base_class = "relative flex cursor-default select-none items-center rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50";
     let mut class = vec![base_class];
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class);
     }
@@ -634,7 +651,7 @@ pub struct CommandCheckboxItemProps {
 pub fn CommandCheckboxItem(props: CommandCheckboxItemProps) -> Element {
     let base_class = "relative flex cursor-default select-none items-center rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50";
     let mut class = vec![base_class];
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class);
     }
@@ -682,7 +699,7 @@ pub struct CommandLoadingProps {
 pub fn CommandLoading(props: CommandLoadingProps) -> Element {
     let base_class = "py-6 text-center text-sm";
     let mut class = vec![base_class];
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class);
     }
