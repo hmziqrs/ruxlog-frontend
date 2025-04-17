@@ -180,7 +180,11 @@ fn PostGridCard(post: Post) -> Element {
                         DropdownMenuContent {
                             DropdownMenuItem { "Edit" }
                             DropdownMenuItem { "Duplicate" }
-                            DropdownMenuItem { class: "text-red-500 dark:text-red-400", "Delete" }
+                            DropdownMenuItem {
+                                variant: String::from("destructive"),
+                                class: "text-red-500 dark:text-red-400",
+                                "Delete"
+                            }
                         }
                     }
                 }

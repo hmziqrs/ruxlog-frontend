@@ -114,16 +114,12 @@ pub fn DropdownMenuContent(props: DropdownMenuProps) -> Element {
 /// DropdownMenuItem component
 #[component]
 pub fn DropdownMenuItem(props: DropdownMenuItemProps) -> Element {
-    let mut class = vec!["focus:bg-accent focus:text-accent-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4".to_string()];
-
-    if props.variant == "destructive" {
-        class.push("text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive".to_string());
-    }
+    let mut class = vec!["hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4".to_string()];
 
     if props.inset {
         class.push("pl-8".to_string());
     }
-
+    
     if let Some(custom_class) = props.class {
         class.push(custom_class);
     }
@@ -134,11 +130,7 @@ pub fn DropdownMenuItem(props: DropdownMenuItemProps) -> Element {
             "data-inset": props.inset.to_string(),
             "data-variant": props.variant,
             class: class.join(" "),
-            onclick: move |e| {
-                if let Some(handler) = &props.onclick {
-                    handler.call(e);
-                }
-            },
+            onclick: move |e| if let Some(handler) = &props.onclick { handler.call(e); },
             {props.children}
         }
     }
