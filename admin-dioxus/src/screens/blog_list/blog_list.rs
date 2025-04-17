@@ -204,7 +204,7 @@ fn PostGridCard(post: Post) -> Element {
             }
             CardFooter { class: "p-4 pt-0 flex items-center justify-between",
                 div { class: "flex items-center gap-2",
-                    Avatar {
+                    Avatar { class: "w-8 h-8",
                         AvatarImage {
                             src: post.author.avatar.clone().unwrap_or_default(),
                             alt: post.author.name.clone(),
@@ -315,7 +315,7 @@ fn PostListItem(post: Post) -> Element {
                     // Author and stats
                     div { class: "flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800",
                         div { class: "flex items-center gap-2",
-                            Avatar {
+                            Avatar { class: "w-8 h-8",
                                 AvatarImage {
                                     src: post.author.avatar.clone().unwrap_or_default(),
                                     alt: post.author.name.clone(),

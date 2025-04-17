@@ -457,6 +457,9 @@
   .h-16 {
     height: calc(var(--spacing) * 16);
   }
+  .h-20 {
+    height: calc(var(--spacing) * 20);
+  }
   .h-26 {
     height: calc(var(--spacing) * 26);
   }
@@ -481,6 +484,9 @@
   .min-h-screen {
     min-height: 100vh;
   }
+  .w-1 {
+    width: calc(var(--spacing) * 1);
+  }
   .w-3 {
     width: calc(var(--spacing) * 3);
   }
@@ -504,6 +510,9 @@
   }
   .w-10 {
     width: calc(var(--spacing) * 10);
+  }
+  .w-20 {
+    width: calc(var(--spacing) * 20);
   }
   .w-26 {
     width: calc(var(--spacing) * 26);
