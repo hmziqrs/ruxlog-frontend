@@ -25,10 +25,21 @@ wasm-bindgen = "0.2.92"
 wasm-cookies = "0.2.1"
 dotenvy = "0.15.7"
 log = "0.4.20"
-dioxus-toast = { version = "0.6.0", default-features = false, features = ["web"] }
+dioxus-toast = { version = "0.6.0", default-features = false, features = [
+    "web",
+] }
 once_cell = "1.19.0"
-gloo-net = {version = "0.6.0", default-features = true }
-web-sys = { version = "0.3.69", features = ["Document", "Window", "Element", "HtmlElement", "DomRect", "NodeList"] }
+gloo-net = { version = "0.6.0", default-features = true }
+web-sys = { version = "0.3.69", features = [
+    "Document",
+    "Window",
+    "Element",
+    "HtmlElement",
+    "DomRect",
+    "NodeList",
+    "EventTarget",
+    "Node",
+] }
 lazy_static = "1.4.0"
 im = "15.1.0"
 

@@ -1,11 +1,9 @@
 mod input;
-mod animated_blob;
-mod toast;
-mod sidebar;
 pub mod shadcn_ui;
+mod sidebar;
+mod toast;
 
 pub use input::*;
-pub use animated_blob::*;
-pub use toast::*;
 pub use sidebar::*;
+pub use toast::*;
 // pub use shadcn_ui::*;
