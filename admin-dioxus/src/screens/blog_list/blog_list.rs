@@ -1,6 +1,6 @@
-use crate::components::shadcn_ui::{Badge, Card, CardContent, CardFooter, CardHeader, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger};
+use crate::components::shadcn_ui::{Card, CardContent, CardFooter, CardHeader, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger};
 use crate::store::{use_post, Post};
-use crate::ui::shadcn::{Button, Avatar, AvatarFallback, AvatarImage};
+use crate::ui::shadcn::{Button, Avatar, AvatarFallback, AvatarImage, Badge, BadgeVariant};
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::icons::ld_icons::{
     LdCalendar, LdEye, LdLayoutGrid, LdHeart, LdLayoutList, LdMessageSquare, 
@@ -158,9 +158,7 @@ fn PostGridCard(post: Post) -> Element {
                     div { class: "space-y-1.5",
                         // Category badge
                         if let Some(category) = &post.category {
-                            Badge { class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800",
-                                "{category.name}"
-                            }
+                            Badge { variant: BadgeVariant::Secondary, "{category.name}" }
                         }
                         h3 { class: "font-semibold text-lg line-clamp-2", "{post.title}" }
                     }
@@ -190,14 +188,10 @@ fn PostGridCard(post: Post) -> Element {
                 if !post.tags.is_empty() {
                     div { class: "flex flex-wrap gap-1.5 mt-3",
                         {post.tags.iter().take(3).map(|tag| rsx! {
-                            Badge { class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800",
-                                "{tag.name}"
-                            }
+                            Badge { variant: BadgeVariant::Secondary, "{tag.name}" }
                         })}
                         if post.tags.len() > 3 {
-                            Badge { class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800",
-                                "+{post.tags.len() - 3}"
-                            }
+                            Badge { variant: BadgeVariant::Secondary, "+{post.tags.len() - 3}" }
                         }
                     }
                 }
@@ -261,9 +255,7 @@ fn PostListItem(post: Post) -> Element {
                             div { class: "flex items-center gap-2",
                                 // Category badge
                                 if let Some(category) = &post.category {
-                                    Badge { class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800",
-                                        "{category.name}"
-                                    }
+                                    Badge { variant: BadgeVariant::Secondary, "{category.name}" }
                                 }
                                 // Published status
                                 span { class: if post.is_published { "px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" } else { "px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
@@ -301,14 +293,10 @@ fn PostListItem(post: Post) -> Element {
                     if !post.tags.is_empty() {
                         div { class: "flex flex-wrap gap-1.5 mt-3",
                             {post.tags.iter().take(5).map(|tag| rsx! {
-                                Badge { class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800",
-                                    "{tag.name}"
-                                }
+                                Badge { variant: BadgeVariant::Secondary, "{tag.name}" }
                             })}
                             if post.tags.len() > 5 {
-                                Badge { class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800",
-                                    "+{post.tags.len() - 5}"
-                                }
+                                Badge { variant: BadgeVariant::Secondary, "+{post.tags.len() - 5}" }
                             }
                         }
                     }
