@@ -1,6 +1,6 @@
-use crate::components::shadcn_ui::{Card, CardContent, CardFooter, CardHeader, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger};
+use crate::components::shadcn_ui::{DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger};
 use crate::store::{use_post, Post};
-use crate::ui::shadcn::{Button, Avatar, AvatarFallback, AvatarImage, Badge, BadgeVariant};
+use crate::ui::shadcn::{Button, Avatar, AvatarFallback, AvatarImage, Badge, BadgeVariant, Card, CardHeader, CardFooter, CardContent};
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::icons::ld_icons::{
     LdCalendar, LdEye, LdLayoutGrid, LdHeart, LdLayoutList, LdMessageSquare, 
