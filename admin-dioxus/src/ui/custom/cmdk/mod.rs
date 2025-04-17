@@ -1,4 +1,3 @@
-mod command_score;
-mod command;
+mod cmdk;
 
-pub use command::*;
+pub use cmdk::*;
