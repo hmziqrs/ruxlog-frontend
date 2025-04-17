@@ -1,6 +1,6 @@
-use crate::components::shadcn_ui::*;
+use crate::components::shadcn_ui::{Badge, Card, CardContent, CardFooter, CardHeader, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger};
 use crate::store::{use_post, Post};
-use crate::ui::shadcn::Button;
+use crate::ui::shadcn::{Button, Avatar, AvatarFallback, AvatarImage};
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::icons::ld_icons::{
     LdCalendar, LdEye, LdLayoutGrid, LdHeart, LdLayoutList, LdMessageSquare, 
@@ -204,14 +204,12 @@ fn PostGridCard(post: Post) -> Element {
             }
             CardFooter { class: "p-4 pt-0 flex items-center justify-between",
                 div { class: "flex items-center gap-2",
-                    Avatar { class: "h-6 w-6",
+                    Avatar {
                         AvatarImage {
                             src: post.author.avatar.clone().unwrap_or_default(),
                             alt: post.author.name.clone(),
                         }
-                        AvatarFallback { class: "text-xs bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200",
-                            {generate_avatar_fallback(&post.author.name)}
-                        }
+                        AvatarFallback { {generate_avatar_fallback(&post.author.name)} }
                     }
                     span { class: "text-xs text-zinc-500 dark:text-zinc-400", "{post.author.name}" }
                 }
@@ -317,14 +315,12 @@ fn PostListItem(post: Post) -> Element {
                     // Author and stats
                     div { class: "flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800",
                         div { class: "flex items-center gap-2",
-                            Avatar { class: "h-6 w-6",
+                            Avatar {
                                 AvatarImage {
                                     src: post.author.avatar.clone().unwrap_or_default(),
                                     alt: post.author.name.clone(),
                                 }
-                                AvatarFallback { class: "text-xs bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200",
-                                    {generate_avatar_fallback(&post.author.name)}
-                                }
+                                AvatarFallback { {generate_avatar_fallback(&post.author.name)} }
                             }
                             span { class: "text-xs text-zinc-500 dark:text-zinc-400",
                                 "{post.author.name}"
