@@ -5,6 +5,7 @@ mod breadcrumb;
 mod button;
 mod card;
 mod checkbox;
+mod collapsible;
 mod dialog;
 mod dropdown_menu;
 
@@ -15,5 +16,6 @@ pub use breadcrumb::*;
 pub use button::*;
 pub use card::*;
 pub use checkbox::*;
+pub use collapsible::*;
 pub use dialog::*;
 pub use dropdown_menu::*;

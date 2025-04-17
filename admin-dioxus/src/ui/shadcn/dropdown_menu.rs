@@ -130,7 +130,11 @@ pub fn DropdownMenuItem(props: DropdownMenuItemProps) -> Element {
             "data-inset": props.inset.to_string(),
             "data-variant": props.variant,
             class: class.join(" "),
-            onclick: move |e| if let Some(handler) = &props.onclick { handler.call(e); },
+            onclick: move |e| {
+                if let Some(handler) = &props.onclick {
+                    handler.call(e);
+                }
+            },
             {props.children}
         }
     }
