@@ -7,36 +7,6 @@ pub struct ChildProps {
     pub class: String,
 }
 
-#[component]
-pub fn Card(props: ChildProps) -> Element {
-    rsx! {
-        div { class: "rounded-lg border-zinc-600/50 border bg-card text-card-foreground shadow-sm",
-            {props.children}
-        }
-    }
-}
-
-#[component]
-pub fn CardHeader(props: ChildProps) -> Element {
-    rsx! {
-        div { class: "flex flex-col space-y-1.5 p-6", {props.children} }
-    }
-}
-
-#[component]
-pub fn CardContent(props: ChildProps) -> Element {
-    rsx! {
-        div { class: "p-6 pt-0", {props.children} }
-    }
-}
-
-#[component]
-pub fn CardFooter(props: ChildProps) -> Element {
-    rsx! {
-        div { class: "flex items-center p-6 pt-0", {props.children} }
-    }
-}
-
 struct DropdownContext(bool);
 
 #[component]
