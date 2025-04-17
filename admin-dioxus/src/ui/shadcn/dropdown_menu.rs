@@ -1,12 +1,20 @@
-use dioxus::prelude::*;
+use dioxus::{logger::tracing, prelude::*};
 use hmziq_dioxus_free_icons::{
     icons::ld_icons::{LdCheck, LdChevronRight, LdCircle},
     Icon,
 };
 
+use crate::ui::custom::AppPortal;
+
 /// Signal for managing dropdown menu open/close state
 #[derive(PartialEq)]
 pub struct DropdownContext(pub bool);
+
+#[derive(PartialEq)]
+pub struct DropdownOffsetContext {
+    pub x: f32,
+    pub y: f32,
+}
 
 /// Properties for all dropdown menu components
 #[derive(Props, PartialEq, Clone)]
@@ -61,7 +69,9 @@ pub fn DropdownMenuTrigger(props: DropdownMenuProps) -> Element {
         button {
             "data-slot": "dropdown-menu-trigger",
             class: "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 data-[state=open]:bg-accent/50",
-            onclick: move |_| {
+            onclick: move |e| {
+                let rect = e.page_coordinates();
+                tracing::info!("Button clicked at: {:?}", rect);
                 let is_open = open.peek().0;
                 open.set(DropdownContext(!is_open));
             },
@@ -73,7 +83,9 @@ pub fn DropdownMenuTrigger(props: DropdownMenuProps) -> Element {
 /// DropdownMenuContent component
 #[component]
 pub fn DropdownMenuContent(props: DropdownMenuProps) -> Element {
-    let open = use_context::<Signal<DropdownContext>>();
+    let mut open = use_context::<Signal<DropdownContext>>();
+    let is_open = open.read().0;
+
     let mut class = vec![
         "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950".to_string(),
         "dropdown-menu-content bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem] overflow-hidden rounded-md border p-1 shadow-md absolute".to_string()
@@ -84,10 +96,16 @@ pub fn DropdownMenuContent(props: DropdownMenuProps) -> Element {
     }
 
     rsx! {
+        AppPortal {
+            onclick: move |_| {
+                open.set(DropdownContext(false));
+            },
+            class: format!("{}", if is_open { "block" } else { "hidden" }).to_string(),
+        }
         div {
             "data-slot": "dropdown-menu-content",
             class: class.join(" "),
-            style: format!("display: {}", if open.read().0 { "block" } else { "none" }),
+            style: format!("display: {}", if is_open { "block" } else { "none" }),
             {props.children}
         }
     }

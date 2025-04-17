@@ -2,10 +2,14 @@ use dioxus::prelude::*;
 
 #[derive(Props, Clone, PartialEq)]
 pub struct AppPortalProps {
+    #[props(default = String::new())]
+    pub class: String,
     /// The content to be displayed inside the portal
     pub children: Element,
     // #[props(default = 0)]
     // pub index: i32,
+    #[props(default = None)]
+    pub onclick: Option<EventHandler<MouseEvent>>,
 }
 
 static PORTAL_INDEX: std::sync::OnceLock<GlobalSignal<i32>> = std::sync::OnceLock::new();
@@ -16,22 +20,27 @@ pub fn use_index() -> &'static GlobalSignal<i32> {
 
 #[component]
 pub fn AppPortal(props: AppPortalProps) -> Element {
-    let portal_index=  use_index();
-    let mut z_index = use_signal(|| 50);
+    // let portal_index=  use_index();
+    // let mut z_index = use_signal(|| 10);
 
 
-    use_effect(move || {
-        let index = portal_index() + 1;
-        *portal_index.write() = index;
-        z_index.set(z_index() + index);
-    });
+    // use_effect(move || {
+    //     let index = portal_index() + 1;
+    //     *portal_index.write() = index;
+    //     z_index.set(z_index() + index);
+    // });
 
 
 
     rsx! {
         div {
-            class: "fixed top-0 left-0 w-full h-full",
-            style: format!("z-index: {}", z_index.read()),
+            onclick: move |e| {
+                if let Some(handler) = &props.onclick {
+                    handler.call(e);
+                }
+            },
+            class: format!("fixed top-0 left-0 w-full h-full {}", props.class),
+            style: format!("z-index: {}", 10),
             {props.children}
         }
     }
