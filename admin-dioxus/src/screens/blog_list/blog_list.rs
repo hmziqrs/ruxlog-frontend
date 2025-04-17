@@ -1,6 +1,7 @@
-use crate::components::shadcn_ui::{DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger};
+// use crate::components::shadcn_ui::{};
+use crate::router::Route;
 use crate::store::{use_post, Post};
-use crate::ui::shadcn::{Button, Avatar, AvatarFallback, AvatarImage, Badge, BadgeVariant, Card, CardHeader, CardFooter, CardContent};
+use crate::ui::shadcn::{Avatar, AvatarFallback, AvatarImage, Badge, BadgeVariant, Button, ButtonVariant, Card, CardContent, CardFooter, CardHeader, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger};
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::icons::ld_icons::{
     LdCalendar, LdEye, LdLayoutGrid, LdHeart, LdLayoutList, LdMessageSquare, 
@@ -27,6 +28,7 @@ pub fn BlogListScreen() -> Element {
     let list_signal = post_state.list.read();
     let mut layout_type = use_signal(|| LayoutType::Grid);
     let mut search_query = use_signal(|| String::new());
+    let mut nav = use_navigator();
 
     // Fetch posts on mount
     use_effect(move || {
@@ -69,9 +71,12 @@ pub fn BlogListScreen() -> Element {
                             }
                         }
                         div { class: "flex items-center gap-2",
-                            // TODO: ThemeToggle
-                            // ThemeToggle {}
-                            Button { "Create post" }
+                            Button {
+                                onclick: move |_| {
+                                    nav.push(Route::AddBlogScreen {});
+                                },
+                                "Create post"
+                            }
                         }
                     }
                     // Search and view mode
@@ -164,7 +169,9 @@ fn PostGridCard(post: Post) -> Element {
                     }
                     DropdownMenu {
                         DropdownMenuTrigger { class: "h-8 w-8",
-                            button { class: "h-8 w-8 flex items-center justify-center",
+                            Button {
+                                class: "h-8 w-8",
+                                variant: ButtonVariant::Ghost,
                                 div { class: "w-4 h-4",
                                     Icon { icon: LdEllipsis {} }
                                 }
@@ -203,7 +210,9 @@ fn PostGridCard(post: Post) -> Element {
                             src: post.author.avatar.clone().unwrap_or_default(),
                             alt: post.author.name.clone(),
                         }
-                        AvatarFallback { {generate_avatar_fallback(&post.author.name)} }
+                        AvatarFallback {
+                            span { class: "text-sm", {generate_avatar_fallback(&post.author.name)} }
+                        }
                     }
                     span { class: "text-xs text-zinc-500 dark:text-zinc-400", "{post.author.name}" }
                 }
