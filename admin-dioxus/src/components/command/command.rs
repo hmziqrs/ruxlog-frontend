@@ -8,7 +8,6 @@ use crate::components::command::{
     },
 };
 use dioxus::prelude::*;
-use dioxus_signals::*;
 use gloo_console::log;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use wasm_bindgen::JsCast;
@@ -16,7 +15,7 @@ use web_sys::{Element, HtmlElement, KeyboardEvent};
 
 #[derive(Props, Clone, PartialEq)]
 pub struct CommandProps {
-    children: Element<'_>,
+    children: Element,
     #[props(default)]
     value: Option<String>, // Controlled value
     #[props(default)]
@@ -35,50 +34,50 @@ pub struct CommandProps {
     vim_bindings: bool,
     label: Option<String>,
     #[props(extends = GlobalAttributes)]
-    attributes: Vec<Attribute<'_>>,
+    attributes: Vec<Attribute>,
 }
 
-pub fn Command(props: CommandProps) -> Element<'_> {
+#[component]
+pub fn Command(props: CommandProps) -> Element {
     // --- State ---
     let initial_value = props
         .value
         .clone()
         .or(props.default_value.clone())
         .unwrap_or_default();
-    let state = use_signal(cx, || CommandState {
+    let state = use_signal(|| CommandState {
         value: signal(initial_value.clone()),
         ..Default::default()
     });
 
     // --- Internal Registries (using Rc<RefCell<>> for shared mutability) ---
-    let items = use_ref(cx, || Rc::new(RefCell::new(HashMap::<String, ItemData>::new())));
-    let groups = use_ref(cx, || Rc::new(RefCell::new(HashMap::<String, GroupData>::new())));
-    let item_ids_order = use_ref(cx, || Rc::new(RefCell::new(Vec::<String>::new())));
-    let group_ids_order = use_ref(cx, || Rc::new(RefCell::new(Vec::<String>::new())));
+    let items = use_ref(|| Rc::new(RefCell::new(HashMap::<String, ItemData>::new())));
+    let groups = use_ref(|| Rc::new(RefCell::new(HashMap::<String, GroupData>::new())));
+    let item_ids_order = use_ref(|| Rc::new(RefCell::new(Vec::<String>::new())));
+    let group_ids_order = use_ref(|| Rc::new(RefCell::new(Vec::<String>::new())));
 
     // --- Refs ---
-    let list_inner_ref = use_signal(cx, || Option::<MountedElement>::None);
-    let command_root_ref = use_ref(cx, || Option::<MountedElement>::None); // Ref for the root div
+    let list_inner_ref = use_signal(|| Option::<MountedElement>::None);
+    let command_root_ref = use_ref(|| Option::<MountedElement>::None); // Ref for the root div
 
     // --- IDs ---
-    let list_id = use_unique_id(cx);
-    let label_id = use_unique_id(cx);
-    let input_id = use_unique_id(cx);
+    let list_id = use_unique_id();
+    let label_id = use_unique_id();
+    let input_id = use_unique_id();
 
     // --- Props Signals ---
     // Create signals for props that might change or are used in effects/callbacks
-    let label_signal = use_signal(cx, || props.label.clone());
-    let should_filter_signal = use_signal(cx, || props.should_filter);
-    let filter_fn_signal = use_signal(cx, || props.filter);
-    let loop_selection_signal = use_signal(cx, || props.loop_selection);
-    let disable_pointer_selection_signal = use_signal(cx, || props.disable_pointer_selection);
-    let vim_bindings_signal = use_signal(cx, || props.vim_bindings);
-    let on_value_change_signal = use_signal(cx, || props.on_value_change.clone());
-    let controlled_value_signal = use_signal(cx, || props.value.clone());
+    let label_signal = use_signal(|| props.label.clone());
+    let should_filter_signal = use_signal(|| props.should_filter);
+    let filter_fn_signal = use_signal(|| props.filter);
+    let loop_selection_signal = use_signal(|| props.loop_selection);
+    let disable_pointer_selection_signal = use_signal(|| props.disable_pointer_selection);
+    let vim_bindings_signal = use_signal(|| props.vim_bindings);
+    let on_value_change_signal = use_signal(|| props.on_value_change.clone());
+    let controlled_value_signal = use_signal(|| props.value.clone());
 
     // --- Callbacks for Context ---
     let register_item = use_callback(
-        cx,
         move |(id, data): (String, ItemData)| {
             let mut items_borrow = items.write();
             let mut order_borrow = item_ids_order.write();
@@ -87,24 +86,22 @@ pub fn Command(props: CommandProps) -> Element<'_> {
             }
             items_borrow.insert(id, data);
             // Trigger refilter/sort when items change
-            needs_update(cx);
+            needs_update();
         },
     );
 
     let unregister_item = use_callback(
-        cx,
         move |id: String| {
             let mut items_borrow = items.write();
             let mut order_borrow = item_ids_order.write();
             items_borrow.remove(&id);
             order_borrow.retain(|item_id| item_id != &id);
             // Trigger refilter/sort when items change
-            needs_update(cx);
+            needs_update();
         },
     );
 
     let register_group = use_callback(
-        cx,
         move |(id, data): (String, GroupData)| {
             let mut groups_borrow = groups.write();
             let mut order_borrow = group_ids_order.write();
@@ -113,23 +110,22 @@ pub fn Command(props: CommandProps) -> Element<'_> {
             }
             groups_borrow.insert(id, data);
             // Trigger refilter/sort when groups change (less critical than items)
-             needs_update(cx);
+             needs_update();
         },
     );
 
     let unregister_group = use_callback(
-        cx,
         move |id: String| {
             let mut groups_borrow = groups.write();
              let mut order_borrow = group_ids_order.write();
             groups_borrow.remove(&id);
             order_borrow.retain(|group_id| group_id != &id);
             // Trigger refilter/sort
-             needs_update(cx);
+             needs_update();
         },
     );
 
-    let set_search = use_callback(cx, move |new_search: String| {
+    let set_search = use_callback(move |new_search: String| {
         if *state.read().search.read() != new_search {
             state.write().search.set(new_search);
             // Filtering/sorting happens in the effect below
@@ -137,12 +133,11 @@ pub fn Command(props: CommandProps) -> Element<'_> {
     });
 
     let set_value = use_callback(
-        cx,
         move |(new_value, should_scroll): (String, bool)| {
             let current_value = state.read().value.read().clone();
             if current_value != new_value {
                 // If controlled, emit event
-                if let Some(controlled) = controlled_value_signal.read().as_ref() {
+                if controlled_value_signal.read().is_some() { // Check if controlled
                     if let Some(cb) = on_value_change_signal.read().as_ref() {
                         cb.call(new_value.clone());
                     }
@@ -161,8 +156,8 @@ pub fn Command(props: CommandProps) -> Element<'_> {
 
                 // Schedule scroll if needed
                 if should_scroll {
-                    // Use task::spawn for async operation after render
-                    cx.spawn({
+                    // Use spawn for async operation after render
+                    spawn({
                         let list_inner = list_inner_ref.read().clone();
                         async move {
                             // Small delay to ensure DOM is updated
@@ -206,14 +201,16 @@ pub fn Command(props: CommandProps) -> Element<'_> {
     // --- Effects ---
 
     // Effect for Filtering and Sorting when search, items, or groups change
-    use_effect(cx, (state.read().search, items, groups), |(search, items_ref, groups_ref)| {
-        let items_read = items_ref.read().borrow().clone();
+    use_effect(|| {
+        let items_read = items_ref();
         let groups_read = groups_ref.read().borrow().clone();
         let item_order_read = item_ids_order.read().borrow().clone();
         let group_order_read = group_ids_order.read().borrow().clone();
         let filter_fn = *filter_fn_signal.read();
         let should_filter = *should_filter_signal.read();
         let current_value = state.read().value.read().clone();
+        // Clone set_value callback for async block
+        let set_value_clone = set_value.clone();
 
         async move {
             let (filtered_state, sorted_items, _sorted_groups) = filter_and_sort_items(
@@ -227,32 +224,34 @@ pub fn Command(props: CommandProps) -> Element<'_> {
             );
 
             // Update filtered state
-            state.write().filtered.set(filtered_state);
+            state.write().filtered.set(filtered_state.clone()); // Clone filtered_state
 
             // Select first item if search changed and no value is selected or current value is filtered out
-            let current_value_is_visible = state.read().filtered.read().items.values().any(|&score| score > 0.0) &&
-                items_read.iter().any(|(id, data)| data.value == current_value && state.read().filtered.read().items.contains_key(id));
+             let current_value_is_visible = items_read.iter().any(|(id, data)| {
+                data.value == current_value && filtered_state.items.get(id).map_or(false, |&score| score > 0.0)
+            });
+
 
             if !current_value_is_visible || current_value.is_empty() {
                  // Find the first *visible* item based on the sorted order
                  let first_visible_item_value = sorted_items.iter()
-                    .find(|id| state.read().filtered.read().items.contains_key(*id))
+                    .find(|id| filtered_state.items.contains_key(*id)) // Use cloned state
                     .and_then(|id| items_read.get(*id))
                     .map(|data| data.value.clone());
 
                  if let Some(first_val) = first_visible_item_value {
                      // Use the set_value callback to handle controlled/uncontrolled logic
-                     set_value.call((first_val, false)); // Don't scroll on auto-select
+                     set_value_clone.call((first_val, false)); // Don't scroll on auto-select
                  } else {
                      // No visible items, clear value
-                     set_value.call((String::new(), false));
+                     set_value_clone.call((String::new(), false));
                  }
             }
         }
     });
 
     // Effect to update internal state if controlled `value` prop changes
-    use_effect(cx, &props.value, |new_value_prop| {
+    use_effect(&props.value, |new_value_prop| {
         let current_internal_value = state.read().value.read().clone();
         let new_value = new_value_prop.unwrap_or_default();
         if current_internal_value != new_value {
@@ -265,7 +264,7 @@ pub fn Command(props: CommandProps) -> Element<'_> {
                 .map(|(id, _)| id.clone());
             state.write().selected_item_id.set(new_selected_id);
             // Potentially scroll into view if controlled value changes externally?
-            // cx.spawn(...) similar to set_value if needed
+            // spawn(...) similar to set_value if needed
         }
         async move {}
     });
@@ -371,12 +370,12 @@ pub fn Command(props: CommandProps) -> Element<'_> {
     };
 
     // --- Render ---
-    cx.render(rsx! {
+    rsx! {
         div {
             ..props.attributes,
             "cmdk-root": "",
             tabindex: "-1", // Make it focusable programmatically if needed, but rely on input focus mostly
-            onmounted: move |cx| command_root_ref.set(Some(cx.inner().clone())),
+            onmounted: move |mount_event| command_root_ref.set(Some(mount_event.inner().clone())), // Update onmounted closure
             onkeydown: handle_keydown,
 
             label {
@@ -393,5 +392,5 @@ pub fn Command(props: CommandProps) -> Element<'_> {
                 &props.children
             }
         }
-    })
+    }
 }

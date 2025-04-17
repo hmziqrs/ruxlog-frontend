@@ -29,9 +29,8 @@ pub struct CommandDialogProps {
     attributes: Vec<Attribute<'_>>, // Attributes for the content container
 }
 
-pub fn CommandDialog(props: CommandDialogProps) -> Element<'_> {
-    let cx = use_hook_context();
-
+#[component]
+pub fn CommandDialog(props: CommandDialogProps) -> Element {
     if !props.open {
         return None; // Don't render anything if not open
     }

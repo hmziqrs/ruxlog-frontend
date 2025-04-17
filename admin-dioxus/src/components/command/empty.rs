@@ -1,7 +1,6 @@
 #![allow(non_snake_case)]
 use crate::components::command::context::use_command_context;
 use dioxus::prelude::*;
-use dioxus_signals::*;
 
 #[derive(Props, Clone, PartialEq)]
 pub struct CommandEmptyProps {
@@ -10,11 +9,11 @@ pub struct CommandEmptyProps {
     attributes: Vec<Attribute<'_>>,
 }
 
-pub fn CommandEmpty(props: CommandEmptyProps) -> Element<'_> {
-    let cx = use_hook_context();
+#[component]
+pub fn CommandEmpty(props: CommandEmptyProps) -> Element {
     let cmdk_context = use_command_context();
 
-    let is_visible = use_memo(cx, &cmdk_context.state.filtered, |filtered| {
+    let is_visible = use_memo(&cmdk_context.state.filtered, |filtered| {
         filtered.read().count == 0
     });
 

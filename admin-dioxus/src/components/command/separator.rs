@@ -1,7 +1,6 @@
 #![allow(non_snake_case)]
 use crate::components::command::context::use_command_context;
 use dioxus::prelude::*;
-use dioxus_signals::*;
 
 #[derive(Props, Clone, PartialEq)]
 pub struct CommandSeparatorProps {
@@ -11,11 +10,11 @@ pub struct CommandSeparatorProps {
     attributes: Vec<Attribute<'_>>,
 }
 
-pub fn CommandSeparator(props: CommandSeparatorProps) -> Element<'_> {
-    let cx = use_hook_context();
+#[component]
+pub fn CommandSeparator(props: CommandSeparatorProps) -> Element {
     let cmdk_context = use_command_context();
 
-    let is_visible = use_memo(cx, &cmdk_context.state.search, |search| {
+    let is_visible = use_memo(&cmdk_context.state.search, |search| {
         props.always_render || search.read().is_empty()
     });
 

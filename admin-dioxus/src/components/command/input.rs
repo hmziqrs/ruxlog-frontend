@@ -12,8 +12,8 @@ pub struct CommandInputProps {
     attributes: Vec<Attribute<'_>>,
 }
 
-pub fn CommandInput(props: CommandInputProps) -> Element<'_> {
-    let cx = use_hook_context();
+#[component]
+pub fn CommandInput(props: CommandInputProps) -> Element {
     let cmdk_context = use_command_context();
     let search_signal = cmdk_context.state.search;
     let is_controlled = props.value.is_some();

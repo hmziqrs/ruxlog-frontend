@@ -4,7 +4,6 @@ use crate::components::command::{
     utils::use_unique_id,
 };
 use dioxus::prelude::*;
-use dioxus_signals::*;
 use gloo_console::log;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlElement;
@@ -24,21 +23,21 @@ pub struct CommandItemProps {
     attributes: Vec<Attribute<'_>>,
 }
 
-pub fn CommandItem(props: CommandItemProps) -> Element<'_> {
-    let cx = use_hook_context();
+#[component]
+pub fn CommandItem(props: CommandItemProps) -> Element {
     let cmdk_context = use_command_context();
     let group_context = use_group_context(); // Might be None if not in a group
 
-    let item_id = use_unique_id(cx);
-    let item_ref = use_ref(cx, || Option::<MountedElement>::None);
-    let inferred_value = use_state(cx, String::new); // State to hold inferred value if needed
+    let item_id = use_unique_id();
+    let item_ref = use_ref(|| Option::<MountedElement>::None);
+    let inferred_value = use_state(String::new); // State to hold inferred value if needed
 
     // Determine the actual value (prop > inferred > "")
-    let value = use_memo(cx, (props.value.clone(), inferred_value.get().clone()), |(prop_val, inferred_val)| {
+    let value = use_memo((props.value.clone(), inferred_value.get().clone()), |(prop_val, inferred_val)| {
         prop_val.unwrap_or_else(|| inferred_val.clone())
     });
 
-    let is_selected = use_memo(cx, (cmdk_context.state.value, value.clone()), |(selected_val, current_val)| {
+    let is_selected = use_memo((cmdk_context.state.value, value.clone()), |(selected_val, current_val)| {
         *selected_val.read() == current_val
     });
 
@@ -47,7 +46,6 @@ pub fn CommandItem(props: CommandItemProps) -> Element<'_> {
 
     // Determine if the item should be rendered based on filtering/force_mount
     let is_visible = use_memo(
-        cx,
         (
             is_forced,
             cmdk_context.should_filter,
@@ -65,7 +63,7 @@ pub fn CommandItem(props: CommandItemProps) -> Element<'_> {
     );
 
     // Register/Unregister Item
-    use_effect(cx, &item_id, |id_signal| {
+    use_effect(&item_id, |id_signal| {
         let id = id_signal.read().clone();
         let data = ItemData {
             value: value.clone(),
@@ -83,7 +81,7 @@ pub fn CommandItem(props: CommandItemProps) -> Element<'_> {
     });
 
     // Update registration if value/keywords change
-     use_effect(cx, (item_id, value.clone(), props.keywords.clone(), group_id.clone()), |(id_signal, val, kw, grp_id)| {
+     use_effect((item_id, value.clone(), props.keywords.clone(), group_id.clone()), |(id_signal, val, kw, grp_id)| {
          let id = id_signal.read().clone();
          let data = ItemData {
              value: val.clone(),
@@ -97,7 +95,7 @@ pub fn CommandItem(props: CommandItemProps) -> Element<'_> {
 
 
     // Effect to infer value from rendered children if `props.value` is not provided
-    use_effect(cx, &item_ref, |item_ref_state| {
+    use_effect(&item_ref, |item_ref_state| {
         if props.value.is_none() {
             if let Some(mounted) = item_ref_state.read().as_ref() {
                  if let Ok(element) = mounted.get() {
@@ -151,7 +149,7 @@ pub fn CommandItem(props: CommandItemProps) -> Element<'_> {
             "data-value": "{value}", // Store value for keyboard nav lookup
             "data-disabled": if props.disabled { "true" } else { "false" }, // Optional data attribute
             "data-selected": if *is_selected { "true" } else { "false" }, // Optional data attribute
-            onmounted: move |cx| item_ref.set(Some(cx.inner().clone())),
+            onmounted: move |mount_event| item_ref.set(Some(mount_event.inner().clone())), // Update onmounted
             onclick: handle_click,
             onpointermove: handle_pointer_move,
 

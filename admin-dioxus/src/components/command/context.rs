@@ -1,6 +1,5 @@
 use crate::components::command::state::{CommandFilter, CommandState};
 use dioxus::prelude::*;
-use dioxus_signals::Signal;
 use std::{
     cell::RefCell,
     collections::{HashMap, HashSet},
