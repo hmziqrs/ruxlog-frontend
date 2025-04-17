@@ -11,8 +11,8 @@ pub struct CommandListProps {
     attributes: Vec<Attribute<'_>>,
 }
 
-pub fn CommandList(props: CommandListProps) -> Element<'_> {
-    let cx = use_hook_context();
+#[component]
+pub fn CommandList(props: CommandListProps) -> Element {
     let cmdk_context = use_command_context();
     let list_inner_ref_signal = cmdk_context.list_inner_ref; // Get the signal itself
 
@@ -33,9 +33,9 @@ pub fn CommandList(props: CommandListProps) -> Element<'_> {
             // The inner div that contains the items and whose ref is stored
             div {
                 "cmdk-list-sizer": "", // Use for potential height calculations later
-                onmounted: move |cx| {
+                onmounted: move |mount_event| {
                     // Set the MountedElement in the context's signal
-                    list_inner_ref_signal.set(Some(cx.inner().clone()));
+                    list_inner_ref_signal.set(Some(mount_event.inner().clone()));
                 },
                 &props.children
             }

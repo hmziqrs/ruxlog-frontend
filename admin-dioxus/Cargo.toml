@@ -39,9 +39,11 @@ web-sys = { version = "0.3.69", features = [
     "NodeList",
     "EventTarget",
     "Node",
+    "AttributeNameValue"
 ] }
 lazy_static = "1.4.0"
 im = "15.1.0"
+gloo-console = "0.3.0"
 
 [features]
 default = ["web"]

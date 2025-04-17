@@ -4,7 +4,6 @@ use crate::components::command::{
     utils::use_unique_id,
 };
 use dioxus::prelude::*;
-use dioxus_signals::*;
 
 #[derive(Props, Clone, PartialEq)]
 pub struct CommandGroupProps {
@@ -17,21 +16,20 @@ pub struct CommandGroupProps {
     attributes: Vec<Attribute<'_>>,
 }
 
-pub fn CommandGroup(props: CommandGroupProps) -> Element<'_> {
-    let cx = use_hook_context();
+#[component]
+pub fn CommandGroup(props: CommandGroupProps) -> Element {
     let cmdk_context = use_command_context();
-    let generated_id = use_unique_id(cx); // Generate an ID anyway
+    let generated_id = use_unique_id(); // Generate an ID anyway
 
     // Use provided value or the generated ID as the group's identifier
-    let group_id = use_memo(cx, (props.value.clone(), generated_id), |(val, gen_id)| {
+    let group_id = use_memo((props.value.clone(), generated_id), |(val, gen_id)| {
         val.unwrap_or_else(|| gen_id.read().clone())
     });
 
-    let heading_id = use_unique_id(cx);
+    let heading_id = use_unique_id();
 
     // Determine if the group should be rendered based on filtering/force_mount
     let is_visible = use_memo(
-        cx,
         (
             props.force_mount,
             cmdk_context.should_filter,
@@ -51,7 +49,7 @@ pub fn CommandGroup(props: CommandGroupProps) -> Element<'_> {
     );
 
     // Register/Unregister Group
-    use_effect(cx, &group_id, |id_val| {
+    use_effect(&group_id, |id_val| {
         let id = id_val.clone();
         let data = GroupData {
             force_mount: props.force_mount,
@@ -67,7 +65,7 @@ pub fn CommandGroup(props: CommandGroupProps) -> Element<'_> {
     });
 
      // Update registration if force_mount changes
-     use_effect(cx, (group_id.clone(), props.force_mount), |(id_val, forced)| {
+     use_effect((group_id.clone(), props.force_mount), |(id_val, forced)| {
          let id = id_val.clone();
          let data = GroupData {
              force_mount: forced,

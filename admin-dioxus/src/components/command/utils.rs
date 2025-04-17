@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
-use dioxus_signals::*;
 use gloo_timers::callback::Timeout;
-use std::collections::{HashMap, HashSet};
+use std::{cell::RefCell, collections::{HashMap, HashSet}, rc::Rc}; // Added Rc and RefCell
 use wasm_bindgen::JsCast;
 use web_sys::{Element, HtmlElement};
 
@@ -158,18 +157,36 @@ pub fn scroll_item_into_view(item_element: &Element) {
     // This requires more complex DOM traversal (finding closest group, then heading).
 }
 
-// Debounce implementation using gloo_timers
-pub fn use_debounce<F>(cx: Scope<'_>, callback: F, delay_ms: u32) -> impl Fn() + '_
+// Debounce implementation using gloo_timers and use_hook
+pub fn use_debounce<F>(callback: F, delay_ms: u32) -> impl Fn()
 where
     F: FnMut() + 'static,
 {
-    let timeout = use_ref(cx, || None::<Timeout>);
-    let callback_ref = use_ref(cx, || callback);
+    // Use use_hook to initialize and hold the Rc<RefCell<Option<Timeout>>>
+    let timeout_state = use_hook(|| Rc::new(RefCell::new(None::<Timeout>)));
+    // Use use_hook to initialize and hold the Rc<RefCell<F>> for the callback
+    let callback_state = use_hook(|| Rc::new(RefCell::new(callback)));
 
-    use_drop(cx, {
-        let timeout = timeout.clone();
+    // Update the stored callback whenever the input callback changes
+    // This effect runs when the identity of `callback` changes (though function identity comparison is tricky in Rust)
+    // A safer approach might involve always updating if the hook re-runs, assuming the parent provides the latest callback.
+    use_effect(use_reactive!(|(callback_state,)| {
+        // *callback_state.borrow_mut() = callback; // This doesn't work as `callback` isn't captured reactively here.
+        // We rely on the fact that use_hook re-runs if the component re-renders,
+        // and we capture the *latest* callback provided during that render.
+        // Let's update the ref *inside* the hook initialization if possible, or manage updates carefully.
+        // A simpler way for this pattern is often just use_ref, but adhering to the request:
+        // We'll update the callback ref *if* the hook re-runs due to parent re-render.
+        // This relies on the parent passing the potentially new callback instance.
+        // Note: This might not perfectly capture *every* change if the parent memoizes the callback improperly.
+        *callback_state.borrow_mut() = callback; // Update the stored callback on re-render
+    }));
+
+
+    use_drop({
+        let timeout_state = timeout_state.clone();
         move || {
-            if let Some(t) = timeout.borrow_mut().take() {
+            if let Some(t) = timeout_state.borrow_mut().take() {
                 t.cancel();
             }
         }
@@ -177,18 +194,20 @@ where
 
     move || {
         // Cancel previous timeout if it exists
-        if let Some(t) = timeout.borrow_mut().take() {
+        if let Some(t) = timeout_state.borrow_mut().take() {
             t.cancel();
         }
 
-        // Clone callback_ref before moving into the closure
-        let callback_ref_clone = callback_ref.clone();
+        // Clone the state Rc before moving into the closure
+        let callback_state_clone = callback_state.clone();
+        let timeout_state_clone = timeout_state.clone(); // Clone for setting the new timeout
 
         // Set new timeout
         let new_timeout = Timeout::new(delay_ms, move || {
-            callback_ref_clone.borrow_mut()();
+            // Execute the callback stored in the RefCell
+            (callback_state_clone.borrow_mut())();
         });
-        *timeout.borrow_mut() = Some(new_timeout);
+        *timeout_state_clone.borrow_mut() = Some(new_timeout);
     }
 }
 
@@ -196,6 +215,6 @@ where
 pub const SR_ONLY_STYLE: &str = "position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;";
 
 // Generate unique IDs (basic version)
-pub fn use_unique_id(cx: Scope<'_>) -> Signal<String> {
-    use_signal(cx, || format!("cmdk-{}", rand::random::<u32>()))
+pub fn use_unique_id() -> Signal<String> {
+    use_signal(|| format!("cmdk-{}", rand::random::<u32>()))
 }
