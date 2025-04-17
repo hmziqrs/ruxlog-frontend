@@ -7,6 +7,7 @@ use dioxus_toast::{ToastInfo, ToastManager};
 use super::form::{use_login_form, LoginForm};
 use crate::config::DarkMode;
 use crate::hooks::use_previous;
+use crate::ui::shadcn::Button;
 use crate::{components::AppInput, store::use_auth};
 
 #[component]
@@ -139,10 +140,10 @@ pub fn LoginScreen() -> Element {
                                     "Forgot password?"
                                 }
                             }
-                            button {
+                            Button {
+                                class: "w-full",
                                 disabled: login_status.is_loading(),
-                                class: "w-full btn btn-lg shadow-md hover:shadow-lg transition-all duration-150 flex items-center justify-center gap-2 bg-zinc-600 hover:bg-zinc-700 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-white border-none",
-                                onclick: move |e| {
+                                onclick: move |e: Event<MouseData>| {
                                     e.prevent_default();
                                     ox_form
                                         .write()
