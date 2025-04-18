@@ -2,51 +2,23 @@
 use std::rc::Rc;
 
 use dioxus::prelude::*;
+use super::state::CommandContext;
 
-#[derive(Clone, PartialEq)]
-struct CommandContext {
-    search: String,
-    is_open: bool,
-    active_index: usize,
+#[derive(Props, PartialEq, Clone)]
+pub struct CommandRootProps {
+    #[props(extends = GlobalAttributes)]
+    attributes: Vec<Attribute>,
+
+    #[props(optional)]
+    children: Element,
 }
 
-impl CommandContext {
-    fn new() -> Self {
-        Self {
-            search: String::new(),
-            is_open: false,
-            active_index: 0,
-        }
-    }
-
-    fn set_search(&mut self, search: String) {
-        self.search = search;
-    }
-
-    fn set_open(&mut self, is_open: bool) {
-        self.is_open = is_open;
-    }
-
-    fn toggle_open(&mut self) {
-        self.is_open = !self.is_open;
-    }
-
-    fn set_active_index(&mut self, idx: usize) {
-        self.active_index = idx;
-    }
-}
-
-// Main Command component
 #[component]
-pub fn Command(children: Element) -> Element {
+pub fn Command(props: CommandRootProps) -> Element {
     use_context_provider(|| Signal::new(CommandContext::new()));
 
     rsx! {
-        div {
-            // Add necessary classes for styling
-            class: "flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground",
-            {children}
-        }
+        div { ..props.attributes,{props.children} }
     }
 }
 
