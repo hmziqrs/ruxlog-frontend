@@ -12,7 +12,6 @@ pub struct CommandRootProps {
     pub label: Option<String>,
 }
 
-
 #[derive(Props, PartialEq, Clone)]
 pub struct CommandInputProps {
     #[props(default = "Type a command or search...".to_string())]
@@ -33,9 +32,35 @@ pub struct CommandItemProps {
     pub disabled: bool,
 }
 
-
 #[derive(Props, PartialEq, Clone)]
 pub struct CommandGroupProps {
+    #[props(extends = GlobalAttributes)]
+    pub attributes: Vec<Attribute>,
+
     pub heading: Option<String>,
+    pub children: Element,
+}
+
+#[derive(Props, PartialEq, Clone)]
+pub struct CommandSeparatorProps {
+    #[props(extends = GlobalAttributes)]
+    pub attributes: Vec<Attribute>,
+}
+
+#[derive(Props, PartialEq, Clone)]
+pub struct CommandLoadingProps {
+    #[props(extends = GlobalAttributes)]
+    pub attributes: Vec<Attribute>,
+
+    #[props(optional)]
+    pub children: Element,
+}
+
+#[derive(Props, PartialEq, Clone)]
+pub struct CommandEmptyProps {
+    #[props(extends = GlobalAttributes)]
+    pub attributes: Vec<Attribute>,
+
+    #[props(optional)]
     pub children: Element,
 }

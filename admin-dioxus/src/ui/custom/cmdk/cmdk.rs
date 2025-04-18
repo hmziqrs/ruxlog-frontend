@@ -1,10 +1,9 @@
 #![allow(non_snake_case)]
 use std::rc::Rc;
 
-use super::state::CommandContext;
 use super::props::*;
+use super::state::CommandContext;
 use dioxus::prelude::*;
-
 
 #[component]
 pub fn Command(props: CommandRootProps) -> Element {
@@ -22,15 +21,12 @@ pub fn Command(props: CommandRootProps) -> Element {
     }
 }
 
-
-
-
 #[component]
 pub fn CommandInput(props: CommandInputProps) -> Element {
     let mut context = use_context::<Signal<CommandContext>>();
     let mut input_ref = use_signal(|| None as Option<Rc<MountedData>>);
     let context_read = context.read();
-    let input_id = context_read.ids.input.as_ref(); 
+    let input_id = context_read.ids.input.as_ref();
 
     // Focus input when Command is opened
     use_effect(move || {
@@ -88,8 +84,6 @@ pub fn CommandList(children: Element) -> Element {
     }
 }
 
-
-
 #[component]
 pub fn CommandItem(props: CommandItemProps) -> Element {
     let context = use_context::<Signal<CommandContext>>();
@@ -137,15 +131,15 @@ pub fn CommandItem(props: CommandItemProps) -> Element {
     }
 }
 
-
-
-
 #[component]
 pub fn CommandGroup(props: CommandGroupProps) -> Element {
+    let context = use_context::<Signal<CommandContext>>();
+    let context_read = context.read();
+    
     rsx! {
-        div { class: "overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground",
-            if let Some(h) = props.heading {
-                div { class: "[cmdk-group-heading]", "{h}" }
+        div {..props.attributes,
+            if let Some(heading) = props.heading {
+                div { "cmdk-group-heading": "", "aria-hidden": "true", {heading} }
             }
             {props.children}
         }
@@ -153,23 +147,23 @@ pub fn CommandGroup(props: CommandGroupProps) -> Element {
 }
 
 #[component]
-pub fn CommandSeparator() -> Element {
+pub fn CommandSeparator(props: CommandSeparatorProps) -> Element {
     rsx! {
-        div { class: "-mx-1 h-px bg-border" }
+
+        div { ..props.attributes }
     }
 }
 
 #[component]
-pub fn CommandLoading(children: Element) -> Element {
+pub fn CommandLoading(props: CommandLoadingProps) -> Element {
     rsx! {
-        div { class: "py-6 text-center text-sm", {children} }
+        div { ..props.attributes,{props.children} }
     }
 }
 
-
 #[component]
-pub fn CommandEmpty(children: Element) -> Element {
+pub fn CommandEmpty(props: CommandEmptyProps) -> Element {
     rsx! {
-        div { class: "py-6 text-center text-sm", {children} }
+        div { ..props.attributes,{props.children} }
     }
 }
