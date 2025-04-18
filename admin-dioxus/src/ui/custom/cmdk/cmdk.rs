@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 use std::rc::Rc;
 
-use dioxus::prelude::*;
 use super::state::CommandContext;
+use dioxus::prelude::*;
 
 #[derive(Props, PartialEq, Clone)]
 pub struct CommandRootProps {
@@ -11,14 +11,24 @@ pub struct CommandRootProps {
 
     #[props(optional)]
     children: Element,
+
+    // #[props]
+    label: Option<String>,
 }
 
 #[component]
 pub fn Command(props: CommandRootProps) -> Element {
     use_context_provider(|| Signal::new(CommandContext::new()));
 
+    let context = use_context::<Signal<CommandContext>>();
+
     rsx! {
-        div { ..props.attributes,{props.children} }
+        div { "cmdk-root": "", ..props.attributes,
+            if props.label.is_some() {
+                label { r#for: context.read().input_id.as_ref(), {props.label.unwrap()} }
+            }
+            {props.children}
+        }
     }
 }
 
@@ -41,10 +51,10 @@ pub fn CommandInput(props: CommandInputProps) -> Element {
     // Focus input when Command is opened
     use_effect(move || {
         // if context.read().is_open {
-            if let Some(input) = input_ref() {
-                spawn(async move {
-                    _ = input.set_focus(true).await;
-                });
+        if let Some(input) = input_ref() {
+            spawn(async move {
+                _ = input.set_focus(true).await;
+            });
             // }
         }
     });
@@ -107,10 +117,10 @@ pub fn CommandList(children: Element) -> Element {
 pub struct CommandItemProps {
     children: Element,
     value: Option<String>,
-    
+
     #[props(optional)]
     on_select: Option<EventHandler<()>>, // Use EventHandler for callbacks
-    
+
     #[props(default = false)]
     disabled: bool,
 }
@@ -132,7 +142,8 @@ pub fn CommandItem(props: CommandItemProps) -> Element {
     if !display_item {
         return rsx! {
             div {}
-        };     }
+        };
+    }
 
     let is_active = false;
 
@@ -212,7 +223,6 @@ pub fn CommandSeparator() -> Element {
     }
 }
 
-
 // Command Loading component (Placeholder for loading state)
 #[component]
 pub fn CommandLoading(children: Element) -> Element {
@@ -228,4 +238,3 @@ pub fn CommandLoading(children: Element) -> Element {
     }
     // Placeholder: Add logic to only render during loading state
 }
-
