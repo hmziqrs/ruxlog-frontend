@@ -56,6 +56,7 @@ pub struct ContextIds {
     pub empty: String,
     pub loading: String,
     pub heading: String,
+    pub label: String,
 }
 
 impl ContextIds {
@@ -68,6 +69,7 @@ impl ContextIds {
             empty: format!("empty-{}", id),
             loading: format!("loading-{}", id),
             heading: format!("heading-{}", id),
+            label: format!("heading-{}", id),
         }
     }
 }
