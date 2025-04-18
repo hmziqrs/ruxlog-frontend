@@ -15,14 +15,18 @@ pub struct CommandContext {
     pub search: String,
     pub is_open: bool,
     pub active_index: usize,
+    pub input_id: String,
 }
 
 impl CommandContext {
     pub fn new() -> Self {
+        // randomly generate a unique id for the input
+        let input_id = format!("cmdk-input-{}", uuid::Uuid::new_v4());
         Self {
             search: String::new(),
             is_open: false,
             active_index: 0,
+            input_id,
         }
     }
 
