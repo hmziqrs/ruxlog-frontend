@@ -3,11 +3,11 @@ use std::rc::Rc;
 
 use dioxus::prelude::*;
 
-// Context to share state between Command components
 #[derive(Clone, PartialEq)]
 struct CommandContext {
     search: String,
     is_open: bool,
+    active_index: usize,
 }
 
 impl CommandContext {
@@ -15,6 +15,7 @@ impl CommandContext {
         Self {
             search: String::new(),
             is_open: false,
+            active_index: 0,
         }
     }
 
@@ -28,6 +29,10 @@ impl CommandContext {
 
     fn toggle_open(&mut self) {
         self.is_open = !self.is_open;
+    }
+
+    fn set_active_index(&mut self, idx: usize) {
+        self.active_index = idx;
     }
 }
 
@@ -59,22 +64,52 @@ pub struct CommandInputProps {
 #[component]
 pub fn CommandInput(props: CommandInputProps) -> Element {
     let mut context = use_context::<Signal<CommandContext>>();
-    // let current_value: String = ;
+    let mut input_ref = use_signal(|| None as Option<Rc<MountedData>>);
+
+    // Focus input when Command is opened
+    use_effect(move || {
+        // if context.read().is_open {
+            if let Some(input) = input_ref() {
+                spawn(async move {
+                    _ = input.set_focus(true).await;
+                });
+            // }
+        }
+    });
 
     rsx! {
-        div {
-            // Add search icon if needed
-            class: "flex items-center border-b px-3",
-            // Icon placeholder:
-            // svg { /* Search Icon */ }
+        div { class: "flex items-center border-b px-3",
             input {
-                // Add necessary classes for styling
+                onmounted: move |cx| {
+                    input_ref.set(Some(cx.data()));
+                },
                 class: "flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
                 placeholder: "{props.placeholder}",
                 value: context.read().search.as_ref(),
                 oninput: move |evt| {
                     let new_value = evt.value();
                     context.write().set_search(new_value.clone());
+                    context.write().set_active_index(0);
+                },
+                // Keyboard navigation
+                onkeydown: move |evt| {
+                    let key = evt.key();
+                    let mut ctx = context.write();
+                    match key {
+                        Key::ArrowDown => {
+                            ctx.active_index += 1;
+                        }
+                        Key::ArrowUp => {
+                            if ctx.active_index > 0 {
+                                ctx.active_index -= 1;
+                            }
+                        }
+                        Key::Enter => {}
+                        Key::Escape => {
+                            ctx.set_open(false);
+                        }
+                        _ => {}
+                    }
                 },
             }
             {props.children}
@@ -85,11 +120,12 @@ pub fn CommandInput(props: CommandInputProps) -> Element {
 // Command List component
 #[component]
 pub fn CommandList(children: Element) -> Element {
+    // Provide a way for CommandItem to know its index
     rsx! {
         div {
-            // Add necessary classes for styling
             class: "max-h-[300px] overflow-y-auto overflow-x-hidden",
-            {children}
+            role: "listbox",
+            {children} // Render the potentially wrapped child
         }
     }
 }
@@ -126,14 +162,28 @@ pub fn CommandItem(props: CommandItemProps) -> Element {
             div {}
         };     }
 
+    let is_active = false;
+
     rsx! {
         div {
             // Add necessary classes for styling, hover, selected states
             class: "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
             "data-disabled": if props.disabled { Some("") } else { None },
-            // Add accessibility attributes like role="option"
+            role: "option",
+            "aria-selected": is_active,
+            tabindex: if is_active { Some("0") } else { None },
+            // Highlight/focus management
+            autofocus: is_active,
             onclick: move |_| {
                 if !props.disabled {
+                    if let Some(handler) = &props.on_select {
+                        handler.call(());
+                    }
+                }
+            },
+            // Keyboard selection (Enter)
+            onkeydown: move |evt| {
+                if is_active && evt.key() == Key::Enter && !props.disabled {
                     if let Some(handler) = &props.on_select {
                         handler.call(());
                     }
@@ -173,16 +223,9 @@ pub struct CommandGroupProps {
 #[component]
 pub fn CommandGroup(props: CommandGroupProps) -> Element {
     rsx! {
-        div {
-            // Add necessary classes for styling
-            class: "overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground",
-            // Add accessibility attributes like role="group"
+        div { class: "overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground",
             if let Some(h) = props.heading {
-                div {
-                    // Class for the heading itself
-                    class: "[cmdk-group-heading]",
-                    "{h}"
-                }
+                div { class: "[cmdk-group-heading]", "{h}" }
             }
             {props.children}
         }
@@ -193,73 +236,10 @@ pub fn CommandGroup(props: CommandGroupProps) -> Element {
 #[component]
 pub fn CommandSeparator() -> Element {
     rsx! {
-        div {
-            // Add necessary classes for styling
-            class: "-mx-1 h-px bg-border",
-                // Add accessibility attributes like role="separator"
-        }
+        div { class: "-mx-1 h-px bg-border" }
     }
 }
 
-// // Command Dialog Props
-// #[derive(Props, PartialEq, Clone)]
-// pub struct CommandDialogProps {
-//     /// Content to display within the Command component inside the dialog
-//     children: Element,
-//     /// Controls the open state of the dialog
-//     open: ReadOnlySignal<bool>,
-//     /// Optional title for the dialog
-//     title: Option<String>,
-//     /// Optional description for the dialog
-//     description: Option<String>,
-// }
-
-// // Command Dialog component (Wraps Command in a Dialog)
-// #[component]
-// pub fn CommandDialog(props: CommandDialogProps) -> Element {
-//     // This component assumes a Dialog component structure like shadcn/ui.
-//     // You might need to adjust based on your actual Dialog implementation.
-//     rsx! {
-//         // Dialog { // Replace with your actual Dialog component
-//         //     open: props.open,
-//         //     DialogContent {
-//         //         class: "overflow-hidden p-0 shadow-lg", // Example classes
-//         //         if let Some(t) = props.title {
-//         //             DialogHeader {
-//         //                 DialogTitle { "{t}" }
-//         //                 if let Some(d) = props.description {
-//         //                     DialogDescription { "{d}" }
-//         //                 }
-//         //             }
-//         //         }
-//         //         Command {
-//         //             // Pass necessary props or context if needed
-//         //             {props.children}
-//         //         }
-//         //     }
-//         // }
-//         // Placeholder implementation until Dialog is available:
-//         if props.open.read() {
-//             div {
-//                 // Basic styling for a modal overlay
-//                 class: "fixed inset-0 z-50 bg-black/50 flex items-center justify-center",
-//                 onclick: move |_| props.open.set(false), // Close on overlay click
-//                 div {
-//                     class: "bg-background rounded-lg shadow-lg w-full max-w-lg p-0",
-//                     onclick: |evt| evt.stop_propagation(), // Prevent closing when clicking inside dialog
-//                     if let Some(t) = &props.title {
-//                         h2 { class: "text-lg font-semibold p-4 border-b", "{t}" }
-//                         if let Some(d) = &props.description {
-//                             p { class: "text-sm text-muted-foreground p-4 pt-0", "{d}" }
-//                         }
-//                     }
-//                     // Render the actual Command content passed as children
-//                     {props.children}
-//                 }
-//             }
-//         }
-//     }
-// }
 
 // Command Loading component (Placeholder for loading state)
 #[component]
@@ -276,32 +256,4 @@ pub fn CommandLoading(children: Element) -> Element {
     }
     // Placeholder: Add logic to only render during loading state
 }
-
-// Example Usage (can be removed or moved to a different file/component)
-/*
-#[component]
-fn App() -> Element {
-    rsx! {
-        Command {
-            CommandInput {}
-            CommandList {
-                CommandEmpty { "No results found." }
-                CommandGroup {
-                    heading: "Suggestions",
-                    CommandItem { value: "calendar", "Calendar" }
-                    CommandItem { value: "search", "Search Emoji" }
-                    CommandItem { value: "calculator", "Calculator" }
-                }
-                CommandSeparator {}
-                CommandGroup {
-                    heading: "Settings",
-                    CommandItem { value: "profile", "Profile" }
-                    CommandItem { value: "billing", "Billing" }
-                    CommandItem { value: "settings", "Settings" }
-                }
-            }
-        }
-    }
-}
-*/
 
