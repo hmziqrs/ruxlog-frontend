@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use std::rc::Rc;
+use std::{fmt::format, rc::Rc};
 
 use dioxus::prelude::*;
 
@@ -15,18 +15,17 @@ pub struct CommandContext {
     pub search: String,
     pub is_open: bool,
     pub active_index: usize,
-    pub input_id: String,
+    pub ids: ContextIds,
 }
 
 impl CommandContext {
     pub fn new() -> Self {
         // randomly generate a unique id for the input
-        let input_id = format!("cmdk-input-{}", uuid::Uuid::new_v4());
         Self {
             search: String::new(),
             is_open: false,
             active_index: 0,
-            input_id,
+            ids: ContextIds::default(),
         }
     }
 
@@ -47,6 +46,29 @@ impl CommandContext {
     }
 }
 
+
+
+#[derive(Clone, PartialEq)]
+pub struct ContextIds {
+    pub root: String,
+    pub input: String,
+    pub list: String,
+    pub empty: String,
+    pub loading: String,
+}
+
+impl ContextIds {
+    pub fn default() ->Self {
+        let id = uuid::Uuid::new_v4();
+        Self {
+            root: format!("root-{}", id),
+            input: format!("input-{}", id),
+            list: format!("list-{}", id),
+            empty: format!("empty-{}", id),
+            loading: format!("loading-{}", id),
+        }
+    }
+}
 
 pub fn default_filter(value: &str, search: &str, keywords: Option<&str>) -> i32 {
     let mapped_keywords = keywords.map(|k| vec![k.to_string()]);
