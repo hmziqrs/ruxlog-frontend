@@ -74,13 +74,13 @@ pub struct CommandGroupContext {
 }
 
 impl CommandGroupContext {
-    pub fn new(node: MountedData) -> Self {
+    pub fn new(node: Rc<MountedData>) -> Self {
         let id = uuid::Uuid::new_v4();
         let id = format!("group-{}", id);
         Self {
             id,
             items: Vec::new(),
-            node: MountedDataWrapper(Rc::new(node)),
+            node: MountedDataWrapper(node),
         }
     }
 
