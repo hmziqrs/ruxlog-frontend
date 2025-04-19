@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use std::{fmt::format, rc::Rc};
 
-use dioxus::prelude::*;
+use dioxus::{prelude::*, web::WebEventExt};
 
 use super::score::command_score;
 
@@ -10,12 +10,25 @@ enum CommandUIType {
     Dialog,
 }
 
+#[derive(Clone)]
+pub struct MountedDataWrapper(Rc<MountedData>);
+
+impl PartialEq for MountedDataWrapper {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.as_web_event().id() == other.0.as_web_event().id()
+    }
+}
+
+    
+
 #[derive(Clone, PartialEq)]
 pub struct CommandContext {
     pub search: String,
     pub is_open: bool,
     pub active_index: usize,
     pub ids: ContextIds,
+    pub groups: Vec<CommandGroupContext>,
+    pub item_indexer: Vec<usize>,
 }
 
 impl CommandContext {
@@ -26,6 +39,8 @@ impl CommandContext {
             is_open: false,
             active_index: 0,
             ids: ContextIds::default(),
+            groups: Vec::new(),
+            item_indexer: Vec::new(),
         }
     }
 
@@ -44,7 +59,65 @@ impl CommandContext {
     pub fn set_active_index(&mut self, idx: usize) {
         self.active_index = idx;
     }
+
+    pub fn add_group(&mut self, group: CommandGroupContext) {
+        self.groups.push(group);
+    }
 }
+
+
+#[derive(Clone, PartialEq)]
+pub struct CommandGroupContext {
+    pub id: String,
+    pub items: Vec<CommandItemContext>,
+    pub node: MountedDataWrapper,
+}
+
+impl CommandGroupContext {
+    pub fn new(node: MountedData) -> Self {
+        let id = uuid::Uuid::new_v4();
+        let id = format!("group-{}", id);
+        Self {
+            id,
+            items: Vec::new(),
+            node: MountedDataWrapper(Rc::new(node)),
+        }
+    }
+
+    pub fn new_item(&self, index: usize, node: MountedData) -> CommandItemContext {
+        let id = format!("{}-item-{}", self.id, index);
+        CommandItemContext::new(id, index, node)
+    }
+
+    pub fn add_item(&mut self, item: CommandItemContext) {
+        self.items.push(item);
+    }
+}
+
+#[derive(Clone, PartialEq)]
+pub struct CommandItemContext {
+    pub id: String,
+    pub index: usize,
+    pub is_filtered: bool, // true if the item is filtered out
+    pub node: MountedDataWrapper,
+}
+
+impl CommandItemContext {
+    pub fn new(id: String, index: usize, node: MountedData) -> Self {
+        // let 
+        Self {
+            id,
+            index,
+            is_filtered: false,
+            node: MountedDataWrapper(Rc::new(node)),
+        }
+    }
+
+    pub fn set_filtered(&mut self, is_filtered: bool) {
+        self.is_filtered = is_filtered;
+    }
+}
+
 
 
 
