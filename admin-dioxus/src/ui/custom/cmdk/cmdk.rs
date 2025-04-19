@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
 use std::rc::Rc;
 
+use crate::ui::custom::cmdk::state::CommandGroupContext;
+
 use super::props::*;
 use super::state::CommandContext;
 use dioxus::logger::tracing;
@@ -90,6 +92,34 @@ pub fn CommandList(props: CommandListProps) -> Element {
     }
 }
 
+
+#[component]
+pub fn CommandGroup(props: CommandGroupProps) -> Element {
+    let mut context = use_context::<Signal<CommandContext>>();
+    let context_read = context.read();
+    let mut group_id = use_signal::<Option<String>>(|| None);
+
+    use_effect(|| {
+        tracing::info!("CommandGroup use_effect");
+    });
+    
+    rsx! {
+        div {
+            id: group_id.read().as_deref(),
+            onmounted: move |cx| {
+                tracing::info!("CommandGroup mounted");
+                let group = CommandGroupContext::new(cx.data().clone());
+                group_id.set(Some(group.id.clone()));
+            },
+            ..props.attributes,
+            if let Some(heading) = props.heading {
+                div { "cmdk-group-heading": "", "aria-hidden": "true", {heading} }
+            }
+            {props.children}
+        }
+    }
+}
+
 #[component]
 pub fn CommandItem(props: CommandItemProps) -> Element {
     let context = use_context::<Signal<CommandContext>>();
@@ -137,20 +167,6 @@ pub fn CommandItem(props: CommandItemProps) -> Element {
     }
 }
 
-#[component]
-pub fn CommandGroup(props: CommandGroupProps) -> Element {
-    let context = use_context::<Signal<CommandContext>>();
-    let context_read = context.read();
-    
-    rsx! {
-        div {..props.attributes,
-            if let Some(heading) = props.heading {
-                div { "cmdk-group-heading": "", "aria-hidden": "true", {heading} }
-            }
-            {props.children}
-        }
-    }
-}
 
 #[component]
 pub fn CommandSeparator(props: CommandSeparatorProps) -> Element {
