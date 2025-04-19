@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use std::rc::Rc;
 
-use crate::ui::custom::cmdk::state::CommandGroupContext;
+use crate::ui::custom::cmdk::state::{CommandGroupContext, CommandItemContext};
 
 use super::props::*;
 use super::state::CommandContext;
@@ -98,9 +98,7 @@ pub struct GroupIdContext(String);
 #[component]
 pub fn CommandGroup(props: CommandGroupProps) -> Element {
     let group_id: Signal<GroupIdContext> = use_context_provider(|| Signal::new(GroupIdContext(CommandGroupContext::generate_id())));
-
     let mut context: Signal<CommandContext> = use_context::<Signal<CommandContext>>();
-
     
     rsx! {
         div {
@@ -123,7 +121,13 @@ pub fn CommandGroup(props: CommandGroupProps) -> Element {
 
 #[component]
 pub fn CommandItem(props: CommandItemProps) -> Element {
-    let context = use_context::<Signal<CommandContext>>();
+    let group_id = use_context::<Signal<GroupIdContext>>();
+    let item_id = use_signal(|| CommandItemContext::generate_id());
+    let mut item_index = use_signal::<Option<i32>>(|| None);
+
+
+    let mut context = use_context::<Signal<CommandContext>>();
+
     let search_term = context.read().search.clone();
 
     let display_item = if let Some(val) = &props.value {
@@ -140,13 +144,22 @@ pub fn CommandItem(props: CommandItemProps) -> Element {
 
     let is_active = false;
 
+    let index = item_index.read();
+
     rsx! {
         div {
-            onmounted: move |cx| {},
-            "data-disabled": if props.disabled { Some("") } else { None },
+            "cmdk-index": if index.is_some() { index.unwrap().to_string() },
+            id: item_id.read().as_ref(),
+            onmounted: move |cx| {
+                let len = context.peek().item_indexer.len();
+                item_index.set(Some(len.clone() as i32));
+                context.write().item_indexer.push(len);
+            },
+            "emdata-disabled": if props.disabled { Some("") } else { None },
             role: "option",
             "aria-selected": is_active,
-            tabindex: if is_active { Some("0") } else { None },
+            tabindex: "0",
+            // tabindex: if is_active { Some("0") } else { None },
             autofocus: is_active,
             onclick: move |_| {
                 if !props.disabled {
