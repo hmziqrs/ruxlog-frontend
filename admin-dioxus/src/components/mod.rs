@@ -1,5 +1,4 @@
 mod input;
-pub mod shadcn_ui;
 mod sidebar;
 mod toast;
 // mod command;
