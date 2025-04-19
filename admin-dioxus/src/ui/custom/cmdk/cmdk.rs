@@ -76,6 +76,7 @@ pub fn CommandInput(props: CommandInputProps) -> Element {
                     context.write().set_search(new_value.clone());
                     context.write().set_active_index(0);
                 },
+                ..props.attributes,
             }
             {props.children}
         }
@@ -83,9 +84,9 @@ pub fn CommandInput(props: CommandInputProps) -> Element {
 }
 
 #[component]
-pub fn CommandList(children: Element) -> Element {
+pub fn CommandList(props: CommandListProps) -> Element {
     rsx! {
-        div { role: "listbox", {children} }
+        div { role: "listbox", ..props.attributes, {props.children} }
     }
 }
 
@@ -110,7 +111,6 @@ pub fn CommandItem(props: CommandItemProps) -> Element {
 
     rsx! {
         div {
-            class: "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
             "data-disabled": if props.disabled { Some("") } else { None },
             role: "option",
             "aria-selected": is_active,
@@ -131,6 +131,7 @@ pub fn CommandItem(props: CommandItemProps) -> Element {
                     }
                 }
             },
+            ..props.attributes,
             {props.children}
         }
     }

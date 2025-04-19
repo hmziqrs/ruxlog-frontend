@@ -9,13 +9,25 @@ pub struct CommandRootProps {
     pub children: Element,
 
     // #[props]
-    pub label: Option<String>,
+    pub label: Option<String>,    
 }
 
 #[derive(Props, PartialEq, Clone)]
 pub struct CommandInputProps {
     #[props(default = "Type a command or search...".to_string())]
     pub placeholder: String,
+
+    #[props(optional)]
+    pub children: Element,
+
+    #[props(extends = GlobalAttributes)]
+    pub attributes: Vec<Attribute>,
+}
+
+#[derive(Props, PartialEq, Clone)]
+pub struct CommandListProps {
+    #[props(extends = GlobalAttributes)]
+    pub attributes: Vec<Attribute>,
 
     #[props(optional)]
     pub children: Element,
@@ -30,6 +42,9 @@ pub struct CommandItemProps {
 
     #[props(default = false)]
     pub disabled: bool,
+
+    #[props(extends = GlobalAttributes)]
+    pub attributes: Vec<Attribute>,
 }
 
 #[derive(Props, PartialEq, Clone)]
