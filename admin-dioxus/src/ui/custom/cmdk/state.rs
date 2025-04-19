@@ -97,12 +97,6 @@ impl CommandGroupContext {
         }
     }
 
-
-    pub fn new_item(&self, index: usize, node: MountedData) -> CommandItemContext {
-        let id = format!("{}-item-{}", self.id, index);
-        CommandItemContext::new(id, index, node)
-    }
-
     pub fn add_item(&mut self, item: CommandItemContext) {
         self.items.push(item);
     }
@@ -125,6 +119,11 @@ impl CommandItemContext {
             is_filtered: false,
             node: MountedDataWrapper(Rc::new(node)),
         }
+    }
+
+    pub fn generate_id() -> String {
+        let id = uuid::Uuid::new_v4();
+        format!("cmdk-item-{}", id)
     }
 
     pub fn set_filtered(&mut self, is_filtered: bool) {
