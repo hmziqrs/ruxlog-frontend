@@ -92,24 +92,25 @@ pub fn CommandList(props: CommandListProps) -> Element {
     }
 }
 
+#[derive(Clone, PartialEq)]
+pub struct GroupIdContext(String);
 
 #[component]
 pub fn CommandGroup(props: CommandGroupProps) -> Element {
-    let mut context = use_context::<Signal<CommandContext>>();
-    let context_read = context.read();
-    let mut group_id = use_signal::<Option<String>>(|| None);
+    let group_id: Signal<GroupIdContext> = use_context_provider(|| Signal::new(GroupIdContext(CommandGroupContext::generate_id())));
 
-    use_effect(|| {
-        tracing::info!("CommandGroup use_effect");
-    });
+    let mut context: Signal<CommandContext> = use_context::<Signal<CommandContext>>();
+
     
     rsx! {
         div {
-            id: group_id.read().as_deref(),
+            id: group_id.read().0.as_ref(),
             onmounted: move |cx| {
-                tracing::info!("CommandGroup mounted");
-                let group = CommandGroupContext::new(cx.data().clone());
-                group_id.set(Some(group.id.clone()));
+                let group = CommandGroupContext::new(
+                    group_id.peek().0.clone(),
+                    cx.data().clone(),
+                );
+                context.write().add_group(group);
             },
             ..props.attributes,
             if let Some(heading) = props.heading {
@@ -141,6 +142,7 @@ pub fn CommandItem(props: CommandItemProps) -> Element {
 
     rsx! {
         div {
+            onmounted: move |cx| {},
             "data-disabled": if props.disabled { Some("") } else { None },
             role: "option",
             "aria-selected": is_active,
