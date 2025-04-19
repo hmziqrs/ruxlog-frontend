@@ -2,6 +2,7 @@
 use std::{fmt::format, rc::Rc};
 
 use dioxus::{prelude::*, web::WebEventExt};
+use im::HashMap;
 
 use super::score::command_score;
 
@@ -27,7 +28,7 @@ pub struct CommandContext {
     pub is_open: bool,
     pub active_index: usize,
     pub ids: ContextIds,
-    pub groups: Vec<CommandGroupContext>,
+    pub groups: HashMap<String, CommandGroupContext>,
     pub item_indexer: Vec<usize>,
 }
 
@@ -39,7 +40,7 @@ impl CommandContext {
             is_open: false,
             active_index: 0,
             ids: ContextIds::default(),
-            groups: Vec::new(),
+            groups: HashMap::new(),
             item_indexer: Vec::new(),
         }
     }
@@ -61,7 +62,7 @@ impl CommandContext {
     }
 
     pub fn add_group(&mut self, group: CommandGroupContext) {
-        self.groups.push(group);
+        self.groups.insert(group.id.clone(), group);
     }
 }
 
@@ -74,15 +75,28 @@ pub struct CommandGroupContext {
 }
 
 impl CommandGroupContext {
-    pub fn new(node: Rc<MountedData>) -> Self {
+    pub fn default(node: Rc<MountedData>) -> Self {
+        
+        Self {
+            id: CommandGroupContext::generate_id(),
+            items: Vec::new(),
+            node: MountedDataWrapper(node),
+        }
+    }
+
+    pub fn generate_id() -> String {
         let id = uuid::Uuid::new_v4();
-        let id = format!("group-{}", id);
+        format!("cmdk-group-{}", id)
+    }
+
+    pub fn new(id: String, node: Rc<MountedData>) -> Self {
         Self {
             id,
             items: Vec::new(),
             node: MountedDataWrapper(node),
         }
     }
+
 
     pub fn new_item(&self, index: usize, node: MountedData) -> CommandItemContext {
         let id = format!("{}-item-{}", self.id, index);
