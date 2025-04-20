@@ -11,10 +11,14 @@ use im::HashMap;
 #[derive(Props, PartialEq, Clone)]
 pub struct CommandListProps {
     pub data: Vec<CommandListItem>,
-    pub initial_selected: CommandListItem,
-    pub children: Element,
-    pub on_select: fn(CommandListItem),
+    // pub initial_selected: CommandListItem,
+    // pub children: Element,
+    // #[props(optional)]
+    // pub on_select: fn(CommandListItem),
+
+    #[props(optional)]
     pub reset_on_select: bool,
+
     pub groups: Vec<String>
 }
 
@@ -24,6 +28,16 @@ pub struct CommandListItem {
     pub value: String,
     pub group_id: String,
     pub disabled: bool,
+}
+
+impl CommandListItem {
+    pub fn new(group_id: String, label: String,  value: Option<String>, disabled: bool) -> Self {
+        let value = match value {
+            Some(v) => v,
+            None => label.clone().to_lowercase().replace(" ", "-"),
+        };
+        Self { label, value, group_id, disabled }
+    }
 }
 
 #[derive(PartialEq, Clone)]
@@ -102,5 +116,31 @@ impl CommandContext {
         }
 
         self.groups = g_map.into_iter().map(|(_, v)| v).collect();
+    }
+
+    pub fn set_next_index(&mut self) {
+        if self.active_index < self.groups.len() as i32 - 1 {
+            self.active_index += 1;
+        } else {
+            self.active_index = 0;
+        }
+    }
+
+    pub fn set_prev_index(&mut self) {
+        if self.active_index > 0 {
+            self.active_index -= 1;
+        } else {
+            self.active_index = (self.groups.len() - 1) as i32;
+        }
+    }
+
+    pub fn set_active_index(&mut self, index: i32) {
+        if index < 0 {
+            self.active_index = 0;
+        } else if index >= self.groups.len() as i32 {
+            self.active_index = (self.groups.len() - 1) as i32;
+        } else {
+            self.active_index = index;
+        }
     }
 }

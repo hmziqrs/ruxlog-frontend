@@ -1,5 +1,4 @@
 mod portal;
-mod cmdk;
+pub mod cmdk;
 
 pub use portal::*;
-pub use cmdk::*;
