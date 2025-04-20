@@ -1,9 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::ui::{
-    custom::cmdk::*,
-    shadcn::{TabItem, Tabs, TabsState},
-};
+use crate::ui::{custom::cmdk::*, shadcn::*};
 
 #[component]
 pub fn CategoryListScreen() -> Element {
@@ -37,6 +34,16 @@ pub fn CategoryListScreen() -> Element {
 
     rsx! {
         div { "Category List (placeholder)" }
+        Accordion { class: "my-accordion",
+            AccordionItem { value: 0,
+                AccordionTrigger { "Accordion Item 1" }
+                AccordionContent { "Content for accordion item 1" }
+            }
+            AccordionItem { value: 1,
+                AccordionTrigger { "Accordion Item 2" }
+                AccordionContent { "Content for accordion item 2" }
+            }
+        }
         Tabs { state: tab_state }
         Cmdk { groups, data, reset_on_select: true }
     }
