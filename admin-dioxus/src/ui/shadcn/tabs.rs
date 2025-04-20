@@ -2,14 +2,11 @@ use dioxus::{html::button::disabled, prelude::*};
 
 #[derive(Props, PartialEq, Clone)]
 pub struct TabsProps {
-    /// Additional CSS classes to apply to the tabs
     #[props(default)]
     pub class: Option<String>,
-    /// The tabs data
-    pub tabs: Vec<TabItem>,
-    /// Default active tab index
-    #[props(default)]
-    pub default_index: usize,
+
+    pub state: Signal<TabsState>,
+
 }
 
 #[derive(PartialEq, Clone)]
@@ -28,7 +25,7 @@ impl TabItem {
 }
 
 #[derive(PartialEq, Clone)]
-struct TabsState {
+pub struct TabsState {
     active_index: usize,
     items: Vec<TabItem>,
 }
@@ -92,7 +89,7 @@ impl TabsState {
 /// A simple tabs component
 #[component]
 pub fn Tabs(props: TabsProps) -> Element {
-    let mut state = use_signal(|| TabsState::new(props.tabs.clone(), props.default_index));
+    let mut state = props.state;
     let active_index = state.read().active_index;
     
     let mut class = vec!["flex flex-col gap-2".to_string()];
