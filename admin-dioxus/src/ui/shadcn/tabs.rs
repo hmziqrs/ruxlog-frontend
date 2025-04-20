@@ -1,4 +1,7 @@
+use std::rc::Rc;
+
 use dioxus::{html::button::disabled, logger::tracing, prelude::*};
+use im::HashMap;
 
 #[derive(Props, PartialEq, Clone)]
 pub struct TabsProps {
@@ -94,6 +97,7 @@ impl TabsState {
 pub fn Tabs(props: TabsProps) -> Element {
     let mut state = props.state;
     let active_index = state.read().active_index;
+    let mut refs = use_signal(|| HashMap::<usize, Rc<MountedData>>::new());
     
     let mut class = vec!["flex flex-col gap-2".to_string()];
     if let Some(custom_class) = props.class.clone() {
@@ -111,16 +115,28 @@ pub fn Tabs(props: TabsProps) -> Element {
                     Key::ArrowRight => {
                         state.write().next_tab();
                     }
+                    Key::Enter => {
+                        let current_active_index = state.read().active_index;
+                        let maybe_mounted = refs.read().get(&current_active_index).cloned();
+                        if let Some(mounted) = maybe_mounted {
+                            spawn(async move {
+                                let _ = mounted.set_focus(true).await;
+                            });
+                        }
+                    }
                     _ => {}
                 }
             },
             class: class.join(" "),
             // Tab list
             div { class: "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]",
-                // Tab buttons
+                // Tab buttonsc
                 for (i , tab) in state.read().items.clone().into_iter().enumerate() {
                     button {
                         tabindex: if !tab.disable { "0" } else { "-1" },
+                        onmounted: move |mounted| {
+                            refs.write().insert(i, mounted.data());
+                        },
                         class: format!(
                             "inline-flex h-[calc(100%-1px)] items-center justify-center rounded-md px-3 py-1 text-sm font-medium transition-all {} {}",
                             if i == active_index { "bg-background shadow-sm text-foreground" } else { "" },
