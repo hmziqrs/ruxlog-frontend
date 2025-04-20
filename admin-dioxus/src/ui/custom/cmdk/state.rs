@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use dioxus::{logger::tracing, prelude::*};
 use im::HashMap;
 
 // So idea is we will always have consumable list from the props
@@ -96,6 +96,7 @@ impl CommandContext {
     }
 
     pub fn set_search(&mut self, search: String) {
+        tracing::info!("YOO ?");
         self.search = search;
 
         self.active_index = 0;
