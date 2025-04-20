@@ -34,7 +34,7 @@ pub fn CategoryListScreen() -> Element {
 
     rsx! {
         div { "Category List (placeholder)" }
-        Accordion { class: "my-accordion",
+        Accordion {
             AccordionItem { value: 0,
                 AccordionTrigger { "Accordion Item 1" }
                 AccordionContent { "Content for accordion item 1" }

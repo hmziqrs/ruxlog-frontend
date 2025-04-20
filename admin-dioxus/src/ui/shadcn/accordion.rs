@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use hmziq_dioxus_free_icons::icons::ld_icons::LdArrowDown;
+use hmziq_dioxus_free_icons::icons::ld_icons::{ LdChevronDown, };
 use hmziq_dioxus_free_icons::Icon;
 
 #[derive(PartialEq, Clone)]
@@ -92,6 +92,9 @@ pub fn AccordionTrigger(props: AccordionTriggerProps) -> Element {
     let mut state_context = use_context::<Signal<AccordionContext>>();
     let item_context = use_context::<Signal<AccordionItemState>>();
     let item_value = item_context.read().0;
+    let open_value = state_context.read().open_value;
+    let is_open = open_value == Some(item_value);
+
     rsx! {
         div { class: "flex", ..props.attributes,
             button {
@@ -107,8 +110,12 @@ pub fn AccordionTrigger(props: AccordionTriggerProps) -> Element {
                 },
                 {props.children}
                 // Simple chevron icon replacement
-                div { class: "pointer-events-none w-4 h-4 shrink-0 translate-y-0.5 transition-transform duration-200",
-                    Icon { icon: LdArrowDown }
+                div {
+                    class: format!(
+                        "pointer-events-none w-4 h-4 shrink-0 translate-y-0.5 transition-transform duration-200 {}",
+                        if is_open { "rotate-180" } else { "" },
+                    ),
+                    Icon { icon: LdChevronDown }
                 }
             }
         }
