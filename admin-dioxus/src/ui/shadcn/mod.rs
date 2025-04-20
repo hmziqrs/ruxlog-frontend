@@ -9,6 +9,7 @@ mod collapsible;
 mod dialog;
 mod dropdown_menu;
 mod tabs;
+mod accordion;
 
 pub use alert::*;
 pub use avatar::*;
@@ -21,3 +22,4 @@ pub use collapsible::*;
 pub use dialog::*;
 pub use dropdown_menu::*;
 pub use tabs::*;
+pub use accordion::*;
