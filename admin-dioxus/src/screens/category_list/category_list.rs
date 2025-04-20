@@ -34,6 +34,23 @@ pub fn CategoryListScreen() -> Element {
 
     rsx! {
         div { "Category List (placeholder)" }
+        Breadcrumb {
+            BreadcrumbList {
+                BreadcrumbItem {
+                    BreadcrumbLink { href: "/", "Home" }
+                }
+                BreadcrumbSeparator {}
+                BreadcrumbItem { BreadcrumbEllipsis {} }
+                BreadcrumbSeparator {}
+                BreadcrumbItem {
+                    BreadcrumbLink { href: "/blogs/tech", "Tech" }
+                }
+                BreadcrumbSeparator {}
+                BreadcrumbItem {
+                    BreadcrumbPage { "Current Article" }
+                }
+            }
+        }
         Accordion {
             AccordionItem { value: 0,
                 AccordionTrigger { "Accordion Item 1" }

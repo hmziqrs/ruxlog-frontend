@@ -3,61 +3,77 @@ use hmziq_dioxus_free_icons::{Icon, icons::ld_icons::{LdChevronRight, LdEllipsis
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BreadcrumbProps {
+    /// Child elements to render inside the component
+    pub children: Element,
+    /// Additional CSS classes to apply
     #[props(default)]
-    class: Option<String>,
-    children: Element,
+    pub class: Option<String>,
 }
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BreadcrumbListProps {
+    /// Child elements to render inside the component
+    pub children: Element,
+    /// Additional CSS classes to apply
     #[props(default)]
-    class: Option<String>,
-    children: Element,
+    pub class: Option<String>,
 }
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BreadcrumbItemProps {
+    /// Child elements to render inside the component
+    pub children: Element,
+    /// Additional CSS classes to apply
     #[props(default)]
-    class: Option<String>,
-    children: Element,
+    pub class: Option<String>,
 }
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BreadcrumbLinkProps {
+    /// Child elements to render inside the component
+    pub children: Element,
+    /// Additional CSS classes to apply
     #[props(default)]
-    class: Option<String>,
-    href: String,
-    children: Element,
+    pub class: Option<String>,
+    /// Link URL
+    pub href: String,
 }
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BreadcrumbPageProps {
+    /// Child elements to render inside the component
+    pub children: Element,
+    /// Additional CSS classes to apply
     #[props(default)]
-    class: Option<String>,
-    children: Element,
+    pub class: Option<String>,
 }
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BreadcrumbSeparatorProps {
+    /// Custom separator element (optional)
     #[props(default)]
-    class: Option<String>,
+    pub children: Option<Element>,
+    /// Additional CSS classes to apply
     #[props(default)]
-    children: Option<Element>,
+    pub class: Option<String>,
 }
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BreadcrumbEllipsisProps {
+    /// Additional CSS classes to apply
     #[props(default)]
-    class: Option<String>,
+    pub class: Option<String>,
 }
 
 #[component]
 pub fn Breadcrumb(props: BreadcrumbProps) -> Element {
+    let class_str = props.class.clone().unwrap_or_default();
+    
     rsx! {
         nav {
-            "aria-label": "breadcrumb",
             "data-slot": "breadcrumb",
-            class: props.class,
+            "aria-label": "breadcrumb",
+            class: class_str,
             {props.children}
         }
     }
@@ -66,40 +82,35 @@ pub fn Breadcrumb(props: BreadcrumbProps) -> Element {
 #[component]
 pub fn BreadcrumbList(props: BreadcrumbListProps) -> Element {
     let mut class = vec!["text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm break-words sm:gap-2.5".to_string()];
-    if let Some(custom_class) = props.class {
-        class.push(custom_class);
+    
+    if let Some(custom_class) = &props.class {
+        class.push(custom_class.clone());
     }
 
     rsx! {
-        ol {
-            "data-slot": "breadcrumb-list",
-            class: class.join(" "),
-            {props.children}
-        }
+        ol { "data-slot": "breadcrumb-list", class: class.join(" "), {props.children} }
     }
 }
 
 #[component]
 pub fn BreadcrumbItem(props: BreadcrumbItemProps) -> Element {
     let mut class = vec!["inline-flex items-center gap-1.5".to_string()];
-    if let Some(custom_class) = props.class {
-        class.push(custom_class);
+    
+    if let Some(custom_class) = &props.class {
+        class.push(custom_class.clone());
     }
 
     rsx! {
-        li {
-            "data-slot": "breadcrumb-item",
-            class: class.join(" "),
-            {props.children}
-        }
+        li { "data-slot": "breadcrumb-item", class: class.join(" "), {props.children} }
     }
 }
 
 #[component]
 pub fn BreadcrumbLink(props: BreadcrumbLinkProps) -> Element {
     let mut class = vec!["hover:text-foreground transition-colors".to_string()];
-    if let Some(custom_class) = props.class {
-        class.push(custom_class);
+    
+    if let Some(custom_class) = &props.class {
+        class.push(custom_class.clone());
     }
 
     rsx! {
@@ -115,8 +126,9 @@ pub fn BreadcrumbLink(props: BreadcrumbLinkProps) -> Element {
 #[component]
 pub fn BreadcrumbPage(props: BreadcrumbPageProps) -> Element {
     let mut class = vec!["text-foreground font-normal".to_string()];
-    if let Some(custom_class) = props.class {
-        class.push(custom_class);
+    
+    if let Some(custom_class) = &props.class {
+        class.push(custom_class.clone());
     }
 
     rsx! {
@@ -134,21 +146,34 @@ pub fn BreadcrumbPage(props: BreadcrumbPageProps) -> Element {
 #[component]
 pub fn BreadcrumbSeparator(props: BreadcrumbSeparatorProps) -> Element {
     let mut class = vec!["[&>svg]:size-3.5".to_string()];
-    if let Some(custom_class) = props.class {
-        class.push(custom_class);
+    
+    if let Some(custom_class) = &props.class {
+        class.push(custom_class.clone());
     }
 
-    rsx! {
-        li {
-            "data-slot": "breadcrumb-separator",
-            role: "presentation",
-            "aria-hidden": "true",
-            class: class.join(" "),
-            {props.children.unwrap_or_else(|| rsx! {
-                div { class: "h-3.5 w-3.5",
-                    Icon { icon: LdChevronRight {} }
+    // Using match for conditional rendering based on props.children
+    match &props.children {
+        Some(children) => {
+            rsx! {
+                li {
+                    "data-slot": "breadcrumb-separator",
+                    role: "presentation",
+                    "aria-hidden": "true",
+                    class: class.join(" "),
+                    {children}
                 }
-            })}
+            }
+        },
+        None => {
+            rsx! {
+                li {
+                    "data-slot": "breadcrumb-separator",
+                    role: "presentation",
+                    "aria-hidden": "true",
+                    class: class.join(" "),
+                    Icon { icon: LdChevronRight }
+                }
+            }
         }
     }
 }
@@ -156,8 +181,9 @@ pub fn BreadcrumbSeparator(props: BreadcrumbSeparatorProps) -> Element {
 #[component]
 pub fn BreadcrumbEllipsis(props: BreadcrumbEllipsisProps) -> Element {
     let mut class = vec!["flex size-9 items-center justify-center".to_string()];
-    if let Some(custom_class) = props.class {
-        class.push(custom_class);
+    
+    if let Some(custom_class) = &props.class {
+        class.push(custom_class.clone());
     }
 
     rsx! {
@@ -166,9 +192,7 @@ pub fn BreadcrumbEllipsis(props: BreadcrumbEllipsisProps) -> Element {
             role: "presentation",
             "aria-hidden": "true",
             class: class.join(" "),
-            div { class: "size-4",
-                Icon { icon: LdEllipsis {} }
-            }
+            Icon { icon: LdEllipsis }
             span { class: "sr-only", "More" }
         }
     }
