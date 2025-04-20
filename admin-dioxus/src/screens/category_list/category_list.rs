@@ -7,20 +7,18 @@ pub fn CategoryListScreen() -> Element {
         let tabs = vec![
         TabItem::new(
             "First Tab".to_string(), 
-            "Content for first tab".to_string(), 
             false
         ),
         TabItem::new(
             "Second Tab".to_string(), 
-            "Content for second tab".to_string(), 
             false
         ),
         TabItem::new(
             "Disabled Tab".to_string(), 
-            "You won't see this content".to_string(), 
             true
         ),
     ];
+    
     let groups = vec!["Settings".to_string(), "Suggestions".to_string(), "Other".to_string()];
     
     let data = vec![
