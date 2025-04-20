@@ -8,6 +8,7 @@ mod checkbox;
 mod collapsible;
 mod dialog;
 mod dropdown_menu;
+mod tabs;
 
 pub use alert::*;
 pub use avatar::*;
@@ -19,3 +20,4 @@ pub use checkbox::*;
 pub use collapsible::*;
 pub use dialog::*;
 pub use dropdown_menu::*;
+pub use tabs::*;
