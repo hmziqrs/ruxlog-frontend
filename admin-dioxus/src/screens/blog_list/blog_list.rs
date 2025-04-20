@@ -243,7 +243,7 @@ fn PostGridCard(post: Post) -> Element {
 #[component]
 fn PostListItem(post: Post) -> Element {
     rsx! {
-        Card { class: "overflow-hidden transition-all hover:shadow-md dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800",
+        Card { class: "pt-0 pb-0 overflow-hidden transition-all hover:shadow-md dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800",
             div { class: "flex flex-col md:flex-row",
                 // Featured image
                 if let Some(featured_image) = &post.featured_image_url {
