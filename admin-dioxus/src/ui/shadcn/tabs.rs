@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use dioxus::{html::button::disabled, prelude::*};
 
 #[derive(Props, PartialEq, Clone)]
 pub struct TabsProps {
@@ -15,15 +15,13 @@ pub struct TabsProps {
 #[derive(PartialEq, Clone)]
 pub struct TabItem {
     pub label: String,
-    pub content: String,
     pub disabled: bool,
 }
 
 impl TabItem {
-    pub fn new(label: String, content: String, disabled: bool) -> Self {
+    pub fn new(label: String, disabled: bool) -> Self {
         Self {
             label,
-            content,
             disabled,
         }
     }
@@ -36,16 +34,57 @@ struct TabsState {
 }
 
 impl TabsState {
-    fn new(tabs: Vec<TabItem>, default_index: usize) -> Self {
+    pub fn new(tabs: Vec<TabItem>, default_index: usize) -> Self {
         Self {
             active_index: default_index,
             items: tabs,
         }
     }
     
-    fn set_active_tab(&mut self, index: usize) {
+    pub fn set_active_tab(&mut self, index: usize) {
         if index < self.items.len() && !self.items[index].disabled {
             self.active_index = index;
+        }
+    }
+
+    pub fn next_tab(&mut self) {
+        let initial_tab = self.active_index.clone();
+        loop {
+            let next_tab = {
+                if self.active_index + 1 >= self.items.len() {
+                    0
+                } else {
+                    self.active_index + 1
+                }
+            };
+            if self.items[next_tab].disabled {
+                continue;
+            }
+            if next_tab == initial_tab {
+                break;
+            }
+            self.active_index = next_tab;
+            break;
+        }
+    }
+
+    pub fn prev_tab(&mut self) {
+        let initial_tab = self.active_index.clone();
+        loop {
+            let prev_tab = {
+                if self.active_index == 0 {
+                    self.items.len() - 1
+                } else {
+                    self.active_index - 1
+                }
+            };
+            if self.items[prev_tab].disabled {
+                continue;
+            }
+            if prev_tab == initial_tab {
+                break;
+            }
+            self.active_index = prev_tab;
         }
     }
 }
@@ -55,7 +94,6 @@ impl TabsState {
 pub fn Tabs(props: TabsProps) -> Element {
     let mut state = use_signal(|| TabsState::new(props.tabs.clone(), props.default_index));
     let active_index = state.read().active_index;
-    let active_content = state.read().items[active_index].content.clone();
     
     let mut class = vec!["flex flex-col gap-2".to_string()];
     if let Some(custom_class) = props.class.clone() {
@@ -81,9 +119,6 @@ pub fn Tabs(props: TabsProps) -> Element {
                         {tab.label}
                     }
                 }
-            }
-            div { class: "mt-2",
-                div { class: "p-4 rounded-md", {active_content} }
             }
         }
     }
