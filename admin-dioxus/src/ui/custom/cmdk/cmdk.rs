@@ -15,15 +15,15 @@ pub fn Cmdk(props: CommandListProps) -> Element {
             div { class: "cmdk-input",
                 input {
                     value: state.read().search.clone(),
-                    // oninput: move |_| {
-                    //     tracing::info!("INNN");
-                    // },
                     oninput: move |e| {
                         let value = e.value();
                         tracing::info!("onchange: {}", value);
                         state.write().set_search(value);
                     },
                 }
+            }
+            if read.is_empty {
+                div { class: "cmdk-empty", "No results found" }
             }
             div { class: "cmdk-list",
                 {

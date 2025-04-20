@@ -19,7 +19,23 @@ pub struct CommandListProps {
     #[props(optional)]
     pub reset_on_select: bool,
 
-    pub groups: Vec<String>
+    pub groups: Vec<String>,
+}
+
+
+#[derive(PartialEq, Clone)]
+pub struct CommandListGroup {
+    pub label: String,
+    pub id: String,
+    pub items: Vec<CommandListItem>,
+}
+
+impl CommandListGroup {
+    pub fn new(label: String, id: String, items: Vec<CommandListItem>) -> Self {
+        // to create it. lowercase, trim, replace spaces with dashes
+        // let id = label.to_lowercase().trim().replace(" ", "-");
+        Self { label, items, id }
+    }
 }
 
 #[derive( PartialEq, Clone)]
@@ -46,26 +62,12 @@ pub struct CommandContext {
     pub active_index: i32,
     pub selected_index: i32,
     pub groups: Vec<CommandListGroup>,
+    pub is_empty: bool,
 
     // This shouldn't be exposed
     internal_groups: Vec<String>,
     list: Vec<CommandListItem>,
     reset_on_select: bool,
-}
-
-#[derive(PartialEq, Clone)]
-pub struct CommandListGroup {
-    pub label: String,
-    pub id: String,
-    pub items: Vec<CommandListItem>,
-}
-
-impl CommandListGroup {
-    pub fn new(label: String, id: String, items: Vec<CommandListItem>) -> Self {
-        // to create it. lowercase, trim, replace spaces with dashes
-        // let id = label.to_lowercase().trim().replace(" ", "-");
-        Self { label, items, id }
-    }
 }
 
 
@@ -87,6 +89,7 @@ impl CommandContext {
             active_index: 0,
             selected_index: 0,
             groups: parsed_groups,
+            is_empty: if list.len() > 0 { false } else { true },
 
 
             internal_groups: groups.clone(),
@@ -117,6 +120,7 @@ impl CommandContext {
         }
 
         self.groups = g_map.into_iter().map(|(_, v)| v).collect();
+        self.is_empty = if self.groups.len() > 0 { false } else { true };
     }
 
     pub fn set_next_index(&mut self) {
