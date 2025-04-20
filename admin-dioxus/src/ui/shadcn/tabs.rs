@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use dioxus::{html::button::disabled, logger::tracing, prelude::*};
+use dioxus::{logger::tracing, prelude::*};
 use im::HashMap;
 
 #[derive(Props, PartialEq, Clone)]
