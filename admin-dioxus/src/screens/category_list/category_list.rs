@@ -1,9 +1,26 @@
 use dioxus::prelude::*;
 
-use crate::ui::custom::cmdk::*;
+use crate::ui::{custom::cmdk::*, shadcn::{TabItem, Tabs}};
 
 #[component]
 pub fn CategoryListScreen() -> Element {
+        let tabs = vec![
+        TabItem::new(
+            "First Tab".to_string(), 
+            "Content for first tab".to_string(), 
+            false
+        ),
+        TabItem::new(
+            "Second Tab".to_string(), 
+            "Content for second tab".to_string(), 
+            false
+        ),
+        TabItem::new(
+            "Disabled Tab".to_string(), 
+            "You won't see this content".to_string(), 
+            true
+        ),
+    ];
     let groups = vec!["Settings".to_string(), "Suggestions".to_string(), "Other".to_string()];
     
     let data = vec![
@@ -25,6 +42,7 @@ pub fn CategoryListScreen() -> Element {
 
     rsx! {
         div { "Category List (placeholder)" }
+        Tabs { tabs, default_index: 0 }
         Cmdk { groups, data, reset_on_select: true }
     }
 }
