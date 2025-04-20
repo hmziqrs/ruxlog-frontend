@@ -1,4 +1,4 @@
-use dioxus::{html::button::disabled, prelude::*};
+use dioxus::{html::button::disabled, logger::tracing, prelude::*};
 
 #[derive(Props, PartialEq, Clone)]
 pub struct TabsProps {
@@ -47,20 +47,21 @@ impl TabsState {
     pub fn next_tab(&mut self) {
         let initial_tab = self.active_index.clone();
         loop {
-            let next_tab = {
-                if self.active_index + 1 >= self.items.len() {
+            tracing::info!("next_tab: {}", initial_tab);
+            self.active_index = {
+                if self.active_index + 1 >= self.items.len()-1 {
                     0
                 } else {
                     self.active_index + 1
                 }
             };
-            if self.items[next_tab].disable {
+            if self.items[self.active_index].disable {
                 continue;
             }
-            if next_tab == initial_tab {
+            if self.active_index == initial_tab {
                 break;
             }
-            self.active_index = next_tab;
+            self.active_index = self.active_index;
             break;
         }
     }
@@ -68,20 +69,22 @@ impl TabsState {
     pub fn prev_tab(&mut self) {
         let initial_tab = self.active_index.clone();
         loop {
-            let prev_tab = {
+            tracing::info!("prev_tab: {}", initial_tab);
+            self.active_index = {
                 if self.active_index == 0 {
                     self.items.len() - 1
                 } else {
-                    self.active_index - 1
+                    self.active_index-1
                 }
             };
-            if self.items[prev_tab].disable {
+            if self.items[self.active_index].disable {
                 continue;
             }
-            if prev_tab == initial_tab {
+            if self.active_index == initial_tab {
                 break;
             }
-            self.active_index = prev_tab;
+            self.active_index = self.active_index;
+            break;
         }
     }
 }
@@ -117,6 +120,7 @@ pub fn Tabs(props: TabsProps) -> Element {
                 // Tab buttons
                 for (i , tab) in state.read().items.clone().into_iter().enumerate() {
                     button {
+                        tabindex: if !tab.disable { "0" } else { "-1" },
                         class: format!(
                             "inline-flex h-[calc(100%-1px)] items-center justify-center rounded-md px-3 py-1 text-sm font-medium transition-all {} {}",
                             if i == active_index { "bg-background shadow-sm text-foreground" } else { "" },
@@ -124,6 +128,7 @@ pub fn Tabs(props: TabsProps) -> Element {
                         ),
                         disabled: tab.disable,
                         onclick: move |_| {
+                            tracing::info!("Tab {} clicked", i);
                             state.write().set_active_tab(i);
                         },
                         {tab.label}
