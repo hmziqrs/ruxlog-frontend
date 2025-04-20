@@ -169,7 +169,18 @@ impl CommandContext {
         let mut parsed_groups = Vec::<CommandListGroup>::new();
         let mut index = 0;
 
-        self.is_empty = if self.groups.len() > 0 { false } else { true };
+        for (_, mut v) in g_map {
+            max_index += v.items.len();
+            for item in &mut v.items {
+                item.index = index;
+                index += 1;
+            }
+            parsed_groups.push(v);
+        }
+
+        self.groups = parsed_groups;
+        self.max_index = max_index;
+        self.is_empty = self.groups.is_empty();
     }
 
     pub fn set_next_index(&mut self) {
