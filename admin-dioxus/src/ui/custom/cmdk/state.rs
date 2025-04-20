@@ -145,7 +145,7 @@ impl CommandContext {
     fn compute_internal_groups(&mut self) {
         let mut g_map: HashMap<String, CommandListGroup> = HashMap::new();
 
-        for (index, item) in self.clone().list.into_iter().enumerate() {
+        for item in self.list.clone() {
             if self.search.is_empty()
                 || item
                     .label
@@ -160,12 +160,15 @@ impl CommandContext {
                     item.group_id,
                     item.label,
                     item.disabled,
-                    index,
+                    0,
                 ));
             }
         }
 
-        self.groups = g_map.into_iter().map(|(_, v)| v).collect();
+        let mut max_index: usize = 0;
+        let mut parsed_groups = Vec::<CommandListGroup>::new();
+        let mut index = 0;
+
         self.is_empty = if self.groups.len() > 0 { false } else { true };
     }
 
