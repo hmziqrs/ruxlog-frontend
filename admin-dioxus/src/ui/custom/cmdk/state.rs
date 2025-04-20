@@ -15,74 +15,109 @@ pub struct CommandListProps {
     // pub children: Element,
     // #[props(optional)]
     // pub on_select: fn(CommandListItem),
-
     #[props(optional)]
     pub reset_on_select: bool,
 
     pub groups: Vec<String>,
 }
 
-
 #[derive(PartialEq, Clone)]
 pub struct CommandListGroup {
     pub label: String,
     pub id: String,
-    pub items: Vec<CommandListItem>,
+    pub items: Vec<CommandInternalListItem>,
 }
 
 impl CommandListGroup {
-    pub fn new(label: String, id: String, items: Vec<CommandListItem>) -> Self {
-        // to create it. lowercase, trim, replace spaces with dashes
-        // let id = label.to_lowercase().trim().replace(" ", "-");
+    pub fn new(label: String, id: String, items: Vec<CommandInternalListItem>) -> Self {
         Self { label, items, id }
     }
 }
 
-#[derive( PartialEq, Clone)]
-pub struct CommandListItem {
+#[derive(PartialEq, Clone)]
+pub struct CommandInternalListItem {
     pub label: String,
     pub value: String,
+    pub group_id: String,
+    pub disabled: bool,
+    pub index: usize,
+}
+
+impl CommandInternalListItem {
+    pub fn new(group_id: String, label: String, disabled: bool, index: usize) -> Self {
+        let value = label.clone().to_lowercase().replace(" ", "-");
+
+        Self {
+            label,
+            value,
+            group_id,
+            disabled,
+            index,
+        }
+    }
+}
+
+#[derive(PartialEq, Clone)]
+pub struct CommandListItem {
+    pub label: String,
     pub group_id: String,
     pub disabled: bool,
 }
 
 impl CommandListItem {
-    pub fn new(group_id: String, label: String,  value: Option<String>, disabled: bool) -> Self {
-        let value = match value {
-            Some(v) => v,
-            None => label.clone().to_lowercase().replace(" ", "-"),
-        };
-        Self { label, value, group_id, disabled }
+    pub fn new(group_id: String, label: String, disabled: bool) -> Self {
+        Self {
+            label,
+            group_id,
+            disabled,
+        }
     }
 }
 
 #[derive(PartialEq, Clone)]
 pub struct CommandContext {
     pub search: String,
-    pub active_index: i32,
-    pub selected_index: i32,
+    pub active_index: usize,
+    pub selected_index: usize,
     pub groups: Vec<CommandListGroup>,
     pub is_empty: bool,
 
     // This shouldn't be exposed
+    max_index: usize,
     internal_groups: Vec<String>,
     list: Vec<CommandListItem>,
     reset_on_select: bool,
 }
 
-
 impl CommandContext {
     pub fn new(groups: Vec<String>, list: Vec<CommandListItem>, reset: Option<bool>) -> Self {
         let mut g_map: HashMap<String, CommandListGroup> = HashMap::new();
 
-        for item in &list {
+        for item in list.clone() {
             let group = g_map.entry(item.group_id.clone()).or_insert_with(|| {
                 CommandListGroup::new(item.group_id.clone(), item.group_id.clone(), Vec::new())
             });
-            group.items.push(item.clone());
+
+            group.items.push(CommandInternalListItem::new(
+                item.group_id,
+                item.label,
+                item.disabled,
+                0,
+            ));
         }
 
-        let parsed_groups: Vec<CommandListGroup> = g_map.into_iter().map(|(_, v)| v).collect();
+        let mut max_index: usize = 0;
+        let mut parsed_groups = Vec::<CommandListGroup>::new();
+        let mut index = 0;
+
+        for (_, mut v) in g_map {
+            max_index += v.items.len();
+            for item in &mut v.items {
+                item.index = index;
+                index += 1;
+            }
+            parsed_groups.push(v);
+        }
 
         Self {
             search: String::new(),
@@ -91,9 +126,9 @@ impl CommandContext {
             groups: parsed_groups,
             is_empty: if list.len() > 0 { false } else { true },
 
-
-            internal_groups: groups.clone(),
-            list: list.clone(),
+            max_index,
+            internal_groups: groups,
+            list: list,
             reset_on_select: reset.unwrap_or(false),
         }
     }
@@ -110,12 +145,23 @@ impl CommandContext {
     fn compute_internal_groups(&mut self) {
         let mut g_map: HashMap<String, CommandListGroup> = HashMap::new();
 
-        for item in &self.list {
-            if self.search.is_empty() || item.label.to_lowercase().contains(&self.search.to_lowercase()) {
+        for (index, item) in self.clone().list.into_iter().enumerate() {
+            if self.search.is_empty()
+                || item
+                    .label
+                    .to_lowercase()
+                    .contains(&self.search.to_lowercase())
+            {
                 let group = g_map.entry(item.group_id.clone()).or_insert_with(|| {
                     CommandListGroup::new(item.group_id.clone(), item.group_id.clone(), Vec::new())
                 });
-                group.items.push(item.clone());
+
+                group.items.push(CommandInternalListItem::new(
+                    item.group_id,
+                    item.label,
+                    item.disabled,
+                    index,
+                ));
             }
         }
 
@@ -124,7 +170,7 @@ impl CommandContext {
     }
 
     pub fn set_next_index(&mut self) {
-        if self.active_index < self.groups.len() as i32 - 1 {
+        if self.active_index < self.max_index - 1 {
             self.active_index += 1;
         } else {
             self.active_index = 0;
@@ -135,15 +181,15 @@ impl CommandContext {
         if self.active_index > 0 {
             self.active_index -= 1;
         } else {
-            self.active_index = (self.groups.len() - 1) as i32;
+            self.active_index = self.max_index - 1;
         }
     }
 
-    pub fn set_active_index(&mut self, index: i32) {
+    pub fn set_active_index(&mut self, index: usize) {
         if index < 0 {
             self.active_index = 0;
-        } else if index >= self.groups.len() as i32 {
-            self.active_index = (self.groups.len() - 1) as i32;
+        } else if index >= self.groups.len() {
+            self.active_index = self.max_index;
         } else {
             self.active_index = index;
         }
