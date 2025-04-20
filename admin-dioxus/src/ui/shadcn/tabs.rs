@@ -15,14 +15,14 @@ pub struct TabsProps {
 #[derive(PartialEq, Clone)]
 pub struct TabItem {
     pub label: String,
-    pub disabled: bool,
+    pub disable: bool,
 }
 
 impl TabItem {
-    pub fn new(label: String, disabled: bool) -> Self {
+    pub fn new(label: String, disable: bool) -> Self {
         Self {
             label,
-            disabled,
+            disable,
         }
     }
 }
@@ -42,7 +42,7 @@ impl TabsState {
     }
     
     pub fn set_active_tab(&mut self, index: usize) {
-        if index < self.items.len() && !self.items[index].disabled {
+        if index < self.items.len() && !self.items[index].disable {
             self.active_index = index;
         }
     }
@@ -57,7 +57,7 @@ impl TabsState {
                     self.active_index + 1
                 }
             };
-            if self.items[next_tab].disabled {
+            if self.items[next_tab].disable {
                 continue;
             }
             if next_tab == initial_tab {
@@ -78,7 +78,7 @@ impl TabsState {
                     self.active_index - 1
                 }
             };
-            if self.items[prev_tab].disabled {
+            if self.items[prev_tab].disable {
                 continue;
             }
             if prev_tab == initial_tab {
@@ -101,7 +101,20 @@ pub fn Tabs(props: TabsProps) -> Element {
     }
 
     rsx! {
-        div { class: class.join(" "),
+        div {
+            onkeydown: move |e| {
+                let key = e.key();
+                match key {
+                    Key::ArrowLeft => {
+                        state.write().prev_tab();
+                    }
+                    Key::ArrowRight => {
+                        state.write().next_tab();
+                    }
+                    _ => {}
+                }
+            },
+            class: class.join(" "),
             // Tab list
             div { class: "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]",
                 // Tab buttons
@@ -110,9 +123,9 @@ pub fn Tabs(props: TabsProps) -> Element {
                         class: format!(
                             "inline-flex h-[calc(100%-1px)] items-center justify-center rounded-md px-3 py-1 text-sm font-medium transition-all {} {}",
                             if i == active_index { "bg-background shadow-sm text-foreground" } else { "" },
-                            if tab.disabled { "opacity-50 cursor-not-allowed" } else { "" },
+                            if tab.disable { "opacity-50 cursor-not-allowed" } else { "" },
                         ),
-                        disabled: tab.disabled,
+                        disabled: tab.disable,
                         onclick: move |_| {
                             state.write().set_active_tab(i);
                         },
