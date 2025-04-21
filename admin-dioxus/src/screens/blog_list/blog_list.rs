@@ -1,10 +1,10 @@
-// use crate::components::shadcn_ui::{};
+use chrono::NaiveDateTime;
 use crate::router::Route;
 use crate::store::{use_post, Post};
 use crate::ui::shadcn::{Avatar, AvatarFallback, AvatarImage, Badge, BadgeVariant, Button, ButtonVariant, Card, CardContent, CardFooter, CardHeader, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger};
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::icons::ld_icons::{
-    LdCalendar, LdEllipsis, LdEye, LdGrid3x3, LdHeart, LdLayoutGrid, LdLayoutList, LdMessageSquare, LdSearch, LdTag
+    LdCalendar, LdEllipsis, LdEye, LdGrid3x3, LdHeart, LdLayoutList, LdMessageSquare, LdSearch, LdTag
 };
 use hmziq_dioxus_free_icons::Icon;
 
@@ -13,6 +13,15 @@ fn generate_avatar_fallback(name: &str) -> String {
     name.split_whitespace()
         .filter_map(|word| word.chars().next())
         .collect::<String>()
+}
+
+// Helper function for date formatting
+fn format_short_date(date_str: &str) -> String {
+    if let Ok(date) = NaiveDateTime::parse_from_str(date_str, "%Y-%m-%dT%H:%M:%S.%f") {
+        date.format("%y-%b-%d").to_string()
+    } else {
+        date_str.to_string()
+    }
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -27,7 +36,7 @@ pub fn BlogListScreen() -> Element {
     let list_signal = post_state.list.read();
     let mut layout_type = use_signal(|| LayoutType::Grid);
     let mut search_query = use_signal(|| String::new());
-    let mut nav = use_navigator();
+    let nav = use_navigator();
 
     // Fetch posts on mount
     use_effect(move || {
@@ -233,12 +242,22 @@ fn PostGridCard(post: Post) -> Element {
                             }
                         }
                     }
-                    span { class: "text-xs font-medium text-zinc-500 dark:text-zinc-400",
-                        "{post.author.name}"
-                    }
+                    span { class: "text-xs text-zinc-500 dark:text-zinc-400", "{post.author.name}" }
                 }
-                // Stats
+                // Stats with date between views and likes
                 div { class: "flex items-center gap-3 text-zinc-500 dark:text-zinc-400",
+                    div { class: "flex items-center gap-1 text-xs",
+                        div { class: "w-3.5 h-3.5",
+                            Icon { icon: LdCalendar {} }
+                        }
+                        span {
+                            if post.is_published && post.published_at.is_some() {
+                                {format_short_date(&post.published_at.clone().unwrap_or_default())}
+                            } else {
+                                {format_short_date(&post.created_at)}
+                            }
+                        }
+                    }
                     div { class: "flex items-center gap-1 text-xs",
                         div { class: "w-3.5 h-3.5",
                             Icon { icon: LdEye {} }
@@ -352,21 +371,21 @@ fn PostListItem(post: Post) -> Element {
                         div { class: "flex items-center gap-4 mt-2 sm:mt-0 text-zinc-500 dark:text-zinc-400",
                             div { class: "flex items-center gap-1 text-xs",
                                 div { class: "w-3.5 h-3.5",
+                                    Icon { icon: LdEye {} }
+                                }
+                                span { "{post.view_count}" }
+                            }
+                            div { class: "flex items-center gap-1 text-xs",
+                                div { class: "w-3.5 h-3.5",
                                     Icon { icon: LdCalendar {} }
                                 }
                                 span {
                                     if post.is_published && post.published_at.is_some() {
-                                        {post.published_at.clone()}
+                                        {format_short_date(&post.published_at.clone().unwrap_or_default())}
                                     } else {
-                                        {post.created_at.clone()}
+                                        {format_short_date(&post.created_at)}
                                     }
                                 }
-                            }
-                            div { class: "flex items-center gap-1 text-xs",
-                                div { class: "w-3.5 h-3.5",
-                                    Icon { icon: LdEye {} }
-                                }
-                                span { "{post.view_count}" }
                             }
                             div { class: "flex items-center gap-1 text-xs",
                                 div { class: "w-3.5 h-3.5",
