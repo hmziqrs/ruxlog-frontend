@@ -193,7 +193,7 @@ fn PostGridCard(post: Post) -> Element {
                     }
                 }
             }
-            CardContent { class: "p-4 pt-2",
+            CardContent { class: "p-4 pt-0 pb-0",
                 if let Some(excerpt) = &post.excerpt {
                     p { class: "text-zinc-500 dark:text-zinc-400 text-sm line-clamp-2 mt-1",
                         "{excerpt}"
@@ -219,10 +219,14 @@ fn PostGridCard(post: Post) -> Element {
                             alt: post.author.name.clone(),
                         }
                         AvatarFallback {
-                            span { class: "text-sm", {generate_avatar_fallback(&post.author.name)} }
+                            span { class: "text-xs font-medium",
+                                {generate_avatar_fallback(&post.author.name)}
+                            }
                         }
                     }
-                    span { class: "text-xs text-zinc-500 dark:text-zinc-400", "{post.author.name}" }
+                    span { class: "text-xs font-medium text-zinc-500 dark:text-zinc-400",
+                        "{post.author.name}"
+                    }
                 }
                 // Stats
                 div { class: "flex items-center gap-3 text-zinc-500 dark:text-zinc-400",
@@ -325,9 +329,13 @@ fn PostListItem(post: Post) -> Element {
                                     src: post.author.avatar.clone().unwrap_or_default(),
                                     alt: post.author.name.clone(),
                                 }
-                                AvatarFallback { {generate_avatar_fallback(&post.author.name)} }
+                                AvatarFallback {
+                                    span { class: "text-xs font-medium",
+                                        {generate_avatar_fallback(&post.author.name)}
+                                    }
+                                }
                             }
-                            span { class: "text-xs text-zinc-500 dark:text-zinc-400",
+                            span { class: "text-xs font-medium text-zinc-500 dark:text-zinc-400",
                                 "{post.author.name}"
                             }
                         }
