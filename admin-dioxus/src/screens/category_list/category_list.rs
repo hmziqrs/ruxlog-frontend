@@ -34,6 +34,7 @@ pub fn CategoryListScreen() -> Element {
 
     rsx! {
         div { "Category List (placeholder)" }
+        Progress { value: 50 }
         Popover {
             PopoverTrigger { "Click me" }
             PopoverContent {
