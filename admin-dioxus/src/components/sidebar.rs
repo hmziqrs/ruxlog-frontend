@@ -87,7 +87,7 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                 if expanded() { "translate-x-0" } else { "-translate-x-full" },
             ),
             // Sidebar header
-            div { class: "flex h-16 items-center justify-between border-b border-zinc-300 dark:border-zinc-700 px-4 transition-colors duration-300",
+            div { class: "flex h-16 items-center justify-between border-b  px-4 transition-colors duration-300",
                 div { class: "flex items-center space-x-2",
                     img {
                         class: "h-8 w-8",
@@ -165,7 +165,7 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                 }
             }
             // Sidebar footer with logout button
-            div { class: "absolute bottom-0 left-0 right-0 border-t border-zinc-300 dark:border-zinc-700 p-4 transition-colors duration-300",
+            div { class: "absolute bottom-0 left-0 right-0 border-t  p-4 transition-colors duration-300",
                 button {
                     class: "flex w-full items-center flex-1 rounded-md px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-900/90 dark:hover:text-white transition-colors duration-200",
                     onclick: move |_| {
