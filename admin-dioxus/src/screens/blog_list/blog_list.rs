@@ -4,8 +4,7 @@ use crate::store::{use_post, Post};
 use crate::ui::shadcn::{Avatar, AvatarFallback, AvatarImage, Badge, BadgeVariant, Button, ButtonVariant, Card, CardContent, CardFooter, CardHeader, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger};
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::icons::ld_icons::{
-    LdCalendar, LdEye, LdLayoutGrid, LdHeart, LdLayoutList, LdMessageSquare, 
-    LdEllipsis, LdSearch, LdTag
+    LdCalendar, LdEllipsis, LdEye, LdGrid3x3, LdHeart, LdLayoutGrid, LdLayoutList, LdMessageSquare, LdSearch, LdTag
 };
 use hmziq_dioxus_free_icons::Icon;
 
@@ -97,17 +96,17 @@ pub fn BlogListScreen() -> Element {
                         }
                         div { class: "flex items-center gap-2",
                             button {
-                                class: if *layout_type.read() == LayoutType::Grid { "h-9 w-9 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "h-9 w-9 border rounded flex items-center justify-center" },
+                                class: if *layout_type.read() == LayoutType::Grid { "h-12 w-12 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "h-12 w-12 border rounded flex items-center justify-center" },
                                 onclick: move |_| layout_type.set(LayoutType::Grid),
-                                div { class: "w-4 h-4",
-                                    Icon { icon: LdLayoutGrid {} }
+                                div { class: "w-5 h-5",
+                                    Icon { icon: LdGrid3x3 {} }
                                 }
                                 span { class: "sr-only", "Grid view" }
                             }
                             button {
-                                class: if *layout_type.read() == LayoutType::List { "h-9 w-9 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "h-9 w-9 border rounded flex items-center justify-center" },
+                                class: if *layout_type.read() == LayoutType::List { "h-12 w-12 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "h-12 w-12 border rounded flex items-center justify-center" },
                                 onclick: move |_| layout_type.set(LayoutType::List),
-                                div { class: "w-4 h-4",
+                                div { class: "w-5 h-5",
                                     Icon { icon: LdLayoutList {} }
                                 }
                                 span { class: "sr-only", "List view" }
@@ -124,7 +123,7 @@ pub fn BlogListScreen() -> Element {
                             }
                         },
                         LayoutType::List => rsx! {
-                            div { class: "flex flex-col gap-4",
+                            div { class: "flex flex-col gap-6",
                                 {filtered_posts.iter().map(|post| rsx! {
                                     PostListItem { post: post.clone() }
                                 })}
@@ -161,12 +160,22 @@ fn PostGridCard(post: Post) -> Element {
             CardHeader { class: "",
                 div { class: "flex items-start justify-between",
                     div { class: "space-y-1.5",
-                        // Category badge
-                        if let Some(category) = &post.category {
-                            Badge {
-                                variant: BadgeVariant::Outline,
-                                class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800",
-                                "{category.name}"
+                        div { class: "flex items-center gap-2",
+                            // Category badge
+                            if let Some(category) = &post.category {
+                                Badge {
+                                    variant: BadgeVariant::Outline,
+                                    class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800",
+                                    "{category.name}"
+                                }
+                            }
+                            // Published/Draft status
+                            span { class: if post.is_published { "px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" } else { "px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
+                                if post.is_published {
+                                    "Published"
+                                } else {
+                                    "Draft"
+                                }
                             }
                         }
                         h3 { class: "font-semibold text-lg line-clamp-2", "{post.title}" }
