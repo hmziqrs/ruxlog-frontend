@@ -34,7 +34,13 @@ pub fn CategoryListScreen() -> Element {
 
     rsx! {
         div { "Category List (placeholder)" }
-
+        div { class: "space-y-3",
+            Skeleton { class: Some("h-[125px] w-full rounded-xl".to_string()) }
+            div { class: "space-y-2",
+                Skeleton { class: Some("h-4 w-[250px]".to_string()) }
+                Skeleton { class: Some("h-4 w-[200px]".to_string()) }
+            }
+        }
         Select {
             onchange: move |value| {
                 println!("Selected: {}", value);
