@@ -8,6 +8,7 @@ mod checkbox;
 mod collapsible;
 mod dialog;
 mod dropdown_menu;
+mod popover;
 mod tabs;
 mod accordion;
 
@@ -21,5 +22,6 @@ pub use checkbox::*;
 pub use collapsible::*;
 pub use dialog::*;
 pub use dropdown_menu::*;
+pub use popover::*;
 pub use tabs::*;
 pub use accordion::*;
