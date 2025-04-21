@@ -12,6 +12,7 @@ mod popover;
 mod progress;
 mod select;
 mod skeleton;
+mod table;
 mod tabs;
 mod accordion;
 
@@ -29,5 +30,6 @@ pub use popover::*;
 pub use progress::*;
 pub use select::*;
 pub use skeleton::*;
+pub use table::*;
 pub use tabs::*;
 pub use accordion::*;

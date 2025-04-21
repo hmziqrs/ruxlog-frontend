@@ -32,6 +32,14 @@ pub fn CategoryListScreen() -> Element {
 
     let tab_state: Signal<TabsState> = use_signal(|| TabsState::new(tabs, 0));
 
+    let invoices = vec![
+    ("INV001", "Pay App, Inc.", "Credit Card", "$250.00"),
+    ("INV002", "Cloud Services Co", "Visa", "$150.00"),
+    ("INV003", "Design System Inc", "Mastercard", "$350.00"),
+    ("INV004", "Web Solutions LLC", "PayPal", "$450.00"),
+    ("INV005", "Tech Innovations", "Visa", "$550.00"),
+];
+
     rsx! {
         div { "Category List (placeholder)" }
         div { class: "space-y-3",
@@ -39,6 +47,35 @@ pub fn CategoryListScreen() -> Element {
             div { class: "space-y-2",
                 Skeleton { class: Some("h-4 w-[250px]".to_string()) }
                 Skeleton { class: Some("h-4 w-[200px]".to_string()) }
+            }
+        }
+        Table {
+            TableCaption { "A list of your recent invoices." }
+            TableHeader {
+                TableRow {
+                    TableHead { "Invoice" }
+                    TableHead { "Status" }
+                    TableHead { "Method" }
+                    TableHead { class: Some("text-right".to_string()), "Amount" }
+                }
+            }
+            TableBody {
+                {
+                    invoices
+                        .iter()
+                        .enumerate()
+                        .map(|(index, invoice)| {
+                            let (id, status, method, amount) = invoice;
+                            rsx! {
+                                TableRow { selected: index % 3 == 0,
+                                    TableCell { class: Some("font-medium".to_string()), "{id}" }
+                                    TableCell { "{status}" }
+                                    TableCell { "{method}" }
+                                    TableCell { class: Some("text-right".to_string()), "{amount}" }
+                                }
+                            }
+                        })
+                }
             }
         }
         Select {
