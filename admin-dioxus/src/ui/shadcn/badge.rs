@@ -2,14 +2,16 @@ use dioxus::prelude::*;
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BadgeProps {
-    /// Additional classes to apply to the badge
-    #[props(default)]
-    pub class: Option<String>,
-    /// Badge content
+    #[props(optional)]
+    pub class: String,
+
     pub children: Element,
-    /// Badge variant
+
     #[props(default = BadgeVariant::Default)]
     pub variant: BadgeVariant,
+
+    #[props(extends = GlobalAttributes)]
+    pub attributes: Vec<Attribute>,
 }
 
 #[derive(PartialEq, Clone)]
@@ -33,14 +35,11 @@ impl BadgeVariant {
 
 #[component]
 pub fn Badge(props: BadgeProps) -> Element {
-    let base_classes = "inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden";
+    let base_classes = "inline-flex items-center justify-center rounded-4xl border px-2 py-0.5 text-xs font-semibold w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden";
     
-    let mut classes = vec![base_classes.to_string(), props.variant.to_class_string().to_string()];
-    if let Some(custom_class) = props.class {
-        classes.push(custom_class);
-    }
+    let classes = vec![base_classes.to_string(), props.variant.to_class_string().to_string(), props.class.clone()];
 
     rsx! {
-        div { "data-slot": "badge", class: classes.join(" "), {props.children} }
+        div { "data-slot": "badge", class: classes.join(" "), ..props.attributes, {props.children} }
     }
 }
