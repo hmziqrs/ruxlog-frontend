@@ -53,7 +53,7 @@ pub fn NavBarContainer() -> Element {
         Sidebar { expanded: sidebar_open, toggle: move |_| sidebar_open.toggle() }
 
         // Main content area (with margin for sidebar on desktop)
-        header { class: "bg-zinc-200 dark:bg-zinc-900/60 backdrop-blur-sm shadow transition-colors duration-300 sticky top-0 z-10",
+        header { class: "bg-zinc-200/60 dark:bg-zinc-900/60 backdrop-blur-sm shadow transition-colors duration-300 sticky top-0 z-10",
             div { class: "flex h-16 items-center justify-between px-4",
                 div { class: "flex items-center",
                     // Mobile menu button
