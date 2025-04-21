@@ -97,7 +97,7 @@ pub fn HomeScreen() -> Element {
 
             // Analytics/Charts (placeholder)
             div { class: "grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8",
-                div { class: "bg-zinc-200/40 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow flex flex-col justify-center items-center min-h-[260px] w-full",
+                div { class: "bg-zinc-200/40 dark:bg-zinc-900/60 border  rounded-xl p-6 shadow flex flex-col justify-center items-center min-h-[260px] w-full",
                     h2 { class: "text-lg font-semibold text-zinc-800 dark:text-zinc-100 mb-2",
                         "Page Views (Chart)"
                     }
@@ -117,7 +117,7 @@ pub fn HomeScreen() -> Element {
                         }
                     }
                 }
-                div { class: "bg-zinc-200/40 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow flex flex-col justify-center items-center min-h-[260px] w-full",
+                div { class: "bg-zinc-200/40 dark:bg-zinc-900/60 border  rounded-xl p-6 shadow flex flex-col justify-center items-center min-h-[260px] w-full",
                     h2 { class: "text-lg font-semibold text-zinc-800 dark:text-zinc-100 mb-2",
                         "Posts by Category (Chart)"
                     }
@@ -144,7 +144,7 @@ pub fn HomeScreen() -> Element {
             }
 
             // Recent Posts
-            div { class: "bg-zinc-200/40 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 p-6 rounded-xl mb-8",
+            div { class: "bg-zinc-200/40 dark:bg-zinc-900/60 border  p-6 rounded-xl mb-8",
                 div { class: "flex justify-between items-center mb-4",
                     h2 { class: "text-xl font-semibold text-zinc-800 dark:text-zinc-100",
                         "Recent Posts"
@@ -211,7 +211,7 @@ pub fn HomeScreen() -> Element {
             }
 
             // Recent Comments
-            div { class: "bg-zinc-200/40 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 p-6 rounded-xl",
+            div { class: "bg-zinc-200/40 dark:bg-zinc-900/60 border  p-6 rounded-xl",
                 div { class: "flex justify-between items-center mb-4",
                     h2 { class: "text-xl font-semibold text-zinc-800 dark:text-zinc-100",
                         "Recent Comments"
@@ -260,7 +260,7 @@ pub fn HomeScreen() -> Element {
 #[component]
 fn StatCard(title: &'static str, value: &'static str, change: &'static str, icon: &'static str) -> Element {
     rsx! {
-        div { class: "bg-zinc-200/40 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 p-6 rounded-xl flex flex-col gap-2 shadow",
+        div { class: "bg-zinc-200/40 dark:bg-zinc-900/60 border  p-6 rounded-xl flex flex-col gap-2 shadow",
             div { class: "flex items-center justify-between",
                 span { class: "text-2xl", "{icon}" }
                 span {
@@ -311,7 +311,7 @@ fn RecentPostRow(title: &'static str, author: &'static str, status: &'static str
 #[component]
 fn RecentCommentRow(user: &'static str, comment: &'static str, post: &'static str, time: &'static str) -> Element {
     rsx! {
-        div { class: "flex items-start space-x-4 border-b border-zinc-200 dark:border-zinc-800 pb-4 last:border-b-0",
+        div { class: "flex items-start space-x-4 border-b  pb-4 last:border-b-0",
             div { class: "h-10 w-10 rounded-full bg-zinc-400 dark:bg-zinc-700 flex items-center justify-center text-zinc-100 font-bold" }
             div { class: "flex-1",
                 div { class: "flex items-center justify-between",
@@ -347,7 +347,7 @@ fn MiniStatCard(title: &'static str, value: &'static str, icon: &'static str, co
 #[component]
 fn ProgressCard(title: &'static str, percent: u8, color: &'static str) -> Element {
     rsx! {
-        div { class: "p-4 rounded-lg shadow bg-zinc-200/40 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 flex flex-col gap-2 min-w-[180px]",
+        div { class: "p-4 rounded-lg shadow bg-zinc-200/40 dark:bg-zinc-900/60 border  flex flex-col gap-2 min-w-[180px]",
             h4 { class: "text-sm font-semibold text-zinc-700 dark:text-zinc-200", "{title}" }
             div { class: "w-full bg-zinc-300 dark:bg-zinc-800 rounded-full h-2 overflow-hidden",
                 div {

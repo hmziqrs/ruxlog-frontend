@@ -88,7 +88,7 @@ pub fn BlogListScreen() -> Element {
                                 }
                             }
                             input {
-                                class: "w-full pl-8 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded border px-3 py-2 text-sm",
+                                class: "w-full pl-8 bg-white dark:bg-zinc-900  rounded border px-3 py-2 text-sm",
                                 r#type: "search",
                                 placeholder: "Search posts...",
                                 value: "{search_query}",
@@ -97,7 +97,7 @@ pub fn BlogListScreen() -> Element {
                         }
                         div { class: "flex items-center gap-2",
                             button {
-                                class: if *layout_type.read() == LayoutType::Grid { "h-9 w-9 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "h-9 w-9 border border-zinc-200 dark:border-zinc-800 rounded flex items-center justify-center" },
+                                class: if *layout_type.read() == LayoutType::Grid { "h-9 w-9 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "h-9 w-9 border  rounded flex items-center justify-center" },
                                 onclick: move |_| layout_type.set(LayoutType::Grid),
                                 div { class: "w-4 h-4",
                                     Icon { icon: LdLayoutGrid {} }
@@ -105,7 +105,7 @@ pub fn BlogListScreen() -> Element {
                                 span { class: "sr-only", "Grid view" }
                             }
                             button {
-                                class: if *layout_type.read() == LayoutType::List { "h-9 w-9 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "h-9 w-9 border border-zinc-200 dark:border-zinc-800 rounded flex items-center justify-center" },
+                                class: if *layout_type.read() == LayoutType::List { "h-9 w-9 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "h-9 w-9 border  rounded flex items-center justify-center" },
                                 onclick: move |_| layout_type.set(LayoutType::List),
                                 div { class: "w-4 h-4",
                                     Icon { icon: LdLayoutList {} }
@@ -140,7 +140,7 @@ pub fn BlogListScreen() -> Element {
 #[component]
 fn PostGridCard(post: Post) -> Element {
     rsx! {
-        Card { class: "pt-0 pb-0 overflow-hidden transition-all hover:shadow-md dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800",
+        Card { class: "pt-0 pb-0 overflow-hidden transition-all hover:shadow-md dark:bg-zinc-900 ",
             // Featured image
             if let Some(featured_image) = &post.featured_image_url {
                 div { class: " aspect-video w-full overflow-hidden",
@@ -243,7 +243,7 @@ fn PostGridCard(post: Post) -> Element {
 #[component]
 fn PostListItem(post: Post) -> Element {
     rsx! {
-        Card { class: "pt-0 pb-0 overflow-hidden transition-all hover:shadow-md dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800",
+        Card { class: "pt-0 pb-0 overflow-hidden transition-all hover:shadow-md dark:bg-zinc-900 ",
             div { class: "flex flex-col md:flex-row",
                 // Featured image
                 if let Some(featured_image) = &post.featured_image_url {
@@ -314,7 +314,7 @@ fn PostListItem(post: Post) -> Element {
                         }
                     }
                     // Author and stats
-                    div { class: "flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800",
+                    div { class: "flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t ",
                         div { class: "flex items-center gap-2",
                             Avatar { class: "w-8 h-8",
                                 AvatarImage {
