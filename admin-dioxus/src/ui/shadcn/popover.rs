@@ -99,7 +99,7 @@ pub fn PopoverContent(props: PopoverProps) -> Element {
             button {
                 r#type: "button",
                 onclick: move |_| open.set(PopoverContext(false)),
-                class: "absolute right-2 top-2 inline-flex items-center justify-center rounded-md p-1 text-popover-foreground/50 opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                class: "absolute right-2 top-2 inline-flex items-center justify-center rounded-lg p-1 text-popover-foreground/50 opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
                 div { class: "h-4 w-4",
                     Icon { icon: LdX {} }
                 }

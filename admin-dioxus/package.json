@@ -7,7 +7,7 @@
   "dependencies": {
     "@tailwindcss/cli": "^4.0.17",
     "@tailwindcss/typography": "tailwindcss/typography",
-    "tailwindcss": "^4.0.17",
+    "tailwindcss": "4.1.4",
     "tailwindcss-animate": "^1.0.7",
     "tw-animate-css": "^1.2.7"
   },

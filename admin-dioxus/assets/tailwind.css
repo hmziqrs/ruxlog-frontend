@@ -2496,7 +2496,7 @@
     Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
 :root {
-  --radius: 0.3rem;
+  --radius: 0.35rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -2581,13 +2581,18 @@ input:not(.checkbox), textarea:not(.checkbox) {
 .input:focus, input:focus, textarea:focus, .textarea:focus {
   outline: none !important;
 }
-.btn {
-  font-weight: normal;
-  box-shadow: none;
-  translate: none;
-  padding-inline: 0px;
-  height: calc(var(--size) * 0.8);
-  padding: calc(var(--btn-p) * 0.7) calc(var(--btn-p) * 1.4);
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: var(--ring);
+    @supports (color: color-mix(in lab, red, red)) {
+      outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
+    }
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
 }
 @property --tw-translate-x {
   syntax: "*";
