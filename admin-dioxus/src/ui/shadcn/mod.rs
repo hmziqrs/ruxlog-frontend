@@ -10,6 +10,7 @@ mod dialog;
 mod dropdown_menu;
 mod popover;
 mod progress;
+mod select;
 mod tabs;
 mod accordion;
 
@@ -25,5 +26,6 @@ pub use dialog::*;
 pub use dropdown_menu::*;
 pub use popover::*;
 pub use progress::*;
+pub use select::*;
 pub use tabs::*;
 pub use accordion::*;
