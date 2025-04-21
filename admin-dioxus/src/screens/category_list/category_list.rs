@@ -37,6 +37,12 @@ pub fn CategoryListScreen() -> Element {
         Popover {
             PopoverTrigger { "Click me" }
             PopoverContent {
+                Cmdk { groups, data, reset_on_select: true }
+            }
+        }
+        Popover {
+            PopoverTrigger { "Click me" }
+            PopoverContent {
                 h3 { class: "font-medium mb-2", "Popover Title" }
                 p { "This is some popover content with useful information." }
                 div { class: "mt-4 flex justify-end",
@@ -74,6 +80,5 @@ pub fn CategoryListScreen() -> Element {
             }
         }
         Tabs { state: tab_state }
-        Cmdk { groups, data, reset_on_select: true }
     }
 }
