@@ -34,6 +34,18 @@ pub fn CategoryListScreen() -> Element {
 
     rsx! {
         div { "Category List (placeholder)" }
+        Popover {
+            PopoverTrigger { "Click me" }
+            PopoverContent {
+                h3 { class: "font-medium mb-2", "Popover Title" }
+                p { "This is some popover content with useful information." }
+                div { class: "mt-4 flex justify-end",
+                    PopoverClose { class: "px-3 py-1.5 bg-zinc-100 rounded text-sm hover:bg-zinc-200",
+                        "Close"
+                    }
+                }
+            }
+        }
         Breadcrumb {
             BreadcrumbList {
                 BreadcrumbItem {
