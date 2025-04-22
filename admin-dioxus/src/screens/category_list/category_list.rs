@@ -40,6 +40,12 @@ pub fn CategoryListScreen() -> Element {
     ("INV005", "Tech Innovations", "Visa", "$550.00"),
 ];
 
+    let select_groups = vec![
+        SelectGroup::new("Settings".to_string(), vec!["Heelo".to_string()]),
+        SelectGroup::new("Suggestions".to_string(), vec!["Hxxx".to_string()]),
+        SelectGroup::new("Other".to_string(), vec!["Newww".to_string()]),
+    ];
+
     rsx! {
         div { "Category List (placeholder)" }
         div { class: "space-y-3",
@@ -78,27 +84,10 @@ pub fn CategoryListScreen() -> Element {
                 }
             }
         }
-        // Select {
-        //     onchange: move |value| {
-        //         println!("Selected: {}", value);
-        //     },
-        //     SelectTrigger { class: Some("w-[200px]".to_string()),
-        //         SelectValue { placeholder: String::from("Select a framework") }
-        //     }
-        //     SelectContent {
-        //         SelectGroup {
-        //             SelectLabel { "Frameworks" }
-        //             SelectItem { value: String::from("next.js"), "Next.js" }
-        //             SelectItem { value: String::from("sveltekit"), "SvelteKit" }
-        //             SelectItem { value: String::from("nuxt"), "Nuxt.js" }
-        //         }
-        //         SelectGroup {
-        //             SelectLabel { "Aggress" }
-        //             SelectItem { value: String::from("remix"), "Remix" }
-        //             SelectItem { value: String::from("astro"), "Astro" }
-        //         }
-        //     }
-        // }
+        Select {
+            groups: select_groups,
+            placeholder: "Select a framework".to_string(),
+        }
         Progress { value: 50 }
         Popover {
             PopoverTrigger { "Click me" }

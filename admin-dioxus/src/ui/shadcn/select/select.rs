@@ -1,4 +1,4 @@
-use dioxus::{html::label, prelude::*};
+use dioxus::{prelude::*};
 use hmziq_dioxus_free_icons::{icons::ld_icons::LdChevronDown, Icon};
 
 use crate::ui::shadcn::{Button, ButtonVariant};
@@ -25,13 +25,31 @@ pub fn Select(props: SelectProps) -> Element {
                     state.write().toggle();
                 },
                 label {
-                    if let Some(selected) = state.read().selected.as_ref() {
+                    if let Some(selected) = state.read().selected.clone() {
                         {selected}
                     } else {
                         {props.placeholder}
                     }
                 }
                 Icon { icon: LdChevronDown }
+            }
+            if state.read().is_open {
+                div { class: "select-content",
+                    div { class: "select-content-inner",
+                        for group in state.read().groups.iter() {
+                            div { class: "select-group",
+                                h3 { class: "select-group-label", "{group.label}" }
+                                for item in group.items.iter() {
+                                    div {
+                                        class: "select-item",
+                                        onclick: move |_| {},
+                                        "{item}"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
