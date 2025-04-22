@@ -78,24 +78,27 @@ pub fn CategoryListScreen() -> Element {
                 }
             }
         }
-        Select {
-            onchange: move |value| {
-                println!("Selected: {}", value);
-            },
-            SelectTrigger { class: Some("w-[200px]".to_string()),
-                SelectValue { placeholder: String::from("Select a framework") }
-            }
-            SelectContent {
-                SelectGroup {
-                    SelectLabel { "Frameworks" }
-                    SelectItem { value: String::from("next.js"), "Next.js" }
-                    SelectItem { value: String::from("sveltekit"), "SvelteKit" }
-                    SelectItem { value: String::from("nuxt"), "Nuxt.js" }
-                    SelectItem { value: String::from("remix"), "Remix" }
-                    SelectItem { value: String::from("astro"), "Astro" }
-                }
-            }
-        }
+        // Select {
+        //     onchange: move |value| {
+        //         println!("Selected: {}", value);
+        //     },
+        //     SelectTrigger { class: Some("w-[200px]".to_string()),
+        //         SelectValue { placeholder: String::from("Select a framework") }
+        //     }
+        //     SelectContent {
+        //         SelectGroup {
+        //             SelectLabel { "Frameworks" }
+        //             SelectItem { value: String::from("next.js"), "Next.js" }
+        //             SelectItem { value: String::from("sveltekit"), "SvelteKit" }
+        //             SelectItem { value: String::from("nuxt"), "Nuxt.js" }
+        //         }
+        //         SelectGroup {
+        //             SelectLabel { "Aggress" }
+        //             SelectItem { value: String::from("remix"), "Remix" }
+        //             SelectItem { value: String::from("astro"), "Astro" }
+        //         }
+        //     }
+        // }
         Progress { value: 50 }
         Popover {
             PopoverTrigger { "Click me" }

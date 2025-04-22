@@ -41,6 +41,9 @@ pub struct ButtonProps {
     /// Optional data attributes to add to the button
     #[props(default)]
     data_attributes: Option<HashMap<String, String>>,
+
+    #[props(extends = GlobalAttributes)]
+    attributes: Vec<Attribute>,
 }
 
 /// The different style variants a button can have
@@ -117,6 +120,7 @@ pub fn Button(props: ButtonProps) -> Element {
             //         data: { key: value }
             // })},
             // data_slot: "button",
+            ..props.attributes,
             {props.children}
         }
     }
