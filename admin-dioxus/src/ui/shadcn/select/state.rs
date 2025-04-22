@@ -25,6 +25,12 @@ pub struct SelectGroup {
     pub items: Vec<String>,
 }
 
+impl SelectGroup {
+    pub fn new(label: String, items: Vec<String>) -> Self {
+        Self { label, items }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct InternalSelectGroup {
     pub label: String,
