@@ -9,7 +9,6 @@ pub fn Cmdk(props: CommandListProps) -> Element {
     let groups = read.groups.clone();
     let active_index = read.active_index;
 
-    tracing::info!("RENDER");
 
     rsx! {
         div {

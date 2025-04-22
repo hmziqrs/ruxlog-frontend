@@ -95,8 +95,8 @@ pub struct SelectLabelProps {
     /// Child elements to render inside the component
     pub children: Element,
     /// Additional CSS classes to apply
-    #[props(default)]
-    pub class: Option<String>,
+    #[props(optional)]
+    pub class: String,
 }
 
 /// Root Select component
@@ -112,7 +112,7 @@ pub fn Select(props: SelectProps) -> Element {
     
     use_context_provider(|| Signal::new(initial_context));
     
-    let class_str = props.class.clone().unwrap_or_default();
+    let class_str = format!("relative {}", props.class);
     
     rsx! {
         div { "data-slot": "select", class: class_str, {props.children} }
@@ -173,7 +173,7 @@ pub fn SelectTrigger(props: SelectTriggerProps) -> Element {
     let mut trigger_ref = use_signal::<Option<Rc<MountedData>>>(|| None);
     
     let mut class = vec![
-        "border-input flex w-fit items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs".to_string(),
+        "border-input flex w-fit items-center justify-between gap-4 rounded-md border bg-transparent px-5 py-6 text-sm whitespace-nowrap shadow-xs".to_string(),
         "transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50".to_string(),
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4".to_string(),
         "focus-visible:border-ring focus-visible:ring-ring/50".to_string(),
