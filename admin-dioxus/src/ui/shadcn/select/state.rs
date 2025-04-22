@@ -14,7 +14,7 @@ pub struct SelectContext {
     pub selected: Option<String>,
     
     pub is_open: bool,
-    pub internal_group: Vec<InternalSelectGroup>,
+    pub internal_groups: Vec<InternalSelectGroup>,
     pub max_index: usize,
     pub active_index: usize,
 }
@@ -80,9 +80,33 @@ impl SelectContext {
             is_open: false,
             groups,
             active_index: 0,
-            internal_group: internal_groups,
+            internal_groups,
             max_index: index,
         }
+    }
+
+    pub fn select_active_index(&mut self) {
+        let active_item = self.internal_groups
+            .iter()
+            .flat_map(|group| group.items.iter())
+            .find(|item| item.index == self.active_index);
+
+        if let Some(item) = active_item {
+            self.selected = Some(item.value.clone());
+        }
+    }
+
+    pub fn select(&mut self, value: String, index: usize) {
+        self.selected = Some(value);
+        self.active_index = index;
+    }
+
+    pub fn close(&mut self) {
+        self.is_open = false;
+    }
+
+    pub fn open(&mut self) {
+        self.is_open = true;
     }
 
     pub fn toggle(&mut self) {
@@ -90,7 +114,7 @@ impl SelectContext {
     }
 
     pub fn next_index(&mut self) {
-        if self.active_index < self.max_index  {
+        if self.active_index < self.max_index - 1  {
             self.active_index += 1;
         } else {
             self.active_index = 0;
@@ -101,7 +125,8 @@ impl SelectContext {
         if self.active_index > 0 {
             self.active_index -= 1;
         } else {
-            self.active_index = self.max_index;
+            self.active_index = self.max_index-1;
         }
     }
+
 }

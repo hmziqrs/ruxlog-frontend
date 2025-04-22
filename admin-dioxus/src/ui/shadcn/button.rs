@@ -81,10 +81,10 @@ fn get_variant_class(variant: ButtonVariant) -> &'static str {
 /// Get the CSS class for a button size
 fn get_size_class(size: ButtonSize) -> &'static str {
     match size {
-        ButtonSize::Default => "h-9 px-4 py-2 has-[>svg]:px-3",
-        ButtonSize::Sm => "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
-        ButtonSize::Lg => "h-10 rounded-md px-6 has-[>svg]:px-4",
-        ButtonSize::Icon => "size-9",
+        ButtonSize::Default => "h-10 px-4 py-2 has-[>svg]:px-3",
+        ButtonSize::Sm => "h-9 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
+        ButtonSize::Lg => "h-12 rounded-md px-6 has-[>svg]:px-4",
+        ButtonSize::Icon => "size-12",
     }
 }
 
