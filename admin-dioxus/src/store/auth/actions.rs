@@ -87,39 +87,39 @@ impl AuthState {
     }
 
     pub async fn init(&self) {
-        self.init_status.write().set_success(None, None);
-        *self.user.write() = Some(User::dev());
-        // self.init_status.write().set_loading(None);
-        // let result = http_client::get("/user/v1/get").send().await;
-        // match result {
-        //     Ok(response) => {
-        //         if (200..300).contains(&response.status()) {
-        //             match response.json::<User>().await {
-        //                 Ok(user) => {
-        //                     if !user.is_verified || user.role != "admin" {
-        //                         Self::delete_id_cookie();
-        //                         self.init_status.write().set_failed(Some(
-        //                             "User not allowed to access this page.".to_string(),
-        //                         ));
-        //                         return;
-        //                     }
-        //                     *self.user.write() = Some(user);
-        //                     self.init_status.write().set_success(None, None);
-        //                 }
-        //                 Err(e) => {
-        //                     self.init_status.write().set_failed(Some(format!("Failed to parse user data: {}", e)));
-        //                 }
-        //             }
-        //         } else if response.status() == 401 {
-        //             self.init_status.write().set_success(None, None);
-        //         } else {
-        //             self.init_status.write().set_api_error(&response).await;
-        //         }
-        //     }
-        //     Err(e) => {
-        //         self.init_status.write().set_failed(Some(format!("Network error: {}", e)));
-        //     }
-        // }
+        // self.init_status.write().set_success(None, None);
+        // *self.user.write() = Some(User::dev());
+        self.init_status.write().set_loading(None);
+        let result = http_client::get("/user/v1/get").send().await;
+        match result {
+            Ok(response) => {
+                if (200..300).contains(&response.status()) {
+                    match response.json::<User>().await {
+                        Ok(user) => {
+                            if !user.is_verified || user.role != "admin" {
+                                Self::delete_id_cookie();
+                                self.init_status.write().set_failed(Some(
+                                    "User not allowed to access this page.".to_string(),
+                                ));
+                                return;
+                            }
+                            *self.user.write() = Some(user);
+                            self.init_status.write().set_success(None, None);
+                        }
+                        Err(e) => {
+                            self.init_status.write().set_failed(Some(format!("Failed to parse user data: {}", e)));
+                        }
+                    }
+                } else if response.status() == 401 {
+                    self.init_status.write().set_success(None, None);
+                } else {
+                    self.init_status.write().set_api_error(&response).await;
+                }
+            }
+            Err(e) => {
+                self.init_status.write().set_failed(Some(format!("Network error: {}", e)));
+            }
+        }
     
     }
 

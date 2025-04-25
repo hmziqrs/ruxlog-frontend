@@ -90,13 +90,13 @@ pub fn BlogListScreen() -> Element {
                     // Search and view mode
                     div { class: "flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
                         div { class: "relative w-full md:w-96",
-                            div { class: "absolute left-2.5 top-2.5 h-4 w-4 text-zinc-500 dark:text-zinc-400",
+                            div { class: "absolute left-2.5 top-2.5 size-4 text-zinc-500 dark:text-zinc-400",
                                 div { class: "w-4 h-4",
                                     Icon { icon: LdSearch {} }
                                 }
                             }
                             input {
-                                class: "w-full pl-8 bg-white dark:bg-zinc-900 rounded border px-3 py-2 text-sm",
+                                class: "w-full pl-8 bg-white dark:bg-zinc-900 rounded border px-3 h-10 text-sm",
                                 r#type: "search",
                                 placeholder: "Search posts...",
                                 value: "{search_query}",
@@ -105,17 +105,17 @@ pub fn BlogListScreen() -> Element {
                         }
                         div { class: "flex items-center gap-2",
                             button {
-                                class: if *layout_type.read() == LayoutType::Grid { "h-12 w-12 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "h-12 w-12 border rounded flex items-center justify-center" },
+                                class: if *layout_type.read() == LayoutType::Grid { "size-10 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "size-10 border rounded flex items-center justify-center" },
                                 onclick: move |_| layout_type.set(LayoutType::Grid),
-                                div { class: "w-5 h-5",
+                                div { class: "size-4",
                                     Icon { icon: LdGrid3x3 {} }
                                 }
                                 span { class: "sr-only", "Grid view" }
                             }
                             button {
-                                class: if *layout_type.read() == LayoutType::List { "h-12 w-12 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "h-12 w-12 border rounded flex items-center justify-center" },
+                                class: if *layout_type.read() == LayoutType::List { "size-10 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "size-10 border rounded flex items-center justify-center" },
                                 onclick: move |_| layout_type.set(LayoutType::List),
-                                div { class: "w-5 h-5",
+                                div { class: "size-4",
                                     Icon { icon: LdLayoutList {} }
                                 }
                                 span { class: "sr-only", "List view" }
