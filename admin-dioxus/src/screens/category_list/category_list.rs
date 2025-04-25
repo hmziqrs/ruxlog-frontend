@@ -41,7 +41,7 @@ pub fn CategoryListScreen() -> Element {
 ];
 
     let select_groups = vec![
-        SelectGroup::new("Settings".to_string(), vec!["Heelo".to_string()]),
+        SelectGroup::new("Settings".to_string(), vec!["Heelo".to_string(), "Hii".to_string(), "Heee".to_string()]),
         SelectGroup::new("Suggestions".to_string(), vec!["Hxxx".to_string()]),
         SelectGroup::new("Other".to_string(), vec!["Newww".to_string()]),
     ];
