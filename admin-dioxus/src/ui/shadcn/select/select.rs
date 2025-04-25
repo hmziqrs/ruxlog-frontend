@@ -31,6 +31,9 @@ pub fn Select(props: SelectProps) -> Element {
                     Key::Enter => {
                         if state.read().is_open {
                             state.write().select_active_index();
+                            state.write().close();
+                        } else {
+                            state.write().open();
                         }
                     }
                     Key::Escape => {
@@ -40,16 +43,10 @@ pub fn Select(props: SelectProps) -> Element {
                 }
             },
             class: "select-root relative max-w-[200px]",
-            Button {
-                variant: ButtonVariant::Outline,
-                class: format!(
-                    "w-full {}",
-                    if state.read().selected.is_some() {
-                        "text-foreground"
-                    } else {
-                        "text-muted-foreground"
-                    },
-                ),
+            div {
+                // variant: ButtonVariant::Outline,
+                tabindex: "0",
+                class: "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
                 onclick: move |_| {
                     state.write().toggle();
                 },
@@ -60,7 +57,9 @@ pub fn Select(props: SelectProps) -> Element {
                         {props.placeholder}
                     }
                 }
-                Icon { icon: LdChevronDown }
+                div { class: "size-5",
+                    Icon { icon: LdChevronDown }
+                }
             }
             if state.read().is_open {
                 AppPortal {
@@ -90,6 +89,7 @@ pub fn Select(props: SelectProps) -> Element {
                                                 "text-muted-foreground"
                                             },
                                         ),
+
                                         onclick: move |_| {
                                             tracing::info!("ITEM ONCLICK");
                                             state.write().select(item.value.clone(), item.index);
