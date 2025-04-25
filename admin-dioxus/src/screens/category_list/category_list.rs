@@ -84,10 +84,12 @@ pub fn CategoryListScreen() -> Element {
                 }
             }
         }
+        div { class: "h-4" }
         Select {
             groups: select_groups,
             placeholder: "Select a framework".to_string(),
         }
+        div { class: "h-4" }
         Progress { value: 50 }
         Popover {
             PopoverTrigger { "Click me" }
