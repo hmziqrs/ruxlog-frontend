@@ -501,6 +501,10 @@
     width: calc(0.25rem * 9);
     height: calc(0.25rem * 9);
   }
+  .size-10 {
+    width: calc(0.25rem * 10);
+    height: calc(0.25rem * 10);
+  }
   .size-12 {
     width: calc(0.25rem * 12);
     height: calc(0.25rem * 12);

@@ -33,15 +33,18 @@ pub fn CategoryListScreen() -> Element {
     let tab_state: Signal<TabsState> = use_signal(|| TabsState::new(tabs, 0));
 
     let invoices = vec![
-    ("INV001", "Pay App, Inc.", "Credit Card", "$250.00"),
-    ("INV002", "Cloud Services Co", "Visa", "$150.00"),
-    ("INV003", "Design System Inc", "Mastercard", "$350.00"),
-    ("INV004", "Web Solutions LLC", "PayPal", "$450.00"),
-    ("INV005", "Tech Innovations", "Visa", "$550.00"),
-];
+        ("INV001", "Pay App, Inc.", "Credit Card", "$250.00"),
+        ("INV002", "Cloud Services Co", "Visa", "$150.00"),
+        ("INV003", "Design System Inc", "Mastercard", "$350.00"),
+        ("INV004", "Web Solutions LLC", "PayPal", "$450.00"),
+        ("INV005", "Tech Innovations", "Visa", "$550.00"),
+    ];
 
     let select_groups = vec![
-        SelectGroup::new("Settings".to_string(), vec!["Heelo".to_string(), "Hii".to_string(), "Heee".to_string()]),
+        SelectGroup::new(
+            "Settings".to_string(),
+            vec!["Heelo".to_string(), "Hii".to_string(), "Heee".to_string()],
+        ),
         SelectGroup::new("Suggestions".to_string(), vec!["Hxxx".to_string()]),
         SelectGroup::new("Other".to_string(), vec!["Newww".to_string()]),
     ];
