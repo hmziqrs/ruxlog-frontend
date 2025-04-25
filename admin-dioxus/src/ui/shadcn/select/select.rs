@@ -42,7 +42,7 @@ pub fn Select(props: SelectProps) -> Element {
                     _ => {}
                 }
             },
-            class: "select-root relative max-w-[200px]",
+            class: "select-root relative max-w-[15rem]",
             div {
                 // variant: ButtonVariant::Outline,
                 tabindex: "0",
@@ -68,7 +68,7 @@ pub fn Select(props: SelectProps) -> Element {
                     },
                 }
                 div {
-                    class: "absolute bg-popover text-popover-foreground z-50 min-w-[15rem] overflow-hidden rounded-lg border shadow-md animate-in fade-in-0 zoom-in-95",
+                    class: "absolute mt-[1px] bg-background text-popover-foreground z-50 min-w-[15rem] overflow-hidden rounded-lg border shadow-md animate-in fade-in-0 zoom-in-95",
                     onclick: move |e| {
                         e.stop_propagation();
                     },
