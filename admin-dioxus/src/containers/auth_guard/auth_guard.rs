@@ -1,4 +1,4 @@
-use dioxus::{logger::tracing, prelude::*};
+use dioxus::prelude::*;
 
 use crate::{
     router::{Route, OPEN_ROUTES},
@@ -39,7 +39,7 @@ pub fn AuthGuardContainer() -> Element {
             let is_logged_in = user.is_some();
             let is_admin = user
                 .as_ref()
-                .map(|u| u.role.as_str() == "admin")
+                .map(|u| u.is_admin())
                 .unwrap_or(false);
             let nav = nav_for_logic.clone();
             let route = route_for_logic.clone();
