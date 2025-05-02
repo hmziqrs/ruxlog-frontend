@@ -1,4 +1,4 @@
-use super::{AuthState, LoginPayload, User};
+use super::{AuthState, LoginPayload, User, UserRole};
 use crate::{services::http_client, store::{StateFrame, ApiError}};
 use dioxus::{logger::tracing, prelude::*};
 use gloo_net::http::Response;
@@ -8,11 +8,12 @@ use wasm_cookies::{CookieOptions, SameSite};
 const USER_ID_COOKIE: &str = "id";
 
 impl User {
-    pub fn new(id: i32, name: String, email: String, role: String, is_verified: bool) -> Self {
+    pub fn new(id: i32, name: String, email: String, role: UserRole, is_verified: bool) -> Self {
         User {
             id,
             name,
             email,
+            avatar: None,
             role,
             is_verified,
         }
@@ -23,7 +24,7 @@ impl User {
             1,
             "Dev User".to_string(),
             "dev@example.com".to_string(),
-            "admin".to_string(),
+            UserRole::Admin,
             true,
         )
     }
@@ -96,7 +97,7 @@ impl AuthState {
                 if (200..300).contains(&response.status()) {
                     match response.json::<User>().await {
                         Ok(user) => {
-                            if !user.is_verified || user.role != "admin" {
+                            if !user.is_verified || !user.is_admin() {
                                 Self::delete_id_cookie();
                                 self.init_status.write().set_failed(Some(
                                     "User not allowed to access this page.".to_string(),
@@ -107,6 +108,7 @@ impl AuthState {
                             self.init_status.write().set_success(None, None);
                         }
                         Err(e) => {
+                            tracing::error!("Failed to parse user data: {}", e);
                             self.init_status.write().set_failed(Some(format!("Failed to parse user data: {}", e)));
                         }
                     }
@@ -132,7 +134,7 @@ impl AuthState {
                 if (200..300).contains(&response.status()) {
                     match response.json::<User>().await {
                         Ok(user) => {
-                            if !user.is_verified || user.role != "admin" {
+                            if !user.is_verified || !user.is_admin() {
                                 self.login_status.write().set_failed(Some(
                                     "User not allowed to access this page.".to_string(),
                                 ));
@@ -142,6 +144,7 @@ impl AuthState {
                             self.login_status.write().set_success(None, None);
                         }
                         Err(e) => {
+                            eprintln!("Failed to parse user data: {}", e);
                             self.login_status.write().set_failed(Some(format!("Failed to parse user data: {}", e)));
                         }
                     }
