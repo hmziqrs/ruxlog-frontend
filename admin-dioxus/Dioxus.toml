@@ -5,7 +5,11 @@
 # HTML title tag content
 title = "admin-dioxus"
 
-# include `assets` in web platform
+[web.watcher]
+index_on_404 = true
+reload_html = true
+watch_path = ["src", "assets"]
+
 [web.resource]
 
 # Additional CSS style files
@@ -19,3 +23,6 @@ script = []
 # Javascript code file
 # serve: [dev-server] only
 script = []
+
+[web.wasm_opt]
+level = "z"

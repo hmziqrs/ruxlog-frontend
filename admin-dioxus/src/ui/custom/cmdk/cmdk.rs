@@ -1,14 +1,14 @@
-use dioxus::{logger::tracing, prelude::*};
 use super::state::*;
+use dioxus::{logger::tracing, prelude::*};
 
 #[component]
 pub fn Cmdk(props: CommandListProps) -> Element {
-    let mut  state = use_signal(|| CommandContext::new(props.groups.clone(), props.data.clone(), None));
+    let mut state =
+        use_signal(|| CommandContext::new(props.groups.clone(), props.data.clone(), None));
 
     let read = state.read();
     let groups = read.groups.clone();
     let active_index = read.active_index;
-
 
     rsx! {
         div {
@@ -40,11 +40,11 @@ pub fn Cmdk(props: CommandListProps) -> Element {
             }
             div { class: "cmdk-list",
                 for group in groups.into_iter() {
-                    div { key: group.id, class: "cmdk-group",
+                    div { key: "{group.id}", class: "cmdk-group",
                         div { class: "cmdk-group-label", "{group.label}" }
                         for item in group.items.into_iter() {
                             div {
-                                key: item.value,
+                                key: "{item.value}",
                                 class: format!(
                                     "cmdk-group-item {}",
                                     if item.index == active_index { "active bg-red-500" } else { "" },
