@@ -1,8 +1,8 @@
 use std::rc::Rc;
 
+use crate::components::{ToastManager, ToastType};
 use dioxus::html::geometry::euclid::Rect;
 use dioxus::{logger::tracing, prelude::*};
-use dioxus_toast::{ToastInfo, ToastManager};
 
 use super::form::{use_login_form, LoginForm};
 use crate::config::DarkMode;
@@ -40,7 +40,9 @@ pub fn LoginScreen() -> Element {
 
     use_effect(use_reactive!(|(is_loading,)| {
         if prev_loading != Some(is_loading) {
-            toast.write().popup(ToastInfo::simple("Hello"));
+            toast
+                .write()
+                .add_toast("Hello".to_string(), "".to_string(), ToastType::Info, None);
         }
     }));
 
@@ -59,7 +61,6 @@ pub fn LoginScreen() -> Element {
                         if is_dark { "rgba(113,113,122,0)" } else { "rgba(212,212,216,0)" },
                     ),
                 }
-
                 // Card with proper mouse tracking
                 div {
                     onmounted: move |cx| {

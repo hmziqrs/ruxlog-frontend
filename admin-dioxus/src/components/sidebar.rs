@@ -1,7 +1,7 @@
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::icons::ld_icons::{
-    LdAreaChart, LdFileText, LdFolder, LdHome, LdLogOut, LdPlus, LdTag, LdUser
+    LdAreaChart, LdFileText, LdFolder, LdHome, LdLogOut, LdPlus, LdTag, LdUser,
 };
 use hmziq_dioxus_free_icons::Icon;
 
@@ -19,7 +19,7 @@ pub struct SidebarModuleLinkProps {
 
 #[component]
 pub fn SidebarModuleLink(props: SidebarModuleLinkProps) -> Element {
-    let  nav = use_navigator();
+    let nav = use_navigator();
     rsx! {
         div { class: "flex flex-row w-full",
             div {
