@@ -6,6 +6,7 @@ use crate::ui::shadcn::{
     DropdownMenuTrigger,
 };
 use chrono::NaiveDateTime;
+use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::icons::ld_icons::{
     LdCalendar, LdEllipsis, LdEye, LdGrid3x3, LdHeart, LdLayoutList, LdMessageSquare, LdSearch,
@@ -37,8 +38,8 @@ pub enum LayoutType {
 
 #[component]
 pub fn PostsListScreen() -> Element {
-    let post_state = use_post();
-    let list_signal = post_state.list.read();
+    let posts_state = use_post();
+    let posts_list = posts_state.list.read();
     let mut layout_type = use_signal(|| LayoutType::Grid);
     let mut search_query = use_signal(|| String::new());
     let nav = use_navigator();
@@ -46,30 +47,21 @@ pub fn PostsListScreen() -> Element {
     // Fetch posts on mount
     use_effect(move || {
         spawn(async move {
-            post_state.list().await;
+            posts_state.list().await;
         });
     });
 
-    let frame = &*list_signal;
+    if posts_list.is_loading() || posts_list.is_failed() {
+        return rsx! {
+            div { class: "flex items-center justify-center h-full",
+                h1 {"Loading"}
+            }
+        };
+    }
 
-    // Filter posts by search query
-    let filtered_posts = match &frame.data {
-        Some(posts) => posts
-            .iter()
-            .filter(|post| {
-                let q = search_query.read().to_lowercase();
-                post.title.to_lowercase().contains(&q)
-                    || post
-                        .excerpt
-                        .as_ref()
-                        .map(|e| e.to_lowercase().contains(&q))
-                        .unwrap_or(false)
-                    || post.author.name.to_lowercase().contains(&q)
-            })
-            .cloned()
-            .collect::<Vec<_>>(),
-        _ => vec![],
-    };
+    let posts = &posts_list.data;
+
+    tracing::info!("Posts: {:?}", posts);
 
     rsx! {
         div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
@@ -128,22 +120,22 @@ pub fn PostsListScreen() -> Element {
                         }
                     }
                     // Posts
-                    match *layout_type.read() {
-                        LayoutType::Grid => rsx! {
-                            div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
-                                {filtered_posts.iter().map(|post| rsx! {
-                                    PostGridCard { post: post.clone() }
-                                })}
-                            }
-                        },
-                        LayoutType::List => rsx! {
-                            div { class: "flex flex-col gap-6",
-                                {filtered_posts.iter().map(|post| rsx! {
-                                    PostListItem { post: post.clone() }
-                                })}
-                            }
-                        },
-                    }
+                    // match *layout_type.read() {
+                    //     LayoutType::Grid => rsx! {
+                    //         div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
+                    //             {posts.iter().map(|post| rsx! {
+                    //                 PostGridCard { post: post.clone() }
+                    //             })}
+                    //         }
+                    //     },
+                    //     LayoutType::List => rsx! {
+                    //         div { class: "flex flex-col gap-6",
+                    //             {posts.iter().map(|post| rsx! {
+                    //                 PostListItem { post: post.clone() }
+                    //             })}
+                    //         }
+                    //     },
+                    // }
                 }
             }
         }

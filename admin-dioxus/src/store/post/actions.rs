@@ -1,21 +1,28 @@
+use dioxus::logger::tracing;
+
 use super::{Post, PostCreatePayload, PostEditPayload, PostFilters, PostState};
 use crate::services::http_client;
-use crate::store::StateFrame;
+use crate::store::{PaginatedList, StateFrame};
 use std::collections::HashMap;
 
 impl PostState {
     pub async fn list(&self) {
         self.list.write().set_loading(None);
-        let result = http_client::post("/post/v1/list/query", &serde_json::json!({})).send().await;
+        let result = http_client::post("/post/v1/query", &serde_json::json!({}))
+            .send()
+            .await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
-                    match response.json::<Vec<Post>>().await {
+                    match response.json::<PaginatedList<Post>>().await {
                         Ok(posts) => {
                             self.list.write().set_success(Some(posts), None);
                         }
                         Err(e) => {
-                            self.list.write().set_failed(Some(format!("Failed to parse posts: {}", e)));
+                            tracing::error!("Failed to parse posts: {}", e);
+                            self.list
+                                .write()
+                                .set_failed(Some(format!("Failed to parse posts: {}", e)));
                         }
                     }
                 } else {
@@ -23,7 +30,9 @@ impl PostState {
                 }
             }
             Err(e) => {
-                self.list.write().set_failed(Some(format!("Network error: {}", e)));
+                self.list
+                    .write()
+                    .set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }
@@ -40,51 +49,86 @@ impl PostState {
                 }
             }
             Err(e) => {
-                self.add.write().set_failed(Some(format!("Network error: {}", e)));
+                self.add
+                    .write()
+                    .set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }
 
     pub async fn edit(&self, id: i32, payload: PostEditPayload) {
         let mut edit_map = self.edit.write();
-        edit_map.entry(id).or_insert_with(StateFrame::new).set_loading(None);
-        let result = http_client::post(&format!("/post/v1/update/{}", id), &payload).send().await;
+        edit_map
+            .entry(id)
+            .or_insert_with(StateFrame::new)
+            .set_loading(None);
+        let result = http_client::post(&format!("/post/v1/update/{}", id), &payload)
+            .send()
+            .await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
                     match response.json::<Post>().await {
                         Ok(post) => {
-                            edit_map.entry(id).or_insert_with(StateFrame::new).set_success(None, None);
+                            edit_map
+                                .entry(id)
+                                .or_insert_with(StateFrame::new)
+                                .set_success(None, None);
                             // Optionally update list/view here if needed
                         }
                         Err(e) => {
-                            edit_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Failed to parse post: {}", e)));
+                            edit_map
+                                .entry(id)
+                                .or_insert_with(StateFrame::new)
+                                .set_failed(Some(format!("Failed to parse post: {}", e)));
                         }
                     }
                 } else {
-                    edit_map.entry(id).or_insert_with(StateFrame::new).set_api_error(&response).await;
+                    edit_map
+                        .entry(id)
+                        .or_insert_with(StateFrame::new)
+                        .set_api_error(&response)
+                        .await;
                 }
             }
             Err(e) => {
-                edit_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Network error: {}", e)));
+                edit_map
+                    .entry(id)
+                    .or_insert_with(StateFrame::new)
+                    .set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }
 
     pub async fn remove(&self, id: i32) {
         let mut remove_map = self.remove.write();
-        remove_map.entry(id).or_insert_with(StateFrame::new).set_loading(None);
-        let result = http_client::post(&format!("/post/v1/delete/{}", id), &()).send().await;
+        remove_map
+            .entry(id)
+            .or_insert_with(StateFrame::new)
+            .set_loading(None);
+        let result = http_client::post(&format!("/post/v1/delete/{}", id), &())
+            .send()
+            .await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
-                    remove_map.entry(id).or_insert_with(StateFrame::new).set_success(None, None);
+                    remove_map
+                        .entry(id)
+                        .or_insert_with(StateFrame::new)
+                        .set_success(None, None);
                 } else {
-                    remove_map.entry(id).or_insert_with(StateFrame::new).set_api_error(&response).await;
+                    remove_map
+                        .entry(id)
+                        .or_insert_with(StateFrame::new)
+                        .set_api_error(&response)
+                        .await;
                 }
             }
             Err(e) => {
-                remove_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Network error: {}", e)));
+                remove_map
+                    .entry(id)
+                    .or_insert_with(StateFrame::new)
+                    .set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }
@@ -99,25 +143,43 @@ impl PostState {
 
     pub async fn view(&self, id: i32) {
         let mut view_map = self.view.write();
-        view_map.entry(id).or_insert_with(StateFrame::new).set_loading(None);
-        let result = http_client::post(&format!("/post/v1/view/{}", id), &()).send().await;
+        view_map
+            .entry(id)
+            .or_insert_with(StateFrame::new)
+            .set_loading(None);
+        let result = http_client::post(&format!("/post/v1/view/{}", id), &())
+            .send()
+            .await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
                     match response.json::<Post>().await {
                         Ok(post) => {
-                            view_map.entry(id).or_insert_with(StateFrame::new).set_success(Some(Some(post)), None);
+                            view_map
+                                .entry(id)
+                                .or_insert_with(StateFrame::new)
+                                .set_success(Some(Some(post)), None);
                         }
                         Err(e) => {
-                            view_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Failed to parse post: {}", e)));
+                            view_map
+                                .entry(id)
+                                .or_insert_with(StateFrame::new)
+                                .set_failed(Some(format!("Failed to parse post: {}", e)));
                         }
                     }
                 } else {
-                    view_map.entry(id).or_insert_with(StateFrame::new).set_api_error(&response).await;
+                    view_map
+                        .entry(id)
+                        .or_insert_with(StateFrame::new)
+                        .set_api_error(&response)
+                        .await;
                 }
             }
             Err(e) => {
-                view_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Network error: {}", e)));
+                view_map
+                    .entry(id)
+                    .or_insert_with(StateFrame::new)
+                    .set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }
