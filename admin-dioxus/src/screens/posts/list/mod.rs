@@ -59,10 +59,6 @@ pub fn PostsListScreen() -> Element {
         };
     }
 
-    let posts = &posts_list.data;
-
-    tracing::info!("Posts: {:?}", posts);
-
     rsx! {
         div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
             div { class: "container mx-auto py-8 px-4",
@@ -119,23 +115,30 @@ pub fn PostsListScreen() -> Element {
                             }
                         }
                     }
-                    // Posts
-                    // match *layout_type.read() {
-                    //     LayoutType::Grid => rsx! {
-                    //         div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
-                    //             {posts.iter().map(|post| rsx! {
-                    //                 PostGridCard { post: post.clone() }
-                    //             })}
-                    //         }
-                    //     },
-                    //     LayoutType::List => rsx! {
-                    //         div { class: "flex flex-col gap-6",
-                    //             {posts.iter().map(|post| rsx! {
-                    //                 PostListItem { post: post.clone() }
-                    //             })}
-                    //         }
-                    //     },
-                    // }
+                    h1 {"hello"}
+                    match &posts_list.data {
+                        Some(posts) => {
+                            match *layout_type.read() {
+                                LayoutType::Grid => rsx! {
+                                    div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
+                                        {posts.iter().map(|post| rsx! {
+                                            PostGridCard { post: post.clone() }
+                                        })}
+                                    }
+                                },
+                                LayoutType::List => rsx! {
+                                    div { class: "flex flex-col gap-6",
+                                        {posts.iter().map(|post| rsx! {
+                                            PostListItem { post: post.clone() }
+                                        })}
+                                    }
+                                },
+                            }
+                        }
+                        None => rsx! {
+                            h1 {"None found"}
+                        }
+                    }
                 }
             }
         }
