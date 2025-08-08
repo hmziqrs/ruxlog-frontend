@@ -141,10 +141,10 @@ impl TagState {
         *self.remove.write() = HashMap::new();
         *self.list.write() = StateFrame::new();
         *self.view.write() = HashMap::new();
-        *self.data_add.write() = None;
-        *self.data_edit.write() = None;
-        *self.data_remove.write() = None;
-        *self.data_list.write() = vec![];
-        *self.data_view.write() = HashMap::new();
+        // *self.data_add.write() = None;
+        // *self.data_edit.write() = None;
+        // *self.data_remove.write() = None;
+        // *self.data_list.write() = vec![];
+        // *self.data_view.write() = HashMap::new();
     }
 }
