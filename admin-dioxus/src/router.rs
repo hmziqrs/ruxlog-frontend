@@ -3,17 +3,17 @@ use std::sync::LazyLock;
 
 use crate::containers::AuthGuardContainer;
 use crate::containers::NavBarContainer;
+use crate::screens::AnalyticsScreen;
+use crate::screens::CategoriesAddScreen;
+use crate::screens::CategoriesListScreen;
 use crate::screens::HomeScreen;
 use crate::screens::LoginScreen;
-use crate::screens::AddBlogScreen;
-use crate::screens::AddCategoryScreen;
-use crate::screens::AddTagScreen;
-use crate::screens::AddUserScreen;
-use crate::screens::AnalyticsScreen;
-use crate::screens::BlogListScreen;
-use crate::screens::CategoryListScreen;
-use crate::screens::TagListScreen;
-use crate::screens::UserListScreen;
+use crate::screens::PostsAddScreen;
+use crate::screens::PostsListScreen;
+use crate::screens::TagsAddScreen;
+use crate::screens::TagsListScreen;
+use crate::screens::UsersAddScreen;
+use crate::screens::UsersListScreen;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -25,30 +25,28 @@ pub enum Route {
 
     #[route("/login")]
     LoginScreen {},
-    
-    #[route("/blog/new")]
-    AddBlogScreen {},
-    #[route("/blog/list")]
-    BlogListScreen {},
 
-    #[route("/category/new")]
-    AddCategoryScreen {},
+    #[route("/posts/add")]
+    PostsAddScreen {},
+    #[route("/posts/list")]
+    PostsListScreen {},
+
+    #[route("/categories/add")]
+    CategoriesAddScreen {},
     #[route("/category/list")]
-    CategoryListScreen {},
+    CategoriesListScreen {},
 
-    #[route("/tag/new")]
-    AddTagScreen {},
-    #[route("/tag/list")]
-    TagListScreen {},
+    #[route("/tags/new")]
+    TagsAddScreen {},
+    #[route("/tags/list")]
+    TagsListScreen {},
 
-    #[route("/user/new")]
-    AddUserScreen {},
-    #[route("/user/list")]
-    UserListScreen {},
+    #[route("/users/new")]
+    UsersAddScreen {},
+    #[route("/users/list")]
+    UsersListScreen {},
 
     #[route("/analytics")]
     AnalyticsScreen {},
 }
-pub static OPEN_ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| vec![
-    Route::LoginScreen {},
-]);
+pub static OPEN_ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| vec![Route::LoginScreen {}]);
