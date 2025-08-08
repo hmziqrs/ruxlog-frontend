@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use crate::containers::UserFormContainer;
 
 #[component]
-pub fn AddUserScreen() -> Element {
+pub fn UsersAddScreen() -> Element {
     rsx! {
         UserFormContainer {}
     }
