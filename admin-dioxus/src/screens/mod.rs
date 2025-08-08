@@ -1,4 +1,3 @@
-mod add_blog;
 mod add_category;
 mod add_tag;
 mod add_user;
@@ -10,7 +9,6 @@ mod posts;
 mod tag_list;
 mod user_list;
 
-pub use add_blog::*;
 pub use add_category::*;
 pub use add_tag::*;
 pub use add_user::*;

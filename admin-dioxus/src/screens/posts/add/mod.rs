@@ -3,8 +3,7 @@ use dioxus::prelude::*;
 use crate::containers::BlogFormContainer;
 
 #[component]
-pub fn AddBlogScreen() -> Element {
-    
+pub fn PostsAddScreen() -> Element {
     rsx! {
         BlogFormContainer {}
     }
