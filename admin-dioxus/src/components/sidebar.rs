@@ -119,40 +119,40 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                         is_active: is_active(Route::HomeScreen {}),
                     }
                     SidebarModuleLink {
-                        main_route: Route::BlogListScreen {},
-                        add_route: Some(Route::AddBlogScreen {}),
+                        main_route: Route::PostsListScreen {},
+                        add_route: Some(Route::PostsAddScreen {}),
                         icon: rsx! {
                             Icon { icon: LdFileText }
                         },
                         label: "Posts",
-                        is_active: is_active(Route::BlogListScreen {}),
+                        is_active: is_active(Route::PostsListScreen {}),
                     }
                     SidebarModuleLink {
-                        main_route: Route::CategoryListScreen {},
-                        add_route: Some(Route::AddCategoryScreen {}),
+                        main_route: Route::CategoriesListScreen {},
+                        add_route: Some(Route::CategoriesAddScreen {}),
                         icon: rsx! {
                             Icon { icon: LdFolder }
                         },
                         label: "Categories",
-                        is_active: is_active(Route::CategoryListScreen {}),
+                        is_active: is_active(Route::CategoriesListScreen {}),
                     }
                     SidebarModuleLink {
-                        main_route: Route::TagListScreen {},
-                        add_route: Some(Route::AddTagScreen {}),
+                        main_route: Route::TagsListScreen {},
+                        add_route: Some(Route::TagsAddScreen {}),
                         icon: rsx! {
                             Icon { icon: LdTag }
                         },
                         label: "Tags",
-                        is_active: is_active(Route::TagListScreen {}),
+                        is_active: is_active(Route::TagsListScreen {}),
                     }
                     SidebarModuleLink {
-                        main_route: Route::UserListScreen {},
-                        add_route: Some(Route::AddUserScreen {}),
+                        main_route: Route::UsersListScreen {},
+                        add_route: Some(Route::UsersAddScreen {}),
                         icon: rsx! {
                             Icon { icon: LdUser }
                         },
                         label: "Users",
-                        is_active: is_active(Route::UserListScreen {}),
+                        is_active: is_active(Route::UsersListScreen {}),
                     }
                     SidebarModuleLink {
                         main_route: Route::AnalyticsScreen {},
