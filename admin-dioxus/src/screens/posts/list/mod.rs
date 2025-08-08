@@ -1,12 +1,12 @@
 use crate::router::Route;
 use crate::store::{use_post, Post};
 use crate::ui::shadcn::{
-    Avatar, AvatarFallback, AvatarImage, Badge, BadgeVariant, Button, ButtonVariant, Card,
-    CardContent, CardFooter, CardHeader, DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-    DropdownMenuTrigger,
+    Avatar, AvatarFallback, AvatarImage, Badge, BadgeVariant, Button, ButtonSize, ButtonVariant,
+    Card, CardContent, CardFooter, CardHeader, Checkbox, DropdownMenu, DropdownMenuContent,
+    DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Popover, PopoverContent,
+    PopoverTrigger,
 };
 use chrono::NaiveDateTime;
-use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::icons::ld_icons::{
     LdCalendar, LdEllipsis, LdEye, LdGrid3x3, LdHeart, LdLayoutList, LdMessageSquare, LdSearch,
@@ -30,19 +30,14 @@ fn format_short_date(date_str: &str) -> String {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum LayoutType {
-    Grid,
-    List,
-}
+// Layout type enum removed as we render Grid-only (non-interactive) like the JS Body example
 
 #[component]
 pub fn PostsListScreen() -> Element {
     let posts_state = use_post();
     let posts_list = posts_state.list.read();
-    let mut layout_type = use_signal(|| LayoutType::Grid);
-    let mut search_query = use_signal(|| String::new());
-    let nav = use_navigator();
+    // Keep fetching posts, but the UI controls remain non-interactive
+    // let _nav = use_navigator();
 
     // Fetch posts on mount
     use_effect(move || {
@@ -63,80 +58,231 @@ pub fn PostsListScreen() -> Element {
         div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
             div { class: "container mx-auto py-8 px-4",
                 div { class: "flex flex-col gap-6",
-                    div { class: "flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
-                        div {
-                            h1 { class: "text-3xl font-bold tracking-tight", "Posts" }
-                            p { class: "text-zinc-500 dark:text-zinc-400 mt-1",
-                                "Manage and view your blog posts"
-                            }
-                        }
-                        div { class: "flex items-center gap-2",
-                            Button {
-                                onclick: move |_| {
-                                    nav.push(Route::PostsAddScreen {});
-                                },
-                                "Create post"
-                            }
+                    Header {}
+                    Filters {}
+                    ActiveFilters {}
+                    Body {}
+                }
+            }
+        }
+    }
+}
+
+// Header Component
+#[component]
+fn Header() -> Element {
+    let nav = use_navigator();
+    rsx! {
+        header { class: "flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
+            div {
+                h1 { class: "text-3xl font-bold tracking-tight", "Posts" }
+                p { class: "text-zinc-500 dark:text-zinc-400 mt-1", "Manage and view your blog posts" }
+            }
+            div { class: "flex items-center gap-2",
+                Button {
+                    onclick: move |_| {nav.push(Route::PostsAddScreen {});},
+                    "Create Post"
+                }
+            }
+        }
+    }
+}
+
+// Filters Component (static UI, no interactivity)
+#[component]
+fn Filters() -> Element {
+    rsx! {
+        div { class: "flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
+            // Search
+            div { class: "relative w-full md:w-96",
+                div { class: "absolute left-2.5 top-2.5 h-4 w-4 text-zinc-500 dark:text-zinc-400",
+                    div { class: "w-4 h-4", Icon { icon: LdSearch {} } }
+                }
+                input {
+                    class: "w-full pl-8 bg-white dark:bg-zinc-900 rounded border border-zinc-200 dark:border-zinc-800 px-3 h-10 text-sm",
+                    r#type: "search",
+                    placeholder: "Search posts...",
+                    value: "",
+                    readonly: true,
+                }
+            }
+
+            // Sort, Filter, View buttons
+            div { class: "flex items-center gap-2",
+                // Sort Dropdown
+                DropdownMenu {
+                    DropdownMenuTrigger {
+                        Button { variant: ButtonVariant::Outline, class: "h-9 gap-1",
+                            // No sort icon available; using text only
+                            "Sort"
                         }
                     }
-                    div { class: "flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
-                        div { class: "relative w-full md:w-96",
-                            div { class: "absolute left-2.5 top-2.5 size-4 text-zinc-500 dark:text-zinc-400",
-                                div { class: "w-4 h-4",
-                                    Icon { icon: LdSearch {} }
-                                }
-                            }
-                            input {
-                                class: "w-full pl-8 bg-white dark:bg-zinc-900 rounded border px-3 h-10 text-sm",
-                                r#type: "search",
-                                placeholder: "Search posts...",
-                                value: "{search_query}",
-                                oninput: move |e| search_query.set(e.value()),
-                            }
-                        }
-                        div { class: "flex items-center gap-2",
-                            button {
-                                class: if *layout_type.read() == LayoutType::Grid { "size-10 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "size-10 border rounded flex items-center justify-center" },
-                                onclick: move |_| layout_type.set(LayoutType::Grid),
-                                div { class: "size-4",
-                                    Icon { icon: LdGrid3x3 {} }
-                                }
-                                span { class: "sr-only", "Grid view" }
-                            }
-                            button {
-                                class: if *layout_type.read() == LayoutType::List { "size-10 bg-zinc-900 dark:bg-zinc-700 text-white rounded flex items-center justify-center" } else { "size-10 border rounded flex items-center justify-center" },
-                                onclick: move |_| layout_type.set(LayoutType::List),
-                                div { class: "size-4",
-                                    Icon { icon: LdLayoutList {} }
-                                }
-                                span { class: "sr-only", "List view" }
-                            }
+                    DropdownMenuContent { class: "w-48",
+                        DropdownMenuItem { "Title" }
+                        DropdownMenuItem { "Publish Date" }
+                        DropdownMenuItem { "Views" }
+                        DropdownMenuItem { "Likes" }
+                        DropdownMenuSeparator {}
+                        DropdownMenuItem { "Descending" }
+                    }
+                }
+
+                // Filter Popover (exclude Authors section as requested)
+                Popover {
+                    PopoverTrigger {
+                        Button { variant: ButtonVariant::Outline, class: "h-9 gap-1",
+                            // No filter icon available; using text only
+                            "Filter"
                         }
                     }
-                    h1 {"hello"}
-                    match &posts_list.data {
-                        Some(posts) => {
-                            match *layout_type.read() {
-                                LayoutType::Grid => rsx! {
-                                    div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
-                                        {posts.iter().map(|post| rsx! {
-                                            PostGridCard { post: post.clone() }
-                                        })}
+                    PopoverContent { class: "w-72 p-4",
+                        div { class: "space-y-4",
+                            div { class: "flex items-center justify-between",
+                                h4 { class: "font-medium", "Filters" }
+                                Button { variant: ButtonVariant::Ghost, class: "h-auto p-0 text-xs", "Clear all" }
+                            }
+
+                            // Status Filter
+                            div { class: "space-y-2",
+                                h5 { class: "text-sm font-medium", "Status" }
+                                div { class: "space-y-1",
+                                    div { class: "flex items-center gap-2",
+                                        Checkbox {}
+                                        span { class: "text-sm", "All" }
                                     }
-                                },
-                                LayoutType::List => rsx! {
-                                    div { class: "flex flex-col gap-6",
-                                        {posts.iter().map(|post| rsx! {
-                                            PostListItem { post: post.clone() }
-                                        })}
+                                    div { class: "flex items-center gap-2",
+                                        Checkbox {}
+                                        span { class: "text-sm", "Published" }
                                     }
-                                },
+                                    div { class: "flex items-center gap-2",
+                                        Checkbox {}
+                                        span { class: "text-sm", "Draft" }
+                                    }
+                                }
+                            }
+
+                            div { class: "-mx-4 my-2 h-px bg-border" }
+
+                            // Category Filter
+                            div { class: "space-y-2",
+                                h5 { class: "text-sm font-medium", "Categories" }
+                                div { class: "max-h-32 overflow-y-auto space-y-1 pr-2",
+                                    div { class: "flex items-center gap-2",
+                                        Checkbox {}
+                                        span { class: "text-sm", "Technology" }
+                                    }
+                                    div { class: "flex items-center gap-2",
+                                        Checkbox {}
+                                        span { class: "text-sm", "Design" }
+                                    }
+                                    div { class: "flex items-center gap-2",
+                                        Checkbox {}
+                                        span { class: "text-sm", "Business" }
+                                    }
+                                }
+                            }
+
+                            div { class: "-mx-4 my-2 h-px bg-border" }
+
+                            // Tags Filter
+                            div { class: "space-y-2",
+                                h5 { class: "text-sm font-medium", "Tags" }
+                                div { class: "max-h-32 overflow-y-auto space-y-1 pr-2",
+                                    div { class: "flex items-center gap-2",
+                                        Checkbox {}
+                                        span { class: "text-sm", "React" }
+                                    }
+                                    div { class: "flex items-center gap-2",
+                                        Checkbox {}
+                                        span { class: "text-sm", "JavaScript" }
+                                    }
+                                    div { class: "flex items-center gap-2",
+                                        Checkbox {}
+                                        span { class: "text-sm", "Tailwind" }
+                                    }
+                                }
                             }
                         }
-                        None => rsx! {
-                            h1 {"None found"}
+                    }
+                }
+
+                // View Mode Buttons (static)
+                Button { class: "h-9 w-9", variant: ButtonVariant::Default,
+                    div { class: "h-4 w-4", Icon { icon: LdGrid3x3 {} } }
+                    span { class: "sr-only", "Grid view" }
+                }
+                Button { class: "h-9 w-9", variant: ButtonVariant::Outline,
+                    div { class: "h-4 w-4", Icon { icon: LdLayoutList {} } }
+                    span { class: "sr-only", "List view" }
+                }
+            }
+        }
+    }
+}
+
+// ActiveFilters Component (static badges)
+#[component]
+fn ActiveFilters() -> Element {
+    rsx! {
+        div { class: "flex flex-wrap items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400",
+            span { "12 posts" }
+            Badge { variant: BadgeVariant::Outline, "Published" }
+            Badge { variant: BadgeVariant::Outline, class: "gap-1",
+                // No user icon available; showing just text
+                "John Doe"
+            }
+            Badge { variant: BadgeVariant::Outline, class: "gap-1",
+                div { class: "h-3.5 w-3.5", Icon { icon: LdTag {} } }
+                "React"
+            }
+            Button { variant: ButtonVariant::Ghost, class: "h-7 px-2 text-xs", size: ButtonSize::Sm,
+                "Clear all"
+            }
+        }
+    }
+}
+
+// Body Component (renders grid of posts; static layout)
+#[component]
+fn Body() -> Element {
+    let posts_state = use_post();
+    let posts_list = posts_state.list.read();
+
+    rsx! {
+        match &posts_list.data {
+            Some(posts) => {
+                if posts.is_empty() {
+                    rsx! {
+                        div { class: "flex flex-col items-center justify-center py-12 text-center",
+                            div { class: "h-12 w-12 text-zinc-300 dark:text-zinc-700 mb-4",
+                                Icon { icon: LdMessageSquare {} }
+                            }
+                            h3 { class: "text-lg font-medium", "No posts found" }
+                            p { class: "text-zinc-500 dark:text-zinc-400 mt-1 max-w-md",
+                                "No posts match your current filters. Try adjusting your search or filter criteria."
+                            }
+                            Button { variant: ButtonVariant::Outline, class: "mt-4", "Clear all filters" }
                         }
                     }
+                } else {
+                    rsx! {
+                        div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
+                            {posts.iter().map(|post| rsx! { PostGridCard { post: post.clone() } })}
+                        }
+                    }
+                }
+            }
+            None => rsx! {
+                // Fallback empty state when no data
+                div { class: "flex flex-col items-center justify-center py-12 text-center",
+                    div { class: "h-12 w-12 text-zinc-300 dark:text-zinc-700 mb-4",
+                        Icon { icon: LdMessageSquare {} }
+                    }
+                    h3 { class: "text-lg font-medium", "No posts found" }
+                    p { class: "text-zinc-500 dark:text-zinc-400 mt-1 max-w-md",
+                        "No posts match your current filters. Try adjusting your search or filter criteria."
+                    }
+                    Button { variant: ButtonVariant::Outline, class: "mt-4", "Clear all filters" }
                 }
             }
         }
