@@ -33,11 +33,11 @@ pub struct TagState {
     pub remove: GlobalSignal<HashMap<i32, StateFrame<()>>>,
     pub list: GlobalSignal<StateFrame<Vec<Tag>>>,
     pub view: GlobalSignal<HashMap<i32, StateFrame<Option<Tag>>>>,
-    pub data_add: GlobalSignal<Option<()>>,
-    pub data_edit: GlobalSignal<Option<()>>,
-    pub data_remove: GlobalSignal<Option<()>>,
-    pub data_list: GlobalSignal<Vec<Tag>>,
-    pub data_view: GlobalSignal<HashMap<i32, Tag>>,
+    // pub data_add: GlobalSignal<Option<()>>,
+    // pub data_edit: GlobalSignal<Option<()>>,
+    // pub data_remove: GlobalSignal<Option<()>>,
+    // pub data_list: GlobalSignal<Vec<Tag>>,
+    // pub data_view: GlobalSignal<HashMap<i32, Tag>>,
 }
 
 impl TagState {
@@ -48,11 +48,11 @@ impl TagState {
             remove: GlobalSignal::new(|| HashMap::new()),
             list: GlobalSignal::new(|| StateFrame::new()),
             view: GlobalSignal::new(|| HashMap::new()),
-            data_add: GlobalSignal::new(|| None),
-            data_edit: GlobalSignal::new(|| None),
-            data_remove: GlobalSignal::new(|| None),
-            data_list: GlobalSignal::new(|| vec![]),
-            data_view: GlobalSignal::new(|| HashMap::new()),
+            // data_add: GlobalSignal::new(|| None),
+            // data_edit: GlobalSignal::new(|| None),
+            // data_remove: GlobalSignal::new(|| None),
+            // data_list: GlobalSignal::new(|| vec![]),
+            // data_view: GlobalSignal::new(|| HashMap::new()),
         }
     }
 }
