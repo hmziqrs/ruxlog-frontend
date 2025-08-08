@@ -1,5 +1,8 @@
 use super::{AuthState, LoginPayload, User, UserRole};
-use crate::{services::http_client, store::{StateFrame, ApiError}};
+use crate::{
+    services::http_client,
+    store::{ApiError, StateFrame},
+};
 use dioxus::{logger::tracing, prelude::*};
 use gloo_net::http::Response;
 #[cfg(target_arch = "wasm32")]
@@ -69,7 +72,9 @@ impl AuthState {
     pub async fn logout(&self) {
         self.logout_status.write().set_loading(None);
         let empty_body = {};
-        let result = http_client::post("/auth/v1/log_out", &empty_body).send().await;
+        let result = http_client::post("/auth/v1/log_out", &empty_body)
+            .send()
+            .await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
@@ -109,7 +114,9 @@ impl AuthState {
                         }
                         Err(e) => {
                             tracing::error!("Failed to parse user data: {}", e);
-                            self.init_status.write().set_failed(Some(format!("Failed to parse user data: {}", e)));
+                            self.init_status
+                                .write()
+                                .set_failed(Some(format!("Failed to parse user data: {}", e)));
                         }
                     }
                 } else if response.status() == 401 {
@@ -119,10 +126,11 @@ impl AuthState {
                 }
             }
             Err(e) => {
-                self.init_status.write().set_failed(Some(format!("Network error: {}", e)));
+                self.init_status
+                    .write()
+                    .set_failed(Some(format!("Network error: {}", e)));
             }
         }
-    
     }
 
     pub async fn login(&self, email: String, password: String) {
@@ -145,7 +153,9 @@ impl AuthState {
                         }
                         Err(e) => {
                             eprintln!("Failed to parse user data: {}", e);
-                            self.login_status.write().set_failed(Some(format!("Failed to parse user data: {}", e)));
+                            self.login_status
+                                .write()
+                                .set_failed(Some(format!("Failed to parse user data: {}", e)));
                         }
                     }
                 } else {
@@ -153,7 +163,9 @@ impl AuthState {
                 }
             }
             Err(e) => {
-                self.login_status.write().set_failed(Some(format!("Network error: {}", e)));
+                self.login_status
+                    .write()
+                    .set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }

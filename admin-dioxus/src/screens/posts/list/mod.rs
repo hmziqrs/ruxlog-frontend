@@ -63,7 +63,6 @@ pub fn PostsListScreen() -> Element {
         div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
             div { class: "container mx-auto py-8 px-4",
                 div { class: "flex flex-col gap-6",
-                    // Header
                     div { class: "flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
                         div {
                             h1 { class: "text-3xl font-bold tracking-tight", "Posts" }
@@ -80,7 +79,6 @@ pub fn PostsListScreen() -> Element {
                             }
                         }
                     }
-                    // Search and view mode
                     div { class: "flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
                         div { class: "relative w-full md:w-96",
                             div { class: "absolute left-2.5 top-2.5 size-4 text-zinc-500 dark:text-zinc-400",
@@ -170,15 +168,11 @@ fn PostGridCard(post: Post) -> Element {
                 div { class: "flex items-start justify-between",
                     div { class: "space-y-1.5",
                         div { class: "flex items-center gap-2",
-                            // Category badge
-                            // if let Some(category) = &post.category {
                                 Badge {
                                     variant: BadgeVariant::Outline,
                                     class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800",
                                     "{post.category.name}"
                                 }
-                            // }
-                            // Published/Draft status
                             span { class: if post.is_published() { "px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" } else { "px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
                                 "POST_STATUS"
                             }
@@ -298,9 +292,7 @@ fn PostListItem(post: Post) -> Element {
                     div { class: "flex items-start justify-between",
                         div { class: "space-y-1",
                             div { class: "flex items-center gap-2",
-                                // Category badge
                                     Badge { variant: BadgeVariant::Secondary, "{post.category.name}" }
-                                // Published status
                                 span { class: if post.is_published() { "px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" } else { "px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
                                     "POST_STATIUS"
                                 }
@@ -328,7 +320,6 @@ fn PostListItem(post: Post) -> Element {
                             "{excerpt}"
                         }
                     }
-                    // Tags
                     if !post.tags.is_empty() {
                         div { class: "flex flex-wrap gap-1.5 mt-3",
                             {post.tags.iter().take(5).map(|tag| rsx! {
@@ -339,7 +330,6 @@ fn PostListItem(post: Post) -> Element {
                             }
                         }
                     }
-                    // Author and stats
                     div { class: "flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t",
                         div { class: "flex items-center gap-2",
                             Avatar { class: "w-8 h-8",
@@ -357,7 +347,6 @@ fn PostListItem(post: Post) -> Element {
                                 "{post.author.name}"
                             }
                         }
-                        // Stats
                         div { class: "flex items-center gap-4 mt-2 sm:mt-0 text-zinc-500 dark:text-zinc-400",
                             div { class: "flex items-center gap-1 text-xs",
                                 div { class: "w-3.5 h-3.5",
