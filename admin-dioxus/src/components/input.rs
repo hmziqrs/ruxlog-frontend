@@ -30,7 +30,7 @@ where
 {
     let mut form = props.form.clone();
     let name = props.name.clone();
-    
+
     let field = {
         let read = form.read();
         read.get_field(&name).unwrap().clone()
@@ -39,7 +39,7 @@ where
     let name_on = name.clone();
     let name_ob = name.clone();
     let name_of = name.clone();
-    
+
     let onchange_handler = props.onchange.clone();
     let onblur_handler = props.onblur.clone();
     let onfocus_handler = props.onfocus.clone();
