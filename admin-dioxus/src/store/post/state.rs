@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
+use crate::store::{PaginatedList, StateFrame};
 use dioxus::prelude::*;
-use crate::store::StateFrame;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PostAuthor {
@@ -29,19 +29,18 @@ pub struct Post {
     pub content: String,
     pub slug: String,
     pub excerpt: Option<String>,
-    pub featured_image_url: Option<String>,
-    pub is_published: bool,
+    // #[serde(rename = "featured_image")]
+    pub featured_image: Option<String>,
     pub published_at: Option<String>,
     pub created_at: String,
     pub updated_at: String,
-    pub author_id: i32,
     pub author: PostAuthor,
-    pub category_id: Option<i32>,
-    pub category: Option<PostCategory>,
-    pub tag_ids: Vec<i32>,
+    pub category: PostCategory,
     pub tags: Vec<PostTag>,
     pub likes_count: i32,
     pub view_count: i32,
+    pub comment_count: i32,
+    pub status: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -77,7 +76,7 @@ pub struct PostEditPayload {
 
 pub struct PostState {
     pub view: GlobalSignal<std::collections::HashMap<i32, StateFrame<Option<Post>>>>,
-    pub list: GlobalSignal<StateFrame<Vec<Post>>>,
+    pub list: GlobalSignal<StateFrame<PaginatedList<Post>>>,
     pub add: GlobalSignal<StateFrame<()>>,
     pub edit: GlobalSignal<std::collections::HashMap<i32, StateFrame<()>>>,
     pub remove: GlobalSignal<std::collections::HashMap<i32, StateFrame<()>>>,
