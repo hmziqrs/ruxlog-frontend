@@ -1,3 +1,5 @@
+use std::fmt::{self, Display};
+
 use crate::store::{PaginatedList, StateFrame};
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -22,6 +24,26 @@ pub struct PostTag {
     pub name: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+// #[serde(rename_all = "snake_case")]
+pub enum PostStatus {
+    Draft,
+    Published,
+    Archived,
+}
+
+impl fmt::Display for PostStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Choose what you want to show to the user; here: Title Case
+        let label = match self {
+            PostStatus::Draft => "Draft",
+            PostStatus::Published => "Published",
+            PostStatus::Archived => "Archived",
+        };
+        f.write_str(label)
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Post {
     pub id: i32,
@@ -39,8 +61,22 @@ pub struct Post {
     pub tags: Vec<PostTag>,
     pub likes_count: i32,
     pub view_count: i32,
-    pub comment_count: i32,
-    pub status: String,
+    pub comment_count: i64,
+    pub status: PostStatus,
+}
+
+impl Post {
+    pub fn is_published(&self) -> bool {
+        self.status == PostStatus::Published
+    }
+
+    pub fn is_draft(&self) -> bool {
+        self.status == PostStatus::Draft
+    }
+
+    pub fn is_archived(&self) -> bool {
+        self.status == PostStatus::Archived
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -50,27 +86,35 @@ pub struct PostFilters {
     pub ascending: Option<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PostCreatePayload {
     pub title: String,
-    pub content: String,
     pub slug: String,
+    pub content: String,
     pub excerpt: Option<String>,
-    pub featured_image_url: Option<String>,
-    pub is_published: Option<bool>,
-    pub category_id: Option<i32>,
-    pub tag_ids: Option<Vec<i32>>,
+    pub featured_image: Option<String>,
+    pub status: PostStatus,
+    pub author_id: i32,
+    pub published_at: Option<String>,
+    pub category_id: i32,
+    pub view_count: i32,
+    pub likes_count: i32,
+    pub tag_ids: Vec<i32>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PostEditPayload {
     pub title: Option<String>,
-    pub content: Option<String>,
     pub slug: Option<String>,
+    pub content: Option<String>,
     pub excerpt: Option<String>,
-    pub featured_image_url: Option<String>,
-    pub is_published: Option<bool>,
+    pub featured_image: Option<String>,
+    pub status: Option<PostStatus>,
+    pub published_at: Option<String>,
+    pub updated_at: String,
     pub category_id: Option<i32>,
+    pub view_count: Option<i32>,
+    pub likes_count: Option<i32>,
     pub tag_ids: Option<Vec<i32>>,
 }
 
