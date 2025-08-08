@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 #[component]
-pub fn UserListScreen() -> Element {
+pub fn UsersListScreen() -> Element {
     rsx! {
         div { "User List (placeholder)" }
     }
