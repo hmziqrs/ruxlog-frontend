@@ -147,7 +147,7 @@ fn PostGridCard(post: Post) -> Element {
     rsx! {
         Card { class: "pt-0 pb-0 overflow-hidden transition-all hover:shadow-md dark:bg-zinc-900",
             // Featured image
-            if let Some(featured_image) = &post.featured_image_url {
+            if let Some(featured_image) = &post.featured_image {
                 div { class: " aspect-video w-full overflow-hidden",
                     img {
                         src: "{featured_image}",
@@ -168,20 +168,16 @@ fn PostGridCard(post: Post) -> Element {
                     div { class: "space-y-1.5",
                         div { class: "flex items-center gap-2",
                             // Category badge
-                            if let Some(category) = &post.category {
+                            // if let Some(category) = &post.category {
                                 Badge {
                                     variant: BadgeVariant::Outline,
                                     class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800",
-                                    "{category.name}"
+                                    "{post.category.name}"
                                 }
-                            }
+                            // }
                             // Published/Draft status
-                            span { class: if post.is_published { "px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" } else { "px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
-                                if post.is_published {
-                                    "Published"
-                                } else {
-                                    "Draft"
-                                }
+                            span { class: if post.is_published() { "px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" } else { "px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
+                                "POST_STATUS"
                             }
                         }
                         h3 { class: "font-semibold text-lg line-clamp-2", "{post.title}" }
@@ -248,7 +244,7 @@ fn PostGridCard(post: Post) -> Element {
                             Icon { icon: LdCalendar {} }
                         }
                         span {
-                            if post.is_published && post.published_at.is_some() {
+                            if post.is_published() && post.published_at.is_some() {
                                 {format_short_date(&post.published_at.clone().unwrap_or_default())}
                             } else {
                                 {format_short_date(&post.created_at)}
@@ -279,7 +275,7 @@ fn PostListItem(post: Post) -> Element {
         Card { class: "pt-0 pb-0 overflow-hidden transition-all hover:shadow-md dark:bg-zinc-900",
             div { class: "flex flex-col md:flex-row",
                 // Featured image
-                if let Some(featured_image) = &post.featured_image_url {
+                if let Some(featured_image) = &post.featured_image {
                     div { class: "md:w-48 lg:w-60 aspect-video md:aspect-square overflow-hidden",
                         img {
                             src: "{featured_image}",
@@ -300,16 +296,10 @@ fn PostListItem(post: Post) -> Element {
                         div { class: "space-y-1",
                             div { class: "flex items-center gap-2",
                                 // Category badge
-                                if let Some(category) = &post.category {
-                                    Badge { variant: BadgeVariant::Secondary, "{category.name}" }
-                                }
+                                    Badge { variant: BadgeVariant::Secondary, "{post.category.name}" }
                                 // Published status
-                                span { class: if post.is_published { "px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" } else { "px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
-                                    if post.is_published {
-                                        "Published"
-                                    } else {
-                                        "Draft"
-                                    }
+                                span { class: if post.is_published() { "px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" } else { "px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
+                                    "POST_STATIUS"
                                 }
                             }
                             h3 { class: "font-semibold text-lg", "{post.title}" }
@@ -377,7 +367,7 @@ fn PostListItem(post: Post) -> Element {
                                     Icon { icon: LdCalendar {} }
                                 }
                                 span {
-                                    if post.is_published && post.published_at.is_some() {
+                                    if post.is_published() && post.published_at.is_some() {
                                         {format_short_date(&post.published_at.clone().unwrap_or_default())}
                                     } else {
                                         {format_short_date(&post.created_at)}
