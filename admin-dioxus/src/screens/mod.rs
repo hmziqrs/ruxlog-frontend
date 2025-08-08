@@ -7,6 +7,7 @@ mod tags;
 mod users;
 
 pub use analytics::*;
+pub use categories::*;
 pub use home::*;
 pub use login::*;
 pub use posts::*;

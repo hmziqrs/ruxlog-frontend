@@ -86,7 +86,7 @@ pub fn PostsListScreen() -> Element {
                         div { class: "flex items-center gap-2",
                             Button {
                                 onclick: move |_| {
-                                    nav.push(Route::AddBlogScreen {});
+                                    nav.push(Route::PostsAddScreen {});
                                 },
                                 "Create post"
                             }
