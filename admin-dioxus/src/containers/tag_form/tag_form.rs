@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 use super::form::{use_tag_form, TagForm};
 use crate::components::{AppInput, ColorPicker};
-use crate::ui::shadcn::Checkbox;
+use crate::ui::shadcn::{Button, ButtonSize, ButtonVariant, Checkbox};
 use crate::utils::colors::get_contrast_yiq;
 
 #[derive(Props, PartialEq, Clone)]
@@ -49,7 +49,7 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                             div { class: "space-y-3",
                                 div { class: "flex items-center justify-between",
                                     label { class: "block text-sm font-medium", "Slug" }
-                                    button { r#type: "button", class: "h-8 px-3 text-xs border rounded border-zinc-200 dark:border-zinc-800",
+                                    Button { variant: ButtonVariant::Outline, size: ButtonSize::Sm,
                                         onclick: move |_| {
                                             let name_value = form.peek().get_field("name").unwrap().value.clone();
                                             if !name_value.is_empty() {
@@ -167,10 +167,10 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
 
                     // Actions
                     div { class: "flex gap-3 pt-4",
-                        button { r#type: "button", class: "w-full h-10 border rounded border-zinc-200 dark:border-zinc-800", "Cancel" }
-                        button { class: "w-full h-10 rounded bg-primary text-white gap-2",
-                            onclick: move |e| {
-                                e.prevent_default();
+                        Button { class: "flex-1 w-auto", variant: ButtonVariant::Outline, "Cancel" }
+                        Button { class: "flex-1 w-auto",
+                            onclick: move |_| {
+                                // e.prevent_default();
                                 let submit = props.on_submit.clone();
                                 form.write().on_submit(move |val| { submit.call(val); });
                             },
