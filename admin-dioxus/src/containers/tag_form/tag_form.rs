@@ -1,19 +1,59 @@
 use dioxus::{logger::tracing, prelude::*};
 
 use super::form::{use_tag_form, TagForm};
-use crate::components::AppInput;
+use crate::components::{AppInput, ColorPicker};
+use crate::ui::shadcn::Checkbox;
+
+#[derive(Props, PartialEq, Clone)]
+pub struct TagFormContainerProps {
+    #[props(default)]
+    pub initial: Option<TagForm>,
+    pub on_submit: EventHandler<TagForm>,
+    #[props(default)]
+    pub title: Option<String>,
+    #[props(default)]
+    pub submit_label: Option<String>,
+}
 
 #[component]
-pub fn TagFormContainer() -> Element {
-    let initial_tag_form = TagForm::new();
+pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
+    let initial_tag_form = props.initial.clone().unwrap_or_else(TagForm::new);
     let tag_form_hook = use_tag_form(initial_tag_form);
     let mut form = tag_form_hook.form;
     let mut auto_slug = tag_form_hook.auto_slug;
+    
+    // Helper functions for color contrast (YIQ)
+    fn hex_to_rgb(hex: &str) -> Option<(u8, u8, u8)> {
+        let hex = hex.trim().trim_start_matches('#');
+        let full = match hex.len() {
+            3 => {
+                let mut s = String::with_capacity(6);
+                for c in hex.chars() { s.push(c); s.push(c); }
+                s
+            }
+            6 => hex.to_string(),
+            _ => return None,
+        };
+        u32::from_str_radix(&full, 16).ok().map(|val| {
+            let r = ((val >> 16) & 0xFF) as u8;
+            let g = ((val >> 8) & 0xFF) as u8;
+            let b = (val & 0xFF) as u8;
+            (r, g, b)
+        })
+    }
+    fn get_contrast_yiq(hex: &str) -> &'static str {
+        if let Some((r, g, b)) = hex_to_rgb(hex) {
+            let yiq = (r as u32 * 299 + g as u32 * 587 + b as u32 * 114) / 1000;
+            if yiq >= 128 { "#111111" } else { "#ffffff" }
+        } else {
+            "#111111"
+        }
+    }
 
     rsx! {
         div { class: "p-8 max-w-4xl mx-auto",
             div { class: "bg-base-100 shadow-2xl rounded-xl p-8",
-                h1 { class: "text-2xl font-bold mb-6 text-primary", "New Tag" }
+                h1 { class: "text-2xl font-bold mb-6 text-primary", {props.title.clone().unwrap_or_else(|| "New Tag".to_string())} }
                 form { class: "space-y-6",
                     // Name field
                     AppInput {
@@ -72,6 +112,67 @@ pub fn TagFormContainer() -> Element {
                         }
                     }
 
+                    // Appearance: color picker and preview
+                    div { class: "space-y-3",
+                        h2 { class: "text-sm font-semibold text-primary", "Appearance" }
+                        div { class: "space-y-2",
+                            label { class: "block text-sm font-medium", "Tag color" }
+                            ColorPicker {
+                                value: form.read().data.color.clone(),
+                                onchange: move |val| {
+                                    form.write().update_field("color", val);
+                                },
+                            }
+                        }
+                        // Preview chip
+                        {
+                            let color = form.read().data.color.clone();
+                            let text_color = get_contrast_yiq(&color);
+                            let style = format!(
+                                "background-color: {}; color: {}; border-color: rgba(0,0,0,0.06);",
+                                color,
+                                text_color
+                            );
+                            rsx! {
+                                div { class: "space-y-1",
+                                    label { class: "block text-sm font-medium", "Preview" }
+                                    div { class: "flex items-center gap-3",
+                                        span { class: "inline-flex items-center rounded-md px-2.5 py-1.5 text-sm font-medium shadow-sm ring-1 ring-inset",
+                                            style: style,
+                                            span { class: "mr-2 inline-block w-2.5 h-2.5 rounded-full", style: "background-color: rgba(255,255,255,0.4);" }
+                                            {
+                                                let name = form.read().data.name.clone();
+                                                if name.is_empty() { "Tag preview".to_string() } else { name }
+                                            }
+                                        }
+                                        code { class: "text-xs border rounded px-1.5 py-0.5", {color} }
+                                    }
+                                    p { class: "text-xs opacity-70", "Text color auto-adjusts for readability." }
+                                }
+                            }
+                        }
+                    }
+
+                    // Visibility: active toggle
+                    div { class: "space-y-2",
+                        h2 { class: "text-sm font-semibold text-primary", "Visibility" }
+                        div { class: "flex items-center justify-between",
+                            div { class: "space-y-0.5",
+                                label { class: "block text-sm font-medium", "Active" }
+                                p { class: "text-xs opacity-70",
+                                    if form.read().data.active { "This tag will be visible across your site." } else { "This tag will be hidden and unavailable for selection." }
+                                }
+                            }
+                            Checkbox {
+                                class: Some("size-6 rounded".to_string()),
+                                checked: form.read().data.active,
+                                onchange: move |checked: bool| {
+                                    form.write().update_field("active", checked.to_string());
+                                },
+                            }
+                        }
+                    }
+
                     // Form actions
                     div { class: "flex justify-end gap-4 pt-4",
                         button { class: "btn", r#type: "button", "Cancel" }
@@ -80,12 +181,13 @@ pub fn TagFormContainer() -> Element {
                             onclick: move |e| {
                                 e.prevent_default();
                                 tracing::info!("Form submitted OK ??");
-                                form.write()
-                                    .on_submit(|val| {
-                                        tracing::info!("Tag form submitted: {:?}", val);
-                                    });
+                                let submit = props.on_submit.clone();
+                                form.write().on_submit(move |val| {
+                                    tracing::info!("Tag form submitted: {:?}", val);
+                                    submit.call(val);
+                                });
                             },
-                            "Create Tag"
+                            {props.submit_label.clone().unwrap_or_else(|| "Create Tag".to_string())}
                         }
                     }
                 }

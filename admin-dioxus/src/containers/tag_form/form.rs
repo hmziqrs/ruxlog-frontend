@@ -14,6 +14,10 @@ pub struct TagForm {
     pub slug: String,
     
     pub description: String,
+    // Hex color like #3b82f6
+    pub color: String,
+    // Visibility: whether the tag is publicly visible
+    pub active: bool,
 }
 
 fn validate_slug(slug: &str) -> Result<(), ValidationError> {
@@ -32,6 +36,8 @@ impl TagForm {
             name: String::new(),
             slug: String::new(),
             description: String::new(),
+            color: "#3b82f6".to_string(),
+            active: true,
         }
     }
 
@@ -63,6 +69,8 @@ impl OxFormModel for TagForm {
         map.insert("name".to_string(), self.name.clone());
         map.insert("slug".to_string(), self.slug.clone());
         map.insert("description".to_string(), self.description.clone());
+        map.insert("color".to_string(), self.color.clone());
+        map.insert("active".to_string(), if self.active { "true".to_string() } else { "false".to_string() });
         map
     }
 
@@ -71,6 +79,11 @@ impl OxFormModel for TagForm {
             "name" => self.name = value.to_string(),
             "slug" => self.slug = value.to_string(),
             "description" => self.description = value.to_string(),
+            "color" => self.color = value.to_string(),
+            "active" => {
+                let v = value.trim().to_lowercase();
+                self.active = matches!(v.as_str(), "true" | "1" | "yes" | "on");
+            }
             _ => {}
         }
     }
