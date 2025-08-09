@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::router::Route;
-use crate::store::{use_tag, Tag};
+use crate::store::{use_tag, Tag, TagsListQuery};
 use crate::ui::shadcn::{
     Badge, BadgeVariant, Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage,
     BreadcrumbSeparator, Button, ButtonVariant, Card, DropdownMenu, DropdownMenuContent,
@@ -18,12 +18,18 @@ pub fn TagsListScreen() -> Element {
     let nav = use_navigator();
     let tags_state = use_tag();
     let mut search_query = use_signal(|| String::new());
-    let mut status_filter = use_signal(|| "all".to_string()); // all | active | inactive
+    let mut page = use_signal(|| 1u64);
+    let mut sort_order = use_signal(|| "desc".to_string()); // asc | desc
 
     // Fetch tags on mount
     use_effect(move || {
         spawn(async move {
-            tags_state.list().await;
+            let q = TagsListQuery {
+                page: Some(page.read().clone()),
+                search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) },
+                sort_order: Some(sort_order.read().clone()),
+            };
+            tags_state.list_with_query(q).await;
         });
     });
 
@@ -47,41 +53,15 @@ pub fn TagsListScreen() -> Element {
     }
 
     // Snapshot data for rendering
-    let tags: Vec<Tag> = list
-        .data
-        .clone()
-        .map(|p| p.data.clone())
-        .unwrap_or_default();
+    let (tags, total_items, current_page, _per_page) = if let Some(p) = list.data.clone() {
+        (p.data.clone(), p.total, p.page, p.per_page)
+    } else {
+        (Vec::<Tag>::new(), 0, 1, 10)
+    };
 
     let total = tags.len();
     let active = tags.iter().filter(|t| t.is_active).count();
     let inactive = total.saturating_sub(active);
-
-    // Filtered view
-    let query = search_query.read().to_lowercase();
-    let status = status_filter.read().clone();
-    let filtered: Vec<Tag> = tags
-        .into_iter()
-        .filter(|t| {
-            let matches_search = if query.is_empty() {
-                true
-            } else {
-                t.name.to_lowercase().contains(&query)
-                    || t.slug.to_lowercase().contains(&query)
-                    || t
-                        .description
-                        .as_ref()
-                        .map(|d| d.to_lowercase().contains(&query))
-                        .unwrap_or(false)
-            };
-            let matches_status = match status.as_str() {
-                "active" => t.is_active,
-                "inactive" => !t.is_active,
-                _ => true,
-            };
-            matches_search && matches_status
-        })
-        .collect();
 
     rsx! {
         // Page wrapper
@@ -160,23 +140,40 @@ pub fn TagsListScreen() -> Element {
                                     class: "pl-8 w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm",
                                     placeholder: "Search tags by name, description, or slug",
                                     value: search_query.read().clone(),
-                                    oninput: move |e| search_query.set(e.value()),
+                                    oninput: move |e| {
+                                        let val = e.value();
+                                        search_query.set(val.clone());
+                                        page.set(1);
+                                        let q = TagsListQuery { page: Some(1), search: if val.is_empty() { None } else { Some(val) }, sort_order: Some(sort_order.read().clone()) };
+                                        spawn({
+                                            let tags_state = use_tag();
+                                            async move { tags_state.list_with_query(q).await; }
+                                        });
+                                    },
                                 }
                             }
                         }
 
-                        // Status + Active Filters
+                        // Sort + Active Filters
                         div { class: "flex w-full items-center gap-2 md:w-auto",
                             div { class: "w-full md:w-48",
-                                label { class: "sr-only", r#for: "status", "Status" }
+                                label { class: "sr-only", r#for: "sort", "Sort order" }
                                 select {
-                                    id: "status",
+                                    id: "sort",
                                     class: "w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm",
-                                    value: status_filter.read().clone(),
-                                    oninput: move |e| status_filter.set(e.value()),
-                                    option { value: "all", "All status" }
-                                    option { value: "active", "Active" }
-                                    option { value: "inactive", "Inactive" }
+                                    value: sort_order.read().clone(),
+                                    oninput: move |e| {
+                                        let s = e.value();
+                                        sort_order.set(s.clone());
+                                        page.set(1);
+                                        let q = TagsListQuery { page: Some(1), search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sort_order: Some(s) };
+                                        spawn({
+                                            let tags_state = use_tag();
+                                            async move { tags_state.list_with_query(q).await; }
+                                        });
+                                    },
+                                    option { value: "desc", "Name: Z → A" }
+                                    option { value: "asc", "Name: A → Z" }
                                 }
                             }
 
@@ -185,16 +182,19 @@ pub fn TagsListScreen() -> Element {
                             div { class: "flex items-center gap-2",
                                 if !search_query.read().is_empty() {
                                     Badge { variant: BadgeVariant::Secondary, class: "max-w-[14rem] cursor-pointer truncate",
-                                        onclick: move |_| search_query.set(String::new()),
+                                        onclick: move |_| {
+                                            search_query.set(String::new());
+                                            page.set(1);
+                                            let q = TagsListQuery { page: Some(1), search: None, sort_order: Some(sort_order.read().clone()) };
+                                            spawn({
+                                                let tags_state = use_tag();
+                                                async move { tags_state.list_with_query(q).await; }
+                                            });
+                                        },
                                         "Search: \"{search_query.read().clone()}\""
                                     }
                                 }
-                                if status_filter.read().as_str() != "all" {
-                                    Badge { variant: BadgeVariant::Secondary, class: "cursor-pointer",
-                                        onclick: move |_| status_filter.set("all".to_string()),
-                                        "Status: {status_filter.read().clone()}"
-                                    }
-                                }
+                                Badge { variant: BadgeVariant::Secondary, class: "cursor-default", "Sort: {sort_order.read().clone()}" }
                             }
                         }
                     }
@@ -216,7 +216,7 @@ pub fn TagsListScreen() -> Element {
                                     }
                                 }
                                 tbody {
-                                    if filtered.is_empty() {
+                                    if tags.is_empty() {
                                         tr { class: "border-b border-border/60",
                                             td { colspan: "6", class: "py-16 px-4",
                                                 div { class: "flex flex-col items-center justify-center gap-3 text-center",
@@ -235,7 +235,7 @@ pub fn TagsListScreen() -> Element {
                                             }
                                         }
                                     } else {
-                                        {filtered.iter().map(|tag| rsx! {
+                                        {tags.iter().map(|tag| rsx! {
                                             tr { class: "border-b border-border/60 hover:bg-muted/40 transition-colors",
                                                 td { class: "py-3 px-4",
                                                     div { class: "flex items-center gap-3",
@@ -273,6 +273,24 @@ pub fn TagsListScreen() -> Element {
                                             }
                                         })}
                                     }
+                                }
+                            }
+                            // Pagination
+                            div { class: "flex items-center justify-between border-t border-border/60 p-3 text-sm text-muted-foreground",
+                                div { class: "hidden md:block", "Page {current_page} • {total_items} items" }
+                                div { class: "flex items-center gap-2 ml-auto",
+                                    Button { variant: ButtonVariant::Outline, disabled: !list.data.clone().map(|p| p.has_previous_page()).unwrap_or(false), onclick: move |_| {
+                                            let new_page = current_page.saturating_sub(1).max(1);
+                                            page.set(new_page);
+                                            let q = TagsListQuery { page: Some(new_page), search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sort_order: Some(sort_order.read().clone()) };
+                                            spawn({ let tags_state = use_tag(); async move { tags_state.list_with_query(q).await; } });
+                                        }, "Previous" }
+                                    Button { disabled: !list.data.clone().map(|p| p.has_next_page()).unwrap_or(false), onclick: move |_| {
+                                            let new_page = current_page + 1;
+                                            page.set(new_page);
+                                            let q = TagsListQuery { page: Some(new_page), search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sort_order: Some(sort_order.read().clone()) };
+                                            spawn({ let tags_state = use_tag(); async move { tags_state.list_with_query(q).await; } });
+                                        }, "Next" }
                                 }
                             }
                         }

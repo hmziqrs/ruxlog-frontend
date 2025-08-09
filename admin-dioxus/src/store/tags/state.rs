@@ -33,6 +33,13 @@ impl Default for Tag {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub struct TagsListQuery {
+    pub page: Option<u64>,
+    pub search: Option<String>,
+    pub sort_order: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct TagsAddPayload {
     pub name: String,
     pub slug: String,

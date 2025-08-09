@@ -1251,6 +1251,9 @@
   .p-2 {
     padding: calc(0.25rem * 2);
   }
+  .p-3 {
+    padding: calc(0.25rem * 3);
+  }
   .p-4 {
     padding: calc(0.25rem * 4);
   }
