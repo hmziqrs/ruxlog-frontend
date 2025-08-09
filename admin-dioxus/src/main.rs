@@ -11,6 +11,7 @@ pub mod screens;
 pub mod services;
 pub mod store;
 pub mod ui;
+pub mod utils;
 
 fn main() {
     dioxus::launch(App);
