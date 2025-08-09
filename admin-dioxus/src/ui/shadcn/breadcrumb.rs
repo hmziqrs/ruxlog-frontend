@@ -3,64 +3,54 @@ use hmziq_dioxus_free_icons::{Icon, icons::ld_icons::{LdChevronRight, LdEllipsis
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BreadcrumbProps {
-    /// Child elements to render inside the component
     pub children: Element,
-    /// Additional CSS classes to apply
     #[props(default)]
     pub class: Option<String>,
 }
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BreadcrumbListProps {
-    /// Child elements to render inside the component
     pub children: Element,
-    /// Additional CSS classes to apply
     #[props(default)]
     pub class: Option<String>,
 }
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BreadcrumbItemProps {
-    /// Child elements to render inside the component
     pub children: Element,
-    /// Additional CSS classes to apply
     #[props(default)]
     pub class: Option<String>,
 }
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BreadcrumbLinkProps {
-    /// Child elements to render inside the component
     pub children: Element,
-    /// Additional CSS classes to apply
     #[props(default)]
     pub class: Option<String>,
-    /// Link URL
-    pub href: String,
+    #[props(default)]
+    pub href: Option<String>,
+    #[props(default)]
+    pub onclick: Option<Callback<()>>,
+    
 }
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BreadcrumbPageProps {
-    /// Child elements to render inside the component
     pub children: Element,
-    /// Additional CSS classes to apply
     #[props(default)]
     pub class: Option<String>,
 }
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BreadcrumbSeparatorProps {
-    /// Custom separator element (optional)
     #[props(default)]
     pub children: Option<Element>,
-    /// Additional CSS classes to apply
     #[props(default)]
     pub class: Option<String>,
 }
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BreadcrumbEllipsisProps {
-    /// Additional CSS classes to apply
     #[props(default)]
     pub class: Option<String>,
 }
@@ -118,6 +108,11 @@ pub fn BreadcrumbLink(props: BreadcrumbLinkProps) -> Element {
             "data-slot": "breadcrumb-link",
             class: class.join(" "),
             href: props.href,
+            onclick: move |_| {
+                if let Some(handler) = &props.onclick {
+                    handler.call(())
+                }
+            },
             {props.children}
         }
     }
