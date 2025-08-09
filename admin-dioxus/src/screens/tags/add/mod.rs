@@ -1,18 +1,41 @@
 use dioxus::prelude::*;
 use crate::ui::shadcn::{
-    Alert, AlertDescription, AlertTitle,
-    Badge, BadgeVariant,
     Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator,
-    Button, ButtonVariant,
-    Card, CardContent, CardDescription, CardHeader, CardTitle,
-    Checkbox,
 };
+use crate::containers::{TagFormContainer, TagForm};
+use crate::store::{use_tag, TagsAddPayload};
 
 #[component]
 pub fn TagsAddScreen() -> Element {
-    // Static placeholder values (no interactivity/state)
-    let default_color = "#3b82f6";
-    let url_preview = "/tags/your-tag-slug";
+    let tags = use_tag();
+
+    // Helpers to compute contrast for text_color
+    fn hex_to_rgb(hex: &str) -> Option<(u8, u8, u8)> {
+        let hex = hex.trim().trim_start_matches('#');
+        let full = match hex.len() {
+            3 => {
+                let mut s = String::with_capacity(6);
+                for c in hex.chars() { s.push(c); s.push(c); }
+                s
+            }
+            6 => hex.to_string(),
+            _ => return None,
+        };
+        u32::from_str_radix(&full, 16).ok().map(|val| {
+            let r = ((val >> 16) & 0xFF) as u8;
+            let g = ((val >> 8) & 0xFF) as u8;
+            let b = (val & 0xFF) as u8;
+            (r, g, b)
+        })
+    }
+    fn get_contrast_yiq(hex: &str) -> &'static str {
+        if let Some((r, g, b)) = hex_to_rgb(hex) {
+            let yiq = (r as u32 * 299 + g as u32 * 587 + b as u32 * 114) / 1000;
+            if yiq >= 128 { "#111111" } else { "#ffffff" }
+        } else {
+            "#111111"
+        }
+    }
 
     rsx! {
         // Page wrapper
@@ -43,148 +66,33 @@ pub fn TagsAddScreen() -> Element {
                                 "Define how your tag looks and behaves. Keep names concise and meaningful."
                             }
                         }
-                        div { class: "flex items-center gap-2",
-                            // Save button (static)
-                            Button { r#type: "submit".to_string(), class: "gap-2".to_string(), "Save Tag" }
-                        }
+                        div { class: "flex items-center gap-2" }
                     }
                 }
             }
 
-            // Content
+            // Content: render reusable form component; submission handled here
             div { class: "container mx-auto px-4 py-8",
-                form { id: "new-tag-form", class: "grid grid-cols-1 gap-6 lg:grid-cols-3",
-                    // Main column
-                    div { class: "lg:col-span-2 space-y-6",
-                        Card { class: Some("dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800".to_string()),
-                            CardHeader { class: Some("pb-4".to_string()),
-                                CardTitle { "Tag details" }
-                                CardDescription { "Basic information and metadata for your tag." }
-                            }
-                            CardContent { class: Some("space-y-6".to_string()),
-                                // Name
-                                div { class: "space-y-2",
-                                    label { r#for: "name", "Name" }
-                                    input {
-                                        id: "name",
-                                        name: "name",
-                                        r#type: "text",
-                                        placeholder: "e.g. Product Updates",
-                                        class: "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 w-full h-10 rounded-md border px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-                                    }
-                                    p { class: "text-xs text-zinc-500 dark:text-zinc-400",
-                                        "Keep it short and recognizable. You can change this later."
-                                    }
-                                }
-
-                                // Separator
-                                div { class: "bg-zinc-200 dark:bg-zinc-800 h-px w-full" }
-
-                                // Slug
-                                div { class: "space-y-2",
-                                    div { class: "flex items-center justify-between",
-                                        label { r#for: "slug", "Slug" }
-                                        Button {
-                                            r#type: "button".to_string(),
-                                            variant: ButtonVariant::Outline,
-                                            class: "h-8 px-3 text-xs border-zinc-200 dark:border-zinc-800".to_string(),
-                                            "Generate from name"
-                                        }
-                                    }
-                                    input {
-                                        id: "slug",
-                                        name: "slug",
-                                        r#type: "text",
-                                        placeholder: "product-updates",
-                                        class: "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 w-full h-10 rounded-md border px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-                                    }
-                                    div { class: "flex items-center gap-2",
-                                        span { class: "text-xs text-zinc-500 dark:text-zinc-400", "URL preview:" }
-                                        code { class: "rounded bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800", {url_preview} }
-                                    }
-                                }
-
-                                // Separator
-                                div { class: "bg-zinc-200 dark:bg-zinc-800 h-px w-full" }
-
-                                // Description
-                                div { class: "space-y-2",
-                                    label { r#for: "description", "Description" }
-                                    textarea {
-                                        id: "description",
-                                        name: "description",
-                                        placeholder: "Briefly describe what posts belong in this tag.",
-                                        class: "h-28 resize-none bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 w-full rounded-md border px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-                                    }
-                                    p { class: "text-xs text-zinc-500 dark:text-zinc-400",
-                                        "Optional. Shown in certain listings and SEO contexts."
-                                    }
-                                }
-                            }
-                        }
-
-                        Alert { class: Some("border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60".to_string()),
-                            AlertTitle { "Design tip" }
-                            AlertDescription {
-                                "Use contrasting colors to ensure the tag remains legible in both light and dark themes."
-                            }
-                        }
-                    }
-
-                    // Sidebar column
-                    div { class: "space-y-6 lg:sticky lg:top-24 h-fit",
-                        // Appearance
-                        Card { class: Some("dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800".to_string()),
-                            CardHeader { class: Some("pb-4".to_string()),
-                                CardTitle { "Appearance" }
-                                CardDescription { "Choose a color and preview the tag." }
-                            }
-                            CardContent { class: Some("space-y-4".to_string()),
-                                div { class: "space-y-2",
-                                    label { "Tag color" }
-                                    input { r#type: "color", value: default_color, class: "h-9 w-14 rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent p-1" }
-                                }
-                                div { class: "space-y-2",
-                                    label { "Preview" }
-                                    div { class: "flex items-center gap-3",
-                                        span { class: "inline-flex items-center rounded-md px-2.5 py-1.5 text-sm font-medium shadow-sm ring-1 ring-inset",
-                                            style: format!("background-color: {default_color}; color: {}; border-color: rgba(0,0,0,0.06);", "#ffffff"),
-                                            span { class: "mr-2 inline-block size-2.5 rounded-full bg-white/40" }
-                                            "Tag preview"
-                                        }
-                                        Badge { variant: BadgeVariant::Outline, class: "text-xs border-zinc-200 dark:border-zinc-800".to_string(), "#3b82f6" }
-                                    }
-                                    p { class: "text-xs text-zinc-500 dark:text-zinc-400", "Text color auto-adjusts for readability." }
-                                }
-                            }
-                        }
-
-                        // Visibility
-                        Card { class: Some("dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800".to_string()),
-                            CardHeader { class: Some("pb-4".to_string()),
-                                CardTitle { "Visibility" }
-                                CardDescription { "Control whether this tag is available publicly." }
-                            }
-                            CardContent { class: Some("space-y-4".to_string()),
-                                div { class: "flex items-center justify-between",
-                                    div { class: "space-y-0.5",
-                                        label { r#for: "active", "Active" }
-                                        p { class: "text-xs text-zinc-500 dark:text-zinc-400",
-                                            "This tag will be visible across your site."
-                                        }
-                                    }
-                                    // Static checkbox (acts as switch stand-in)
-                                    Checkbox { class: Some("size-6 rounded-full".to_string()), checked: true }
-                                }
-                            }
-                        }
-
-                        // Footer actions (static)
-                        div { class: "flex gap-2 pt-2",
-                            Button { r#type: "button".to_string(), variant: ButtonVariant::Outline, class: "w-full border-zinc-200 dark:border-zinc-800".to_string(), "Cancel" }
-                            Button { r#type: "submit".to_string(), class: "w-full gap-2".to_string(), "Save Tag" }
-                        }
-                    }
+                TagFormContainer {
+                    title: Some("New Tag".to_string()),
+                    submit_label: Some("Create Tag".to_string()),
+                    on_submit: move |val: TagForm| {
+                        let description = if val.description.trim().is_empty() { None } else { Some(val.description.clone()) };
+                        let color = if val.color.trim().is_empty() { None } else { Some(val.color.clone()) };
+                        let text_color = Some(get_contrast_yiq(&val.color).to_string());
+                        let payload = TagsAddPayload {
+                            name: val.name.clone(),
+                            slug: val.slug.clone(),
+                            description,
+                            color,
+                            text_color,
+                            is_active: Some(val.active),
+                        };
+                        let tags = tags;
+                        spawn(async move {
+                            tags.add(payload).await;
+                        });
+                    },
                 }
             }
         }

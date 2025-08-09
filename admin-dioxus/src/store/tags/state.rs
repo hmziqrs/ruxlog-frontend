@@ -11,6 +11,9 @@ pub struct Tag {
     pub created_at: String,
     pub updated_at: String,
     pub description: Option<String>,
+    pub color: String,
+    pub text_color: String,
+    pub is_active: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -18,6 +21,9 @@ pub struct TagsAddPayload {
     pub name: String,
     pub slug: String,
     pub description: Option<String>,
+    pub color: Option<String>,
+    pub text_color: Option<String>,
+    pub is_active: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -25,6 +31,9 @@ pub struct TagsEditPayload {
     pub name: Option<String>,
     pub slug: Option<String>,
     pub description: Option<String>,
+    pub color: Option<String>,
+    pub text_color: Option<String>,
+    pub is_active: Option<bool>,
 }
 
 pub struct TagsState {
