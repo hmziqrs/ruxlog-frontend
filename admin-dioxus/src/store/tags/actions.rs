@@ -13,10 +13,11 @@ impl TagsState {
                     match response.json::<Tag>().await {
                         Ok(tag) => {
                             self.add.write().set_success(None, None);
-                            let mut tmp = self.list.write();
-                            let mut tmp_list = tmp.data.clone().unwrap();
-                            tmp_list.data.insert(0, tag);
-                            tmp.set_success(Some(tmp_list), None);
+                            self.list().await;
+                            // let mut tmp = self.list.write();
+                            // let mut tmp_list = tmp.data.clone().unwrap();
+                            // tmp_list.data.insert(0, tag);
+                            // tmp.set_success(Some(tmp_list), None);
                         }
                         Err(e) => {
                             self.add.write().set_failed(Some(format!("Failed to parse tag: {}", e)));
