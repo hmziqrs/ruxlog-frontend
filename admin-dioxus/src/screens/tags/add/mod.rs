@@ -16,7 +16,7 @@ pub fn TagsAddScreen() -> Element {
         div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
             // Top region with breadcrumb and header
             div { class: "border-b border-zinc-200 dark:border-zinc-800 bg-gradient-to-b from-zinc-50/60 to-transparent dark:from-zinc-950/40",
-                div { class: "container mx-auto px-4 py-6 md:py-8",
+                div { class: "container mx-auto px-4 py-8 md:py-12",
                     // Breadcrumb
                     Breadcrumb {
                         BreadcrumbList {
@@ -33,8 +33,8 @@ pub fn TagsAddScreen() -> Element {
                     }
 
                     // Header row
-                    div { class: "mt-4 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center",
-                        div { class: "space-y-1",
+                    div { class: "mt-6 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center",
+                        div { class: "space-y-2",
                             h1 { class: "text-3xl md:text-4xl font-bold tracking-tight", "Create Tag" }
                             p { class: "text-sm md:text-base text-zinc-600 dark:text-zinc-400",
                                 "Define how your tag looks and behaves. Keep names concise and meaningful."
@@ -46,7 +46,7 @@ pub fn TagsAddScreen() -> Element {
             }
 
             // Content: render reusable form component; submission handled here
-            div { class: "container mx-auto px-4 py-8",
+            div { class: "container mx-auto px-4 py-10 md:py-12",
                 TagFormContainer {
                     title: Some("New Tag".to_string()),
                     submit_label: Some("Create Tag".to_string()),
