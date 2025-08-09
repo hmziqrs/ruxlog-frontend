@@ -2,6 +2,7 @@ use std::fmt::{self, Display};
 
 use crate::store::{PaginatedList, StateFrame};
 use dioxus::prelude::*;
+use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -119,11 +120,11 @@ pub struct PostEditPayload {
 }
 
 pub struct PostState {
-    pub view: GlobalSignal<std::collections::HashMap<i32, StateFrame<Option<Post>>>>,
+    pub view: GlobalSignal<HashMap<i32, StateFrame<Option<Post>>>>,
     pub list: GlobalSignal<StateFrame<PaginatedList<Post>>>,
     pub add: GlobalSignal<StateFrame<()>>,
-    pub edit: GlobalSignal<std::collections::HashMap<i32, StateFrame<()>>>,
-    pub remove: GlobalSignal<std::collections::HashMap<i32, StateFrame<()>>>,
+    pub edit: GlobalSignal<HashMap<i32, StateFrame<()>>>,
+    pub remove: GlobalSignal<HashMap<i32, StateFrame<()>>>,
     pub bulk_remove: GlobalSignal<StateFrame<()>>,
     pub filters: GlobalSignal<PostFilters>,
 }
@@ -131,11 +132,11 @@ pub struct PostState {
 impl PostState {
     pub fn new() -> Self {
         PostState {
-            view: GlobalSignal::new(|| std::collections::HashMap::new()),
+            view: GlobalSignal::new(|| HashMap::new()),
             list: GlobalSignal::new(|| StateFrame::new()),
             add: GlobalSignal::new(|| StateFrame::new()),
-            edit: GlobalSignal::new(|| std::collections::HashMap::new()),
-            remove: GlobalSignal::new(|| std::collections::HashMap::new()),
+            edit: GlobalSignal::new(|| HashMap::new()),
+            remove: GlobalSignal::new(|| HashMap::new()),
             bulk_remove: GlobalSignal::new(|| StateFrame::new()),
             filters: GlobalSignal::new(|| PostFilters::default()),
         }

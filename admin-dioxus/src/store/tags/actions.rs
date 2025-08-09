@@ -1,10 +1,10 @@
-use super::{Tag, TagAddPayload, TagEditPayload, TagState};
+use super::{Tag, TagsAddPayload, TagsEditPayload, TagsState};
 use crate::services::http_client;
-use crate::store::StateFrame;
+use crate::store::{PaginatedList, StateFrame};
 use std::collections::HashMap;
 
-impl TagState {
-    pub async fn add(&self, payload: TagAddPayload) {
+impl TagsState {
+    pub async fn add(&self, payload: TagsAddPayload) {
         self.add.write().set_loading(None);
         let result = http_client::post("/tag/v1/create", &payload).send().await;
         match result {
@@ -13,9 +13,10 @@ impl TagState {
                     match response.json::<Tag>().await {
                         Ok(tag) => {
                             self.add.write().set_success(None, None);
-                            self.data_view.write().insert(tag.id, tag.clone());
-                            let mut list = self.data_list.write();
-                            list.insert(0, tag);
+                            let mut tmp = self.list.write();
+                            let mut tmp_list = tmp.data.clone().unwrap();
+                            tmp_list.data.insert(0, tag);
+                            tmp.set_success(Some(tmp_list), None);
                         }
                         Err(e) => {
                             self.add.write().set_failed(Some(format!("Failed to parse tag: {}", e)));
@@ -31,7 +32,7 @@ impl TagState {
         }
     }
 
-    pub async fn edit(&self, id: i32, payload: TagEditPayload) {
+    pub async fn edit(&self, id: i32, payload: TagsEditPayload) {
         let mut edit_map = self.edit.write();
         edit_map.entry(id).or_insert_with(StateFrame::new).set_loading(None);
         let result = http_client::post(&format!("/tag/v1/update/{}", id), &payload).send().await;
@@ -41,13 +42,12 @@ impl TagState {
                     match response.json::<Tag>().await {
                         Ok(tag) => {
                             edit_map.entry(id).or_insert_with(StateFrame::new).set_success(None, None);
-                            self.data_view.write().insert(tag.id, tag.clone());
-                            let mut list = self.data_list.write();
-                            for item in list.iter_mut() {
-                                if item.id == tag.id {
-                                    *item = tag.clone();
-                                }
+                            let mut list = self.list.write();
+                            let mut tmp_list = list.data.clone().unwrap();
+                            if let Some(item) = tmp_list.data.iter_mut().find(|t| t.id == id) {
+                                *item = tag.clone();
                             }
+                            list.set_success(Some(tmp_list), None);
                         }
                         Err(e) => {
                             edit_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Failed to parse tag: {}", e)));
@@ -71,9 +71,6 @@ impl TagState {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
                     remove_map.entry(id).or_insert_with(StateFrame::new).set_success(None, None);
-                    let mut list = self.data_list.write();
-                    list.retain(|item| item.id != id);
-                    self.data_view.write().clear();
                 } else {
                     remove_map.entry(id).or_insert_with(StateFrame::new).set_api_error(&response).await;
                 }
@@ -90,10 +87,9 @@ impl TagState {
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
-                    match response.json::<Vec<Tag>>().await {
+                    match response.json::<PaginatedList<Tag>>().await {
                         Ok(tags) => {
                             self.list.write().set_success(Some(tags.clone()), None);
-                            *self.data_list.write() = tags;
                         }
                         Err(e) => {
                             self.list.write().set_failed(Some(format!("Failed to parse tags: {}", e)));
@@ -119,7 +115,6 @@ impl TagState {
                     match response.json::<Tag>().await {
                         Ok(tag) => {
                             view_map.entry(id).or_insert_with(StateFrame::new).set_success(Some(Some(tag.clone())), None);
-                            self.data_view.write().insert(tag.id, tag);
                         }
                         Err(e) => {
                             view_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Failed to parse tag: {}", e)));
