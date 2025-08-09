@@ -10,6 +10,9 @@ pub struct BadgeProps {
     #[props(default = BadgeVariant::Default)]
     pub variant: BadgeVariant,
 
+    #[props(default)]
+    pub onclick: Option<EventHandler<MouseEvent>>,
+
     #[props(extends = GlobalAttributes)]
     pub attributes: Vec<Attribute>,
 }
@@ -40,6 +43,16 @@ pub fn Badge(props: BadgeProps) -> Element {
     let classes = vec![base_classes.to_string(), props.variant.to_class_string().to_string(), props.class.clone()];
 
     rsx! {
-        div { "data-slot": "badge", class: classes.join(" "), ..props.attributes, {props.children} }
+        div {
+            "data-slot": "badge",
+            class: classes.join(" "),
+            onclick: move |e| {
+                if let Some(handler) = &props.onclick {
+                    handler.call(e);
+                }
+            },
+            ..props.attributes,
+            {props.children}
+        }
     }
 }
