@@ -11,3 +11,5 @@ pub use toast::*;
 
 mod color_picker;
 pub use color_picker::*;
+mod tag;
+pub use tag::*;
