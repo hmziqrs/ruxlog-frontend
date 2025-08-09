@@ -16,6 +16,22 @@ pub struct Tag {
     pub is_active: bool,
 }
 
+impl Default for Tag {
+    fn default() -> Self {
+        Self {
+            id: 0,
+            name: String::new(),
+            slug: String::new(),
+            created_at: String::new(),
+            updated_at: String::new(),
+            description: None,
+            color: "#3b82f6".to_string(),
+            text_color: "#ffffff".to_string(),
+            is_active: true,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct TagsAddPayload {
     pub name: String,
