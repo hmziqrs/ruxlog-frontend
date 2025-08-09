@@ -120,7 +120,7 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                                         label { class: "block text-sm font-medium", "Text color" }
                                         p { class: "text-xs opacity-70", "Enable to choose a custom text color. Otherwise it auto-adjusts for readability." }
                                     }
-                                    Checkbox { class: Some("size-6 rounded".to_string()), checked: form.read().data.custom_text_color, onchange: move |checked: bool| { form.write().update_field("custom_text_color", checked.to_string()); } }
+                                    Checkbox { checked: form.read().data.custom_text_color, onchange: move |checked: bool| { form.write().update_field("custom_text_color", checked.to_string()); } }
                                 }
                                 if form.read().data.custom_text_color {
                                     ColorPicker { value: form.read().data.text_color.clone(), onchange: move |val| { form.write().update_field("text_color", val); } }
@@ -160,7 +160,7 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                                     label { class: "block text-sm font-medium", "Active" }
                                     p { class: "text-xs text-zinc-500 dark:text-zinc-400", if form.read().data.active { "This tag will be visible across your site." } else { "This tag will be hidden and unavailable for selection." } }
                                 }
-                                Checkbox { class: Some("size-6 rounded".to_string()), checked: form.read().data.active, onchange: move |checked: bool| { form.write().update_field("active", checked.to_string()); } }
+                                Checkbox { class: None, checked: form.read().data.active, onchange: move |checked: bool| { form.write().update_field("active", checked.to_string()); } }
                             }
                         }
                     }
