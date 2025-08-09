@@ -8,7 +8,7 @@ title = "admin-dioxus"
 [web.watcher]
 index_on_404 = true
 reload_html = true
-watch_path = ["src", "assets"]
+watch_path = ["src", "public", "assets"]
 
 [web.resource]
 
