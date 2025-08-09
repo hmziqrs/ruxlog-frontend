@@ -42,11 +42,6 @@ pub struct CategoryState {
     pub remove: GlobalSignal<HashMap<i32, StateFrame<()>>>,
     pub list: GlobalSignal<StateFrame<Vec<Category>>>,
     pub view: GlobalSignal<HashMap<i32, StateFrame<Option<Category>>>>,
-    pub data_add: GlobalSignal<Option<()>>,
-    pub data_edit: GlobalSignal<Option<()>>,
-    pub data_remove: GlobalSignal<Option<()>>,
-    pub data_list: GlobalSignal<Vec<Category>>,
-    pub data_view: GlobalSignal<HashMap<i32, Category>>,
 }
 
 impl CategoryState {
@@ -57,11 +52,6 @@ impl CategoryState {
             remove: GlobalSignal::new(|| HashMap::new()),
             list: GlobalSignal::new(|| StateFrame::new()),
             view: GlobalSignal::new(|| HashMap::new()),
-            data_add: GlobalSignal::new(|| None),
-            data_edit: GlobalSignal::new(|| None),
-            data_remove: GlobalSignal::new(|| None),
-            data_list: GlobalSignal::new(|| vec![]),
-            data_view: GlobalSignal::new(|| HashMap::new()),
         }
     }
 }

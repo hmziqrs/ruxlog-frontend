@@ -32,7 +32,7 @@ pub struct User {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-pub struct UserAddPayload {
+pub struct UsersAddPayload {
     pub avatar: Option<String>,
     pub email: String,
     pub is_verified: bool,
@@ -41,7 +41,7 @@ pub struct UserAddPayload {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-pub struct UserEditPayload {
+pub struct UsersEditPayload {
     pub avatar: Option<String>,
     pub email: Option<String>,
     pub is_verified: Option<bool>,
@@ -49,38 +49,28 @@ pub struct UserEditPayload {
     pub role: Option<UserRole>,
 }
 
-pub struct UserState {
+pub struct UsersState {
     pub add: GlobalSignal<StateFrame<()>>,
     pub edit: GlobalSignal<HashMap<i32, StateFrame<()>>>,
     pub remove: GlobalSignal<HashMap<i32, StateFrame<()>>>,
     pub list: GlobalSignal<StateFrame<Vec<User>>>,
     pub view: GlobalSignal<HashMap<i32, StateFrame<Option<User>>>>,
-    pub data_add: GlobalSignal<Option<()>>,
-    pub data_edit: GlobalSignal<Option<()>>,
-    pub data_remove: GlobalSignal<Option<()>>,
-    pub data_list: GlobalSignal<Vec<User>>,
-    pub data_view: GlobalSignal<HashMap<i32, Option<User>>>,
 }
 
-impl UserState {
+impl UsersState {
     pub fn new() -> Self {
-        UserState {
+        UsersState {
             add: GlobalSignal::new(|| StateFrame::new()),
             edit: GlobalSignal::new(|| HashMap::new()),
             remove: GlobalSignal::new(|| HashMap::new()),
             list: GlobalSignal::new(|| StateFrame::new()),
             view: GlobalSignal::new(|| HashMap::new()),
-            data_add: GlobalSignal::new(|| None),
-            data_edit: GlobalSignal::new(|| None),
-            data_remove: GlobalSignal::new(|| None),
-            data_list: GlobalSignal::new(|| vec![]),
-            data_view: GlobalSignal::new(|| HashMap::new()),
         }
     }
 }
 
-static USER_STATE: std::sync::OnceLock<UserState> = std::sync::OnceLock::new();
+static USER_STATE: std::sync::OnceLock<UsersState> = std::sync::OnceLock::new();
 
-pub fn use_user() -> &'static UserState {
-    USER_STATE.get_or_init(|| UserState::new())
+pub fn use_user() -> &'static UsersState {
+    USER_STATE.get_or_init(|| UsersState::new())
 }

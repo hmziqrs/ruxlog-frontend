@@ -1,13 +1,13 @@
 mod auth;
-mod category;
+mod categories;
 mod lib;
-mod post;
+mod posts;
 mod tags;
-mod user;
+mod users;
 
 pub use auth::*;
-pub use category::*;
+pub use categories::*;
 pub use lib::*;
-pub use post::*;
+pub use posts::*;
 pub use tags::*;
-pub use user::*;
+pub use users::*;
