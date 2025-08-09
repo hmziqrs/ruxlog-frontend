@@ -117,15 +117,13 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                                 let color = data.color.clone();
                                 let text_color = if data.custom_text_color && !data.text_color.trim().is_empty() { data.text_color.clone() } else { get_contrast_yiq(&color).to_string() };
                                 let preview_tag = Tag {
-                                    id: 0,
                                     name: if data.name.is_empty() { "Tag preview".to_string() } else { data.name.clone() },
                                     slug: data.slug.clone(),
-                                    created_at: "".to_string(),
-                                    updated_at: "".to_string(),
                                     description: if data.description.trim().is_empty() { None } else { Some(data.description.clone()) },
                                     color: color.clone(),
                                     text_color: text_color.clone(),
                                     is_active: data.active,
+                                    ..Tag::default()
                                 };
                                 rsx! {
                                     div { class: "space-y-3",
