@@ -98,10 +98,41 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                                 },
                             }
                         }
+                        // Text color override
+                        div { class: "space-y-2",
+                            div { class: "flex items-center justify-between",
+                                div { class: "space-y-0.5",
+                                    label { class: "block text-sm font-medium", "Text color" }
+                                    p { class: "text-xs opacity-70",
+                                        "Enable to choose a custom text color. Otherwise it auto-adjusts for readability."
+                                    }
+                                }
+                                Checkbox {
+                                    class: Some("size-6 rounded".to_string()),
+                                    checked: form.read().data.custom_text_color,
+                                    onchange: move |checked: bool| {
+                                        form.write().update_field("custom_text_color", checked.to_string());
+                                    },
+                                }
+                            }
+                            if form.read().data.custom_text_color {
+                                ColorPicker {
+                                    value: form.read().data.text_color.clone(),
+                                    onchange: move |val| {
+                                        form.write().update_field("text_color", val);
+                                    },
+                                }
+                            }
+                        }
                         // Preview chip
                         {
-                            let color = form.read().data.color.clone();
-                            let text_color = get_contrast_yiq(&color);
+                            let data = form.read().data.clone();
+                            let color = data.color.clone();
+                            let text_color = if data.custom_text_color && !data.text_color.trim().is_empty() {
+                                data.text_color.clone()
+                            } else {
+                                get_contrast_yiq(&color).to_string()
+                            };
                             let style = format!(
                                 "background-color: {}; color: {}; border-color: rgba(0,0,0,0.06);",
                                 color,
@@ -121,7 +152,13 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                                         }
                                         code { class: "text-xs border rounded px-1.5 py-0.5", {color} }
                                     }
-                                    p { class: "text-xs opacity-70", "Text color auto-adjusts for readability." }
+                                    p { class: "text-xs opacity-70", 
+                                        if form.read().data.custom_text_color { 
+                                            "Using custom text color."
+                                        } else { 
+                                            "Text color auto-adjusts for readability." 
+                                        } 
+                                    }
                                 }
                             }
                         }
