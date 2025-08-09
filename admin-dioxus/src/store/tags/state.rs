@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use dioxus::prelude::*;
-use crate::store::StateFrame;
+use crate::store::{StateFrame, PaginatedList};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -14,24 +14,24 @@ pub struct Tag {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-pub struct TagAddPayload {
+pub struct TagsAddPayload {
     pub name: String,
     pub slug: String,
     pub description: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-pub struct TagEditPayload {
+pub struct TagsEditPayload {
     pub name: Option<String>,
     pub slug: Option<String>,
     pub description: Option<String>,
 }
 
-pub struct TagState {
+pub struct TagsState {
     pub add: GlobalSignal<StateFrame<()>>,
     pub edit: GlobalSignal<HashMap<i32, StateFrame<()>>>,
     pub remove: GlobalSignal<HashMap<i32, StateFrame<()>>>,
-    pub list: GlobalSignal<StateFrame<Vec<Tag>>>,
+    pub list: GlobalSignal<StateFrame<PaginatedList<Tag>>>,
     pub view: GlobalSignal<HashMap<i32, StateFrame<Option<Tag>>>>,
     // pub data_add: GlobalSignal<Option<()>>,
     // pub data_edit: GlobalSignal<Option<()>>,
@@ -40,9 +40,9 @@ pub struct TagState {
     // pub data_view: GlobalSignal<HashMap<i32, Tag>>,
 }
 
-impl TagState {
+impl TagsState {
     pub fn new() -> Self {
-        TagState {
+        Self {
             add: GlobalSignal::new(|| StateFrame::new()),
             edit: GlobalSignal::new(|| HashMap::new()),
             remove: GlobalSignal::new(|| HashMap::new()),
@@ -57,8 +57,8 @@ impl TagState {
     }
 }
 
-static TAG_STATE: std::sync::OnceLock<TagState> = std::sync::OnceLock::new();
+static TAG_STATE: std::sync::OnceLock<TagsState> = std::sync::OnceLock::new();
 
-pub fn use_tag() -> &'static TagState {
-    TAG_STATE.get_or_init(|| TagState::new())
+pub fn use_tag() -> &'static TagsState {
+    TAG_STATE.get_or_init(|| TagsState::new())
 }
