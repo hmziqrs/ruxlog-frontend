@@ -8,3 +8,6 @@ pub use sidebar::*;
 pub use toast::*;
 // pub use command::*;
 // pub use shadcn_ui::*;
+
+mod color_picker;
+pub use color_picker::*;
