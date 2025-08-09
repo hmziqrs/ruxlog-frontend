@@ -3,6 +3,7 @@ use dioxus::prelude::*;
 use validator::{Validate, ValidationError};
 
 use crate::hooks::{OxForm, OxFormModel};
+use crate::utils::colors::get_contrast_yiq;
 
 #[derive(Debug, Validate, Clone, PartialEq)]
 pub struct TagForm {
@@ -16,6 +17,10 @@ pub struct TagForm {
     pub description: String,
     // Hex color like #3b82f6
     pub color: String,
+    // Optional override for text color when custom_text_color is true
+    pub text_color: String,
+    // Whether to use custom text color instead of auto-contrast
+    pub custom_text_color: bool,
     // Visibility: whether the tag is publicly visible
     pub active: bool,
 }
@@ -37,6 +42,9 @@ impl TagForm {
             slug: String::new(),
             description: String::new(),
             color: "#3b82f6".to_string(),
+            // default text color based on auto contrast of default bg
+            text_color: get_contrast_yiq("#3b82f6").to_string(),
+            custom_text_color: false,
             active: true,
         }
     }
@@ -70,6 +78,11 @@ impl OxFormModel for TagForm {
         map.insert("slug".to_string(), self.slug.clone());
         map.insert("description".to_string(), self.description.clone());
         map.insert("color".to_string(), self.color.clone());
+        map.insert("text_color".to_string(), self.text_color.clone());
+        map.insert(
+            "custom_text_color".to_string(),
+            if self.custom_text_color { "true".to_string() } else { "false".to_string() }
+        );
         map.insert("active".to_string(), if self.active { "true".to_string() } else { "false".to_string() });
         map
     }
@@ -80,6 +93,11 @@ impl OxFormModel for TagForm {
             "slug" => self.slug = value.to_string(),
             "description" => self.description = value.to_string(),
             "color" => self.color = value.to_string(),
+            "text_color" => self.text_color = value.to_string(),
+            "custom_text_color" => {
+                let v = value.trim().to_lowercase();
+                self.custom_text_color = matches!(v.as_str(), "true" | "1" | "yes" | "on");
+            }
             "active" => {
                 let v = value.trim().to_lowercase();
                 self.active = matches!(v.as_str(), "true" | "1" | "yes" | "on");

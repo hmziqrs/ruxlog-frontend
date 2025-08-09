@@ -53,7 +53,11 @@ pub fn TagsAddScreen() -> Element {
                     on_submit: move |val: TagForm| {
                         let description = if val.description.trim().is_empty() { None } else { Some(val.description.clone()) };
                         let color = if val.color.trim().is_empty() { None } else { Some(val.color.clone()) };
-                        let text_color = Some(get_contrast_yiq(&val.color).to_string());
+                        let text_color = if val.custom_text_color && !val.text_color.trim().is_empty() {
+                            Some(val.text_color.clone())
+                        } else {
+                            Some(get_contrast_yiq(&val.color).to_string())
+                        };
                         let payload = TagsAddPayload {
                             name: val.name.clone(),
                             slug: val.slug.clone(),
