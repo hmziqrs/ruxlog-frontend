@@ -4,38 +4,12 @@ use crate::ui::shadcn::{
 };
 use crate::containers::{TagFormContainer, TagForm};
 use crate::store::{use_tag, TagsAddPayload};
+use crate::utils::colors::get_contrast_yiq;
 
 #[component]
 pub fn TagsAddScreen() -> Element {
     let tags = use_tag();
 
-    // Helpers to compute contrast for text_color
-    fn hex_to_rgb(hex: &str) -> Option<(u8, u8, u8)> {
-        let hex = hex.trim().trim_start_matches('#');
-        let full = match hex.len() {
-            3 => {
-                let mut s = String::with_capacity(6);
-                for c in hex.chars() { s.push(c); s.push(c); }
-                s
-            }
-            6 => hex.to_string(),
-            _ => return None,
-        };
-        u32::from_str_radix(&full, 16).ok().map(|val| {
-            let r = ((val >> 16) & 0xFF) as u8;
-            let g = ((val >> 8) & 0xFF) as u8;
-            let b = (val & 0xFF) as u8;
-            (r, g, b)
-        })
-    }
-    fn get_contrast_yiq(hex: &str) -> &'static str {
-        if let Some((r, g, b)) = hex_to_rgb(hex) {
-            let yiq = (r as u32 * 299 + g as u32 * 587 + b as u32 * 114) / 1000;
-            if yiq >= 128 { "#111111" } else { "#ffffff" }
-        } else {
-            "#111111"
-        }
-    }
 
     rsx! {
         // Page wrapper
