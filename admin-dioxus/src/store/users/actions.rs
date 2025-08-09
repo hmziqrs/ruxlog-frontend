@@ -1,10 +1,10 @@
-use super::{User, UserAddPayload, UserEditPayload, UserState};
+use super::{User, UsersAddPayload, UsersEditPayload, UsersState};
 use crate::services::http_client;
 use crate::store::StateFrame;
 use std::collections::HashMap;
 
-impl UserState {
-    pub async fn add(&self, payload: UserAddPayload) {
+impl UsersState {
+    pub async fn add(&self, payload: UsersAddPayload) {
         self.add.write().set_loading(None);
         let result = http_client::post("/admin/user/v1/create", &payload).send().await;
         match result {
@@ -13,8 +13,10 @@ impl UserState {
                     match response.json::<User>().await {
                         Ok(user) => {
                             self.add.write().set_success(None, None);
-                            let mut list = self.data_list.write();
-                            list.insert(0, user);
+                            let mut tmp = self.list.write();
+                            let mut existing = tmp.data.clone().unwrap_or_default();
+                            existing.insert(0, user);
+                            tmp.set_success(Some(existing), None);
                         }
                         Err(e) => {
                             self.add.write().set_failed(Some(format!("Failed to parse user: {}", e)));
@@ -30,7 +32,7 @@ impl UserState {
         }
     }
 
-    pub async fn edit(&self, id: i32, payload: UserEditPayload) {
+    pub async fn edit(&self, id: i32, payload: UsersEditPayload) {
         let mut edit_map = self.edit.write();
         edit_map.entry(id).or_insert_with(StateFrame::new).set_loading(None);
         let result = http_client::post(&format!("/admin/user/v1/update/{}", id), &payload).send().await;
@@ -40,16 +42,12 @@ impl UserState {
                     match response.json::<User>().await {
                         Ok(user) => {
                             edit_map.entry(id).or_insert_with(StateFrame::new).set_success(None, None);
-                            let mut list = self.data_list.write();
-                            for item in list.iter_mut() {
-                                if item.id == id {
-                                    *item = user.clone();
-                                }
+                            let mut list = self.list.write();
+                            let mut existing = list.data.clone().unwrap_or_default();
+                            if let Some(item) = existing.iter_mut().find(|u| u.id == id) {
+                                *item = user.clone();
                             }
-                            let mut view = self.data_view.write();
-                            if view.contains_key(&id) {
-                                view.insert(id, Some(user));
-                            }
+                            list.set_success(Some(existing), None);
                         }
                         Err(e) => {
                             edit_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Failed to parse user: {}", e)));
@@ -73,9 +71,6 @@ impl UserState {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
                     remove_map.entry(id).or_insert_with(StateFrame::new).set_success(None, None);
-                    let mut list = self.data_list.write();
-                    list.retain(|user| user.id != id);
-                    self.data_view.write().remove(&id);
                 } else {
                     remove_map.entry(id).or_insert_with(StateFrame::new).set_api_error(&response).await;
                 }
@@ -95,7 +90,6 @@ impl UserState {
                     match response.json::<Vec<User>>().await {
                         Ok(users) => {
                             self.list.write().set_success(Some(users.clone()), None);
-                            *self.data_list.write() = users;
                         }
                         Err(e) => {
                             self.list.write().set_failed(Some(format!("Failed to parse users: {}", e)));
@@ -121,7 +115,6 @@ impl UserState {
                     match response.json::<User>().await {
                         Ok(user) => {
                             view_map.entry(id).or_insert_with(StateFrame::new).set_success(Some(Some(user.clone())), None);
-                            self.data_view.write().insert(id, Some(user));
                         }
                         Err(e) => {
                             view_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Failed to parse user: {}", e)));
@@ -143,10 +136,6 @@ impl UserState {
         *self.remove.write() = HashMap::new();
         *self.list.write() = StateFrame::new();
         *self.view.write() = HashMap::new();
-        *self.data_add.write() = None;
-        *self.data_edit.write() = None;
-        *self.data_remove.write() = None;
-        *self.data_list.write() = vec![];
-        *self.data_view.write() = HashMap::new();
+
     }
 }
