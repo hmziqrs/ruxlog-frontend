@@ -84,7 +84,8 @@ impl TagsState {
 
     pub async fn list(&self) {
         self.list.write().set_loading(None);
-        let result = http_client::get("/tag/v1/list").send().await;
+        let empty_body = "{}".to_string();
+        let result = http_client::post("/tag/v1/list/query", &empty_body).send().await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
