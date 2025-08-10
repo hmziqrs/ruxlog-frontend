@@ -29,6 +29,7 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
         Route::PostsListScreen {} => ("Posts", None),
         Route::CategoriesAddScreen {} => ("Categories", Some("New")),
         Route::CategoriesListScreen {} => ("Categories", None),
+        Route::CategoriesEditScreen { .. } => ("Categories", Some("Edit")),
         Route::TagsAddScreen {} => ("Tags", Some("New")),
         Route::TagsEditScreen { .. } => ("Tags", Some("Edit")),
         Route::TagsListScreen {} => ("Tags", None),

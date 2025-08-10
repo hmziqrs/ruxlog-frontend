@@ -20,7 +20,7 @@ pub fn CategoriesListScreen() -> Element {
     let mut search_query = use_signal(|| String::new());
     let mut status_filter = use_signal(|| "all".to_string()); // all | active | inactive
     let mut page = use_signal(|| 1u64);
-    let mut sort_order = use_signal(|| "desc".to_string()); // asc | desc
+    let sort_order = use_signal(|| "desc".to_string()); // asc | desc
 
     // Fetch categories on mount
     use_effect(move || {
@@ -37,10 +37,10 @@ pub fn CategoriesListScreen() -> Element {
 
     let list = cats_state.list.read();
     let list_loading = list.is_loading();
-    let list_failed = list.is_failed();
+    let _list_failed = list.is_failed();
 
     // Snapshot data for rendering
-    let (categories, total_items, current_page, _per_page) = if let Some(p) = list.data.clone() {
+    let (categories, _total_items, current_page, _per_page) = if let Some(p) = list.data.clone() {
         (p.data.clone(), p.total, p.page, p.per_page)
     } else {
         (Vec::<Category>::new(), 0, 1, 10)
@@ -129,7 +129,7 @@ pub fn CategoriesListScreen() -> Element {
                         search_query.set(val.clone());
                         page.set(1);
                         let q = CategoryListQuery { page: Some(1), search: if val.is_empty() { None } else { Some(val) }, sort_order: Some(sort_order.read().clone()), parent_id: None };
-                        spawn({  async move { cats_state.list_with_query(q).await; } });
+                        spawn(async move { cats_state.list_with_query(q).await; });
                     },
                     status_selected: status_filter.read().clone(),
                     on_status_select: move |value| { status_filter.set(value); },
@@ -182,7 +182,7 @@ pub fn CategoriesListScreen() -> Element {
                                                                     search_query.set(String::new());
                                                                     page.set(1);
                                                                     let q = CategoryListQuery { page: Some(1), search: None, sort_order: Some(sort_order.read().clone()), parent_id: None };
-                                                                    spawn({  async move { cats_state.list_with_query(q).await; } });
+                                                                    spawn(async move { cats_state.list_with_query(q).await; });
                                                                 }, "Clear search" }
                                                             Button { onclick: move |_| {nav.push(Route::CategoriesAddScreen {});}, "Create your first category" }
                                                         }
@@ -225,10 +225,10 @@ pub fn CategoriesListScreen() -> Element {
                                                                 DropdownMenuItem { onclick: move |_| { nav.push(Route::PostsListScreen {}); }, "View Posts" }
                                                                 DropdownMenuItem { class: "text-red-600 dark:text-red-400", onclick: move |_| {
                                                                         let id = category_id;
-                                                                        spawn({  async move {
+                                                                        spawn(async move {
                                                                             cats_state.remove(id).await;
                                                                             cats_state.list().await;
-                                                                        }});
+                                                                        });
                                                                     }, "Delete" }
                                                             }
                                                         }
@@ -248,13 +248,13 @@ pub fn CategoriesListScreen() -> Element {
                                     let new_page = current_page.saturating_sub(1).max(1);
                                     page.set(new_page);
                                     let q = CategoryListQuery { page: Some(new_page), search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sort_order: Some(sort_order.read().clone()), parent_id: None };
-                                    spawn({  async move { cats_state.list_with_query(q).await; } });
+                                    spawn(async move { cats_state.list_with_query(q).await; });
                                 },
                                 on_next: move |_| {
                                     let new_page = current_page + 1;
                                     page.set(new_page);
                                     let q = CategoryListQuery { page: Some(new_page), search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sort_order: Some(sort_order.read().clone()), parent_id: None };
-                                    spawn({  async move { cats_state.list_with_query(q).await; } });
+                                    spawn(async move { cats_state.list_with_query(q).await; });
                                 },
                             }
                         }
