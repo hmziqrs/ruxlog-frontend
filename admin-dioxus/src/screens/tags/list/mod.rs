@@ -13,6 +13,9 @@ use hmziq_dioxus_free_icons::{
     Icon,
 };
 
+use std::time::Duration;
+use gloo_timers::future::sleep;
+
 #[component]
 pub fn TagsListScreen() -> Element {
     let nav = use_navigator();
@@ -125,10 +128,24 @@ pub fn TagsListScreen() -> Element {
                     search_placeholder: "Search tags by name, description, or slug".to_string(),
                     disabled: list_loading,
                     on_search_input: move |val: String| {
+                        // Update UI state immediately, but debounce the fetch by 500ms.
                         search_query.set(val.clone());
                         page.set(1);
-                        let q = TagsListQuery { page: Some(1), search: if val.is_empty() { None } else { Some(val) }, sort_order: Some(sort_order.read().clone()) };
-                        spawn({  async move { tags_state.list_with_query(q).await; } });
+                        let search_query = search_query.clone();
+                        let sort_order = sort_order.clone();
+                        let tags_state = tags_state;
+                        spawn(async move {
+                            sleep(Duration::from_millis(500)).await;
+                            // Only fetch if the input hasn't changed during the debounce window
+                            if search_query.read().as_str() == val.as_str() {
+                                let q = TagsListQuery {
+                                    page: Some(1),
+                                    search: if val.is_empty() { None } else { Some(val) },
+                                    sort_order: Some(sort_order.read().clone()),
+                                };
+                                tags_state.list_with_query(q).await;
+                            }
+                        });
                     },
                     status_selected: status_filter.read().clone(),
                     on_status_select: move |value| { status_filter.set(value); },
@@ -181,7 +198,7 @@ pub fn TagsListScreen() -> Element {
                                                                     search_query.set(String::new());
                                                                     page.set(1);
                                                                     let q = TagsListQuery { page: Some(1), search: None, sort_order: Some(sort_order.read().clone()) };
-                                                                    spawn({  async move { tags_state.list_with_query(q).await; } });
+                                                                    spawn(async move { tags_state.list_with_query(q).await; });
                                                                 }, "Clear search" }
                                                             Button { onclick: move |_| {nav.push(Route::TagsAddScreen {});}, "Create your first tag" }
                                                         }
