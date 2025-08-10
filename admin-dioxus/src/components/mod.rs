@@ -15,3 +15,5 @@ mod tag;
 pub use tag::*;
 mod page_header;
 pub use page_header::*;
+mod form_skeleton;
+pub use form_skeleton::*;
