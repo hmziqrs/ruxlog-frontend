@@ -30,3 +30,6 @@ pub use list_error_banner::*;
 
 mod list_empty_state;
 pub use list_empty_state::*;
+
+mod image_upload;
+pub use image_upload::*;
