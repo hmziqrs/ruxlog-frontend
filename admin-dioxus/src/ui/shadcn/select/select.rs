@@ -1,7 +1,6 @@
 use dioxus::{logger::tracing, prelude::*};
 use hmziq_dioxus_free_icons::{icons::ld_icons::{LdChevronDown, LdCheck}, Icon};
 
-use crate::ui::shadcn::{Button, ButtonVariant};
 use crate::ui::custom::AppPortal;
 
 use super::state::{SelectContext, SelectProps};
@@ -13,6 +12,7 @@ pub fn Select(props: SelectProps) -> Element {
     rsx! {
         div {
             onkeydown: move |e| {
+                e.stop_propagation();
                 match e.key() {
                     Key::ArrowDown => {
                         if !state.read().is_open {
