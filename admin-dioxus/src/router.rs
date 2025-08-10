@@ -12,6 +12,7 @@ use crate::screens::PostsAddScreen;
 use crate::screens::PostsListScreen;
 use crate::screens::TagsAddScreen;
 use crate::screens::TagsListScreen;
+use crate::screens::TagsEditScreen;
 use crate::screens::UsersAddScreen;
 use crate::screens::UsersListScreen;
 
@@ -38,6 +39,8 @@ pub enum Route {
 
     #[route("/tags/new")]
     TagsAddScreen {},
+    #[route("/tags/:id/edit")]
+    TagsEditScreen { id: i32 },
     #[route("/tags/list")]
     TagsListScreen {},
 
