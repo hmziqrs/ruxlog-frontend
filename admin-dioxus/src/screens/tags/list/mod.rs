@@ -128,7 +128,7 @@ pub fn TagsListScreen() -> Element {
                         search_query.set(val.clone());
                         page.set(1);
                         let q = TagsListQuery { page: Some(1), search: if val.is_empty() { None } else { Some(val) }, sort_order: Some(sort_order.read().clone()) };
-                        spawn({ let tags_state = use_tag(); async move { tags_state.list_with_query(q).await; } });
+                        spawn({  async move { tags_state.list_with_query(q).await; } });
                     },
                     status_selected: status_filter.read().clone(),
                     on_status_select: move |value| { status_filter.set(value); },
@@ -181,7 +181,7 @@ pub fn TagsListScreen() -> Element {
                                                                     search_query.set(String::new());
                                                                     page.set(1);
                                                                     let q = TagsListQuery { page: Some(1), search: None, sort_order: Some(sort_order.read().clone()) };
-                                                                    spawn({ let tags_state = use_tag(); async move { tags_state.list_with_query(q).await; } });
+                                                                    spawn({  async move { tags_state.list_with_query(q).await; } });
                                                                 }, "Clear search" }
                                                             Button { onclick: move |_| {nav.push(Route::TagsAddScreen {});}, "Create your first tag" }
                                                         }
@@ -224,7 +224,7 @@ pub fn TagsListScreen() -> Element {
                                                                 DropdownMenuItem { onclick: move |_| { nav.push(Route::PostsListScreen {}); }, "View Posts" }
                                                                 DropdownMenuItem { class: "text-red-600 dark:text-red-400", onclick: move |_| {
                                                                         let id = tag_id;
-                                                                        spawn({ let tags_state = use_tag(); async move {
+                                                                        spawn({  async move {
                                                                             tags_state.remove(id).await;
                                                                             tags_state.list().await;
                                                                         }});
@@ -240,22 +240,20 @@ pub fn TagsListScreen() -> Element {
                                 }
                             }
                             // Pagination
-                            Pagination {
-                                label: format!("Page {} • {} items", current_page, total_items),
+                            Pagination::<Tag> {
+                                page: list.data.clone(),
                                 disabled: list_loading,
-                                prev_disabled: !list.data.clone().map(|p| p.has_previous_page()).unwrap_or(false),
-                                next_disabled: !list.data.clone().map(|p| p.has_next_page()).unwrap_or(false),
                                 on_prev: move |_| {
                                     let new_page = current_page.saturating_sub(1).max(1);
                                     page.set(new_page);
                                     let q = TagsListQuery { page: Some(new_page), search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sort_order: Some(sort_order.read().clone()) };
-                                    spawn({ let tags_state = use_tag(); async move { tags_state.list_with_query(q).await; } });
+                                    spawn({  async move { tags_state.list_with_query(q).await; } });
                                 },
                                 on_next: move |_| {
                                     let new_page = current_page + 1;
                                     page.set(new_page);
                                     let q = TagsListQuery { page: Some(new_page), search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sort_order: Some(sort_order.read().clone()) };
-                                    spawn({ let tags_state = use_tag(); async move { tags_state.list_with_query(q).await; } });
+                                    spawn({  async move { tags_state.list_with_query(q).await; } });
                                 },
                             }
                         }
