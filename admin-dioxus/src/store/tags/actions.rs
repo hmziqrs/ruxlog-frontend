@@ -43,12 +43,20 @@ impl TagsState {
                     match response.json::<Tag>().await {
                         Ok(tag) => {
                             edit_map.entry(id).or_insert_with(StateFrame::new).set_success(None, None);
+                            // Update list cache
                             let mut list = self.list.write();
                             let mut tmp_list = list.data.clone().unwrap();
                             if let Some(item) = tmp_list.data.iter_mut().find(|t| t.id == id) {
                                 *item = tag.clone();
                             }
                             list.set_success(Some(tmp_list), None);
+                            drop(list);
+                            // Update view cache to keep detail in sync
+                            let mut view_map = self.view.write();
+                            view_map
+                                .entry(id)
+                                .or_insert_with(StateFrame::new)
+                                .set_success(Some(Some(tag.clone())), None);
                         }
                         Err(e) => {
                             edit_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Failed to parse tag: {}", e)));
