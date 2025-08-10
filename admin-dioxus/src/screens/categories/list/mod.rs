@@ -39,7 +39,7 @@ pub fn CategoriesListScreen() -> Element {
 
     let list = cats_state.list.read();
     let list_loading = list.is_loading();
-    let _list_failed = list.is_failed();
+    let list_failed = list.is_failed();
 
     // Snapshot data for rendering
     let (categories, _total_items, current_page, _per_page) = if let Some(p) = list.data.clone() {
