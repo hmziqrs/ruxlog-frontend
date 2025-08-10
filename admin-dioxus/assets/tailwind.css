@@ -1743,6 +1743,9 @@
       --tw-ring-color: color-mix(in oklab, var(--color-green-500) 10%, transparent);
     }
   }
+  .ring-zinc-200 {
+    --tw-ring-color: var(--color-zinc-200);
+  }
   .ring-zinc-400 {
     --tw-ring-color: var(--color-zinc-400);
   }
@@ -2827,6 +2830,11 @@
   .dark\:ring-zinc-300 {
     &:is(.dark *) {
       --tw-ring-color: var(--color-zinc-300);
+    }
+  }
+  .dark\:ring-zinc-800 {
+    &:is(.dark *) {
+      --tw-ring-color: var(--color-zinc-800);
     }
   }
   .dark\:placeholder\:text-zinc-400 {
