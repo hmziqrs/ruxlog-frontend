@@ -84,7 +84,7 @@ pub fn BreadcrumbList(props: BreadcrumbListProps) -> Element {
 
 #[component]
 pub fn BreadcrumbItem(props: BreadcrumbItemProps) -> Element {
-    let mut class = vec!["inline-flex items-center gap-1.5".to_string()];
+    let mut class = vec!["inline-flex items-center gap-1.5 cursor-pointer".to_string()];
     
     if let Some(custom_class) = &props.class {
         class.push(custom_class.clone());
