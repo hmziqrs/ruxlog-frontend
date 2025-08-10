@@ -2,9 +2,9 @@ use dioxus::prelude::*;
 
 use crate::router::Route;
 use crate::store::{use_tag, Tag, TagsListQuery};
+use crate::components::PageHeader;
 use crate::ui::shadcn::{
-    Badge, BadgeVariant, Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage,
-    BreadcrumbSeparator, Button, ButtonVariant, Card, DropdownMenu, DropdownMenuContent,
+    Badge, BadgeVariant, Button, ButtonVariant, Card, DropdownMenu, DropdownMenuContent,
     DropdownMenuItem, DropdownMenuTrigger, Select, SelectGroup,
 };
 use chrono::NaiveDateTime;
@@ -79,59 +79,41 @@ pub fn TagsListScreen() -> Element {
     rsx! {
         // Page wrapper
         div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
-            // Top region with breadcrumb and header
-            div { class: "border-b border-zinc-200 dark:border-zinc-800 bg-gradient-to-b from-zinc-50/60 to-transparent dark:from-zinc-950/40",
-                div { class: "container mx-auto px-4 py-6 md:py-8",
-                    // Breadcrumb
-                    Breadcrumb {
-                        BreadcrumbList {
-                            BreadcrumbItem { BreadcrumbLink { href: "/dashboard".to_string(), "Dashboard" } }
-                            BreadcrumbSeparator {}
-                            BreadcrumbItem { BreadcrumbPage { "Tags" } }
+            // Unified autonomous header
+            PageHeader {
+                title: "Tags".to_string(),
+                description: "Organize your content with tags. Create, edit, and manage tags.".to_string(),
+                actions: Some(rsx!{ Button { onclick: move |_| { nav.push(Route::TagsAddScreen {}); }, "New Tag" } })
+            }
+
+            // Stats
+            div { class: "container mx-auto px-4 py-6 md:py-8",
+                div { class: "grid grid-cols-1 gap-2 sm:grid-cols-3",
+                    Card { class: "border-muted shadow-none",
+                        div { class: "flex items-center justify-between p-4",
+                            div { class: "space-y-1",
+                                p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Total" }
+                                p { class: "text-2xl font-semibold tabular-nums", "{total}" }
+                            }
+                            div { class: "w-5 h-5 text-zinc-500 dark:text-zinc-400", Icon { icon: LdTag {} } }
                         }
                     }
-
-                    // Header row
-                    div { class: "mt-6 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center",
-                        div { class: "space-y-2",
-                            h1 { class: "text-3xl md:text-4xl font-bold tracking-tight", "Tags" }
-                            p { class: "text-sm md:text-base text-zinc-600 dark:text-zinc-400",
-                                "Organize your content with tags. Create, edit, and manage tags."
+                    Card { class: "border-muted shadow-none",
+                        div { class: "flex items-center justify-between p-4",
+                            div { class: "space-y-1",
+                                p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Active" }
+                                p { class: "text-2xl font-semibold tabular-nums", "{active}" }
                             }
-                        }
-                        div { class: "flex items-center gap-2",
-                            Button { onclick: move |_| { nav.push(Route::TagsAddScreen {}); }, "New Tag" }
+                            div { class: "h-5 w-5 rounded-full bg-green-500/15 ring-4 ring-green-500/10" }
                         }
                     }
-
-                    // Stats
-                    div { class: "mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3",
-                        Card { class: "border-muted shadow-none",
-                            div { class: "flex items-center justify-between p-4",
-                                div { class: "space-y-1",
-                                    p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Total" }
-                                    p { class: "text-2xl font-semibold tabular-nums", "{total}" }
-                                }
-                                div { class: "w-5 h-5 text-zinc-500 dark:text-zinc-400", Icon { icon: LdTag {} } }
+                    Card { class: "border-muted shadow-none",
+                        div { class: "flex items-center justify-between p-4",
+                            div { class: "space-y-1",
+                                p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Inactive" }
+                                p { class: "text-2xl font-semibold tabular-nums", "{inactive}" }
                             }
-                        }
-                        Card { class: "border-muted shadow-none",
-                            div { class: "flex items-center justify-between p-4",
-                                div { class: "space-y-1",
-                                    p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Active" }
-                                    p { class: "text-2xl font-semibold tabular-nums", "{active}" }
-                                }
-                                div { class: "h-5 w-5 rounded-full bg-green-500/15 ring-4 ring-green-500/10" }
-                            }
-                        }
-                        Card { class: "border-muted shadow-none",
-                            div { class: "flex items-center justify-between p-4",
-                                div { class: "space-y-1",
-                                    p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Inactive" }
-                                    p { class: "text-2xl font-semibold tabular-nums", "{inactive}" }
-                                }
-                                div { class: "h-5 w-5 rounded-full bg-zinc-500/15 ring-4 ring-zinc-500/10" }
-                            }
+                            div { class: "h-5 w-5 rounded-full bg-zinc-500/15 ring-4 ring-zinc-500/10" }
                         }
                     }
                 }

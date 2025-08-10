@@ -13,3 +13,5 @@ mod color_picker;
 pub use color_picker::*;
 mod tag;
 pub use tag::*;
+mod page_header;
+pub use page_header::*;
