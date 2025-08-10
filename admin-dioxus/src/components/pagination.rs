@@ -1,17 +1,14 @@
 use dioxus::prelude::*;
 use crate::ui::shadcn::{Button, ButtonVariant};
+use crate::store::PaginatedList;
 
 #[derive(Props, PartialEq, Clone)]
-pub struct PaginationProps {
-    /// Label shown on the left (hidden on small screens), e.g. "Page 1 • 42 items"
-    pub label: String,
+pub struct PaginationProps<T: Clone + PartialEq + 'static> {
+    /// Current page data; when None, component renders blank label and disables nav
+    pub page: Option<PaginatedList<T>>,
     /// Disable all interactions (loading state)
     #[props(default = false)]
     pub disabled: bool,
-    /// Whether previous button should be disabled (e.g., no previous page)
-    pub prev_disabled: bool,
-    /// Whether next button should be disabled (e.g., no next page)
-    pub next_disabled: bool,
     /// Callback when previous is clicked
     pub on_prev: EventHandler<()>,
     /// Callback when next is clicked
@@ -19,13 +16,23 @@ pub struct PaginationProps {
 }
 
 #[component]
-pub fn Pagination(props: PaginationProps) -> Element {
-    let prev_is_disabled = props.disabled || props.prev_disabled;
-    let next_is_disabled = props.disabled || props.next_disabled;
+pub fn Pagination<T: Clone + PartialEq + 'static>(props: PaginationProps<T>) -> Element {
+    let (label, prev_disabled, next_disabled) = if let Some(p) = props.page.as_ref() {
+        (
+            format!("Page {} • {} items", p.page, p.total),
+            !p.has_previous_page(),
+            !p.has_next_page(),
+        )
+    } else {
+        (String::new(), true, true)
+    };
+
+    let prev_is_disabled = props.disabled || prev_disabled;
+    let next_is_disabled = props.disabled || next_disabled;
 
     rsx! {
         div { class: "flex items-center justify-between border-t border-border/60 p-3 text-sm text-muted-foreground",
-            div { class: "hidden md:block", "{props.label}" }
+            div { class: "hidden md:block", "{label}" }
             div { class: "flex items-center gap-2 ml-auto",
                 Button { variant: ButtonVariant::Outline, disabled: prev_is_disabled, onclick: move |_| { props.on_prev.call(()); }, "Previous" }
                 Button { disabled: next_is_disabled, onclick: move |_| { props.on_next.call(()); }, "Next" }
