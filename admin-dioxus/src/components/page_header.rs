@@ -24,14 +24,17 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
 
     // Derive module name and whether this is an "add/new" screen
     let (module, add_suffix): (&str, Option<&str>) = match current_route {
+        // HEADER_ROUTES_START (auto-generated)
         Route::PostsAddScreen {} => ("Posts", Some("New")),
         Route::PostsListScreen {} => ("Posts", None),
         Route::CategoriesAddScreen {} => ("Categories", Some("New")),
         Route::CategoriesListScreen {} => ("Categories", None),
         Route::TagsAddScreen {} => ("Tags", Some("New")),
+        Route::TagsEditScreen { .. } => ("Tags", Some("Edit")),
         Route::TagsListScreen {} => ("Tags", None),
         Route::UsersAddScreen {} => ("Users", Some("New")),
         Route::UsersListScreen {} => ("Users", None),
+        // HEADER_ROUTES_END
         Route::AnalyticsScreen {} => ("Analytics", None),
         // Default/fallback
         Route::HomeScreen {} | Route::LoginScreen {} => ("Dashboard", None),
@@ -40,10 +43,12 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
     // Resolve the list route for the current module, if applicable
     let list_route_for_module = |m: &str| -> Option<Route> {
         match m {
+            // LIST_ROUTES_START (auto-generated)
             "Posts" => Some(Route::PostsListScreen {}),
             "Categories" => Some(Route::CategoriesListScreen {}),
             "Tags" => Some(Route::TagsListScreen {}),
             "Users" => Some(Route::UsersListScreen {}),
+            // LIST_ROUTES_END
             _ => None,
         }
     };
