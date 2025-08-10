@@ -67,7 +67,7 @@ pub struct CardActionProps {
 /// Card component
 #[component]
 pub fn Card(props: CardProps) -> Element {
-    let mut class = vec!["bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm".to_string()];
+    let mut class = vec!["bg-card text-card-foreground flex flex-col rounded-xl border".to_string()];
     
     if let Some(custom_class) = props.class {
         class.push(custom_class);
