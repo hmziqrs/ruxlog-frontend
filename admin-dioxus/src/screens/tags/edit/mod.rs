@@ -16,7 +16,7 @@ pub fn TagsEditScreen(id: i32) -> Element {
             let view_map = tags.view.read();
             let needs_fetch = match view_map.get(&id) {
                 None => true,
-                Some(frame) => frame.is_init() || frame.is_failed(),
+                Some(frame) => frame.is_init(),
             };
             if needs_fetch {
                 spawn({
