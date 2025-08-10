@@ -134,7 +134,7 @@ impl TagsState {
     pub async fn view(&self, id: i32) {
         let mut view_map = self.view.write();
         view_map.entry(id).or_insert_with(StateFrame::new).set_loading(None);
-        let result = http_client::get(&format!("/tag/v1/view/{}", id)).send().await;
+        let result = http_client::post(&format!("/tag/v1/view/{}", id), &()).send().await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
