@@ -2,7 +2,8 @@ use dioxus::prelude::*;
 
 use super::form::{use_category_form, CategoryForm};
 use crate::components::{AppInput, ColorPicker};
-use crate::ui::shadcn::{Button, ButtonSize, ButtonVariant, Checkbox};
+use crate::ui::shadcn::{Button, ButtonSize, ButtonVariant, Checkbox, Skeleton, Combobox, ComboboxItem};
+use crate::store::use_category;
 
 #[derive(Props, PartialEq, Clone)]
 pub struct CategoryFormContainerProps {
@@ -20,6 +21,14 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
     let initial_category_form = props.initial.clone().unwrap_or_else(CategoryForm::new);
     let category_form_hook = use_category_form(initial_category_form);
     let mut form = category_form_hook.form;
+    let cats_state = use_category();
+
+    // Fetch categories for parent selection on mount
+    use_effect(move || {
+        spawn(async move {
+            cats_state.list().await;
+        });
+    });
 
     rsx! {
         div {
@@ -152,14 +161,40 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                         }
                     }
 
-                    // Parent category id (simple input for now)
+                    // Parent category selector
                     div { class: "rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm",
                         div { class: "px-6 pt-6",
                             h2 { class: "text-lg font-semibold", "Parent Category" }
-                            p { class: "text-sm text-zinc-600 dark:text-zinc-400", "Optional. Create a hierarchy by specifying a parent ID." }
+                            p { class: "text-sm text-zinc-600 dark:text-zinc-400", "Optional. Select a parent to create a hierarchy." }
                         }
                         div { class: "px-6 py-6",
-                            AppInput { name: "parent_id", form, label: "Parent Category ID", placeholder: "Parent category ID", r#type: "number" }
+                            {
+                                let list = cats_state.list.read();
+                                let is_loading = list.is_loading();
+                                let items: Vec<ComboboxItem> = if let Some(page) = list.data.clone() {
+                                    page.data.into_iter().map(|c| ComboboxItem { value: c.id.to_string(), label: c.name }).collect()
+                                } else { vec![] };
+                                let current_val = {
+                                    let pid = form.read().data.parent_id.clone();
+                                    if pid.trim().is_empty() { None } else { Some(pid) }
+                                };
+                                rsx! {
+                                    if is_loading && items.is_empty() {
+                                        Skeleton { class: Some("h-10 w-full".to_string()) }
+                                    } else {
+                                        Combobox {
+                                            items,
+                                            placeholder: "Select parent...".to_string(),
+                                            value: current_val,
+                                            width: "w-full".to_string(),
+                                            onvaluechange: Some(EventHandler::new(move |val: Option<String>| {
+                                                let v = val.unwrap_or_default();
+                                                form.write().update_field("parent_id", v);
+                                            })),
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 
