@@ -1,6 +1,6 @@
-use super::{Category, CategoryAddPayload, CategoryEditPayload, CategoryState};
+use super::{Category, CategoryAddPayload, CategoryEditPayload, CategoryListQuery, CategoryState};
 use crate::services::http_client;
-use crate::store::StateFrame;
+use crate::store::{PaginatedList, StateFrame};
 use std::collections::HashMap;
 
 impl CategoryState {
@@ -13,10 +13,9 @@ impl CategoryState {
                     match response.json::<Category>().await {
                         Ok(category) => {
                             self.add.write().set_success(None, None);
-                            let mut list = self.list.write();
-                            let mut existing = list.data.clone().unwrap_or_default();
-                            existing.insert(0, category);
-                            list.set_success(Some(existing), None);
+                            // Refresh the list to keep cache consistent with server paging
+                            drop(category);
+                            self.list().await;
                         }
                         Err(e) => {
                             self.add.write().set_failed(Some(format!("Failed to parse category: {}", e)));
@@ -42,12 +41,21 @@ impl CategoryState {
                     match response.json::<Category>().await {
                         Ok(category) => {
                             edit_map.entry(id).or_insert_with(StateFrame::new).set_success(None, None);
+                            // Update list cache if present
                             let mut list = self.list.write();
-                            let mut existing = list.data.clone().unwrap_or_default();
-                            if let Some(item) = existing.iter_mut().find(|c| c.id == category.id) {
-                                *item = category.clone();
+                            if let Some(mut tmp_list) = list.data.clone() {
+                                if let Some(item) = tmp_list.data.iter_mut().find(|c| c.id == id) {
+                                    *item = category.clone();
+                                }
+                                list.set_success(Some(tmp_list), None);
                             }
-                            list.set_success(Some(existing), None);
+                            drop(list);
+                            // Update view cache to keep detail in sync
+                            let mut view_map = self.view.write();
+                            view_map
+                                .entry(id)
+                                .or_insert_with(StateFrame::new)
+                                .set_success(Some(Some(category.clone())), None);
                         }
                         Err(e) => {
                             edit_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Failed to parse category: {}", e)));
@@ -71,6 +79,10 @@ impl CategoryState {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
                     remove_map.entry(id).or_insert_with(StateFrame::new).set_success(None, None);
+                    // Release guard before awaiting
+                    drop(remove_map);
+                    // Refresh list for parity with add()
+                    self.list().await;
                 } else {
                     remove_map.entry(id).or_insert_with(StateFrame::new).set_api_error(&response).await;
                 }
@@ -83,11 +95,36 @@ impl CategoryState {
 
     pub async fn list(&self) {
         self.list.write().set_loading(None);
-        let result = http_client::get("/category/v1/list").send().await;
+        let empty_body = "{}".to_string();
+        let result = http_client::post("/category/v1/list/query", &empty_body).send().await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
-                    match response.json::<Vec<Category>>().await {
+                    match response.json::<PaginatedList<Category>>().await {
+                        Ok(categories) => {
+                            self.list.write().set_success(Some(categories.clone()), None);
+                        }
+                        Err(e) => {
+                            self.list.write().set_failed(Some(format!("Failed to parse categories: {}", e)));
+                        }
+                    }
+                } else {
+                    self.list.write().set_api_error(&response).await;
+                }
+            }
+            Err(e) => {
+                self.list.write().set_failed(Some(format!("Network error: {}", e)));
+            }
+        }
+    }
+
+    pub async fn list_with_query(&self, query: CategoryListQuery) {
+        self.list.write().set_loading(None);
+        let result = http_client::post("/category/v1/list/query", &query).send().await;
+        match result {
+            Ok(response) => {
+                if (200..300).contains(&response.status()) {
+                    match response.json::<PaginatedList<Category>>().await {
                         Ok(categories) => {
                             self.list.write().set_success(Some(categories.clone()), None);
                         }

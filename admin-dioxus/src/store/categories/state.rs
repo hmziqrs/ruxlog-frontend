@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use dioxus::prelude::*;
-use crate::store::StateFrame;
+use crate::store::{StateFrame, PaginatedList};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -10,6 +10,9 @@ pub struct Category {
     pub slug: String,
     pub created_at: String,
     pub updated_at: String,
+    pub color: String,
+    pub text_color: String,
+    pub is_active: bool,
     pub cover_image: Option<String>,
     pub description: Option<String>,
     pub logo_image: Option<String>,
@@ -20,6 +23,9 @@ pub struct Category {
 pub struct CategoryAddPayload {
     pub name: String,
     pub slug: String,
+    pub color: String,
+    pub text_color: Option<String>,
+    pub is_active: Option<bool>,
     pub cover_image: Option<String>,
     pub description: Option<String>,
     pub logo_image: Option<String>,
@@ -30,9 +36,20 @@ pub struct CategoryAddPayload {
 pub struct CategoryEditPayload {
     pub name: Option<String>,
     pub slug: Option<String>,
-    pub cover_image: Option<String>,
-    pub description: Option<String>,
-    pub logo_image: Option<String>,
+    pub parent_id: Option<Option<i32>>,
+    pub description: Option<Option<String>>,
+    pub cover_image: Option<Option<String>>,
+    pub logo_image: Option<Option<String>>,
+    pub color: Option<String>,
+    pub text_color: Option<String>,
+    pub is_active: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub struct CategoryListQuery {
+    pub page: Option<u64>,
+    pub search: Option<String>,
+    pub sort_order: Option<String>,
     pub parent_id: Option<i32>,
 }
 
@@ -40,7 +57,7 @@ pub struct CategoryState {
     pub add: GlobalSignal<StateFrame<()>>,
     pub edit: GlobalSignal<HashMap<i32, StateFrame<()>>>,
     pub remove: GlobalSignal<HashMap<i32, StateFrame<()>>>,
-    pub list: GlobalSignal<StateFrame<Vec<Category>>>,
+    pub list: GlobalSignal<StateFrame<PaginatedList<Category>>>,
     pub view: GlobalSignal<HashMap<i32, StateFrame<Option<Category>>>>,
 }
 
