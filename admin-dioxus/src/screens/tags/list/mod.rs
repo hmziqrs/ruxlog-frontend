@@ -5,7 +5,7 @@ use crate::store::{use_tag, Tag, TagsListQuery};
 use crate::ui::shadcn::{
     Badge, BadgeVariant, Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage,
     BreadcrumbSeparator, Button, ButtonVariant, Card, DropdownMenu, DropdownMenuContent,
-    DropdownMenuItem, DropdownMenuTrigger,
+    DropdownMenuItem, DropdownMenuTrigger, Select, SelectGroup,
 };
 use chrono::NaiveDateTime;
 use hmziq_dioxus_free_icons::{
@@ -171,42 +171,15 @@ pub fn TagsListScreen() -> Element {
                         div { class: "flex w-full items-center gap-2 md:w-auto",
                             div { class: "w-full md:w-48",
                                 label { class: "sr-only", r#for: "status", "Status" }
-                                select {
-                                    id: "status",
-                                    class: "w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm",
-                                    value: status_filter.read().clone(),
-                                    oninput: move |e| {
-                                        let v = e.value();
-                                        status_filter.set(v);
-                                    },
-                                    option { value: "all", "All status" }
-                                    option { value: "active", "Active" }
-                                    option { value: "inactive", "Inactive" }
-                                }
-                            }
-
-                            // Separator
-                            div { class: "hidden h-8 w-px bg-border md:block" }
-
-                            div { class: "flex items-center gap-2",
-                                if !search_query.read().is_empty() {
-                                    Badge { variant: BadgeVariant::Secondary, class: "max-w-[14rem] cursor-pointer truncate",
-                                        onclick: move |_| {
-                                            search_query.set(String::new());
-                                            page.set(1);
-                                            let q = TagsListQuery { page: Some(1), search: None, sort_order: Some(sort_order.read().clone()) };
-                                            spawn({
-                                                let tags_state = use_tag();
-                                                async move { tags_state.list_with_query(q).await; }
-                                            });
-                                        },
-                                        "Search: \"{search_query.read().clone()}\""
-                                    }
-                                }
-                                if status_filter.read().as_str() != "all" {
-                                    Badge { variant: BadgeVariant::Secondary, class: "cursor-pointer",
-                                        onclick: move |_| { status_filter.set("all".to_string()); },
-                                        "Status: {status_filter.read().clone()}"
+                                Select {
+                                    groups: vec![SelectGroup::new(
+                                        "Status".to_string(),
+                                        vec!["All".to_string(), "Active".to_string(), "Inactive".to_string()],
+                                    )],
+                                    selected: Some(status_filter.read().clone()),
+                                    placeholder: "All status".to_string(),
+                                    on_select: move |value| {
+                                        status_filter.set(value);
                                     }
                                 }
                             }

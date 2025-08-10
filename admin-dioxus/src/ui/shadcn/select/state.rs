@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 pub struct SelectProps {
     pub groups: Vec<SelectGroup>,
     pub selected: Option<String>,
-    pub on_select: Option<fn(String)>,
+    pub on_select: Option<EventHandler<String>>,
     pub placeholder: String,
 }
 
