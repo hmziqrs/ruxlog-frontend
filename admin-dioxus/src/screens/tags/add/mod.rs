@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
 use crate::components::PageHeader;
 use crate::containers::{TagFormContainer, TagForm};
-use crate::store::{use_tag, TagsAddPayload};
-use crate::utils::colors::get_contrast_yiq;
+use crate::store::use_tag;
+ 
 
 #[component]
 pub fn TagsAddScreen() -> Element {
@@ -24,21 +24,7 @@ pub fn TagsAddScreen() -> Element {
                     title: Some("New Tag".to_string()),
                     submit_label: Some("Create Tag".to_string()),
                     on_submit: move |val: TagForm| {
-                        let description = if val.description.trim().is_empty() { None } else { Some(val.description.clone()) };
-                        let color = if val.color.trim().is_empty() { None } else { Some(val.color.clone()) };
-                        let text_color = if val.custom_text_color && !val.text_color.trim().is_empty() {
-                            Some(val.text_color.clone())
-                        } else {
-                            Some(get_contrast_yiq(&val.color).to_string())
-                        };
-                        let payload = TagsAddPayload {
-                            name: val.name.clone(),
-                            slug: val.slug.clone(),
-                            description,
-                            color,
-                            text_color,
-                            is_active: Some(val.active),
-                        };
+                        let payload = val.to_add_payload();
                         let tags = tags;
                         spawn(async move {
                             tags.add(payload).await;

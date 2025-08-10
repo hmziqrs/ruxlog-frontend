@@ -4,6 +4,7 @@ use validator::{Validate, ValidationError};
 
 use crate::hooks::{OxForm, OxFormModel};
 use crate::utils::colors::get_contrast_yiq;
+use crate::store::{TagsAddPayload, TagsEditPayload};
 
 #[derive(Debug, Validate, Clone, PartialEq)]
 pub struct TagForm {
@@ -68,6 +69,49 @@ impl TagForm {
             .replace_all(&text, "")
             .to_string();
         text
+    }
+
+    // Compute the final text color respecting user choice or auto-contrast
+    pub fn effective_text_color(&self) -> String {
+        if self.custom_text_color && !self.text_color.trim().is_empty() {
+            self.text_color.clone()
+        } else {
+            get_contrast_yiq(&self.color).to_string()
+        }
+    }
+
+    // Convert the form to the backend add payload contract
+    pub fn to_add_payload(&self) -> TagsAddPayload {
+        let description = if self.description.trim().is_empty() { None } else { Some(self.description.clone()) };
+        let color = if self.color.trim().is_empty() { None } else { Some(self.color.clone()) };
+        let text_color = Some(self.effective_text_color());
+        let is_active = Some(self.active);
+
+        TagsAddPayload {
+            name: self.name.clone(),
+            slug: self.slug.clone(),
+            description,
+            color,
+            text_color,
+            is_active,
+        }
+    }
+
+    // Convert the form to the backend edit payload contract
+    pub fn to_edit_payload(&self) -> TagsEditPayload {
+        let description = if self.description.trim().is_empty() { None } else { Some(self.description.clone()) };
+        let color = if self.color.trim().is_empty() { None } else { Some(self.color.clone()) };
+        let text_color = Some(self.effective_text_color());
+        let is_active = Some(self.active);
+
+        TagsEditPayload {
+            name: Some(self.name.clone()),
+            slug: Some(self.slug.clone()),
+            description,
+            color,
+            text_color,
+            is_active,
+        }
     }
 }
 
