@@ -12,6 +12,8 @@ use hmziq_dioxus_free_icons::{
     icons::ld_icons::{LdEllipsis, LdTag},
     Icon,
 };
+use std::time::Duration;
+use gloo_timers::future::sleep;
 
 #[component]
 pub fn CategoriesListScreen() -> Element {
@@ -126,10 +128,24 @@ pub fn CategoriesListScreen() -> Element {
                     search_placeholder: "Search categories by name, description, or slug".to_string(),
                     disabled: list_loading,
                     on_search_input: move |val: String| {
+                        // Debounce fetch by 500ms to avoid immediate loading disabling the input
                         search_query.set(val.clone());
                         page.set(1);
-                        let q = CategoryListQuery { page: Some(1), search: if val.is_empty() { None } else { Some(val) }, sort_order: Some(sort_order.read().clone()), parent_id: None };
-                        spawn(async move { cats_state.list_with_query(q).await; });
+                        let search_query = search_query.clone();
+                        let sort_order = sort_order.clone();
+                        let cats_state = cats_state;
+                        spawn(async move {
+                            sleep(Duration::from_millis(500)).await;
+                            if search_query.read().as_str() == val.as_str() {
+                                let q = CategoryListQuery {
+                                    page: Some(1),
+                                    search: if val.is_empty() { None } else { Some(val) },
+                                    sort_order: Some(sort_order.read().clone()),
+                                    parent_id: None,
+                                };
+                                cats_state.list_with_query(q).await;
+                            }
+                        });
                     },
                     status_selected: status_filter.read().clone(),
                     on_status_select: move |value| { status_filter.set(value); },
