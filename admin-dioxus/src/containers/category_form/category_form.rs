@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use super::form::{use_category_form, CategoryForm};
-use crate::components::{AppInput, ColorPicker};
+use crate::components::{AppInput, ColorPicker, ImageUpload};
 use crate::ui::shadcn::{Button, ButtonSize, ButtonVariant, Checkbox, Skeleton, Combobox, ComboboxItem};
 use crate::store::use_category;
 
@@ -131,11 +131,39 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                 }
                             }
 
-                            // Logo image URL
-                            AppInput { name: "logo_image", form, label: "Logo Image URL", placeholder: "https://example.com/logo.jpg" }
+                            // Logo image upload
+                            div { class: "space-y-2",
+                                label { class: "block text-sm font-medium", "Logo image" }
+                                ImageUpload {
+                                    value: {
+                                        let v = form.read().data.logo_image.clone();
+                                        if v.trim().is_empty() { None } else { Some(v) }
+                                    },
+                                    title: "Upload logo".to_string(),
+                                    description: "Square logo works best.".to_string(),
+                                    aspect_ratio: "aspect-square".to_string(),
+                                    onchange: move |url: String| {
+                                        form.write().update_field("logo_image", url);
+                                    }
+                                }
+                            }
 
-                            // Cover image URL
-                            AppInput { name: "cover_image", form, label: "Cover Image URL", placeholder: "https://example.com/cover.jpg" }
+                            // Cover image upload
+                            div { class: "space-y-2",
+                                label { class: "block text-sm font-medium", "Cover image" }
+                                ImageUpload {
+                                    value: {
+                                        let v = form.read().data.cover_image.clone();
+                                        if v.trim().is_empty() { None } else { Some(v) }
+                                    },
+                                    title: "Upload cover".to_string(),
+                                    description: "Recommended 1200×600.".to_string(),
+                                    aspect_ratio: "aspect-video".to_string(),
+                                    onchange: move |url: String| {
+                                        form.write().update_field("cover_image", url);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
