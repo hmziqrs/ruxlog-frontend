@@ -18,6 +18,7 @@ pub fn TagsListScreen() -> Element {
     let nav = use_navigator();
     let tags_state = use_tag();
     let mut search_query = use_signal(|| String::new());
+    let mut status_filter = use_signal(|| "all".to_string()); // all | active | inactive
     let mut page = use_signal(|| 1u64);
     let mut sort_order = use_signal(|| "desc".to_string()); // asc | desc
 
@@ -63,12 +64,24 @@ pub fn TagsListScreen() -> Element {
     let active = tags.iter().filter(|t| t.is_active).count();
     let inactive = total.saturating_sub(active);
 
+    // Client-side filter by status to match the reference behavior
+    let status_val = status_filter.read().clone();
+    let filtered_tags: Vec<Tag> = tags
+        .iter()
+        .cloned()
+        .filter(|t| match status_val.as_str() {
+            "active" => t.is_active,
+            "inactive" => !t.is_active,
+            _ => true,
+        })
+        .collect();
+
     rsx! {
         // Page wrapper
         div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
             // Top region with breadcrumb and header
             div { class: "border-b border-zinc-200 dark:border-zinc-800 bg-gradient-to-b from-zinc-50/60 to-transparent dark:from-zinc-950/40",
-                div { class: "container mx-auto px-4 py-8 md:py-12",
+                div { class: "container mx-auto px-4 py-6 md:py-8",
                     // Breadcrumb
                     Breadcrumb {
                         BreadcrumbList {
@@ -93,7 +106,7 @@ pub fn TagsListScreen() -> Element {
 
                     // Stats
                     div { class: "mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3",
-                        Card { class: "border-muted",
+                        Card { class: "border-muted shadow-none",
                             div { class: "flex items-center justify-between p-4",
                                 div { class: "space-y-1",
                                     p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Total" }
@@ -102,7 +115,7 @@ pub fn TagsListScreen() -> Element {
                                 div { class: "w-5 h-5 text-zinc-500 dark:text-zinc-400", Icon { icon: LdTag {} } }
                             }
                         }
-                        Card { class: "border-muted",
+                        Card { class: "border-muted shadow-none",
                             div { class: "flex items-center justify-between p-4",
                                 div { class: "space-y-1",
                                     p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Active" }
@@ -111,7 +124,7 @@ pub fn TagsListScreen() -> Element {
                                 div { class: "h-5 w-5 rounded-full bg-green-500/15 ring-4 ring-green-500/10" }
                             }
                         }
-                        Card { class: "border-muted",
+                        Card { class: "border-muted shadow-none",
                             div { class: "flex items-center justify-between p-4",
                                 div { class: "space-y-1",
                                     p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Inactive" }
@@ -125,9 +138,9 @@ pub fn TagsListScreen() -> Element {
             }
 
             // Content
-            div { class: "container mx-auto px-4 py-8",
+            div { class: "container mx-auto px-4 py-8 md:py-12",
                 // Toolbar
-                Card { class: "border-muted",
+                Card { class: "border-muted shadow-none",
                     div { class: "flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between",
                         // Search
                         div { class: "w-full md:w-96",
@@ -137,7 +150,7 @@ pub fn TagsListScreen() -> Element {
                                 input {
                                     id: "search",
                                     r#type: "search",
-                                    class: "pl-8 w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm",
+                                    class: "pl-8 w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm",
                                     placeholder: "Search tags by name, description, or slug",
                                     value: search_query.read().clone(),
                                     oninput: move |e| {
@@ -154,30 +167,26 @@ pub fn TagsListScreen() -> Element {
                             }
                         }
 
-                        // Sort + Active Filters
+                        // Status filter + Active filters
                         div { class: "flex w-full items-center gap-2 md:w-auto",
                             div { class: "w-full md:w-48",
-                                label { class: "sr-only", r#for: "sort", "Sort order" }
+                                label { class: "sr-only", r#for: "status", "Status" }
                                 select {
-                                    id: "sort",
-                                    class: "w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm",
-                                    value: sort_order.read().clone(),
+                                    id: "status",
+                                    class: "w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm",
+                                    value: status_filter.read().clone(),
                                     oninput: move |e| {
-                                        let s = e.value();
-                                        sort_order.set(s.clone());
-                                        page.set(1);
-                                        let q = TagsListQuery { page: Some(1), search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sort_order: Some(s) };
-                                        spawn({
-                                            let tags_state = use_tag();
-                                            async move { tags_state.list_with_query(q).await; }
-                                        });
+                                        let v = e.value();
+                                        status_filter.set(v);
                                     },
-                                    option { value: "desc", "Name: Z → A" }
-                                    option { value: "asc", "Name: A → Z" }
+                                    option { value: "all", "All status" }
+                                    option { value: "active", "Active" }
+                                    option { value: "inactive", "Inactive" }
                                 }
                             }
 
-                            div { class: "flex-1" }
+                            // Separator
+                            div { class: "hidden h-8 w-px bg-border md:block" }
 
                             div { class: "flex items-center gap-2",
                                 if !search_query.read().is_empty() {
@@ -194,14 +203,19 @@ pub fn TagsListScreen() -> Element {
                                         "Search: \"{search_query.read().clone()}\""
                                     }
                                 }
-                                Badge { variant: BadgeVariant::Secondary, class: "cursor-default", "Sort: {sort_order.read().clone()}" }
+                                if status_filter.read().as_str() != "all" {
+                                    Badge { variant: BadgeVariant::Secondary, class: "cursor-pointer",
+                                        onclick: move |_| { status_filter.set("all".to_string()); },
+                                        "Status: {status_filter.read().clone()}"
+                                    }
+                                }
                             }
                         }
                     }
                 }
 
                 // Table
-                Card { class: "border-muted overflow-hidden mt-4",
+                Card { class: "border-muted shadow-none overflow-hidden mt-4",
                     div { class: "relative",
                         div { class: "overflow-x-auto",
                             table { class: "w-full border-collapse",
@@ -216,7 +230,7 @@ pub fn TagsListScreen() -> Element {
                                     }
                                 }
                                 tbody {
-                                    if tags.is_empty() {
+                                    if filtered_tags.is_empty() {
                                         tr { class: "border-b border-border/60",
                                             td { colspan: "6", class: "py-16 px-4",
                                                 div { class: "flex flex-col items-center justify-center gap-3 text-center",
@@ -228,14 +242,21 @@ pub fn TagsListScreen() -> Element {
                                                         p { class: "text-sm text-muted-foreground", "Try adjusting your search or create a new tag to get started." }
                                                     }
                                                     div { class: "flex flex-col items-center gap-2 sm:flex-row",
-                                                        Button { variant: ButtonVariant::Outline, onclick: move |_| {search_query.set(String::new());}, "Clear search" }
+                                                        Button { variant: ButtonVariant::Outline, onclick: move |_| {
+                                                                search_query.set(String::new());
+                                                                page.set(1);
+                                                                let q = TagsListQuery { page: Some(1), search: None, sort_order: Some(sort_order.read().clone()) };
+                                                                spawn({ let tags_state = use_tag(); async move { tags_state.list_with_query(q).await; } });
+                                                            }, "Clear search" }
                                                         Button { onclick: move |_| {nav.push(Route::TagsAddScreen {});}, "Create your first tag" }
                                                     }
                                                 }
                                             }
                                         }
                                     } else {
-                                        {tags.iter().map(|tag| rsx! {
+                                        {filtered_tags.iter().map(|tag| {
+                                            let tag_id = tag.id;
+                                            rsx! {
                                             tr { class: "border-b border-border/60 hover:bg-muted/40 transition-colors",
                                                 td { class: "py-3 px-4",
                                                     div { class: "flex items-center gap-3",
@@ -251,9 +272,9 @@ pub fn TagsListScreen() -> Element {
                                                 td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{format_short_date(&tag.created_at)}" }
                                                 td { class: "py-3 px-4",
                                                     if tag.is_active {
-                                                        Badge { "Active" }
+                                                        Badge { class: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/30", "Active" }
                                                     } else {
-                                                        Badge { variant: BadgeVariant::Secondary, "Inactive" }
+                                                        Badge { variant: BadgeVariant::Secondary, class: "bg-muted text-foreground/70 hover:bg-muted", "Inactive" }
                                                     }
                                                 }
                                                 td { class: "py-3 px-4",
@@ -263,13 +284,20 @@ pub fn TagsListScreen() -> Element {
                                                                 Button { variant: ButtonVariant::Ghost, class: "h-8 w-8", div { class: "w-4 h-4", Icon { icon: LdEllipsis {} } } }
                                                             }
                                                             DropdownMenuContent { class: "w-44 border-border bg-popover",
-                                                                DropdownMenuItem { "Edit" }
-                                                                DropdownMenuItem { "View Posts" }
-                                                                DropdownMenuItem { class: "text-red-600 dark:text-red-400", "Delete" }
+                                                                DropdownMenuItem { onclick: move |_| { /* Edit route not yet available */ }, "Edit" }
+                                                                DropdownMenuItem { onclick: move |_| { nav.push(Route::PostsListScreen {}); }, "View Posts" }
+                                                                DropdownMenuItem { class: "text-red-600 dark:text-red-400", onclick: move |_| {
+                                                                        let id = tag_id;
+                                                                        spawn({ let tags_state = use_tag(); async move {
+                                                                            tags_state.remove(id).await;
+                                                                            tags_state.list().await;
+                                                                        }});
+                                                                    }, "Delete" }
                                                             }
                                                         }
                                                     }
                                                 }
+                                            }
                                             }
                                         })}
                                     }
