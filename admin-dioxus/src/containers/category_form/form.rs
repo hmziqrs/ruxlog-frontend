@@ -3,6 +3,8 @@ use dioxus::prelude::*;
 use validator::{Validate, ValidationError};
 
 use crate::hooks::{OxForm, OxFormModel};
+use crate::utils::colors::get_contrast_yiq;
+use crate::store::{CategoryAddPayload, CategoryEditPayload};
 
 #[derive(Debug, Validate, Clone, PartialEq)]
 pub struct CategoryForm {
@@ -14,11 +16,20 @@ pub struct CategoryForm {
     pub slug: String,
     
     pub description: String,
-    
+    // Hex color like #3b82f6
+    pub color: String,
+    // Optional override for text color when custom_text_color is true
+    pub text_color: String,
+    // Whether to use custom text color instead of auto-contrast
+    pub custom_text_color: bool,
+    // Visibility: whether the category is publicly visible
+    pub active: bool,
+
     pub cover_image: String,
-    
+
     pub logo_image: String,
-    
+
+    // keep as string for input, will parse into i32 for payloads
     pub parent_id: String,
 }
 
@@ -38,6 +49,11 @@ impl CategoryForm {
             name: String::new(),
             slug: String::new(),
             description: String::new(),
+            color: "#3b82f6".to_string(),
+            // default text color based on auto contrast of default bg
+            text_color: get_contrast_yiq("#3b82f6").to_string(),
+            custom_text_color: false,
+            active: true,
             cover_image: String::new(),
             logo_image: String::new(),
             parent_id: String::new(),
@@ -64,6 +80,61 @@ impl CategoryForm {
             .to_string();
         text
     }
+
+    // Compute the final text color respecting user choice or auto-contrast
+    pub fn effective_text_color(&self) -> String {
+        if self.custom_text_color && !self.text_color.trim().is_empty() {
+            self.text_color.clone()
+        } else {
+            get_contrast_yiq(&self.color).to_string()
+        }
+    }
+
+    // Convert the form to the backend add payload contract
+    pub fn to_add_payload(&self) -> CategoryAddPayload {
+        let description = if self.description.trim().is_empty() { None } else { Some(self.description.clone()) };
+        let text_color = Some(self.effective_text_color());
+        let is_active = Some(self.active);
+        let cover_image = if self.cover_image.trim().is_empty() { None } else { Some(self.cover_image.clone()) };
+        let logo_image = if self.logo_image.trim().is_empty() { None } else { Some(self.logo_image.clone()) };
+        let parent_id = if self.parent_id.trim().is_empty() { None } else { self.parent_id.trim().parse::<i32>().ok() };
+
+        CategoryAddPayload {
+            name: self.name.clone(),
+            slug: self.slug.clone(),
+            color: self.color.clone(),
+            text_color,
+            is_active,
+            cover_image,
+            description,
+            logo_image,
+            parent_id,
+        }
+    }
+
+    // Convert the form to the backend edit payload contract
+    pub fn to_edit_payload(&self) -> CategoryEditPayload {
+        let description = if self.description.trim().is_empty() { Some(None) } else { Some(Some(self.description.clone())) };
+        let cover_image = if self.cover_image.trim().is_empty() { Some(None) } else { Some(Some(self.cover_image.clone())) };
+        let logo_image = if self.logo_image.trim().is_empty() { Some(None) } else { Some(Some(self.logo_image.clone())) };
+        let parent_id = if self.parent_id.trim().is_empty() {
+            Some(None)
+        } else {
+            self.parent_id.trim().parse::<i32>().ok().map(|v| Some(v)).or(Some(None))
+        };
+
+        CategoryEditPayload {
+            name: Some(self.name.clone()),
+            slug: Some(self.slug.clone()),
+            parent_id,
+            description,
+            cover_image,
+            logo_image,
+            color: Some(self.color.clone()),
+            text_color: Some(self.effective_text_color()),
+            is_active: Some(self.active),
+        }
+    }
 }
 
 impl OxFormModel for CategoryForm {
@@ -72,6 +143,13 @@ impl OxFormModel for CategoryForm {
         map.insert("name".to_string(), self.name.clone());
         map.insert("slug".to_string(), self.slug.clone());
         map.insert("description".to_string(), self.description.clone());
+        map.insert("color".to_string(), self.color.clone());
+        map.insert("text_color".to_string(), self.text_color.clone());
+        map.insert(
+            "custom_text_color".to_string(),
+            if self.custom_text_color { "true".to_string() } else { "false".to_string() }
+        );
+        map.insert("active".to_string(), if self.active { "true".to_string() } else { "false".to_string() });
         map.insert("cover_image".to_string(), self.cover_image.clone());
         map.insert("logo_image".to_string(), self.logo_image.clone());
         map.insert("parent_id".to_string(), self.parent_id.to_string());
@@ -84,6 +162,16 @@ impl OxFormModel for CategoryForm {
             "name" => self.name = value.to_string(),
             "slug" => self.slug = value.to_string(),
             "description" => self.description = value.to_string(),
+            "color" => self.color = value.to_string(),
+            "text_color" => self.text_color = value.to_string(),
+            "custom_text_color" => {
+                let v = value.trim().to_lowercase();
+                self.custom_text_color = matches!(v.as_str(), "true" | "1" | "yes" | "on");
+            }
+            "active" => {
+                let v = value.trim().to_lowercase();
+                self.active = matches!(v.as_str(), "true" | "1" | "yes" | "on");
+            }
             "cover_image" => self.cover_image = value.to_string(),
             "logo_image" => self.logo_image = value.to_string(),
             "parent_id" => self.parent_id = value.to_string(),

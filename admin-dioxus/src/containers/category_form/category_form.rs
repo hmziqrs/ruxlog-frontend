@@ -3,9 +3,20 @@ use dioxus::{logger::tracing, prelude::*};
 use super::form::{use_category_form, CategoryForm};
 use crate::components::AppInput;
 
+#[derive(Props, PartialEq, Clone)]
+pub struct CategoryFormContainerProps {
+    #[props(default)]
+    pub initial: Option<CategoryForm>,
+    pub on_submit: EventHandler<CategoryForm>,
+    #[props(default)]
+    pub title: Option<String>,
+    #[props(default)]
+    pub submit_label: Option<String>,
+}
+
 #[component]
-pub fn CategoryFormContainer() -> Element {
-    let initial_category_form = CategoryForm::new();
+pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
+    let initial_category_form = props.initial.clone().unwrap_or_else(CategoryForm::new);
     let category_form_hook = use_category_form(initial_category_form);
     let mut form = category_form_hook.form;
     let mut auto_slug = category_form_hook.auto_slug;
@@ -13,7 +24,7 @@ pub fn CategoryFormContainer() -> Element {
     rsx! {
         div { class: "p-8 max-w-4xl mx-auto",
             div { class: "bg-base-100 shadow-2xl rounded-xl p-8",
-                h1 { class: "text-2xl font-bold mb-6 text-primary", "New Category" }
+                if let Some(t) = props.title.clone() { h1 { class: "text-2xl font-bold mb-6 text-primary", {t} } }
                 form { class: "space-y-6",
                     // Name field
                     AppInput {
@@ -104,13 +115,10 @@ pub fn CategoryFormContainer() -> Element {
                             class: "btn btn-primary",
                             onclick: move |e| {
                                 e.prevent_default();
-                                tracing::info!("Form submitted OK ??");
-                                form.write()
-                                    .on_submit(|val| {
-                                        tracing::info!("Category form submitted: {:?}", val);
-                                    });
+                                let submit = props.on_submit.clone();
+                                form.write().on_submit(move |val| { submit.call(val); });
                             },
-                            "Create Category"
+                            {props.submit_label.clone().unwrap_or_else(|| "Save Category".to_string())}
                         }
                     }
                 }

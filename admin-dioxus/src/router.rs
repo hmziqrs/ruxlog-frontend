@@ -6,6 +6,7 @@ use crate::containers::NavBarContainer;
 use crate::screens::AnalyticsScreen;
 use crate::screens::CategoriesAddScreen;
 use crate::screens::CategoriesListScreen;
+use crate::screens::CategoriesEditScreen;
 use crate::screens::HomeScreen;
 use crate::screens::LoginScreen;
 use crate::screens::PostsAddScreen;
@@ -36,6 +37,8 @@ pub enum Route {
     CategoriesAddScreen {},
     #[route("/category/list")]
     CategoriesListScreen {},
+    #[route("/categories/:id/edit")]
+    CategoriesEditScreen { id: i32 },
 
     #[route("/tags/new")]
     TagsAddScreen {},
