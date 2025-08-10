@@ -4,34 +4,15 @@ use crate::components::PageHeader;
 use crate::containers::{TagForm, TagFormContainer};
 use crate::store::use_tag;
 use crate::ui::shadcn::Button;
+use crate::hooks::use_tag_view;
 
 #[component]
 pub fn TagsEditScreen(id: i32) -> Element {
-    let tags = use_tag();
-    // Kick off fetch of the tag if not present or not loading
-    {
-        let tags = tags;
-        use_effect(move || {
-            let view_map = tags.view.read();
-            let needs_fetch = match view_map.get(&id) {
-                None => true,
-                Some(frame) => frame.is_init(),
-            };
-            if needs_fetch {
-                spawn({
-                    let tags = use_tag();
-                    async move { tags.view(id).await; }
-                });
-            }
-        });
-    }
-
-    let view_map = tags.view.read();
-    let frame = view_map.get(&id);
-    let is_loading = frame.map(|f| f.is_loading()).unwrap_or(true);
-    let is_failed = frame.map(|f| f.is_failed()).unwrap_or(false);
-    let message = frame.and_then(|f| f.message.clone());
-    let tag_opt = frame.and_then(|f| f.data.clone()).flatten();
+    let state = use_tag_view(id);
+    let is_loading = state.is_loading;
+    let is_failed = state.is_failed;
+    let message = state.message.clone();
+    let tag_opt = state.tag.clone();
 
     // Compute initial form state from loaded tag
     let initial_form: Option<TagForm> = tag_opt.clone().map(|t| TagForm {
