@@ -72,6 +72,10 @@ impl TagsState {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
                     remove_map.entry(id).or_insert_with(StateFrame::new).set_success(None, None);
+                    // Release the write guard before awaiting to refresh the list
+                    drop(remove_map);
+                    // Keep list in sync after deletion (parity with add())
+                    self.list().await;
                 } else {
                     remove_map.entry(id).or_insert_with(StateFrame::new).set_api_error(&response).await;
                 }

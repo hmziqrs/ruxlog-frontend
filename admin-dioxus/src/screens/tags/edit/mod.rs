@@ -2,8 +2,7 @@ use dioxus::prelude::*;
 
 use crate::components::PageHeader;
 use crate::containers::{TagForm, TagFormContainer};
-use crate::store::{use_tag, TagsEditPayload};
-use crate::utils::colors::get_contrast_yiq;
+use crate::store::use_tag;
 use crate::ui::shadcn::Button;
 
 #[component]
@@ -96,21 +95,7 @@ pub fn TagsEditScreen(id: i32) -> Element {
                         submit_label: Some("Save Changes".to_string()),
                         initial: Some(initial.clone()),
                         on_submit: move |val: TagForm| {
-                            let description = if val.description.trim().is_empty() { None } else { Some(val.description.clone()) };
-                            let color = if val.color.trim().is_empty() { None } else { Some(val.color.clone()) };
-                            let text_color = if val.custom_text_color && !val.text_color.trim().is_empty() {
-                                Some(val.text_color.clone())
-                            } else {
-                                Some(get_contrast_yiq(&val.color).to_string())
-                            };
-                            let payload = TagsEditPayload {
-                                name: Some(val.name.clone()),
-                                slug: Some(val.slug.clone()),
-                                description,
-                                color,
-                                text_color,
-                                is_active: Some(val.active),
-                            };
+                            let payload = val.to_edit_payload();
                             let tags = use_tag();
                             spawn(async move {
                                 tags.edit(id, payload).await;
