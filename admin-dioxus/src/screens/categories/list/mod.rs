@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 use crate::router::Route;
 use crate::store::{use_category, Category, CategoryListQuery};
-use crate::components::{PageHeader, ListToolbar, Pagination};
+use crate::components::{PageHeader, ListToolbar, Pagination, LoadingOverlay, ListEmptyState, ListErrorBanner};
 use crate::ui::shadcn::{
     Badge, BadgeVariant, Button, ButtonVariant, Card, DropdownMenu, DropdownMenuContent,
     DropdownMenuItem, DropdownMenuTrigger,
@@ -68,11 +68,30 @@ pub fn CategoriesListScreen() -> Element {
     rsx! {
         // Page wrapper
         div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
-            // Header
+            // Unified autonomous header
             PageHeader {
                 title: "Categories".to_string(),
-                description: "Organize your content with categories. Create, edit, and manage categories.".to_string(),
+                description: "Create and organize your categories. Manage subcategories, status and more.".to_string(),
                 actions: Some(rsx!{ Button { onclick: move |_| { nav.push(Route::CategoriesAddScreen {}); }, "New Category" } })
+            }
+
+            // Optional error banner
+            if list_failed {
+                div { class: "container mx-auto px-4 pt-4",
+                    ListErrorBanner {
+                        message: "Failed to load categories. Please try again.".to_string(),
+                        retry_label: Some("Retry".to_string()),
+                        on_retry: Some(EventHandler::new(move |_| {
+                            let q = CategoryListQuery {
+                                page: Some(page.read().clone()),
+                                search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) },
+                                sort_order: Some(sort_order.read().clone()),
+                                parent_id: None,
+                            };
+                            spawn(async move { cats_state.list_with_query(q).await; });
+                        })),
+                    }
+                }
             }
 
             // Stats
@@ -185,23 +204,18 @@ pub fn CategoriesListScreen() -> Element {
                                         } else {
                                             tr { class: "border-b border-border/60",
                                                 td { colspan: "6", class: "py-16 px-4",
-                                                    div { class: "flex flex-col items-center justify-center gap-3 text-center",
-                                                        div { class: "flex h-12 w-12 items-center justify-center rounded-full bg-muted",
-                                                            div { class: "h-6 w-6 text-muted-foreground", Icon { icon: LdTag {} } }
-                                                        }
-                                                        div { class: "space-y-1",
-                                                            h3 { class: "text-lg font-medium", "No categories found" }
-                                                            p { class: "text-sm text-muted-foreground", "Try adjusting your search or create a new category to get started." }
-                                                        }
-                                                        div { class: "flex flex-col items-center gap-2 sm:flex-row",
-                                                            Button { variant: ButtonVariant::Outline, onclick: move |_| {
-                                                                    search_query.set(String::new());
-                                                                    page.set(1);
-                                                                    let q = CategoryListQuery { page: Some(1), search: None, sort_order: Some(sort_order.read().clone()), parent_id: None };
-                                                                    spawn(async move { cats_state.list_with_query(q).await; });
-                                                                }, "Clear search" }
-                                                            Button { onclick: move |_| {nav.push(Route::CategoriesAddScreen {});}, "Create your first category" }
-                                                        }
+                                                    ListEmptyState {
+                                                        title: "No categories found".to_string(),
+                                                        description: "Try adjusting your search or create a new category to get started.".to_string(),
+                                                        clear_label: "Clear search".to_string(),
+                                                        create_label: "Create your first category".to_string(),
+                                                        on_clear: move |_| {
+                                                            search_query.set(String::new());
+                                                            page.set(1);
+                                                            let q = CategoryListQuery { page: Some(1), search: None, sort_order: Some(sort_order.read().clone()), parent_id: None };
+                                                            spawn(async move { cats_state.list_with_query(q).await; });
+                                                        },
+                                                        on_create: move |_| { nav.push(Route::CategoriesAddScreen {}); },
                                                     }
                                                 }
                                             }
@@ -275,11 +289,7 @@ pub fn CategoriesListScreen() -> Element {
                             }
                         }
                         // Loading overlay when we have data
-                        if list_loading && has_data {
-                            div { class: "absolute inset-0 z-10 bg-background/50 backdrop-blur-[1px] flex items-center justify-center",
-                                div { class: "h-6 w-6 rounded-full border-2 border-zinc-300 border-t-zinc-700 animate-spin" }
-                            }
-                        }
+                        if list_loading && has_data { LoadingOverlay { visible: true } }
                     }
                 }
             }
