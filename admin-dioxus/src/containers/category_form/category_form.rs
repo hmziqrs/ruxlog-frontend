@@ -4,6 +4,7 @@ use super::form::{use_category_form, CategoryForm};
 use crate::components::{AppInput, ColorPicker, ImageUpload};
 use crate::ui::shadcn::{Button, ButtonSize, ButtonVariant, Checkbox, Skeleton, Combobox, ComboboxItem};
 use crate::store::use_category;
+use hmziq_dioxus_free_icons::{Icon, icons::ld_icons::LdX};
 
 #[derive(Props, PartialEq, Clone)]
 pub struct CategoryFormContainerProps {
@@ -197,8 +198,12 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                         }
                         div { class: "px-6 py-6",
                             {
-                                let list = cats_state.list.read();
+                                let cats = cats_state;
+                                let list = cats.list.read();
                                 let is_loading = list.is_loading();
+                                let is_failed = list.is_failed();
+                                let message = list.message.clone();
+                                let err_text = message.clone().unwrap_or_else(|| "Failed to fetch categories list.".to_string());
                                 let items: Vec<ComboboxItem> = if let Some(page) = list.data.clone() {
                                     page.data.into_iter().map(|c| ComboboxItem { value: c.id.to_string(), label: c.name }).collect()
                                 } else { vec![] };
@@ -209,6 +214,20 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                 rsx! {
                                     if is_loading && items.is_empty() {
                                         Skeleton { class: Some("h-10 w-full".to_string()) }
+                                    } else if is_failed {
+                                        div { class: "flex items-start justify-between gap-2",
+                                            div { class: "flex items-center gap-2 text-sm text-red-600 dark:text-red-400",
+                                                div { class: "h-4 w-4", Icon { icon: LdX {} } }
+                                                span { { err_text } }
+                                            }
+                                            Button { variant: ButtonVariant::Outline, size: ButtonSize::Sm,
+                                                onclick: move |_| {
+                                                    let cats = cats;
+                                                    spawn(async move { cats.list().await; });
+                                                },
+                                                "Retry"
+                                            }
+                                        }
                                     } else {
                                         Combobox {
                                             items,
