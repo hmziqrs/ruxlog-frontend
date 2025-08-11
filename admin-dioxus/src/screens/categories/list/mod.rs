@@ -37,7 +37,7 @@ pub fn CategoriesListScreen() -> Element {
         });
     });
 
-    let list = cats_state.list.read();
+    let list = cats_state.list_with_query.read();
     let list_loading = list.is_loading();
     let list_failed = list.is_failed();
 
@@ -255,9 +255,15 @@ pub fn CategoriesListScreen() -> Element {
                                                                 DropdownMenuItem { onclick: move |_| { nav.push(Route::PostsListScreen {}); }, "View Posts" }
                                                                 DropdownMenuItem { class: "text-red-600 dark:text-red-400", onclick: move |_| {
                                                                         let id = category_id;
+                                                                        let q = CategoryListQuery {
+                                                                            page: Some(page.read().clone()),
+                                                                            search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) },
+                                                                            sort_order: Some(sort_order.read().clone()),
+                                                                            parent_id: None,
+                                                                        };
                                                                         spawn(async move {
                                                                             cats_state.remove(id).await;
-                                                                            cats_state.list().await;
+                                                                            cats_state.list_with_query(q).await;
                                                                         });
                                                                     }, "Delete" }
                                                             }
