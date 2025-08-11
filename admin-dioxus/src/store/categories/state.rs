@@ -57,7 +57,11 @@ pub struct CategoryState {
     pub add: GlobalSignal<StateFrame<()>>,
     pub edit: GlobalSignal<HashMap<i32, StateFrame<()>>>,
     pub remove: GlobalSignal<HashMap<i32, StateFrame<()>>>,
-    pub list: GlobalSignal<StateFrame<PaginatedList<Category>>>,
+    // Distinct keys
+    // list: simple vector for lightweight consumers (e.g. parent selector)
+    pub list: GlobalSignal<StateFrame<Vec<Category>>>,
+    // list_with_query: paginated list for the list screen with filters/pagination
+    pub list_with_query: GlobalSignal<StateFrame<PaginatedList<Category>>>,
     pub view: GlobalSignal<HashMap<i32, StateFrame<Option<Category>>>>,
 }
 
@@ -68,6 +72,7 @@ impl CategoryState {
             edit: GlobalSignal::new(|| HashMap::new()),
             remove: GlobalSignal::new(|| HashMap::new()),
             list: GlobalSignal::new(|| StateFrame::new()),
+            list_with_query: GlobalSignal::new(|| StateFrame::new()),
             view: GlobalSignal::new(|| HashMap::new()),
         }
     }

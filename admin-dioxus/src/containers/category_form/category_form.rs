@@ -204,9 +204,13 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                 let is_failed = list.is_failed();
                                 let message = list.message.clone();
                                 let sub_text = message.clone().unwrap_or_else(|| "There was a problem loading categories. Please try again.".to_string());
-                                let items: Vec<ComboboxItem> = if let Some(page) = list.data.clone() {
-                                    page.data.into_iter().map(|c| ComboboxItem { value: c.id.to_string(), label: c.name }).collect()
-                                } else { vec![] };
+                                let items: Vec<ComboboxItem> = list
+                                    .data
+                                    .clone()
+                                    .unwrap_or_default()
+                                    .into_iter()
+                                    .map(|c| ComboboxItem { value: c.id.to_string(), label: c.name })
+                                    .collect();
                                 let current_val = {
                                     let pid = form.read().data.parent_id.clone();
                                     if pid.trim().is_empty() { None } else { Some(pid) }
