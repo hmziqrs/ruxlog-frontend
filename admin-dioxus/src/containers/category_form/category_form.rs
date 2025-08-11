@@ -203,7 +203,7 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                 let is_loading = list.is_loading();
                                 let is_failed = list.is_failed();
                                 let message = list.message.clone();
-                                let err_text = message.clone().unwrap_or_else(|| "Failed to fetch categories list.".to_string());
+                                let sub_text = message.clone().unwrap_or_else(|| "There was a problem loading categories. Please try again.".to_string());
                                 let items: Vec<ComboboxItem> = if let Some(page) = list.data.clone() {
                                     page.data.into_iter().map(|c| ComboboxItem { value: c.id.to_string(), label: c.name }).collect()
                                 } else { vec![] };
@@ -215,17 +215,22 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                     if is_loading && items.is_empty() {
                                         Skeleton { class: Some("h-10 w-full".to_string()) }
                                     } else if is_failed {
-                                        div { class: "flex items-start justify-between gap-2",
-                                            div { class: "flex items-center gap-2 text-sm text-red-600 dark:text-red-400",
-                                                div { class: "h-4 w-4", Icon { icon: LdX {} } }
-                                                span { { err_text } }
-                                            }
-                                            Button { variant: ButtonVariant::Outline, size: ButtonSize::Sm,
-                                                onclick: move |_| {
-                                                    let cats = cats;
-                                                    spawn(async move { cats.list().await; });
-                                                },
-                                                "Retry"
+                                        div { class: "rounded-md border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 p-4",
+                                            div { class: "flex flex-col items-center text-center gap-3",
+                                                div { class: "h-10 w-10 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center",
+                                                    div { class: "h-5 w-5", Icon { icon: LdX {} } }
+                                                }
+                                                div { class: "space-y-1",
+                                                    p { class: "text-sm font-semibold", "Failed to fetch categories list" }
+                                                    p { class: "text-xs text-red-600/90 dark:text-red-400/90", { sub_text } }
+                                                }
+                                                Button { variant: ButtonVariant::Outline, size: ButtonSize::Sm,
+                                                    onclick: move |_| {
+                                                        let cats = cats;
+                                                        spawn(async move { cats.list().await; });
+                                                    },
+                                                    "Retry"
+                                                }
                                             }
                                         }
                                     } else {
