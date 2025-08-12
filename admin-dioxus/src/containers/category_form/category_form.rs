@@ -97,41 +97,10 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                     // Branding card
                     div { class: "rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm",
                         div { class: "px-6 py-6",
-                            h2 { class: "text-lg font-semibold", "Branding" }
-                            p { class: "text-sm text-zinc-600 dark:text-zinc-400", "Color and images for the category." }
+                            h2 { class: "text-lg font-semibold", "Images" }
+                            p { class: "text-sm text-zinc-600 dark:text-zinc-400", "Logo and cover images for the category." }
                         }
                         div { class: "px-6 py-6 space-y-6",
-                            // Color picker + preview
-                            div { class: "space-y-3",
-                                label { class: "block text-sm font-medium", "Category color" }
-                                ColorPicker { value: form.read().data.color.clone(), onchange: move |val| { form.write().update_field("color", val); } }
-                                {
-                                    let data = form.read().data.clone();
-                                    let color = data.color.clone();
-                                    rsx! {
-                                        div { class: "inline-flex items-center gap-2 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-1.5 text-sm",
-                                            span { class: "h-2.5 w-2.5 rounded-full ring-1 ring-zinc-200 dark:ring-zinc-800", style: format!("background-color: {}", color) }
-                                            code { class: "text-xs border rounded px-1.5 py-0.5 border-zinc-200 dark:border-zinc-800", {color.clone()} }
-                                            span { class: "text-xs opacity-70", if data.custom_text_color { "Using custom text color." } else { "Text color auto-adjusts for readability." } }
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Optional custom text color toggle
-                            div { class: "space-y-2",
-                                div { class: "flex items-center justify-between",
-                                    div { class: "space-y-0.5",
-                                        label { class: "block text-sm font-medium", "Use custom text color" }
-                                        p { class: "text-xs text-zinc-500 dark:text-zinc-400", "Override automatic contrast with your own text color." }
-                                    }
-                                    Checkbox { class: None, checked: form.read().data.custom_text_color, onchange: move |checked: bool| { form.write().update_field("custom_text_color", checked.to_string()); } }
-                                }
-                                if form.read().data.custom_text_color {
-                                    ColorPicker { value: form.read().data.text_color.clone(), onchange: move |val| { form.write().update_field("text_color", val); } }
-                                }
-                            }
-
                             // Logo image upload
                             div { class: "space-y-2",
                                 label { class: "block text-sm font-medium", "Logo image" }
@@ -186,6 +155,46 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                     }
                                 }
                                 Checkbox { class: None, checked: form.read().data.active, onchange: move |checked: bool| { form.write().update_field("active", checked.to_string()); } }
+                            }
+                        }
+                    }
+
+                    // Branding
+                    div { class: "rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm",
+                        div { class: "px-6 pt-6",
+                            h2 { class: "text-lg font-semibold", "Branding" }
+                            p { class: "text-sm text-zinc-600 dark:text-zinc-400", "Pick a color and optionally override the text color." }
+                        }
+                        div { class: "px-6 py-6 space-y-6",
+                            // Color picker + preview
+                            div { class: "space-y-3",
+                                label { class: "block text-sm font-medium", "Category color" }
+                                ColorPicker { value: form.read().data.color.clone(), onchange: move |val| { form.write().update_field("color", val); } }
+                                {
+                                    let data = form.read().data.clone();
+                                    let color = data.color.clone();
+                                    rsx! {
+                                        div { class: "inline-flex items-center gap-2 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-1.5 text-sm",
+                                            span { class: "h-2.5 w-2.5 rounded-full ring-1 ring-zinc-200 dark:ring-zinc-800", style: format!("background-color: {}", color) }
+                                            code { class: "text-xs border rounded px-1.5 py-0.5 border-zinc-200 dark:border-zinc-800", {color.clone()} }
+                                            span { class: "text-xs opacity-70", if data.custom_text_color { "Using custom text color." } else { "Text color auto-adjusts for readability." } }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Optional custom text color toggle
+                            div { class: "space-y-2",
+                                div { class: "flex items-center justify-between",
+                                    div { class: "space-y-0.5",
+                                        label { class: "block text-sm font-medium", "Use custom text color" }
+                                        p { class: "text-xs text-zinc-500 dark:text-zinc-400", "Override automatic contrast with your own text color." }
+                                    }
+                                    Checkbox { class: None, checked: form.read().data.custom_text_color, onchange: move |checked: bool| { form.write().update_field("custom_text_color", checked.to_string()); } }
+                                }
+                                if form.read().data.custom_text_color {
+                                    ColorPicker { value: form.read().data.text_color.clone(), onchange: move |val| { form.write().update_field("text_color", val); } }
+                                }
                             }
                         }
                     }
