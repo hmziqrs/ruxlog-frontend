@@ -1,6 +1,11 @@
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::{Icon, icons::ld_icons::{LdPlus, LdX}};
 use crate::ui::shadcn::{Button, ButtonSize, ButtonVariant};
+use web_sys::{HtmlInputElement, Url};
+use wasm_bindgen::JsCast;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+static INPUT_ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 #[derive(Props, PartialEq, Clone)]
 pub struct ImageUploadProps {
@@ -18,29 +23,94 @@ pub struct ImageUploadProps {
     pub aspect_ratio: String,
 }
 
-/// Simple image upload UI that simulates upload with a timeout
+/// Simple image picker that creates a blob URL for the selected file
 #[component]
 pub fn ImageUpload(props: ImageUploadProps) -> Element {
-    let mut is_uploading = use_signal(|| false);
+    let mut last_blob_url = use_signal(|| Option::<String>::None);
+    let input_id = use_signal(|| format!(
+        "image-upload-{}",
+        INPUT_ID_COUNTER.fetch_add(1, Ordering::Relaxed)
+    ));
 
     let value = props.value.clone().unwrap_or_default();
     let has_image = !value.trim().is_empty();
 
-    // Simulate image upload (instant for now)
-    let handle_upload = move |_| {
-        if is_uploading() { return; }
-        is_uploading.set(true);
-        props.onchange.call("/placeholder.svg?height=600&width=1200".to_string());
-        is_uploading.set(false);
+    // Open native file picker
+    let open_picker = {
+        let id = input_id();
+        move |_| {
+            if let Some(window) = web_sys::window() {
+                if let Some(doc) = window.document() {
+                    if let Some(el) = doc.get_element_by_id(&id) {
+                        if let Ok(input) = el.dyn_into::<HtmlInputElement>() {
+                            let _ = input.click();
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    // Handle file selection -> create object URL and emit
+    let on_file_change = {
+        let id = input_id();
+        move |_| {
+            if let Some(window) = web_sys::window() {
+                if let Some(doc) = window.document() {
+                    if let Some(el) = doc.get_element_by_id(&id) {
+                        if let Ok(input) = el.dyn_into::<HtmlInputElement>() {
+                            if let Some(files) = input.files() {
+                                if let Some(file) = files.get(0) {
+                                    if let Some(prev) = last_blob_url() {
+                                        let _ = Url::revoke_object_url(&prev);
+                                    }
+                                    // File extends Blob in the web APIs; cast for Rust types
+                                    let js_val: &wasm_bindgen::JsValue = file.as_ref();
+                                    let blob: &web_sys::Blob = js_val.unchecked_ref();
+                                    if let Ok(url) = Url::create_object_url_with_blob(blob) {
+                                        last_blob_url.set(Some(url.clone()));
+                                        props.onchange.call(url);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     };
 
     // Remove image
-    let handle_remove = move |_| {
-        props.onchange.call(String::new());
+    let handle_remove = {
+        let id = input_id();
+        move |_| {
+            if let Some(prev) = last_blob_url() {
+                let _ = Url::revoke_object_url(&prev);
+                last_blob_url.set(None);
+            }
+            if let Some(window) = web_sys::window() {
+                if let Some(doc) = window.document() {
+                    if let Some(el) = doc.get_element_by_id(&id) {
+                        if let Ok(input) = el.dyn_into::<HtmlInputElement>() {
+                            input.set_value("");
+                        }
+                    }
+                }
+            }
+            props.onchange.call(String::new());
+        }
     };
 
     rsx! {
         div { class: "space-y-2",
+            // Hidden file input for picking images
+            input {
+                r#type: "file",
+                accept: "image/*",
+                class: "hidden",
+                id: "{input_id()}",
+                onchange: on_file_change,
+            }
             if has_image {
                 div { class: "relative overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-800",
                     img { src: value, alt: props.title.clone(), class: format!("w-full h-auto object-cover {}", props.aspect_ratio) }
@@ -66,10 +136,9 @@ pub fn ImageUpload(props: ImageUploadProps) -> Element {
                         Button {
                             r#type: "button".to_string(),
                             variant: ButtonVariant::Outline,
-                            onclick: handle_upload,
-                            disabled: is_uploading(),
+                            onclick: open_picker,
                             class: "mt-2 border-zinc-200 dark:border-zinc-800".to_string(),
-                            if is_uploading() { "Uploading..." } else { "{props.title}" }
+                            "{props.title}"
                         }
                     }
                 }
