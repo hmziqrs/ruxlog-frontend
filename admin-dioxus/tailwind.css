@@ -90,16 +90,6 @@
     --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
     --sidebar-border: oklch(0.92 0.004 286.32);
     --sidebar-ring: oklch(0.705 0.015 286.067);
-
-    /* Toast semantic colors */
-    --primary-success-color: var(--chart-2);
-    --secondary-success-color: var(--foreground);
-    --primary-error-color: var(--destructive);
-    --contrast-error-color: var(--foreground);
-    --primary-warning-color: var(--chart-4);
-    --secondary-warning-color: var(--foreground);
-    --primary-info-color: var(--chart-3);
-    --secondary-info-color: var(--foreground);
 }
 
 .dark {
@@ -134,16 +124,73 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.552 0.016 285.938);
+}
 
-    /* Toast semantic colors (inherit from dark theme tokens) */
-    --primary-success-color: var(--chart-2);
-    --secondary-success-color: var(--foreground);
+/* Reference theme tokens mapped to existing Tailwind theme variables */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --dark: initial;
+        --light: ;
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --dark: ;
+        --light: initial;
+    }
+}
+
+/* Primary / Secondary palette (reference) wired to our theme tokens */
+:root {
+    /* Primary colors -> surfaces/backgrounds */
+    --primary-color: var(--background);
+    --primary-color-1: var(--card);
+    --primary-color-2: var(--popover);
+    --primary-color-3: var(--muted);
+    --primary-color-4: var(--muted);
+    --primary-color-5: var(--accent);
+    --primary-color-6: var(--input);
+    --primary-color-7: var(--ring);
+
+    /* Secondary colors -> text/foreground shades */
+    --secondary-color: var(--foreground);
+    --secondary-color-1: var(--foreground);
+    --secondary-color-2: var(--secondary-foreground);
+    --secondary-color-3: var(--muted-foreground);
+    --secondary-color-4: var(--foreground);
+    --secondary-color-5: var(--muted-foreground);
+    --secondary-color-6: var(--ring);
+
+    /* Highlight colors */
+    --focused-border-color: var(--ring);
+    --primary-success-color: var(--secondary);
+    --secondary-success-color: var(--primary);
+    --primary-warning-color: var(--secondary);
+    --secondary-warning-color: var(--accent-foreground);
     --primary-error-color: var(--destructive);
-    --contrast-error-color: var(--foreground);
-    --primary-warning-color: var(--chart-4);
-    --secondary-warning-color: var(--foreground);
-    --primary-info-color: var(--chart-3);
-    --secondary-info-color: var(--foreground);
+    --secondary-error-color: var(--destructive);
+    --contrast-error-color: var(--secondary-color-3);
+    --primary-info-color: var(--muted);
+    --secondary-info-color: var(--muted-foreground);
+}
+
+/* Modern browsers with `scrollbar-*` support */
+@supports (scrollbar-width: auto) {
+    :not(:hover) {
+        scrollbar-color: rgb(0 0 0 / 0%) rgb(0 0 0 / 0%);
+    }
+
+    :hover {
+        scrollbar-color: var(--secondary-color-2) rgba(0, 0, 0, 0);
+    }
+}
+
+/* Legacy browsers with `::-webkit-scrollbar-*` support */
+@supports selector(::-webkit-scrollbar) {
+    :root::-webkit-scrollbar-track {
+        background: transparent;
+    }
 }
 
 html,
@@ -183,5 +230,13 @@ textarea:focus,
     }
     body {
         @apply bg-background text-foreground;
+        padding: 0;
+        margin: 0;
+        /* Ensure compatibility with reference variables */
+        background-color: var(--primary-color);
+        color: var(--secondary-color-4);
+        font-optical-sizing: auto;
+        font-style: normal;
+        font-weight: 400;
     }
 }
