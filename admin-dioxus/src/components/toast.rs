@@ -241,19 +241,19 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
                 role: "region",
                 aria_label: "{length} notifications",
                 tabindex: "-1",
-                class: "toast-container",
+                class: "toast-container group/toast fixed z-[9999] right-5 bottom-5 max-w-[350px]",
                 style: "--toast-count: {length}",
                 onmounted: move |e| {
                     region_ref.set(Some(e.data()));
                 },
 
                 ol {
-                    class: "toast-list",
+                    class: "toast-list flex flex-col-reverse p-0 m-0 gap-3 list-none",
                     // Render all toasts
                     for (index, toast) in toast_list.read().iter().rev().enumerate() {
                         li {
                             key: "{toast.id}",
-                            class: "toast-item",
+                            class: "toast-item flex",
                             {
                                 props.render_toast.call(ToastProps::builder().id(toast.id)
                                     .index(index)
@@ -406,36 +406,36 @@ pub fn Toast(props: ToastProps) -> Element {
             aria_modal: "false",
             tabindex: "0",
 
-            class: "toast",
+            class: "toast flex overflow-hidden w-72 h-16 box-border items-center justify-between px-4 py-3 rounded-md border border-border z-[calc(var(--toast-count)-var(--toast-index))] -mt-16 shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-[transform,margin,opacity] duration-200 ease-out transform-gpu opacity-[calc(1-var(--toast-hidden))] scale-x-[calc(1-0.05*var(--toast-index))] scale-y-[calc(1-0.02*var(--toast-index))] group-hover/toast:animate-none group-focus-within/toast:animate-none dark:brightness-[calc(0.5+0.5*(1-((var(--toast-index)+1)/4)))] data-[type=success]:bg-[var(--primary-success-color)] data-[type=success]:text-[var(--secondary-success-color)] data-[type=error]:bg-[var(--primary-error-color)] data-[type=error]:text-[var(--contrast-error-color)] data-[type=warning]:bg-[var(--primary-warning-color)] data-[type=warning]:text-[var(--secondary-warning-color)] data-[type=info]:bg-[var(--primary-info-color)] data-[type=info]:text-[var(--secondary-info-color)]",
             "data-type": props.toast_type.as_str(),
             "data-permanent": props.permanent,
             "data-toast-even": (props.index % 2 == 0).then_some("true"),
             "data-toast-odd": (props.index % 2 == 1).then_some("true"),
             "data-top": (props.index == 0).then_some("true"),
-            style: "--toast-index: {props.index}",
+            style: "--toast-index: {props.index}; --toast-hidden: calc(min(max(0, var(--toast-index) - 2), 1))",
             ..props.attributes,
 
-            div { class: "toast-content",
+            div { class: "toast-content flex-1 mr-2 transition-[filter] duration-200",
                 role: "alert",
                 aria_atomic: "true",
 
                 div {
                     id: label_id,
-                    class: "toast-title",
+                    class: "toast-title mb-1 text-foreground font-semibold",
                     {props.title.clone()}
                 }
 
                 if let Some(description) = &props.description {
                     div {
                         id: description_id.clone(),
-                        class: "toast-description",
+                        class: "toast-description text-muted-foreground text-sm",
                         {description.clone()}
                     }
                 }
             }
 
             button {
-                class: "toast-close",
+                class: "toast-close self-start p-0 m-0 border-0 bg-transparent text-[18px] leading-none cursor-pointer text-muted-foreground hover:text-foreground",
                 aria_label: "close",
                 onclick: move |e| {
                     // Focus the region again after closing
