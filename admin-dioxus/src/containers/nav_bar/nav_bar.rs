@@ -1,9 +1,7 @@
-use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::Icon;
-// Import the specific lucide icons we need
 use hmziq_dioxus_free_icons::icons::ld_icons::{
-    LdBell, LdChevronLeft, LdChevronRight, LdMenu, LdMoon, LdSearch, LdSettings, LdSun,
+    LdBell, LdMenu, LdMoon, LdSearch, LdSun,
 };
 
 use crate::config::DarkMode;
@@ -23,12 +21,10 @@ pub fn NavBarContainer() -> Element {
                     .await
                     .unwrap()
                     .to_string();
-            tracing::info!("Dark mode is: {}", is_dark);
             dark_theme.set(DarkMode(is_dark.parse::<bool>().unwrap_or(false)));
         });
     });
 
-    // Toggle dark mode
     let toggle_dark_mode = move |_: MouseEvent| {
         dark_theme.write().toggle();
         spawn(async move {
@@ -37,7 +33,6 @@ pub fn NavBarContainer() -> Element {
         });
     };
 
-    // Toggle sidebar handler
     let toggle_sidebar = move |_: MouseEvent| {
         sidebar_open.toggle();
     };
@@ -49,14 +44,11 @@ pub fn NavBarContainer() -> Element {
     }
 
     rsx! {
-        // Sidebar component (fixed position)
         Sidebar { expanded: sidebar_open, toggle: move |_| sidebar_open.toggle() }
 
-        // Main content area (with margin for sidebar on desktop)
         header { class: "bg-zinc-200/60 dark:bg-zinc-900/60 backdrop-blur-sm shadow transition-colors duration-300 sticky top-0 z-10",
             div { class: "flex h-16 items-center justify-between px-4",
                 div { class: "flex items-center",
-                    // Mobile menu button
                     button {
                         class: "rounded-md p-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 sm:hidden",
                         onclick: move |_| sidebar_open.set(true),
@@ -64,7 +56,6 @@ pub fn NavBarContainer() -> Element {
                             Icon { icon: LdMenu }
                         }
                     }
-                    // Desktop sidebar toggle button
                     button {
                         class: "hidden rounded-md p-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 sm:flex",
                         onclick: toggle_sidebar,
@@ -74,7 +65,6 @@ pub fn NavBarContainer() -> Element {
                     }
                 }
 
-                // Search bar (hidden on small screens)
                 div { class: "hidden md:block flex-1 px-4 lg:px-6",
                     div { class: "relative max-w-md",
                         div { class: "pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3",
@@ -93,7 +83,6 @@ pub fn NavBarContainer() -> Element {
                     }
                 }
 
-                // Right side nav items
                 div { class: "flex items-center space-x-4",
                     button { class: "rounded-full p-1 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-200 dark:focus:ring-offset-zinc-800",
                         div { class: "w-4 h-4",
@@ -111,7 +100,6 @@ pub fn NavBarContainer() -> Element {
                             }
                         }
                     }
-                    // User profile
                     div { class: "relative ml-3",
                         div { class: "flex rounded-full bg-zinc-200 dark:bg-zinc-700 text-sm focus:outline-none transition-colors duration-200",
                             img {
@@ -125,7 +113,6 @@ pub fn NavBarContainer() -> Element {
             }
         }
 
-        // Page content
         Outlet::<Route> {}
     }
 }
