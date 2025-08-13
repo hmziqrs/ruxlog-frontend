@@ -24,6 +24,7 @@ dependencies = [
  "chrono",
  "dioxus",
  "dioxus-primitives",
+ "dioxus-time",
  "dotenvy",
  "gloo-console",
  "gloo-net",

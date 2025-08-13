@@ -1,4 +1,3 @@
-use components::ToastManager;
 use dioxus::prelude::*;
 
 use crate::components::ToastProvider;

@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use crate::hooks::use_previous;
 use crate::router::Route;
 use crate::store::{use_tag, Tag, TagsListQuery};
-use crate::components::{ListEmptyState, ListErrorBanner, ListToolbar, LoadingOverlay, PageHeader, Pagination, ToastManager, ToastType};
+use crate::components::{ListEmptyState, ListErrorBanner, ListToolbar, LoadingOverlay, PageHeader, Pagination, use_toast, ToastOptions};
 use crate::ui::shadcn::{
     Badge, BadgeVariant, Button, ButtonVariant, Card, DropdownMenu, DropdownMenuContent,
     DropdownMenuItem, DropdownMenuTrigger,
@@ -21,7 +21,7 @@ use gloo_timers::future::sleep;
 pub fn TagsListScreen() -> Element {
     let nav = use_navigator();
     let tags_state = use_tag();
-    let mut toast: Signal<ToastManager> = use_context();
+    let toasts = use_toast();
     let mut search_query = use_signal(|| String::new());
     let mut status_filter = use_signal(|| "all".to_string()); // all | active | inactive
     let mut page = use_signal(|| 1u64);
@@ -49,9 +49,7 @@ pub fn TagsListScreen() -> Element {
 
     use_effect(use_reactive!(|(list_loading,)| {
         if prev_loading != Some(list_loading) && list_success {
-            toast
-                .write()
-                .add_toast("Tags loaded successfully".to_string(), "".to_string(), ToastType::Success, None);
+            toasts.success("Tags loaded successfully".to_string(), ToastOptions::new().description(""));
         }
     }));
 

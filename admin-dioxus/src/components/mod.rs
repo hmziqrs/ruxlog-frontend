@@ -33,3 +33,6 @@ pub use list_empty_state::*;
 
 mod image_upload;
 pub use image_upload::*;
+
+mod portal_v2;
+pub use portal_v2::*;
