@@ -2229,6 +2229,17 @@
       color: var(--accent-foreground);
     }
   }
+  .data-\[closing\=true\]\:translate-y-2 {
+    &[data-closing="true"] {
+      --tw-translate-y: calc(0.25rem * 2);
+      translate: var(--tw-translate-x) var(--tw-translate-y);
+    }
+  }
+  .data-\[closing\=true\]\:opacity-0 {
+    &[data-closing="true"] {
+      opacity: 0%;
+    }
+  }
   .data-\[disabled\]\:pointer-events-none {
     &[data-disabled] {
       pointer-events: none;

@@ -39,6 +39,7 @@ struct ToastItem {
     toast_type: ToastType,
     duration: Option<Duration>,
     permanent: bool,
+    closing: bool,
 }
 
 type AddToastCallback = Callback<(String, Option<String>, ToastType, Option<Duration>, bool)>;
@@ -48,6 +49,7 @@ struct ToastCtx {
     #[allow(dead_code)]
     toasts: Signal<VecDeque<ToastItem>>,
     add_toast: AddToastCallback,
+    close_toast: Callback<usize>,
     remove_toast: Callback<usize>,
     focus_region: Callback,
 }
@@ -78,6 +80,24 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
         } else {
             tracing::info!("[toast] not found (already removed?): id={}", id);
         }
+    });
+
+    // Start animated close: mark as closing and remove after animation duration
+    let close_toast = use_callback(move |id: usize| {
+        tracing::info!("[toast] close_toast start: id={}", id);
+        {
+            let mut toasts_vec = toasts.write();
+            if let Some(pos) = toasts_vec.iter().position(|t: &ToastItem| t.id == id) {
+                if !toasts_vec[pos].closing {
+                    toasts_vec[pos].closing = true;
+                }
+            }
+        }
+        let remove_toast = remove_toast.clone();
+        spawn(async move {
+            dioxus_time::sleep(Duration::from_millis(200)).await;
+            remove_toast.call(id);
+        });
     });
 
     let add_toast = use_callback(
@@ -114,6 +134,7 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
                 toast_type,
                 duration,
                 permanent,
+                closing: false,
             };
 
             let mut toasts_vec = toasts.write();
@@ -127,15 +148,15 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
                 }
             }
 
-            // Provider-level auto-dismiss: schedule removal if a duration exists
+            // Provider-level auto-dismiss: schedule animated close if a duration exists
             if let Some(d) = duration {
                 tracing::info!("[toast] provider timer scheduled: id={}, duration={:?}", id, d);
-                let remove = remove_toast.clone();
+                let close = close_toast.clone();
                 let remove_id = id;
                 spawn(async move {
                     dioxus_time::sleep(d).await;
                     tracing::info!("[toast] provider timer fired: id={}", remove_id);
-                    remove.call(remove_id);
+                    close.call(remove_id);
                 });
             }
         },
@@ -171,6 +192,7 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
     let ctx = use_context_provider(|| ToastCtx {
         toasts,
         add_toast,
+        close_toast,
         remove_toast,
         focus_region,
     });
@@ -201,11 +223,12 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
                                     .description(toast.description.clone())
                                     .toast_type(toast.toast_type)
                                     .permanent(toast.permanent)
+                                    .closing(toast.closing)
                                     .on_close({
                                         let toast_id = toast.id;
-                                        let remove_toast = ctx.remove_toast;
+                                        let close_toast = ctx.close_toast;
                                         move |_| {
-                                            remove_toast.call(toast_id);
+                                            close_toast.call(toast_id);
                                         }
                                     })
                                     .duration({
@@ -237,6 +260,8 @@ pub struct ToastProps {
     #[props(default = false)]
     pub permanent: bool,
     pub duration: Option<Duration>,
+    #[props(default = false)]
+    pub closing: bool,
     #[props(extends = GlobalAttributes)]
     attributes: Vec<Attribute>,
 }
@@ -253,17 +278,17 @@ pub fn Toast(props: ToastProps) -> Element {
     let ctx = use_context::<ToastCtx>();
     let effective_duration = if props.permanent { None } else { props.duration };
     let toast_id_for_timeout = props.id;
-    let remove_toast_for_timeout = ctx.remove_toast;
+    let close_toast_for_timeout = ctx.close_toast;
     let timeout = use_timeout(
         effective_duration.unwrap_or(Duration::from_millis(1)),
         move |()| {
             tracing::info!("[toast] component timer fired: id={}", toast_id_for_timeout);
-            remove_toast_for_timeout.call(toast_id_for_timeout);
+            close_toast_for_timeout.call(toast_id_for_timeout);
         },
     );
     let mut started = use_signal(|| false);
     use_effect(move || {
-        if effective_duration.is_some() && !started() {
+        if effective_duration.is_some() && !props.closing && !started() {
             tracing::info!(
                 "[toast] component timer start: id={}, duration={:?}",
                 toast_id_for_timeout,
@@ -283,9 +308,10 @@ pub fn Toast(props: ToastProps) -> Element {
             aria_modal: "false",
             tabindex: "0",
 
-            class: "toast flex overflow-hidden w-72 h-16 box-border items-center justify-between px-4 py-3 rounded-md border border-border z-[calc(var(--toast-count)-var(--toast-index))] -mt-16 shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-[transform,margin,opacity] duration-200 ease-out transform-gpu opacity-[calc(1-var(--toast-hidden))] scale-x-[calc(1-0.05*var(--toast-index))] scale-y-[calc(1-0.02*var(--toast-index))] group-hover/toast:animate-none group-focus-within/toast:animate-none dark:brightness-[calc(0.5+0.5*(1-((var(--toast-index)+1)/4)))] data-[type=success]:bg-[var(--primary-success-color)] data-[type=success]:text-[var(--secondary-success-color)] data-[type=error]:bg-[var(--primary-error-color)] data-[type=error]:text-[var(--contrast-error-color)] data-[type=warning]:bg-[var(--primary-warning-color)] data-[type=warning]:text-[var(--secondary-warning-color)] data-[type=info]:bg-[var(--primary-info-color)] data-[type=info]:text-[var(--secondary-info-color)]",
+            class: "toast flex overflow-hidden w-72 h-16 box-border items-center justify-between px-4 py-3 rounded-md border border-border z-[calc(var(--toast-count)-var(--toast-index))] -mt-16 shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-[transform,margin,opacity] duration-200 ease-out transform-gpu opacity-[calc(1-var(--toast-hidden))] scale-x-[calc(1-0.05*var(--toast-index))] scale-y-[calc(1-0.02*var(--toast-index))] group-hover/toast:animate-none group-focus-within/toast:animate-none dark:brightness-[calc(0.5+0.5*(1-((var(--toast-index)+1)/4)))] data-[type=success]:bg-[var(--primary-success-color)] data-[type=success]:text-[var(--secondary-success-color)] data-[type=error]:bg-[var(--primary-error-color)] data-[type=error]:text-[var(--contrast-error-color)] data-[type=warning]:bg-[var(--primary-warning-color)] data-[type=warning]:text-[var(--secondary-warning-color)] data-[type=info]:bg-[var(--primary-info-color)] data-[type=info]:text-[var(--secondary-info-color)] data-[closing=true]:opacity-0 data-[closing=true]:translate-y-2",
             "data-type": props.toast_type.as_str(),
             "data-permanent": props.permanent,
+            "data-closing": props.closing.then_some("true"),
             "data-toast-even": (props.index % 2 == 0).then_some("true"),
             "data-toast-odd": (props.index % 2 == 1).then_some("true"),
             "data-top": (props.index == 0).then_some("true"),
