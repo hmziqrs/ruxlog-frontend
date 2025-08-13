@@ -91,16 +91,20 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
             use std::sync::atomic::{AtomicUsize, Ordering};
             static NEXT_ID: AtomicUsize = AtomicUsize::new(0);
             let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
+            // Determine effective default (fallback to 3s if provider default is None)
+            let provided_default = (props.default_duration)();
+            let effective_default = provided_default.or(Some(Duration::from_secs(3)));
             let duration = if permanent {
                 None
             } else {
-                duration.or_else(|| (props.default_duration)())
+                duration.or(effective_default)
             };
             tracing::info!(
-                "[toast] add_toast: id={}, permanent={}, default_duration={:?}, effective_duration={:?}",
+                "[toast] add_toast: id={}, permanent={}, provided_default={:?}, effective_default={:?}, effective_duration={:?}",
                 id,
                 permanent,
-                (props.default_duration)(),
+                provided_default,
+                effective_default,
                 duration
             );
             let toast = ToastItem {
@@ -204,7 +208,11 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
                                             remove_toast.call(toast_id);
                                         }
                                     })
-                                    .duration(if toast.permanent { None } else { toast.duration.or_else(|| (props.default_duration)()) })
+                                    .duration({
+                                        let provided_default = (props.default_duration)();
+                                        let effective_default = provided_default.or(Some(Duration::from_secs(3)));
+                                        if toast.permanent { None } else { toast.duration.or(effective_default) }
+                                    })
                                     .attributes(vec![])
                                     .build()
                                 )
