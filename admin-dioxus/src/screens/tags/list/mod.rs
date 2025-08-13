@@ -7,7 +7,7 @@ use crate::ui::shadcn::{
     Badge, BadgeVariant, Button, ButtonVariant, Card, DropdownMenu, DropdownMenuContent,
     DropdownMenuItem, DropdownMenuTrigger,
 };
-use crate::utils::dates::format_short_date;
+use crate::utils::dates::format_short_date_dt;
 use hmziq_dioxus_free_icons::{
     icons::ld_icons::{LdEllipsis, LdTag},
     Icon,
@@ -235,7 +235,7 @@ pub fn TagsListScreen() -> Element {
                                                 }
                                                 td { class: "hidden max-w-[28rem] py-3 px-4 text-muted-foreground md:table-cell", span { class: "line-clamp-1", {tag.description.clone().unwrap_or("—".to_string())} } }
                                                 td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{tag.slug}" }
-                                                td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{format_short_date(&tag.created_at)}" }
+                                                td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{format_short_date_dt(&tag.created_at)}" }
                                                 td { class: "py-3 px-4",
                                                     if tag.is_active {
                                                         Badge { class: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/30", "Active" }

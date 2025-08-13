@@ -2,14 +2,15 @@ use serde::{Deserialize, Serialize};
 use dioxus::prelude::*;
 use crate::store::{StateFrame, PaginatedList};
 use std::collections::HashMap;
+use chrono::{DateTime, Utc};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Tag {
     pub id: i32,
     pub name: String,
     pub slug: String,
-    pub created_at: String,
-    pub updated_at: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
     pub description: Option<String>,
     pub color: String,
     pub text_color: String,
@@ -22,8 +23,8 @@ impl Default for Tag {
             id: 0,
             name: String::new(),
             slug: String::new(),
-            created_at: String::new(),
-            updated_at: String::new(),
+            created_at: DateTime::<Utc>::from_timestamp(0, 0).unwrap_or_else(|| Utc::now()),
+            updated_at: DateTime::<Utc>::from_timestamp(0, 0).unwrap_or_else(|| Utc::now()),
             description: None,
             color: "#3b82f6".to_string(),
             text_color: "#ffffff".to_string(),
