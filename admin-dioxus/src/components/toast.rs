@@ -4,6 +4,7 @@ use crate::{
     hooks::use_unique_id
 };
 
+use dioxus::logger::tracing;
 use super::portal_v2::{use_portal, PortalIn, PortalOut};
 use dioxus::dioxus_core::DynamicNode;
 use dioxus::prelude::*;
@@ -69,9 +70,13 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
     let portal = use_portal();
 
     let remove_toast = use_callback(move |id: usize| {
+        tracing::info!("[toast] remove_toast called: id={}", id);
         let mut toasts_vec = toasts.write();
         if let Some(pos) = toasts_vec.iter().position(|t: &ToastItem| t.id == id) {
             toasts_vec.remove(pos);
+            tracing::info!("[toast] removed: id={}", id);
+        } else {
+            tracing::info!("[toast] not found (already removed?): id={}", id);
         }
     });
 
@@ -91,7 +96,13 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
             } else {
                 duration.or_else(|| (props.default_duration)())
             };
-
+            tracing::info!(
+                "[toast] add_toast: id={}, permanent={}, default_duration={:?}, effective_duration={:?}",
+                id,
+                permanent,
+                (props.default_duration)(),
+                duration
+            );
             let toast = ToastItem {
                 id,
                 title,
@@ -110,6 +121,18 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
                 } else {
                     toasts_vec.pop_front();
                 }
+            }
+
+            // Provider-level auto-dismiss: schedule removal if a duration exists
+            if let Some(d) = duration {
+                tracing::info!("[toast] provider timer scheduled: id={}, duration={:?}", id, d);
+                let remove = remove_toast.clone();
+                let remove_id = id;
+                spawn(async move {
+                    dioxus_time::sleep(d).await;
+                    tracing::info!("[toast] provider timer fired: id={}", remove_id);
+                    remove.call(remove_id);
+                });
             }
         },
     );
@@ -181,7 +204,7 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
                                             remove_toast.call(toast_id);
                                         }
                                     })
-                                    .duration(if toast.permanent { None } else { toast.duration })
+                                    .duration(if toast.permanent { None } else { toast.duration.or_else(|| (props.default_duration)()) })
                                     .attributes(vec![])
                                     .build()
                                 )
@@ -220,17 +243,28 @@ pub fn Toast(props: ToastProps) -> Element {
         .as_ref()
         .map(|_| format!("{id}-description"));
     let ctx = use_context::<ToastCtx>();
-    if !props.permanent && props.duration.is_some() {
-        let duration = props.duration.unwrap();
-        let toast_id = props.id;
-        let remove_toast = ctx.remove_toast;
-        let timeout = use_timeout(duration, move |()| {
-            remove_toast.call(toast_id);
-        });
-        use_effect(move || {
+    let effective_duration = if props.permanent { None } else { props.duration };
+    let toast_id_for_timeout = props.id;
+    let remove_toast_for_timeout = ctx.remove_toast;
+    let timeout = use_timeout(
+        effective_duration.unwrap_or(Duration::from_millis(1)),
+        move |()| {
+            tracing::info!("[toast] component timer fired: id={}", toast_id_for_timeout);
+            remove_toast_for_timeout.call(toast_id_for_timeout);
+        },
+    );
+    let mut started = use_signal(|| false);
+    use_effect(move || {
+        if effective_duration.is_some() && !started() {
+            tracing::info!(
+                "[toast] component timer start: id={}, duration={:?}",
+                toast_id_for_timeout,
+                effective_duration
+            );
+            started.set(true);
             timeout.action(());
-        });
-    }
+        }
+    });
 
     rsx! {
         div {
