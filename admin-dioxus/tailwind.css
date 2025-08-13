@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-
+@import "./src/styles/toast.css";
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant dark (&:is(.dark *));
 
@@ -90,6 +90,16 @@
     --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
     --sidebar-border: oklch(0.92 0.004 286.32);
     --sidebar-ring: oklch(0.705 0.015 286.067);
+
+    /* Toast semantic colors */
+    --primary-success-color: var(--chart-2);
+    --secondary-success-color: var(--foreground);
+    --primary-error-color: var(--destructive);
+    --contrast-error-color: var(--foreground);
+    --primary-warning-color: var(--chart-4);
+    --secondary-warning-color: var(--foreground);
+    --primary-info-color: var(--chart-3);
+    --secondary-info-color: var(--foreground);
 }
 
 .dark {
@@ -124,6 +134,16 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.552 0.016 285.938);
+
+    /* Toast semantic colors (inherit from dark theme tokens) */
+    --primary-success-color: var(--chart-2);
+    --secondary-success-color: var(--foreground);
+    --primary-error-color: var(--destructive);
+    --contrast-error-color: var(--foreground);
+    --primary-warning-color: var(--chart-4);
+    --secondary-warning-color: var(--foreground);
+    --primary-info-color: var(--chart-3);
+    --secondary-info-color: var(--foreground);
 }
 
 html,
