@@ -14,6 +14,17 @@ Non-goals (for v1 unless specifically included in a phase below):
 - Fancy devtools or analytics.
 
 
+## Progress Update — 2025-08-13T19:23:35+05:00
+
+- Created `src/components/sonner/` with `mod.rs`, `types.rs`, `state.rs`.
+- Implemented core types and defaults in `types.rs` (`ToastType`, `Position`, `SwipeDirection`, `Action`, `ToastIcons`, `ToastClassNames`, `ToastOptions`, `ToastT`, `ToasterProps`, `Offset`, constants).
+- Added `use_sonner()` handle and context contracts in `state.rs` (callbacks and ID generator; provider to come in Phase 2).
+- Exported module via `src/components/mod.rs` (`pub mod sonner;`).
+- Verified compilation via `cargo check`.
+
+Next: Phase 2 — implement provider (`toaster.rs`) with portal and minimal rendering (`toast.rs`).
+
+
 ## High-level Architecture
 
 - A "Toaster" provider (context + portal) manages a list of toasts, their lifecycle, stacking and positioning.
@@ -87,16 +98,16 @@ Exit criteria:
 
 Deliverables:
 - `src/components/sonner/types.rs`
-  - [ ] `ToastType` enum with `Success, Info, Warning, Error, Loading`.
-  - [ ] `Position` enum: `TopLeft, TopRight, BottomLeft, BottomRight, TopCenter, BottomCenter`.
-  - [ ] `SwipeDirection` enum: `Top, Right, Bottom, Left`.
-  - [ ] `Action` struct (label: Node/Text, on_click callback, optional style).
-  - [ ] `ToastIcons` struct (optional custom icons per type + loading + close).
-  - [ ] `ToastClassNames` struct mirroring Sonner `classNames` shape (toast, description, icon, content, title, action/cancel buttons, per-type overrides).
-  - [ ] `ToastOptions` for per-toast overrides (duration, closeButton, className, classNames, style, descriptionClassName, cancelButtonStyle, actionButtonStyle, toasterId, etc.).
-  - [ ] `ToastT` struct modeling runtime toast (id, type, title, description, icon, durations, flags, action/cancel, promise state, position, styles, classNames, testId, etc.).
-  - [ ] `ToasterProps` equivalent.
-  - [ ] `Offset` type: either number/string or per-side struct.
+  - [x] `ToastType` enum with `Success, Info, Warning, Error, Loading`.
+  - [x] `Position` enum: `TopLeft, TopRight, BottomLeft, BottomRight, TopCenter, BottomCenter`.
+  - [x] `SwipeDirection` enum: `Top, Right, Bottom, Left`.
+  - [x] `Action` struct (label: Node/Text, on_click callback, optional style).
+  - [x] `ToastIcons` struct (optional custom icons per type + loading + close).
+  - [x] `ToastClassNames` struct mirroring Sonner `classNames` shape (toast, description, icon, content, title, action/cancel buttons, per-type overrides).
+  - [x] `ToastOptions` for per-toast overrides (duration, closeButton, className, classNames, style, descriptionClassName, cancelButtonStyle, actionButtonStyle, toasterId, etc.).
+  - [x] `ToastT` struct modeling runtime toast (id, type, title, description, icon, durations, flags, action/cancel, promise state, position, styles, classNames, testId, etc.).
+  - [x] `ToasterProps` equivalent.
+  - [x] `Offset` type: either number/string or per-side struct.
 
 - `src/components/sonner/state.rs`
   - [ ] `Heights` tracking type: `{ toast_id, height, position }`.
@@ -104,10 +115,10 @@ Deliverables:
   - [ ] Events to add/update/dismiss/delete toasts.
 
 - `src/components/sonner/mod.rs`
-  - [ ] Re-exports and basic module wiring.
+  - [x] Re-exports and basic module wiring.
 
 Acceptance:
-- [ ] Compiles. No rendering yet.
+- [x] Compiles. No rendering yet.
 
 Integration test:
 - [ ] Add a temporary example compilation unit that instantiates `ToasterProps` defaults.
@@ -303,8 +314,8 @@ Acceptance:
 
 ## Detailed Task Breakdown (checklist)
 
-- [ ] Create `src/components/sonner/` module with `mod.rs` and placeholder files.
-- [ ] Implement `types.rs` enumerations and structs (see Phase 1).
+- [x] Create `src/components/sonner/` module with `mod.rs` and placeholder files.
+- [x] Implement `types.rs` enumerations and structs (see Phase 1).
 - [ ] Implement `state.rs` signals and events:
   - [ ] `add_toast`, `update_toast`, `dismiss_toast`, `delete_toast`
   - [ ] `set_interacting(bool)`, `set_expanded(bool)`
