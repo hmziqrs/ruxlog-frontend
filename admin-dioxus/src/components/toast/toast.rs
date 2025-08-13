@@ -15,18 +15,19 @@ pub struct ToastProps {
 fn Toast(props: ToastProps) -> Element {
     let toast = &props.toast;
     
-    // Determine toast class based on toast type
-    let toast_class = match toast.toast_type {
-        super::ToastType::Info => "bg-blue-100 border-blue-500 text-blue-700",
-        super::ToastType::Success => "bg-green-100 border-green-500 text-green-700",
-        super::ToastType::Warning => "bg-yellow-100 border-yellow-500 text-yellow-700",
-        super::ToastType::Error => "bg-red-100 border-red-500 text-red-700",
+    // Themed base and subtle color variants according to toast type
+    let base_class = "px-4 py-3 rounded-md border shadow-lg bg-background text-foreground border-border";
+    let (variant_class, title_class) = match toast.toast_type {
+        super::ToastType::Info => ("border-l-4 border-l-primary", "text-primary"),
+        super::ToastType::Success => ("border-l-4 border-l-emerald-500 dark:border-l-emerald-400", "text-emerald-600 dark:text-emerald-400"),
+        super::ToastType::Warning => ("border-l-4 border-l-amber-500 dark:border-l-amber-400", "text-amber-600 dark:text-amber-400"),
+        super::ToastType::Error => ("border-l-4 border-l-destructive", "text-destructive"),
     };
 
     rsx! {
-        div { class: "px-4 py-3 rounded border-l-4 shadow-md {toast_class}",
-            div { class: "font-bold", "{toast.title}" }
-            div { "{toast.body}" }
+        div { class: "{base_class} {variant_class}",
+            div { class: "font-semibold {title_class}", "{toast.title}" }
+            div { class: "text-sm text-muted-foreground", "{toast.body}" }
         }
     }
 }
@@ -60,7 +61,7 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
         div { class: "relative",
             {props.children}
             if manager().toasts.len() > 0 {
-                div { class: "absolute bottom-4 right-4 space-y-4",
+                div { class: "fixed bottom-4 right-4 z-50 space-y-3",
                     for (_id , toast) in manager().toasts.iter() {
                         Toast { key: "{toast.id}", toast: toast.clone() }
                     }

@@ -42,15 +42,16 @@ pub fn TagsListScreen() -> Element {
 
     let list = tags_state.list.read();
     let list_loading = list.is_loading();
+    let list_success = list.is_success();
     let list_failed = list.is_failed();
 
     let prev_loading = use_previous(list_loading);
-    
+
     use_effect(use_reactive!(|(list_loading,)| {
-        if prev_loading != Some(list_loading) {
+        if prev_loading != Some(list_loading) && list_success {
             toast
                 .write()
-                .add_toast("Hello".to_string(), "".to_string(), ToastType::Info, None);
+                .add_toast("Tags loaded successfully".to_string(), "".to_string(), ToastType::Success, None);
         }
     }));
 
