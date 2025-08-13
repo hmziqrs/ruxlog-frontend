@@ -2,14 +2,15 @@ use serde::{Deserialize, Serialize};
 use dioxus::prelude::*;
 use crate::store::{StateFrame, PaginatedList};
 use std::collections::HashMap;
+use chrono::{DateTime, Utc};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Category {
     pub id: i32,
     pub name: String,
     pub slug: String,
-    pub created_at: String,
-    pub updated_at: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
     pub color: String,
     pub text_color: String,
     pub is_active: bool,
