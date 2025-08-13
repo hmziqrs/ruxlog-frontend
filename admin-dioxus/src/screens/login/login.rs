@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::components::{ToastManager, ToastType};
+use crate::components::{use_toast, ToastOptions, ToastType};
 use dioxus::html::geometry::euclid::Rect;
 use dioxus::{logger::tracing, prelude::*};
 
@@ -17,7 +17,7 @@ pub fn LoginScreen() -> Element {
     let login_status = auth_store.login_status.read();
     let is_loading = login_status.is_loading();
     let prev_loading = use_previous(is_loading);
-    let mut toast: Signal<ToastManager> = use_context();
+    let toasts = use_toast();
     let mut mouse_pos = use_signal(|| (0, 0)); // Initialize at 0,0
     let mut card_ref = use_signal(|| None as Option<Rc<MountedData>>);
     let mut card_dimensions = use_signal(Rect::zero);
@@ -40,9 +40,7 @@ pub fn LoginScreen() -> Element {
 
     use_effect(use_reactive!(|(is_loading,)| {
         if prev_loading != Some(is_loading) {
-            toast
-                .write()
-                .add_toast("Hello".to_string(), "".to_string(), ToastType::Info, None);
+            toasts.info("Hello".to_string(), ToastOptions::new().description(""));
         }
     }));
 
