@@ -1,10 +1,9 @@
 use super::{AuthState, LoginPayload, User, UserRole};
 use crate::{
     services::http_client,
-    store::{ApiError, StateFrame},
+    store::{StateFrame},
 };
 use dioxus::{logger::tracing, prelude::*};
-use gloo_net::http::Response;
 #[cfg(target_arch = "wasm32")]
 use wasm_cookies::{CookieOptions, SameSite};
 

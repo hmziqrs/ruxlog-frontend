@@ -1,4 +1,4 @@
-use dioxus::{logger::tracing, prelude::*};
+use dioxus::prelude::*;
 
 #[derive(Props, PartialEq, Clone)]
 pub struct AvatarProps {
