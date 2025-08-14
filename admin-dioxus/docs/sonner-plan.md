@@ -171,15 +171,15 @@ Integration test:
 ## Phase 4 — Stacking, Heights, Gap, VisibleToasts, Expand
 
 Deliverables:
-- [ ] Measure toast heights on mount and after content updates; update `heights` state.
-- [ ] Compute per-toast offset from prior visible toasts using `gap` (default 14) and measured heights.
-- [ ] Enforce `visibleToasts` (default 3) per Sonner behavior; others stack beneath.
-- [ ] `expand`: when true, skip clipping/limit so content shows fully.
+- [x] Measure toast heights on mount and after content updates; update `heights` state.
+- [x] Compute per-toast offset from prior visible toasts using `gap` (default 14) and measured heights.
+- [x] Enforce `visibleToasts` (default 3) per Sonner behavior; others stack beneath.
+- [x] `expand`: when true, skip clipping/limit so content shows fully.
 - [ ] Basic in/out transitions using existing class utilities (match `src/components/toast.rs` approach).
 
 Acceptance:
-- [ ] Only `visibleToasts` are fully visible; others are stacked with scale/opacity/offset.
-- [ ] Toggling `expand` shows full height of each toast.
+- [x] Only `visibleToasts` are fully visible; others are stacked with scale/opacity/offset.
+- [x] Toggling `expand` shows full height of each toast.
 
 Integration test:
 - [ ] Render 5+ toasts; visually confirm stacking and offsets.

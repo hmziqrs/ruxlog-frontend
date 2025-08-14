@@ -57,20 +57,33 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
 
     let dismiss_toast = {
         let mut toasts = toasts.clone();
+        let mut heights_sig = heights.clone();
         use_callback(move |id: u64| {
+            // remove toast
             let mut list = toasts.write();
             if let Some(pos) = list.iter().position(|t| t.id == id) {
                 list.remove(pos);
+            }
+            // remove any recorded height for this toast id
+            let mut hs = heights_sig.write();
+            if let Some(pos) = hs.iter().position(|h| h.toast_id == id) {
+                hs.remove(pos);
             }
         })
     };
 
     let delete_toast = {
         let mut toasts = toasts.clone();
+        let mut heights_sig = heights.clone();
         use_callback(move |id: u64| {
             let mut list = toasts.write();
             if let Some(pos) = list.iter().position(|t| t.id == id) {
                 list.remove(pos);
+            }
+            // remove any recorded height for this toast id
+            let mut hs = heights_sig.write();
+            if let Some(pos) = hs.iter().position(|h| h.toast_id == id) {
+                hs.remove(pos);
             }
         })
     };
@@ -227,7 +240,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                                     "position:absolute; left:0; right:0; top:0px; opacity:0;".to_string()
                                 } else if i < visible_count {
                                     format!(
-                                        "position:absolute; left:0; right:0; top:{}px; z-index:{};",
+                                        "position:absolute; left:0; right:0; top:{}px; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, top 200ms ease; will-change: transform, opacity, top;",
                                         offsets.get(i).cloned().unwrap_or(0),
                                         1000 - i as i32
                                     )
@@ -237,7 +250,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                                     let scale = (1.0 - (overflow_index as f32) * 0.06).max(0.82);
                                     let opacity = (1.0 - (overflow_index as f32) * 0.15).max(0.4);
                                     format!(
-                                        "position:absolute; left:0; right:0; top:{}px; transform: scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{};",
+                                        "position:absolute; left:0; right:0; top:{}px; transform: scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{}; transition: transform 200ms ease, opacity 200ms ease; will-change: transform, opacity;",
                                         offsets.get(cutoff).cloned().unwrap_or(0),
                                         scale,
                                         opacity,
@@ -252,7 +265,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                                     let visible_start = count - visible_count;
                                     if i >= visible_start {
                                         format!(
-                                            "position:absolute; left:0; right:0; bottom:{}px; z-index:{};",
+                                            "position:absolute; left:0; right:0; bottom:{}px; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, bottom 200ms ease; will-change: transform, opacity, bottom;",
                                             offsets.get(i).cloned().unwrap_or(0),
                                             1000 - (count - i) as i32
                                         )
@@ -261,7 +274,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                                         let scale = (1.0 - (overflow_index as f32) * 0.06).max(0.82);
                                         let opacity = (1.0 - (overflow_index as f32) * 0.15).max(0.4);
                                         format!(
-                                            "position:absolute; left:0; right:0; bottom:{}px; transform: scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{};",
+                                            "position:absolute; left:0; right:0; bottom:{}px; transform: scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{}; transition: transform 200ms ease, opacity 200ms ease; will-change: transform, opacity;",
                                             offsets.get(visible_start).cloned().unwrap_or(0),
                                             scale,
                                             opacity,
