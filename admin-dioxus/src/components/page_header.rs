@@ -37,6 +37,7 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
         Route::UsersListScreen {} => ("Users", None),
         // HEADER_ROUTES_END
         Route::AnalyticsScreen {} => ("Analytics", None),
+        Route::SonnerDemoScreen {} => ("Sonner", None),
         // Default/fallback
         Route::HomeScreen {} | Route::LoginScreen {} => ("Dashboard", None),
     };
