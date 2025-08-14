@@ -22,7 +22,7 @@ Non-goals (for v1 unless specifically included in a phase below):
 - Exported module via `src/components/mod.rs` (`pub mod sonner;`).
 - Verified compilation via `cargo check`.
 
-Next: Phase 2 — implement provider (`toaster.rs`) with portal and minimal rendering (`toast.rs`).
+Next: Phase 3 — implement timers, auto-dismiss, and pause-on-hover/hidden.
 
 
 ## High-level Architecture
@@ -128,21 +128,21 @@ Integration test:
 
 Deliverables:
 - `src/components/sonner/toaster.rs`
-  - [ ] `SonnerToaster` component:
-    - [ ] Context provider with signals for toasts, heights, interacting, defaults.
-    - [ ] Portal via `use_portal`, `PortalIn/Out` (reusing `src/components/toast.rs` pattern).
-    - [ ] Container `role="region"`, `aria-label` from `props.containerAriaLabel` or computed count.
-    - [ ] `dir` attribute support (`ltr`, `rtl`, `auto`).
-    - [ ] Positioning based on `props.position`.
-    - [ ] Visible list (no measuring/stacking yet): render each toast using `toast.rs` component.
+  - [x] `SonnerToaster` component:
+    - [x] Context provider with signals for toasts, heights, interacting, defaults.
+    - [x] Portal via `use_portal`, `PortalIn/Out` (reusing `src/components/toast.rs` pattern).
+    - [x] Container `role="region"`, `aria-label` from `props.containerAriaLabel` or computed count.
+    - [x] `dir` attribute support (`ltr`, `rtl`, `auto`).
+    - [x] Positioning based on `props.position`.
+    - [x] Visible list (no measuring/stacking yet): render each toast using `toast.rs` component.
 
 - `src/components/sonner/toast.rs`
-  - [ ] Minimal `ToastView` with title, optional description, close button.
-  - [ ] `aria-labelledby/aria-describedby` wiring via unique ids (`use_unique_id`).
-  - [ ] Close button behavior calls provider’s dismiss.
+  - [x] Minimal `ToastView` with title, optional description, close button.
+  - [x] `aria-labelledby/aria-describedby` wiring via unique ids (`use_unique_id`).
+  - [x] Close button behavior calls provider’s dismiss.
 
 - Hook/handle:
-  - [ ] `use_sonner()` returns a `SonnerToasts` handle with `.show`, `.success`, `.error`, `.warning`, `.info`, `.loading` convenience methods.
+  - [x] `use_sonner()` returns a `SonnerToasts` handle with `.show`, `.success`, `.error`, `.warning`, `.info`, `.loading` convenience methods.
 
 Acceptance:
 - [ ] Mounting `SonnerToaster` and calling `use_sonner().success(...)` renders a toast.
