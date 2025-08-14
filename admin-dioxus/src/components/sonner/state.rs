@@ -2,9 +2,10 @@
 //! Provides handle types and context contracts. Provider implementation comes in Phase 2.
 
 use dioxus::prelude::*;
+use std::collections::VecDeque;
 
 use super::types::{
-    ToastOptions, ToastT, ToastType, DEFAULT_TOAST_LIFETIME_MS, Position,
+    ToastOptions, ToastT, ToastType, DEFAULT_TOAST_LIFETIME_MS, Position, HeightT, ToasterProps,
 };
 
 // Callback types used by the provider (wired in Phase 2)
@@ -15,6 +16,13 @@ type DeleteToastCallback = Callback<u64>;
 
 #[derive(Clone)]
 pub struct SonnerCtx {
+    // Signals (Phase 2: exposed for future stacking/controls)
+    pub toasts: Signal<VecDeque<ToastT>>, // ordered list
+    pub heights: Signal<Vec<HeightT>>,    // measurements (unused in Phase 2)
+    pub interacting: Signal<bool>,        // pointer within region
+    pub defaults: ToasterProps,           // effective defaults
+
+    // Imperative controls
     pub add_toast: AddToastCallback,
     pub update_toast: UpdateToastCallback,
     pub dismiss_toast: DismissToastCallback,
