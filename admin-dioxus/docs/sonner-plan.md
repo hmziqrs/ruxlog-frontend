@@ -154,18 +154,18 @@ Integration test:
 ## Phase 3 — Timers, Auto-dismiss, Pause on Hover/Interacting/Hidden
 
 Deliverables:
-- [ ] Per-toast `duration` with provider-level default (like existing `ToastProviderProps::default_duration`).
-- [ ] Pause/resume timer on hover and on focus inside the toast.
-- [ ] Global `interacting` flag toggled while pointer is inside the list.
-- [ ] `document.hidden` handling: pause all timers while hidden. Implement via `document.addEventListener('visibilitychange', ...)` using `dioxus::document::eval` pattern from `src/components/toast.rs` (see F6 example) or a small JS snippet.
-- [ ] `onAutoClose` callback when a toast closes automatically.
+- [x] Per-toast `duration` with provider-level default (via `ToasterProps::duration_ms` fallback in `SonnerToaster`).
+- [x] Pause/resume timer on hover and on focus inside the toast (`src/components/sonner/toast.rs`).
+- [x] Global `interacting` flag toggled while pointer is inside the list (`src/components/sonner/toaster.rs`).
+- [x] `document.hidden` handling: pause all timers while hidden (visibilitychange listener wired via `dioxus::document::eval`).
+- [ ] `onAutoClose` callback when a toast closes automatically. (Implemented internally on `ToastT`/`SonnerToast`; API exposure TBD.)
 
 Acceptance:
-- [ ] If user hovers over toasts, timers pause; on leaving, resume.
-- [ ] Switching tabs pauses timers; returning resumes.
+- [x] If user hovers over toasts, timers pause; on leaving, resume.
+- [x] Switching tabs pauses timers; returning resumes.
 
 Integration test:
-- [ ] Demo toggles: duration = 2s; verify pause/resume.
+- [x] Demo duration set to 2s; verify pause/resume via `/demo/sonner`.
 
 
 ## Phase 4 — Stacking, Heights, Gap, VisibleToasts, Expand

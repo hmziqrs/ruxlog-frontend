@@ -13,14 +13,18 @@ pub fn SonnerDemoScreen() -> Element {
                 button {
                     class: "px-3 py-2 rounded-md bg-green-600 text-white hover:bg-green-700",
                     onclick: move |_| {
-                        sonner.success("Saved successfully".to_string(), ToastOptions::default());
+                        let mut opts = ToastOptions::default();
+                        opts.duration_ms = Some(2000);
+                        sonner.success("Saved successfully".to_string(), opts);
                     },
                     "Show Success"
                 }
                 button {
                     class: "px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700",
                     onclick: move |_| {
-                        sonner.error("Something went wrong".to_string(), ToastOptions::default());
+                        let mut opts = ToastOptions::default();
+                        opts.duration_ms = Some(2000);
+                        sonner.error("Something went wrong".to_string(), opts);
                     },
                     "Show Error"
                 }

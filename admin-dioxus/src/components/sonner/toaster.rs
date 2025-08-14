@@ -21,12 +21,17 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
     // Toasts state (Phase 2: simple list, no stacking/measurements yet)
     let toasts = use_signal(|| VecDeque::<ToastT>::new());
     let heights = use_signal(|| Vec::<HeightT>::new());
-    let interacting = use_signal(|| false);
+    let mut interacting = use_signal(|| false);
+    let hidden = use_signal(|| false);
 
     // Create callbacks for context
     let add_toast = {
         let mut toasts = toasts.clone();
-        use_callback(move |toast: ToastT| {
+        let default_duration = props.defaults.duration_ms;
+        use_callback(move |mut toast: ToastT| {
+            if toast.duration_ms.is_none() {
+                toast.duration_ms = Some(default_duration);
+            }
             let mut list = toasts.write();
             list.push_back(toast);
         })
@@ -67,6 +72,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
         toasts: toasts.clone(),
         heights: heights.clone(),
         interacting: interacting.clone(),
+        hidden: hidden.clone(),
         defaults: props.defaults.clone(),
         // callbacks
         add_toast,
@@ -76,6 +82,19 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
     });
 
     let portal = use_portal();
+
+    // Listen for document visibility changes to pause timers when hidden
+    use_effect(move || {
+        let mut eval = dioxus::document::eval(
+            "document.addEventListener('visibilitychange', () => { dioxus.send(document.hidden) })",
+        );
+        let mut hidden_sig = hidden.clone();
+        spawn(async move {
+            while let Ok(flag) = eval.recv().await {
+                hidden_sig.set(flag);
+            }
+        });
+    });
 
     // Compute container attributes
     let toasts_vec = {
@@ -116,6 +135,8 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                 tabindex: "-1",
                 dir: "{dir_attr}",
                 class: "sonner-container {position_class}",
+                onmouseenter: move |_| interacting.set(true),
+                onmouseleave: move |_| interacting.set(false),
 
                 // Visible list (no stacking/measurements yet)
                 for (i, toast) in toasts_vec.iter().enumerate() {
@@ -126,6 +147,8 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                         description: toast.description.clone(),
                         toast_type: toast.toast_type,
                         close_button: toast.close_button,
+                        duration_ms: toast.duration_ms,
+                        on_auto_close: toast.on_auto_close.clone(),
                         on_close: {
                             let dismiss_toast = dismiss_toast.clone();
                             let id = toast.id;

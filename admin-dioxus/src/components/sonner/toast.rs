@@ -2,8 +2,11 @@
 
 use crate::hooks::use_unique_id;
 use dioxus::prelude::*;
+use dioxus_time::sleep;
+use std::time::Duration;
 
 use super::types::ToastType;
+use super::state::SonnerCtx;
 
 #[derive(Props, Clone, PartialEq)]
 pub struct SonnerToastProps {
@@ -13,6 +16,10 @@ pub struct SonnerToastProps {
     pub toast_type: ToastType,
     #[props(default = true)]
     pub close_button: bool,
+    #[props(default = None)]
+    pub duration_ms: Option<u64>,
+    #[props(default = None)]
+    pub on_auto_close: Option<Callback<u64>>,
     pub on_close: Callback<MouseEvent>,
     #[props(extends = GlobalAttributes)]
     attributes: Vec<Attribute>,
@@ -20,6 +27,7 @@ pub struct SonnerToastProps {
 
 #[component]
 pub fn SonnerToast(props: SonnerToastProps) -> Element {
+    let ctx = use_context::<SonnerCtx>();
     let uid = use_unique_id();
     let id = use_memo(move || format!("sonner-toast-{uid}"));
     let label_id = format!("{id}-label");
@@ -29,6 +37,48 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
         .map(|_| format!("{id}-description"));
     let aria_labelledby_val = label_id.clone();
     let aria_describedby_val = description_id.clone();
+
+    // Phase 3: timers with pause on hover/focus/interacting/hidden
+    let mut hovered = use_signal(|| false);
+    let mut focused = use_signal(|| false);
+    let interacting = ctx.interacting;
+    let hidden = ctx.hidden;
+    let paused = use_memo(move || hovered() || focused() || interacting() || hidden());
+    let mut remaining_ms = use_signal(|| props.duration_ms.unwrap_or(0));
+    let toast_id_for_timer = props.id;
+    let on_auto_close_cb = props.on_auto_close.clone();
+    let dismiss = ctx.dismiss_toast;
+    let has_duration = props.duration_ms.is_some();
+    let mut started = use_signal(|| false);
+    use_effect(move || {
+        if has_duration && !started() {
+            started.set(true);
+            spawn(async move {
+                let tick = 50u64; // ms
+                loop {
+                    if paused() {
+                        sleep(Duration::from_millis(tick)).await;
+                        continue;
+                    }
+                    let current = remaining_ms();
+                    if current == 0 {
+                        break;
+                    }
+                    let next = current.saturating_sub(tick);
+                    remaining_ms.set(next);
+                    if next == 0 {
+                        break;
+                    }
+                    sleep(Duration::from_millis(tick)).await;
+                }
+                // Auto close
+                dismiss.call(toast_id_for_timer);
+                if let Some(cb) = on_auto_close_cb.clone() {
+                    cb.call(toast_id_for_timer);
+                }
+            });
+        }
+    });
 
     rsx! {
         div {
@@ -40,6 +90,10 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
             tabindex: "0",
             class: "sonner-toast flex items-center justify-between gap-2 w-72 px-4 py-3 rounded-md border border-border bg-background text-foreground shadow-sm",
             "data-type": props.toast_type.as_str(),
+            onmouseenter: move |_| hovered.set(true),
+            onmouseleave: move |_| hovered.set(false),
+            onfocus: move |_| focused.set(true),
+            onblur: move |_| focused.set(false),
             ..props.attributes,
 
             div { class: "sonner-toast-content flex-1",

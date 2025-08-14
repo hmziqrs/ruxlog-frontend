@@ -20,6 +20,7 @@ pub struct SonnerCtx {
     pub toasts: Signal<VecDeque<ToastT>>, // ordered list
     pub heights: Signal<Vec<HeightT>>,    // measurements (unused in Phase 2)
     pub interacting: Signal<bool>,        // pointer within region
+    pub hidden: Signal<bool>,             // document.hidden flag (Phase 3)
     pub defaults: ToasterProps,           // effective defaults
 
     // Imperative controls
@@ -61,6 +62,7 @@ impl SonnerToasts {
             class_names: options.class_names.clone(),
             position: Position::BottomRight,
             test_id: None,
+            on_auto_close: None,
         };
         self.add_toast.call(toast);
     }
