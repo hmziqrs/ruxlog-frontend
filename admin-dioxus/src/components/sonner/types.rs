@@ -126,7 +126,7 @@ pub struct ToastOptions {
 }
 
 /// Internal runtime representation of a toast (subset for Phase 1)
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ToastT {
     pub id: u64,
     pub toaster_id: Option<String>,
@@ -144,6 +144,7 @@ pub struct ToastT {
     pub class_names: Option<ToastClassNames>,
     pub position: Position,
     pub test_id: Option<String>,
+    pub on_auto_close: Option<Callback<u64>>, // Phase 3: notify when a toast auto-closes
 }
 
 impl Default for ToastT {
@@ -165,6 +166,7 @@ impl Default for ToastT {
             class_names: None,
             position: Position::BottomRight,
             test_id: None,
+            on_auto_close: None,
         }
     }
 }
