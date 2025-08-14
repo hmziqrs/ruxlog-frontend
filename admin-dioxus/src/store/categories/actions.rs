@@ -2,7 +2,6 @@ use super::{Category, CategoryAddPayload, CategoryEditPayload, CategoryListQuery
 use crate::services::http_client;
 use crate::store::{PaginatedList, StateFrame};
 use std::collections::HashMap;
-use serde_json;
 
 impl CategoryState {
     pub async fn add(&self, payload: CategoryAddPayload) {

@@ -1,6 +1,5 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
-use dioxus::html::geometry::ClientPoint;
 use std::cell::RefCell;
 use std::rc::Rc;
 use uuid::Uuid;
