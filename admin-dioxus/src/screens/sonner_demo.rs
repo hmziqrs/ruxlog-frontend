@@ -15,6 +15,10 @@ pub fn SonnerDemoScreen() -> Element {
                     onclick: move |_| {
                         let mut opts = ToastOptions::default();
                         opts.duration_ms = Some(2000);
+                        // let sonner_handle = sonner;
+                        opts.on_auto_close = Some(Callback::new(move |id| {
+                            sonner.info(format!("Success auto-closed: {id}"), ToastOptions::default());
+                        }));
                         sonner.success("Saved successfully".to_string(), opts);
                     },
                     "Show Success"
@@ -24,6 +28,10 @@ pub fn SonnerDemoScreen() -> Element {
                     onclick: move |_| {
                         let mut opts = ToastOptions::default();
                         opts.duration_ms = Some(2000);
+                        // let sonner_handle = sonner;
+                        opts.on_auto_close = Some(Callback::new(move |id| {
+                            sonner.info(format!("Error auto-closed: {id}"), ToastOptions::default());
+                        }));
                         sonner.error("Something went wrong".to_string(), opts);
                     },
                     "Show Error"

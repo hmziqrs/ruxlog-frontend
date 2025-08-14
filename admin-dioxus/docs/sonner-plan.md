@@ -158,7 +158,7 @@ Deliverables:
 - [x] Pause/resume timer on hover and on focus inside the toast (`src/components/sonner/toast.rs`).
 - [x] Global `interacting` flag toggled while pointer is inside the list (`src/components/sonner/toaster.rs`).
 - [x] `document.hidden` handling: pause all timers while hidden (visibilitychange listener wired via `dioxus::document::eval`).
-- [ ] `onAutoClose` callback when a toast closes automatically. (Implemented internally on `ToastT`/`SonnerToast`; API exposure TBD.)
+- [x] `onAutoClose` callback when a toast closes automatically. Exposed via `ToastOptions::on_auto_close` and invoked by `SonnerToast` when timers expire.
 
 Acceptance:
 - [x] If user hovers over toasts, timers pause; on leaving, resume.
