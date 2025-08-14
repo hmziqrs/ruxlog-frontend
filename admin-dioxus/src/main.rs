@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::components::ToastProvider;
+use crate::components::sonner::SonnerToaster;
 
 pub mod components;
 mod config;
@@ -38,7 +39,9 @@ fn App() -> Element {
         }
         // document::Link { rel: "stylesheet", href: asset!("/assets/tailwind.css") }
         ToastProvider {
-            Router::<crate::router::Route> {}
+            SonnerToaster {
+                Router::<crate::router::Route> {}
+            }
         }
     }
 }

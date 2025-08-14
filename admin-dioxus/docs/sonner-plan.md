@@ -145,10 +145,10 @@ Deliverables:
   - [x] `use_sonner()` returns a `SonnerToasts` handle with `.show`, `.success`, `.error`, `.warning`, `.info`, `.loading` convenience methods.
 
 Acceptance:
-- [ ] Mounting `SonnerToaster` and calling `use_sonner().success(...)` renders a toast.
+- [x] Mounting `SonnerToaster` and calling `use_sonner().success(...)` renders a toast.
 
 Integration test:
-- [ ] Add a demo route/screen with two buttons to trigger `success` and `error`.
+- [x] Add a demo route/screen with two buttons to trigger `success` and `error` (Route: `/demo/sonner`).
 
 
 ## Phase 3 — Timers, Auto-dismiss, Pause on Hover/Interacting/Hidden
