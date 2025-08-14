@@ -62,7 +62,7 @@ impl SonnerToasts {
             class_names: options.class_names.clone(),
             position: Position::BottomRight,
             test_id: None,
-            on_auto_close: None,
+            on_auto_close: options.on_auto_close.clone(),
         };
         self.add_toast.call(toast);
     }

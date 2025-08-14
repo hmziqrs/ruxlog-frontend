@@ -8,12 +8,20 @@ use super::state::SonnerCtx;
 use super::toast::SonnerToast;
 use super::types::{HeightT, Position, TextDirection, ToasterProps, ToastT};
 
-#[derive(Props, Clone, PartialEq)]
+#[derive(Props, Clone)]
 pub struct SonnerToasterProps {
     #[props(default = ToasterProps::default())]
     pub defaults: ToasterProps,
     #[props(default = None)]
     pub children: Option<Element>,
+}
+
+impl PartialEq for SonnerToasterProps {
+    fn eq(&self, _other: &Self) -> bool {
+        // Force re-render checks to consider props changed. This avoids requiring
+        // ToasterProps (which contains callbacks) to implement PartialEq.
+        false
+    }
 }
 
 #[component]

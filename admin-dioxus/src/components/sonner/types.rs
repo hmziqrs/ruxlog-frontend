@@ -111,7 +111,7 @@ pub struct ToastIcons {
 }
 
 /// Per-toast options (external API) similar to Sonner's toast options
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default)]
 pub struct ToastOptions {
     pub class_name: Option<String>,
     pub close_button: Option<bool>,
@@ -123,6 +123,7 @@ pub struct ToastOptions {
     pub class_names: Option<ToastClassNames>,
     pub close_button_aria_label: Option<String>,
     pub toaster_id: Option<String>,
+    pub on_auto_close: Option<Callback<u64>>, // Phase 3: public API
 }
 
 /// Internal runtime representation of a toast (subset for Phase 1)
@@ -172,7 +173,7 @@ impl Default for ToastT {
 }
 
 /// Toaster-level props (provider defaults)
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub struct ToasterProps {
     pub id: Option<String>,
     pub invert: bool,
