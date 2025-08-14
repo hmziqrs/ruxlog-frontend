@@ -5,7 +5,7 @@ use dioxus::prelude::*;
 use dioxus_time::sleep;
 use std::time::Duration;
 
-use super::types::ToastType;
+use super::types::{HeightT, ToastType};
 use super::state::SonnerCtx;
 
 #[derive(Props, Clone, PartialEq)]
@@ -37,6 +37,34 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
         .map(|_| format!("{id}-description"));
     let aria_labelledby_val = label_id.clone();
     let aria_describedby_val = description_id.clone();
+
+    // Phase 4: measure height on mount and when content changes
+    {
+        let heights = ctx.heights.clone();
+        let position = ctx.defaults.position;
+        let id_for_measure = format!("{id}");
+        let toast_id_for_height = props.id;
+        let _title_dep = props.title.clone();
+        let _desc_dep = props.description.clone();
+        use_effect(move || {
+            let mut eval = dioxus::document::eval(&format!(
+                "(() => {{ const el = document.getElementById('{}'); dioxus.send(el ? Math.round(el.getBoundingClientRect().height) : 0) }})()",
+                id_for_measure
+            ));
+            let mut heights_sig = heights.clone();
+            spawn(async move {
+                if let Ok(h) = eval.recv::<i32>().await {
+                    let mut vec = heights_sig.write();
+                    if let Some(existing) = vec.iter_mut().find(|r| r.toast_id == toast_id_for_height) {
+                        existing.height_px = h as i32;
+                        existing.position = position;
+                    } else {
+                        vec.push(HeightT { height_px: h as i32, toast_id: toast_id_for_height, position });
+                    }
+                }
+            });
+        });
+    }
 
     // Phase 3: timers with pause on hover/focus/interacting/hidden
     let mut hovered = use_signal(|| false);
