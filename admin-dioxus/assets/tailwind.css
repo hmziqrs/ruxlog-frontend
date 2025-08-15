@@ -454,6 +454,9 @@
   .ml-3 {
     margin-left: calc(0.25rem * 3);
   }
+  .ml-4 {
+    margin-left: calc(0.25rem * 4);
+  }
   .ml-auto {
     margin-left: auto;
   }
