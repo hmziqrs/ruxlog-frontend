@@ -14,6 +14,22 @@ Non-goals (for v1 unless specifically included in a phase below):
 - Fancy devtools or analytics.
 
 
+## Progress Update — 2025-08-15T13:59:55+05:00
+
+- Implemented Phase 4 stacking behaviors:
+  - Enforced `visibleToasts` limit with stacking of overflow toasts (scale/opacity, z-index, pointer-events: none).
+  - `expand` shows all toasts without limiting/clamping.
+  - Container height computed from visible toasts only.
+  - Positions Top/Bottom flows respected for offsets; full positional offsets remain in Phase 5.
+- Added smooth layout transitions for position/opacity changes during reflow (movement transitions). Entrance/exit transitions still TODO.
+- Cleaned `heights` state on toast dismiss/delete to avoid stale entries.
+- Updated this plan’s Phase 4 deliverables and acceptance to reflect completion.
+
+Next:
+- Implement entrance/exit transitions for mount/unmount.
+- Start Phase 5: positions and viewport offsets (desktop/mobile).
+
+
 ## Progress Update — 2025-08-13T19:23:35+05:00
 
 - Created `src/components/sonner/` with `mod.rs`, `types.rs`, `state.rs`.
