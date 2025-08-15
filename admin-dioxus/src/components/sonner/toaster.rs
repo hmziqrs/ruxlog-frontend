@@ -6,7 +6,7 @@ use std::collections::VecDeque;
 
 use super::state::SonnerCtx;
 use super::toast::SonnerToast;
-use super::types::{HeightT, Position, TextDirection, ToasterProps, ToastT};
+use super::types::{HeightT, Offset, Position, TextDirection, ToasterProps, ToastT, DEFAULT_VIEWPORT_OFFSET};
 
 #[derive(Props, Clone)]
 pub struct SonnerToasterProps {
@@ -103,6 +103,20 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
     });
 
     let portal = use_portal();
+
+    // Track viewport width to choose desktop vs mobile offsets (Phase 5)
+    let viewport_width = use_signal(|| 1024i32);
+    use_effect(move || {
+        let mut eval = dioxus::document::eval(
+            "(function(){ const send=()=>dioxus.send(window.innerWidth); send(); window.addEventListener('resize', send); })()",
+        );
+        let mut vw_sig = viewport_width.clone();
+        spawn(async move {
+            while let Ok(w) = eval.recv::<i32>().await {
+                vw_sig.set(w);
+            }
+        });
+    });
 
     // Listen for document visibility changes to pause timers when hidden
     use_effect(move || {
@@ -205,7 +219,61 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
         }
     };
 
-    let container_style = format!("position: relative; height: {}px;", visible_height.max(0));
+    // Phase 5: Offsets per position (desktop/mobile)
+    let is_mobile = *viewport_width.read() <= props.defaults.mobile_breakpoint_px;
+    let active_offset: &Offset = if is_mobile { &props.defaults.mobile_offset } else { &props.defaults.offset };
+
+    // Resolve per-side offset with sensible fallback to DEFAULT_VIEWPORT_OFFSET
+    let resolve = |off: &Offset, side: &str| -> String {
+        match off {
+            Offset::Number(n) => format!("{}px", n),
+            Offset::Text(s) => s.clone(),
+            Offset::Sides { top, right, bottom, left } => match side {
+                "top" => top.clone().unwrap_or_else(|| DEFAULT_VIEWPORT_OFFSET.to_string()),
+                "right" => right.clone().unwrap_or_else(|| DEFAULT_VIEWPORT_OFFSET.to_string()),
+                "bottom" => bottom.clone().unwrap_or_else(|| DEFAULT_VIEWPORT_OFFSET.to_string()),
+                "left" => left.clone().unwrap_or_else(|| DEFAULT_VIEWPORT_OFFSET.to_string()),
+                _ => DEFAULT_VIEWPORT_OFFSET.to_string(),
+            },
+        }
+    };
+
+    let pos_css = match props.defaults.position {
+        Position::TopLeft => format!(
+            "top: {}; left: {};",
+            resolve(active_offset, "top"),
+            resolve(active_offset, "left")
+        ),
+        Position::TopRight => format!(
+            "top: {}; right: {};",
+            resolve(active_offset, "top"),
+            resolve(active_offset, "right")
+        ),
+        Position::BottomLeft => format!(
+            "bottom: {}; left: {};",
+            resolve(active_offset, "bottom"),
+            resolve(active_offset, "left")
+        ),
+        Position::BottomRight => format!(
+            "bottom: {}; right: {};",
+            resolve(active_offset, "bottom"),
+            resolve(active_offset, "right")
+        ),
+        Position::TopCenter => format!(
+            "top: {}; left: 50%; transform: translateX(-50%);",
+            resolve(active_offset, "top")
+        ),
+        Position::BottomCenter => format!(
+            "bottom: {}; left: 50%; transform: translateX(-50%);",
+            resolve(active_offset, "bottom")
+        ),
+    };
+
+    let container_style = format!(
+        "position: fixed; {} height: {}px;",
+        pos_css,
+        visible_height.max(0)
+    );
 
     rsx! {
         {props.children}
