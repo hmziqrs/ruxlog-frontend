@@ -199,26 +199,19 @@ Acceptance:
 
 Integration test:
 - [ ] Render 5+ toasts; visually confirm stacking and offsets.
-
-
 ## Phase 5 — Positions and Offsets (Desktop/Mobile)
 
 Deliverables:
-- [ ] Support positions: `top-left`, `top-right`, `bottom-left`, `bottom-right`, `top-center`, `bottom-center`.
-- [ ] Implement viewport offsets: `offset` and `mobileOffset` similar to Sonner (`24px` desktop, `16px` mobile by default).
-- [ ] Simple mobile detection by viewport width (configurable threshold) for `mobileOffset`.
+ - [x] Support positions: `top-left`, `top-right`, `bottom-left`, `bottom-right`, `top-center`, `bottom-center`.
+ - [x] Implement viewport offsets: `offset` and `mobileOffset` similar to Sonner (`24px` desktop, `16px` mobile by default).
+ - [x] Simple mobile detection by viewport width (configurable threshold) for `mobileOffset`.
 
 Acceptance:
-- [ ] Each position works; offsets applied correctly.
-- [ ] Mobile viewport uses `mobileOffset` values.
+ - [x] Each position works; offsets applied correctly.
+ - [x] Mobile viewport uses `mobileOffset` values.
 
 Integration test:
-- [ ] Add a demo that cycles through positions; add a control for offset/mobileOffset.
-
-
-## Phase 6 — Dismiss Logic, Close Button, Dismissible Flag
-
-Deliverables:
+ - [x] Add a demo that cycles through positions; add a control for offset/mobileOffset.
 - [ ] `dismissible` flag per toast (default true) to allow/deny manual dismissal.
 - [ ] `closeButton` global (toaster props) and per-toast overrides.
 - [ ] Provider-level `remove` after an out animation (delay ~200ms like `src/components/toast.rs`).
