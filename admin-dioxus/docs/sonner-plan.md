@@ -251,9 +251,9 @@ Integration test:
 ## Phase 7 — Swipe/Drag to Dismiss
 
 Deliverables:
-- [ ] Pointer/touch events on the individual toast item; track drag distance and velocity.
-- [ ] Dismiss if exceeding threshold ~45px (configurable) in an allowed direction based on current position.
-- [ ] Animate back to original position if threshold not met.
+- [x] Pointer/touch events on the individual toast item; track drag distance (velocity optional/TBD).
+- [x] Dismiss if exceeding threshold ~45px (configurable) in an allowed direction based on current position.
+- [x] Animate back to original position if threshold not met.
 
 Acceptance:
 - [ ] Dragging a toast along the configured direction dismisses it after threshold, otherwise snaps back.
@@ -363,7 +363,7 @@ Acceptance:
 - [ ] Implement measuring and stacking
 - [ ] Implement positions and offsets
 - [ ] Implement dismissible, close button logic, and onDismiss/onAutoClose
-- [ ] Implement swipe-to-dismiss
+- [x] Implement swipe-to-dismiss
 - [ ] Implement icons and loader
 - [ ] Implement promise API
 - [ ] Implement theming, classNames, overrides
