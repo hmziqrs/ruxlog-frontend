@@ -14,6 +14,15 @@ Non-goals (for v1 unless specifically included in a phase below):
 - Fancy devtools or analytics.
 
 
+## Progress Update — 2025-08-16T14:05:00+05:00
+
+- Phase 9 Promise-based toasts implemented:
+  - Added `PromiseConfig` in `src/components/sonner/types.rs`.
+  - Added `SonnerToasts.promise(...)` in `src/components/sonner/state.rs` to insert a loading toast and update to success/error on resolution.
+  - Ensured timers/durations behave correctly: `src/components/sonner/toast.rs` initializes timers from `props.duration_ms` on start/update; provider `add_toast` skips assigning default duration to `Loading` toasts so they persist until resolved.
+- Demo: added “Promise Success” and “Promise Error” buttons in `src/screens/sonner_demo.rs` that simulate async success/failure via `dioxus_time::sleep`.
+- Build: `cargo check` passes.
+
 ## Progress Update — 2025-08-16T13:29:07+05:00
 
 - Mirrored top/bottom stacking animations in `src/components/sonner/toaster.rs`:
@@ -280,15 +289,15 @@ Integration test:
 ## Phase 9 — Promise-based Toasts
 
 Deliverables:
-- [ ] API: `toasts.promise(future, { loading, success, error, ...options })`.
-- [ ] Internals: insert `loading` toast; when future resolves, update the same toast id to `success` or `error` (merge updates; keep duration semantics like Sonner).
+- [x] API: `toasts.promise(future, { loading, success, error, ...options })`.
+- [x] Internals: insert `loading` toast; when future resolves, update the same toast id to `success` or `error` (merge updates; keep duration semantics like Sonner).
 - [ ] Optional: support `onAutoClose`/`onDismiss` on transitions as appropriate.
 
 Acceptance:
-- [ ] A sample async task shows loading → success; failing task shows loading → error; timings map to options/defaults.
+- [x] A sample async task shows loading → success; failing task shows loading → error; timings map to options/defaults.
 
 Integration test:
-- [ ] Demo page with a “simulate success” and “simulate failure” button.
+- [x] Demo page with a “simulate success” and “simulate failure” button.
 
 
 ## Phase 10 — Theming, Rich Colors, Invert, Unstyled, ClassNames
@@ -365,7 +374,7 @@ Acceptance:
 - [ ] Implement dismissible, close button logic, and onDismiss/onAutoClose
 - [x] Implement swipe-to-dismiss
 - [x] Implement icons and loader
-- [ ] Implement promise API
+- [x] Implement promise API
 - [ ] Implement theming, classNames, overrides
 - [ ] Implement multiple toasters (id)
 - [ ] Write documentation and example page
