@@ -14,6 +14,30 @@ Non-goals (for v1 unless specifically included in a phase below):
 - Fancy devtools or analytics.
 
 
+## Progress Update — 2025-08-16T13:29:07+05:00
+
+- Mirrored top/bottom stacking animations in `src/components/sonner/toaster.rs`:
+  - Top positions now animate via `top` only; bottom positions via `bottom` only.
+  - Top visible positioning mirrors bottom logic: `top = visible_height - (dist_from_slice_top + height_i)` so new toasts appear at the top and push older ones downward.
+  - Overflow stacks (older items) use scale/opacity with pointer-events disabled and correct z-index.
+- Transition parity:
+  - All branches include `transform 200ms ease, opacity 200ms ease, top|bottom 200ms ease`.
+  - Ensures smooth reflow when items shift and when overflow fades/scales.
+- Stability fixes:
+  - Stable keys for toasts (`key: toast.id`) to avoid remounts that cancel transitions.
+- Stacking/measurement:
+  - Container height computed from visible slice only.
+  - Offsets computed forward for top clusters and reverse-accumulated for bottom clusters.
+- Positions/offsets:
+  - Desktop/mobile offsets supported; center positions span horizontally with item self-centering.
+
+Next:
+- Add entrance/exit transitions and delayed removal after out animation.
+- Centralize transition timing/easing as shared constants.
+- Implement dismissible/closeButton parity and `onDismiss`.
+- Begin swipe/drag to dismiss (Phase 7).
+
+
 ## Progress Update — 2025-08-15T13:59:55+05:00
 
 - Implemented Phase 4 stacking behaviors:
