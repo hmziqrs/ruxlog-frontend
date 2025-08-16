@@ -177,6 +177,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
 
     let mut offsets: Vec<i32> = Vec::with_capacity(toasts_vec.len());
     match props.defaults.position {
+        // For top positions, compute cumulative distance from the top for each toast
         Position::TopLeft | Position::TopRight | Position::TopCenter => {
             let mut cursor = 0i32;
             for h in &heights_px {
@@ -184,8 +185,8 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                 cursor += *h + gap;
             }
         }
+        // For bottom positions, compute distances from the bottom edge such that the newest toast has 0
         Position::BottomLeft | Position::BottomRight | Position::BottomCenter => {
-            // Compute from bottom upwards
             let mut cursor = 0i32;
             let mut tmp: Vec<i32> = Vec::with_capacity(toasts_vec.len());
             for h in heights_px.iter().rev() {
@@ -206,7 +207,8 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
     let visible_height = if visible_count == 0 { 0 } else {
         match props.defaults.position {
             Position::TopLeft | Position::TopRight | Position::TopCenter => {
-                let slice = &heights_px[0..visible_count];
+                let start = count - visible_count;
+                let slice = &heights_px[start..count];
                 let sum: i32 = slice.iter().sum();
                 sum + gap * ((visible_count as i32) - 1)
             }
@@ -294,7 +296,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                 // Visible list with stacking/offsets
                 for (i, toast) in toasts_vec.iter().enumerate() {
                     SonnerToast {
-                        key: "{toast.id}-{i}",
+                        key: "{toast.id}",
                         id: toast.id,
                         title: toast.title.clone(),
                         description: toast.description.clone(),
@@ -303,7 +305,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                         duration_ms: toast.duration_ms,
                         on_auto_close: toast.on_auto_close.clone(),
                         style: {match props.defaults.position {
-                            // Top cluster
+                            // Top cluster (mirror bottom semantics: show the last N toasts)
                             Position::TopLeft | Position::TopRight | Position::TopCenter => {
                                 let (h_align, translate_prefix) = match props.defaults.position {
                                     Position::TopLeft => ("left:0;", ""),
@@ -317,49 +319,57 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                                     } else {
                                         format!("position:absolute; {}; top:0px; opacity:0; transform: {};", h_align, translate_prefix)
                                     }
-                                } else if i < visible_count {
-                                    let top_px = offsets.get(i).cloned().unwrap_or(0);
-                                    if translate_prefix.is_empty() {
-                                        format!(
-                                            "position:absolute; {} top:{}px; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, top 200ms ease; will-change: transform, opacity, top;",
-                                            h_align,
-                                            top_px,
-                                            1000 - i as i32
-                                        )
-                                    } else {
-                                        format!(
-                                            "position:absolute; {} top:{}px; transform: {}; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, top 200ms ease; will-change: transform, opacity, top;",
-                                            h_align,
-                                            top_px,
-                                            translate_prefix,
-                                            1000 - i as i32
-                                        )
-                                    }
                                 } else {
-                                    let cutoff = visible_count - 1;
-                                    let overflow_index = i - cutoff; // 1 for first overflow
-                                    let scale = (1.0 - (overflow_index as f32) * 0.06).max(0.82);
-                                    let opacity = (1.0 - (overflow_index as f32) * 0.15).max(0.4);
-                                    let base_top = offsets.get(cutoff).cloned().unwrap_or(0);
-                                    if translate_prefix.is_empty() {
-                                        format!(
-                                            "position:absolute; {} top:{}px; transform: scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{}; transition: transform 200ms ease, opacity 200ms ease; will-change: transform, opacity;",
-                                            h_align,
-                                            base_top,
-                                            scale,
-                                            opacity,
-                                            1000 - cutoff as i32
-                                        )
+                                    let visible_start = count - visible_count;
+                                    if i >= visible_start {
+                                        // Visible region: newest at top (top:0), older pushed down
+                                        // Mirror bottom logic: top = visible_height - (dist_from_slice_top + h_i)
+                                        let base_top = offsets.get(visible_start).cloned().unwrap_or(0);
+                                        let dist_from_slice_top = offsets.get(i).cloned().unwrap_or(0) - base_top;
+                                        let h_i = heights_px.get(i).cloned().unwrap_or(fallback_h);
+                                        let top_px = (visible_height - (dist_from_slice_top + h_i)).max(0);
+                                        if translate_prefix.is_empty() {
+                                            format!(
+                                                "position:absolute; {} top:{}px; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, top 200ms ease; will-change: transform, opacity, top;",
+                                                h_align,
+                                                top_px,
+                                                1000 - (count - i) as i32
+                                            )
+                                        } else {
+                                            format!(
+                                                "position:absolute; {} top:{}px; transform: {}; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, top 200ms ease; will-change: transform, opacity, top;",
+                                                h_align,
+                                                top_px,
+                                                translate_prefix,
+                                                1000 - (count - i) as i32
+                                            )
+                                        }
                                     } else {
-                                        format!(
-                                            "position:absolute; {} top:{}px; transform: {} scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{}; transition: transform 200ms ease, opacity 200ms ease; will-change: transform, opacity;",
-                                            h_align,
-                                            base_top,
-                                            translate_prefix,
-                                            scale,
-                                            opacity,
-                                            1000 - cutoff as i32
-                                        )
+                                        // Overflow above the visible cluster (older toasts)
+                                        let overflow_index = visible_start - i; // 1 for first overflow above visible cluster
+                                        let scale = (1.0 - (overflow_index as f32) * 0.06).max(0.82);
+                                        let opacity = (1.0 - (overflow_index as f32) * 0.15).max(0.4);
+                                        let base_top = 0; // stack at the very top edge
+                                        if translate_prefix.is_empty() {
+                                            format!(
+                                                "position:absolute; {} top:{}px; transform: scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, top 200ms ease; will-change: transform, opacity, top;",
+                                                h_align,
+                                                base_top,
+                                                scale,
+                                                opacity,
+                                                1000 - (count - visible_start) as i32
+                                            )
+                                        } else {
+                                            format!(
+                                                "position:absolute; {} top:{}px; transform: {} scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, top 200ms ease; will-change: transform, opacity, top;",
+                                                h_align,
+                                                base_top,
+                                                translate_prefix,
+                                                scale,
+                                                opacity,
+                                                1000 - (count - visible_start) as i32
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -404,7 +414,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                                         let base_bottom = offsets.get(visible_start).cloned().unwrap_or(0);
                                         if translate_prefix.is_empty() {
                                             format!(
-                                                "position:absolute; {} bottom:{}px; transform: scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{}; transition: transform 200ms ease, opacity 200ms ease; will-change: transform, opacity;",
+                                                "position:absolute; {} bottom:{}px; transform: scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, bottom 200ms ease; will-change: transform, opacity, bottom;",
                                                 h_align,
                                                 base_bottom,
                                                 scale,
@@ -413,7 +423,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                                             )
                                         } else {
                                             format!(
-                                                "position:absolute; {} bottom:{}px; transform: {} scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{}; transition: transform 200ms ease, opacity 200ms ease; will-change: transform, opacity;",
+                                                "position:absolute; {} bottom:{}px; transform: {} scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, bottom 200ms ease; will-change: transform, opacity, bottom;",
                                                 h_align,
                                                 base_bottom,
                                                 translate_prefix,
