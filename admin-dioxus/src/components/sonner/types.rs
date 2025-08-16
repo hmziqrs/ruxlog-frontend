@@ -118,7 +118,7 @@ pub struct ToastOptions {
     pub class_name: Option<String>,
     pub close_button: Option<bool>,
     pub description_class_name: Option<String>,
-    pub cancel_button_style: Option<BTreeMap<String, String>>,
+    pub cancel_button_style: Option<BTreeMap<String, String>>, // CSS-like style map
     pub action_button_style: Option<BTreeMap<String, String>>,
     pub duration_ms: Option<u64>,
     pub unstyled: Option<bool>,
@@ -126,6 +126,7 @@ pub struct ToastOptions {
     pub close_button_aria_label: Option<String>,
     pub toaster_id: Option<String>,
     pub on_auto_close: Option<Callback<u64>>, // Phase 3: public API
+    pub on_dismiss: Option<Callback<u64>>, // Phase 9+: fired whenever the toast is removed (auto or manual)
     /// Per-toast icon override keyword (see ToastIcons docs)
     pub icon: Option<String>,
 }
@@ -168,6 +169,7 @@ pub struct ToastT {
     pub position: Position,
     pub test_id: Option<String>,
     pub on_auto_close: Option<Callback<u64>>, // Phase 3: notify when a toast auto-closes
+    pub on_dismiss: Option<Callback<u64>>, // Phase 9+: notify when a toast is dismissed/removed
 }
 
 impl Default for ToastT {
@@ -190,6 +192,7 @@ impl Default for ToastT {
             position: Position::BottomRight,
             test_id: None,
             on_auto_close: None,
+            on_dismiss: None,
         }
     }
 }

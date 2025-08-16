@@ -61,8 +61,11 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
         let mut toasts = toasts.clone();
         let mut heights_sig = heights.clone();
         use_callback(move |id: u64| {
-            // remove toast
+            // remove toast and invoke on_dismiss callback if present
             let mut list = toasts.write();
+            let cb = if let Some(pos) = list.iter().position(|t| t.id == id) {
+                list.get(pos).and_then(|t| t.on_dismiss.clone())
+            } else { None };
             if let Some(pos) = list.iter().position(|t| t.id == id) {
                 list.remove(pos);
             }
@@ -71,6 +74,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
             if let Some(pos) = hs.iter().position(|h| h.toast_id == id) {
                 hs.remove(pos);
             }
+            if let Some(cb) = cb { cb.call(id); }
         })
     };
 
@@ -79,6 +83,9 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
         let mut heights_sig = heights.clone();
         use_callback(move |id: u64| {
             let mut list = toasts.write();
+            let cb = if let Some(pos) = list.iter().position(|t| t.id == id) {
+                list.get(pos).and_then(|t| t.on_dismiss.clone())
+            } else { None };
             if let Some(pos) = list.iter().position(|t| t.id == id) {
                 list.remove(pos);
             }
@@ -87,6 +94,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
             if let Some(pos) = hs.iter().position(|h| h.toast_id == id) {
                 hs.remove(pos);
             }
+            if let Some(cb) = cb { cb.call(id); }
         })
     };
 

@@ -14,7 +14,7 @@ Non-goals (for v1 unless specifically included in a phase below):
 - Fancy devtools or analytics.
 
 
-## Progress Update — 2025-08-16T14:05:00+05:00
+## Progress Update — 2025-08-17T01:26:00+05:00
 
 - Phase 9 Promise-based toasts implemented:
   - Added `PromiseConfig` in `src/components/sonner/types.rs`.
@@ -22,8 +22,9 @@ Non-goals (for v1 unless specifically included in a phase below):
   - Ensured timers/durations behave correctly: `src/components/sonner/toast.rs` initializes timers from `props.duration_ms` on start/update; provider `add_toast` skips assigning default duration to `Loading` toasts so they persist until resolved.
 - Demo: added “Promise Success” and “Promise Error” buttons in `src/screens/sonner_demo.rs` that simulate async success/failure via `dioxus_time::sleep`.
 - Build: `cargo check` passes.
+ - Callbacks: `on_auto_close` fires on timer end; new `on_dismiss` added and invoked by provider on any removal (manual close, swipe, or auto-close), including after promise transitions.
 
-## Progress Update — 2025-08-16T13:29:07+05:00
+## Progress Update — 2025-08-16T14:05:00+05:00
 
 - Mirrored top/bottom stacking animations in `src/components/sonner/toaster.rs`:
   - Top positions now animate via `top` only; bottom positions via `bottom` only.
@@ -291,7 +292,7 @@ Integration test:
 Deliverables:
 - [x] API: `toasts.promise(future, { loading, success, error, ...options })`.
 - [x] Internals: insert `loading` toast; when future resolves, update the same toast id to `success` or `error` (merge updates; keep duration semantics like Sonner).
-- [ ] Optional: support `onAutoClose`/`onDismiss` on transitions as appropriate.
+- [x] Optional: support `onAutoClose`/`onDismiss` on transitions as appropriate.
 
 Acceptance:
 - [x] A sample async task shows loading → success; failing task shows loading → error; timings map to options/defaults.
