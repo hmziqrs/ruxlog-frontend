@@ -6,7 +6,7 @@ use crate::components::sonner::types::{ToasterProps, Position, Offset};
 #[component]
 pub fn SonnerDemoScreen() -> Element {
     // Controls for provider defaults (Phase 5 QA)
-    let mut position = use_signal(|| Position::BottomRight);
+    let mut position = use_signal(|| Position::BottomCenter);
     let mut expand = use_signal(|| false);
     let mut visible = use_signal(|| 3usize);
     let mut offset_str = use_signal(|| "24px".to_string());
@@ -144,7 +144,7 @@ fn DemoContent() -> Element {
                 class: "px-3 py-2 rounded-md bg-green-600 text-white hover:bg-green-700",
                 onclick: move |_| {
                     let mut opts = ToastOptions::default();
-                    opts.duration_ms = Some(2000);
+                    opts.duration_ms = Some(9000);
                     // let sonner_clone = sonner;
                     // opts.on_auto_close = Some(Callback::new(move |id| {
                     //     sonner_clone.info(format!("Success auto-closed: {id}"), ToastOptions::default());
