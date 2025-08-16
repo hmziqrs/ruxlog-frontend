@@ -1,6 +1,8 @@
 use dioxus::prelude::*;
+use dioxus_time::sleep;
+use std::time::Duration;
 
-use crate::components::sonner::{use_sonner, ToastOptions, SonnerToaster};
+use crate::components::sonner::{use_sonner, ToastOptions, SonnerToaster, PromiseConfig};
 use crate::components::sonner::types::{ToasterProps, Position, Offset};
 
 #[component]
@@ -227,6 +229,32 @@ fn DemoContent() -> Element {
                     sonner.error("Error (icon: info)".to_string(), opts);
                 },
                 "Error (icon info)"
+            }
+        }
+        div { class: "space-x-2 mt-2",
+            button {
+                class: "px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700",
+                onclick: move |_| {
+                    let fut = async move {
+                        sleep(Duration::from_millis(1200)).await;
+                        Ok::<(), ()>(())
+                    };
+                    let config = PromiseConfig::new("Loading...", "Completed!", "Failed.");
+                    sonner.promise(fut, config, ToastOptions::default());
+                },
+                "Promise Success"
+            }
+            button {
+                class: "px-3 py-2 rounded-md bg-purple-600 text-white hover:bg-purple-700",
+                onclick: move |_| {
+                    let fut = async move {
+                        sleep(Duration::from_millis(1500)).await;
+                        Err::<(), ()>(())
+                    };
+                    let config = PromiseConfig::new("Loading...", "Completed!", "Failed.");
+                    sonner.promise(fut, config, ToastOptions::default());
+                },
+                "Promise Error"
             }
         }
     }

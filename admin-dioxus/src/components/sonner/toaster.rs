@@ -6,7 +6,7 @@ use std::collections::VecDeque;
 
 use super::state::SonnerCtx;
 use super::toast::SonnerToast;
-use super::types::{HeightT, Offset, Position, TextDirection, ToasterProps, ToastT, DEFAULT_VIEWPORT_OFFSET};
+use super::types::{HeightT, Offset, Position, TextDirection, ToasterProps, ToastT, ToastType, DEFAULT_VIEWPORT_OFFSET};
 
 #[derive(Props, Clone)]
 pub struct SonnerToasterProps {
@@ -37,7 +37,9 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
         let mut toasts = toasts.clone();
         let default_duration = props.defaults.duration_ms;
         use_callback(move |mut toast: ToastT| {
-            if toast.duration_ms.is_none() {
+            // Only apply default duration for non-loading toasts.
+            // Loading toasts without duration should remain until resolved.
+            if toast.duration_ms.is_none() && toast.toast_type != ToastType::Loading {
                 toast.duration_ms = Some(default_duration);
             }
             let mut list = toasts.write();
