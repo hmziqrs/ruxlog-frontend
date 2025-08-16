@@ -48,7 +48,7 @@ impl SonnerToasts {
             toaster_id: options.toaster_id.clone(),
             title: Some(title),
             toast_type,
-            icon: None,
+            icon: options.icon.clone(),
             description: None,
             duration_ms: options
                 .duration_ms

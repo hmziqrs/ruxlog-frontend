@@ -301,6 +301,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                         title: toast.title.clone(),
                         description: toast.description.clone(),
                         toast_type: toast.toast_type,
+                        icon: toast.icon.clone(),
                         close_button: toast.close_button,
                         duration_ms: toast.duration_ms,
                         on_auto_close: toast.on_auto_close.clone(),

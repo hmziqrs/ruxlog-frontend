@@ -6,6 +6,7 @@ use dioxus_time::sleep;
 use std::time::Duration;
 
 use super::types::{HeightT, ToastType, SwipeDirection, Position, DEFAULT_SWIPE_THRESHOLD_PX};
+use super::icons::{icon_close, icon_error, icon_info, icon_success, icon_warning, loader_spinner};
 use super::state::SonnerCtx;
 
 #[derive(Props, Clone, PartialEq)]
@@ -14,6 +15,8 @@ pub struct SonnerToastProps {
     pub title: Option<String>,
     pub description: Option<String>,
     pub toast_type: ToastType,
+    #[props(default = None)]
+    pub icon: Option<String>,
     #[props(default = true)]
     pub close_button: bool,
     #[props(default = None)]
@@ -124,10 +127,10 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
         }
     };
 
-    let mut drag_dx = use_signal(|| 0.0f64);
-    let mut drag_dy = use_signal(|| 0.0f64);
-    let mut dragging = use_signal(|| false);
-    let mut snapping = use_signal(|| false);
+    let drag_dx = use_signal(|| 0.0f64);
+    let drag_dy = use_signal(|| 0.0f64);
+    let dragging = use_signal(|| false);
+    let snapping = use_signal(|| false);
 
     // Attach JS pointer/touch listeners to track drag deltas
     {
@@ -230,6 +233,53 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
     let transition = if snapping() && !dragging() { "transform 180ms ease-out, opacity 180ms ease-out" } else { "none" };
     let drag_style = format!("transform: translate({:.2}px, {:.2}px); opacity: {:.3}; transition: {};", tx, ty, opacity, transition);
 
+    // Phase 8: resolve icon element based on per-toast and global overrides
+    let icon_el: Option<Element> = {
+        // Prefer per-toast keyword, else provider defaults by type
+        let kw_opt = props
+            .icon
+            .clone()
+            .or_else(|| match props.toast_type {
+                ToastType::Success => ctx.defaults.icons.success.clone(),
+                ToastType::Info => ctx.defaults.icons.info.clone(),
+                ToastType::Warning => ctx.defaults.icons.warning.clone(),
+                ToastType::Error => ctx.defaults.icons.error.clone(),
+                ToastType::Loading => ctx.defaults.icons.loading.clone(),
+            });
+
+        if let Some(kw) = kw_opt {
+            let k = kw.to_lowercase();
+            match k.as_str() {
+                "none" => None,
+                "success" => Some(icon_success(None)),
+                "info" => Some(icon_info(None)),
+                "warning" => Some(icon_warning(None)),
+                "error" => Some(icon_error(None)),
+                "loading" | "loader" => Some(loader_spinner(None)),
+                "close" => Some(icon_close(None)),
+                _ => {
+                    // Fallback to default for this toast type
+                    match props.toast_type {
+                        ToastType::Success => Some(icon_success(None)),
+                        ToastType::Info => Some(icon_info(None)),
+                        ToastType::Warning => Some(icon_warning(None)),
+                        ToastType::Error => Some(icon_error(None)),
+                        ToastType::Loading => Some(loader_spinner(None)),
+                    }
+                }
+            }
+        } else {
+            // Default for this toast type
+            match props.toast_type {
+                ToastType::Success => Some(icon_success(None)),
+                ToastType::Info => Some(icon_info(None)),
+                ToastType::Warning => Some(icon_warning(None)),
+                ToastType::Error => Some(icon_error(None)),
+                ToastType::Loading => Some(loader_spinner(None)),
+            }
+        }
+    };
+
     rsx! {
         div {
             id,
@@ -250,6 +300,11 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
 
             // Inner wrapper is static content container
             div { class: "sonner-toast-inner flex items-center justify-between gap-2 px-4 py-3",
+                // Left icon (if any)
+                if let Some(icon) = icon_el {
+                    div { class: "sonner-toast-icon shrink-0", {icon} }
+                }
+
                 div { class: "sonner-toast-content flex-1",
                     role: "alert",
                     aria_atomic: "true",
@@ -265,10 +320,10 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
 
                 if props.close_button {
                     button {
-                        class: "sonner-toast-close self-start p-0 m-0 border-0 bg-transparent text-[18px] leading-none cursor-pointer text-muted-foreground hover:text-foreground",
+                        class: "sonner-toast-close self-start p-0 m-0 border-0 bg-transparent leading-none cursor-pointer text-muted-foreground hover:text-foreground",
                         aria_label: "close",
                         onclick: move |e| props.on_close.call(e),
-                        "×"
+                        { icon_close(None) }
                     }
                 }
             }
