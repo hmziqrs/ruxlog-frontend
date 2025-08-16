@@ -40,7 +40,12 @@ pub fn SonnerDemoScreen() -> Element {
                     ("Bottom Center", Position::BottomCenter),
                     ("Bottom Right", Position::BottomRight),
                 ] {
-                    button { class: "px-2 py-1 rounded border hover:bg-accent text-sm",
+                    button { 
+                        class: { if position() == pos { 
+                            "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
+                        } else { 
+                            "px-2 py-1 rounded border hover:bg-accent text-sm"
+                        }},
                         onclick: move |_| position.set(pos),
                         {label}
                     }
@@ -49,21 +54,36 @@ pub fn SonnerDemoScreen() -> Element {
             div { class: "flex flex-wrap gap-2 items-center",
                 div { class: "font-medium mr-2", "Offset:" }
                 for label in ["16px", "24px", "32px", "48px"] {
-                    button { class: "px-2 py-1 rounded border hover:bg-accent text-sm",
+                    button { 
+                        class: { if offset_str() == label { 
+                            "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
+                        } else { 
+                            "px-2 py-1 rounded border hover:bg-accent text-sm"
+                        }},
                         onclick: move |_| offset_str.set(label.to_string()),
                         {label}
                     }
                 }
                 div { class: "font-medium ml-4 mr-2", "Mobile Offset:" }
                 for label in ["8px", "12px", "16px", "24px"] {
-                    button { class: "px-2 py-1 rounded border hover:bg-accent text-sm",
+                    button { 
+                        class: { if mobile_offset_str() == label { 
+                            "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
+                        } else { 
+                            "px-2 py-1 rounded border hover:bg-accent text-sm"
+                        }},
                         onclick: move |_| mobile_offset_str.set(label.to_string()),
                         {label}
                     }
                 }
                 div { class: "font-medium ml-4 mr-2", "Breakpoint:" }
                 for (label, bp) in [("640", 640), ("768", 768), ("1024", 1024)] {
-                    button { class: "px-2 py-1 rounded border hover:bg-accent text-sm",
+                    button { 
+                        class: { if breakpoint() == bp { 
+                            "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
+                        } else { 
+                            "px-2 py-1 rounded border hover:bg-accent text-sm"
+                        }},
                         onclick: move |_| breakpoint.set(bp),
                         {label}
                     }
@@ -72,17 +92,32 @@ pub fn SonnerDemoScreen() -> Element {
             div { class: "flex flex-wrap gap-2 items-center",
                 div { class: "font-medium mr-2", "Visible:" }
                 for n in [1usize, 2, 3, 4, 5] {
-                    button { class: "px-2 py-1 rounded border hover:bg-accent text-sm",
+                    button { 
+                        class: { if visible() == n { 
+                            "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
+                        } else { 
+                            "px-2 py-1 rounded border hover:bg-accent text-sm"
+                        }},
                         onclick: move |_| visible.set(n),
                         {format!("{}", n)}
                     }
                 }
                 div { class: "font-medium ml-4 mr-2", "Expand:" }
-                button { class: "px-2 py-1 rounded border hover:bg-accent text-sm",
+                button { 
+                    class: { if !expand() { 
+                        "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
+                    } else { 
+                        "px-2 py-1 rounded border hover:bg-accent text-sm"
+                    }},
                     onclick: move |_| expand.set(false),
                     "Off"
                 }
-                button { class: "px-2 py-1 rounded border hover:bg-accent text-sm",
+                button { 
+                    class: { if expand() { 
+                        "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
+                    } else { 
+                        "px-2 py-1 rounded border hover:bg-accent text-sm"
+                    }},
                     onclick: move |_| expand.set(true),
                     "On"
                 }
@@ -102,6 +137,7 @@ pub fn SonnerDemoScreen() -> Element {
 fn DemoContent() -> Element {
     let sonner = use_sonner();
 
+    
     rsx! {
         div { class: "space-x-2",
             button {
