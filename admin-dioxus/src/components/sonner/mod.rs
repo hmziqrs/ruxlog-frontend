@@ -5,8 +5,10 @@ pub mod types;
 pub mod state;
 pub mod toast;
 pub mod toaster;
+pub mod icons;
 
 pub use types::*;
 pub use state::*;
 pub use toast::*;
 pub use toaster::*;
+pub use icons::*;

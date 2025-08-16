@@ -99,7 +99,9 @@ pub struct ToastClassNames {
     pub default: Option<String>,
 }
 
-/// Custom icons, represented as class names or symbolic identifiers for Phase 1
+/// Custom icons, represented as symbolic identifiers for Phase 1
+/// Supported identifiers include: "none", "success", "info", "warning", "error",
+/// "loading"/"loader", and "close". Unknown identifiers fall back to defaults.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ToastIcons {
     pub success: Option<String>,
@@ -124,6 +126,8 @@ pub struct ToastOptions {
     pub close_button_aria_label: Option<String>,
     pub toaster_id: Option<String>,
     pub on_auto_close: Option<Callback<u64>>, // Phase 3: public API
+    /// Per-toast icon override keyword (see ToastIcons docs)
+    pub icon: Option<String>,
 }
 
 /// Internal runtime representation of a toast (subset for Phase 1)

@@ -265,16 +265,16 @@ Integration test:
 ## Phase 8 — Icons, Loader, and Custom Icon Overrides
 
 Deliverables:
-- [ ] `icons.rs` with Success, Info, Warning, Error, Close, and a Loader made of bars similar to Sonner.
-- [ ] `ToastIcons` prop to override icons globally; per-toast custom icon supported (`toast.icon`).
-- [ ] Loading toasts show loader (and block interactions if desired).
+- [x] `icons.rs` with Success, Info, Warning, Error, Close, and a Loader made of bars/spinner similar to Sonner.
+- [x] `ToastIcons` prop to override icons globally; per-toast custom icon supported (`toast.icon`).
+- [x] Loading toasts show loader (and block interactions if desired).
 
 Acceptance:
-- [ ] Icons appear per type; loader appears for loading toasts.
-- [ ] Per-toast and global overrides work.
+- [x] Icons appear per type; loader appears for loading toasts.
+- [x] Per-toast and global overrides work.
 
 Integration test:
-- [ ] Demo controls to swap icon set and override a single toast’s icon.
+- [x] Demo controls to swap icon set and override a single toast’s icon.
 
 
 ## Phase 9 — Promise-based Toasts
@@ -364,7 +364,7 @@ Acceptance:
 - [ ] Implement positions and offsets
 - [ ] Implement dismissible, close button logic, and onDismiss/onAutoClose
 - [x] Implement swipe-to-dismiss
-- [ ] Implement icons and loader
+- [x] Implement icons and loader
 - [ ] Implement promise API
 - [ ] Implement theming, classNames, overrides
 - [ ] Implement multiple toasters (id)

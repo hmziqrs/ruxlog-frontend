@@ -12,6 +12,7 @@ pub fn SonnerDemoScreen() -> Element {
     let mut offset_str = use_signal(|| "24px".to_string());
     let mut mobile_offset_str = use_signal(|| "16px".to_string());
     let mut breakpoint = use_signal(|| 640i32);
+    let mut icons_mode = use_signal(|| 0i32); // 0=default, 1=none
 
     // Build defaults from controls
     let defaults = {
@@ -22,6 +23,17 @@ pub fn SonnerDemoScreen() -> Element {
         d.offset = Offset::Text(offset_str());
         d.mobile_offset = Offset::Text(mobile_offset_str());
         d.mobile_breakpoint_px = breakpoint();
+        match icons_mode() {
+            0 => {}
+            1 => {
+                d.icons.success = Some("none".into());
+                d.icons.info = Some("none".into());
+                d.icons.warning = Some("none".into());
+                d.icons.error = Some("none".into());
+                d.icons.loading = Some("none".into());
+            }
+            _ => {}
+        }
         d
     };
 
@@ -49,6 +61,27 @@ pub fn SonnerDemoScreen() -> Element {
                         onclick: move |_| position.set(pos),
                         {label}
                     }
+                }
+            }
+            div { class: "flex flex-wrap gap-2 items-center",
+                div { class: "font-medium mr-2", "Icons:" }
+                button {
+                    class: { if icons_mode() == 0 {
+                        "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
+                    } else {
+                        "px-2 py-1 rounded border hover:bg-accent text-sm"
+                    }},
+                    onclick: move |_| icons_mode.set(0),
+                    "Default"
+                }
+                button {
+                    class: { if icons_mode() == 1 {
+                        "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
+                    } else {
+                        "px-2 py-1 rounded border hover:bg-accent text-sm"
+                    }},
+                    onclick: move |_| icons_mode.set(1),
+                    "None"
                 }
             }
             div { class: "flex flex-wrap gap-2 items-center",
@@ -165,6 +198,35 @@ fn DemoContent() -> Element {
                     sonner.error("Something went wrong".to_string(), opts);
                 },
                 "Show Error"
+            }
+            button {
+                class: "px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700",
+                onclick: move |_| {
+                    let mut opts = ToastOptions::default();
+                    opts.duration_ms = Some(4000);
+                    sonner.loading("Processing...".to_string(), opts);
+                },
+                "Show Loading"
+            }
+        }
+        div { class: "space-x-2 mt-2",
+            button {
+                class: "px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700",
+                onclick: move |_| {
+                    let mut opts = ToastOptions::default();
+                    opts.icon = Some("none".into());
+                    sonner.success("Success (icon: none)".to_string(), opts);
+                },
+                "Success (icon none)"
+            }
+            button {
+                class: "px-3 py-2 rounded-md bg-orange-600 text-white hover:bg-orange-700",
+                onclick: move |_| {
+                    let mut opts = ToastOptions::default();
+                    opts.icon = Some("info".into());
+                    sonner.error("Error (icon: info)".to_string(), opts);
+                },
+                "Error (icon info)"
             }
         }
     }
