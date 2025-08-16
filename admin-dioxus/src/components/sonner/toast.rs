@@ -78,12 +78,15 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
     let mut remaining_ms = use_signal(|| props.duration_ms.unwrap_or(0));
     let toast_id_for_timer = props.id;
     let on_auto_close_cb = props.on_auto_close.clone();
+    let init_duration = props.duration_ms;
     let dismiss = ctx.dismiss_toast;
     let has_duration = props.duration_ms.is_some();
     let mut started = use_signal(|| false);
     use_effect(move || {
         if has_duration && !started() {
             started.set(true);
+            // Initialize remaining time from current props, important for promise-updated toasts
+            remaining_ms.set(init_duration.unwrap_or(0));
             spawn(async move {
                 let tick = 50u64; // ms
                 loop {

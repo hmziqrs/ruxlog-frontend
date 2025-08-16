@@ -130,6 +130,24 @@ pub struct ToastOptions {
     pub icon: Option<String>,
 }
 
+/// Configuration for promise-based toasts (Phase 9)
+#[derive(Clone, Debug)]
+pub struct PromiseConfig {
+    pub loading: String,
+    pub success: String,
+    pub error: String,
+}
+
+impl PromiseConfig {
+    pub fn new<L: Into<String>, S: Into<String>, E: Into<String>>(loading: L, success: S, error: E) -> Self {
+        Self {
+            loading: loading.into(),
+            success: success.into(),
+            error: error.into(),
+        }
+    }
+}
+
 /// Internal runtime representation of a toast (subset for Phase 1)
 #[derive(Clone)]
 pub struct ToastT {

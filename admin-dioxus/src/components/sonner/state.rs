@@ -3,9 +3,11 @@
 
 use dioxus::prelude::*;
 use std::collections::VecDeque;
+use std::future::Future;
 
 use super::types::{
     ToastOptions, ToastT, ToastType, DEFAULT_TOAST_LIFETIME_MS, Position, HeightT, ToasterProps,
+    PromiseConfig,
 };
 
 // Callback types used by the provider (wired in Phase 2)
@@ -88,6 +90,55 @@ impl SonnerToasts {
     }
     pub fn delete(&self, id: u64) {
         self.delete_toast.call(id)
+    }
+
+    /// Promise-based toast flow (Phase 9): shows a loading toast, then updates to success or error.
+    /// This simplified variant expects a future yielding Result<(), ()> and static messages.
+    pub fn promise<F>(&self, fut: F, config: PromiseConfig, options: ToastOptions)
+    where
+        F: Future<Output = Result<(), ()>> + 'static,
+    {
+        let id = next_toast_id();
+
+        // Insert loading toast (no duration to keep it until resolution)
+        let mut loading = ToastT {
+            id,
+            toaster_id: options.toaster_id.clone(),
+            title: Some(config.loading.clone()),
+            toast_type: ToastType::Loading,
+            icon: options.icon.clone(),
+            description: None,
+            duration_ms: None,
+            delete: false,
+            close_button: options.close_button.unwrap_or(true),
+            dismissible: true,
+            action: None,
+            cancel: None,
+            class_name: options.class_name.clone(),
+            class_names: options.class_names.clone(),
+            position: Position::BottomRight,
+            test_id: None,
+            on_auto_close: options.on_auto_close.clone(),
+        };
+        self.add_toast.call(loading.clone());
+
+        let update = self.update_toast;
+        spawn(async move {
+            let res = fut.await;
+            match res {
+                Ok(()) => {
+                    loading.toast_type = ToastType::Success;
+                    loading.title = Some(config.success.clone());
+                    loading.duration_ms = Some(DEFAULT_TOAST_LIFETIME_MS);
+                }
+                Err(()) => {
+                    loading.toast_type = ToastType::Error;
+                    loading.title = Some(config.error.clone());
+                    loading.duration_ms = Some(DEFAULT_TOAST_LIFETIME_MS);
+                }
+            }
+            update.call(loading);
+        });
     }
 }
 
