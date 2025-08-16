@@ -240,14 +240,16 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
             tabindex: "0",
             class: "sonner-toast w-72 rounded-md border border-border bg-background text-foreground shadow-sm",
             "data-type": props.toast_type.as_str(),
+            // Apply drag transform to the OUTER container so the whole toast (including border/bg) moves
+            style: "{drag_style}",
             onmouseenter: move |_| hovered.set(true),
             onmouseleave: move |_| hovered.set(false),
             onfocus: move |_| focused.set(true),
             onblur: move |_| focused.set(false),
             ..props.attributes,
 
-            // Inner wrapper gets drag transform
-            div { class: "sonner-toast-inner flex items-center justify-between gap-2 px-4 py-3", style: "{drag_style}",
+            // Inner wrapper is static content container
+            div { class: "sonner-toast-inner flex items-center justify-between gap-2 px-4 py-3",
                 div { class: "sonner-toast-content flex-1",
                     role: "alert",
                     aria_atomic: "true",
