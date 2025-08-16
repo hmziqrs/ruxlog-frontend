@@ -177,7 +177,7 @@ fn DemoContent() -> Element {
                 class: "px-3 py-2 rounded-md bg-green-600 text-white hover:bg-green-700",
                 onclick: move |_| {
                     let mut opts = ToastOptions::default();
-                    opts.duration_ms = Some(9000);
+                    opts.duration_ms = Some(2000);
                     // let sonner_clone = sonner;
                     // opts.on_auto_close = Some(Callback::new(move |id| {
                     //     sonner_clone.info(format!("Success auto-closed: {id}"), ToastOptions::default());
