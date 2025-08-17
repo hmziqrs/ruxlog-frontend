@@ -365,14 +365,14 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                                         let top_px = (visible_height - (dist_from_slice_top + h_i)).max(0);
                                         if translate_prefix.is_empty() {
                                             format!(
-                                                "position:absolute; {} top:{}px; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, top 200ms ease; will-change: transform, opacity, top;",
+                                                "position:absolute; {} top:{}px; transform: none; pointer-events: auto; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, top 200ms ease; will-change: transform, opacity, top;",
                                                 h_align,
                                                 top_px,
                                                 1000 - (count - i) as i32
                                             )
                                         } else {
                                             format!(
-                                                "position:absolute; {} top:{}px; transform: {}; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, top 200ms ease; will-change: transform, opacity, top;",
+                                                "position:absolute; {} top:{}px; transform: {}; pointer-events: auto; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, top 200ms ease; will-change: transform, opacity, top;",
                                                 h_align,
                                                 top_px,
                                                 translate_prefix,
@@ -428,14 +428,14 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                                         let bottom_px = offsets.get(i).cloned().unwrap_or(0);
                                         if translate_prefix.is_empty() {
                                             format!(
-                                                "position:absolute; {} bottom:{}px; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, bottom 200ms ease; will-change: transform, opacity, bottom;",
+                                                "position:absolute; {} bottom:{}px; transform: none; pointer-events: auto; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, bottom 200ms ease; will-change: transform, opacity, bottom;",
                                                 h_align,
                                                 bottom_px,
                                                 1000 - (count - i) as i32
                                             )
                                         } else {
                                             format!(
-                                                "position:absolute; {} bottom:{}px; transform: {}; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, bottom 200ms ease; will-change: transform, opacity, bottom;",
+                                                "position:absolute; {} bottom:{}px; transform: {}; pointer-events: auto; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, bottom 200ms ease; will-change: transform, opacity, bottom;",
                                                 h_align,
                                                 bottom_px,
                                                 translate_prefix,
