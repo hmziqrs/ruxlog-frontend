@@ -281,9 +281,11 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
     };
     let outer_opacity = if !mounted() || is_exiting { 0.0 } else { drag_opacity };
     let pe = if is_exiting { "pointer-events: none;" } else { "" };
+    let is_center = matches!(ctx.defaults.position, Position::TopCenter | Position::BottomCenter);
+    let center_prefix = if is_center { "translateX(-50%) " } else { "" };
     let drag_style = format!(
-        "transform: translate({:.2}px, {:.2}px); opacity: {:.3}; transition: {}; {}",
-        tx, ty_with_anim, outer_opacity, outer_transition, pe
+        "transform: {}translate({:.2}px, {:.2}px); opacity: {:.3}; transition: {}; {}",
+        center_prefix, tx, ty_with_anim, outer_opacity, outer_transition, pe
     );
 
     // Phase 8: resolve icon element based on per-toast and global overrides
@@ -343,13 +345,13 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
             tabindex: "0",
             class: "sonner-toast w-72 rounded-md border border-border bg-background text-foreground shadow-sm",
             "data-type": props.toast_type.as_str(),
-            // Apply drag transform to the OUTER container so the whole toast (including border/bg) moves
             style: "{drag_style}",
             onmouseenter: move |_| hovered.set(true),
             onmouseleave: move |_| hovered.set(false),
             onfocus: move |_| focused.set(true),
             onblur: move |_| focused.set(false),
             ..props.attributes,
+            // Apply drag/enter/exit transform LAST to override any provider style
 
             // Inner wrapper
             div { class: "sonner-toast-inner flex items-center justify-between gap-2 px-4 py-3",
