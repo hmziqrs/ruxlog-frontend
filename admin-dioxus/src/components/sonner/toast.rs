@@ -41,6 +41,23 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
     let aria_labelledby_val = label_id.clone();
     let aria_describedby_val = description_id.clone();
 
+    // Entrance animation: fade + slide in on mount
+    let mounted = use_signal(|| false);
+    {
+        let mounted_read = mounted.clone();
+        let mut mounted_set = mounted.clone();
+        use_effect(move || {
+            if mounted_read() {
+                return;
+            }
+            // Defer to next tick to ensure initial style is applied before transition
+            spawn(async move {
+                sleep(Duration::from_millis(16)).await;
+                mounted_set.set(true);
+            });
+        });
+    }
+
     // Phase 4: measure height on mount and when content changes
     {
         let heights = ctx.heights.clone();
@@ -224,7 +241,11 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
         });
     }
 
-    // Compute drag style for inner wrapper
+    // Compute combined drag + entrance style for the OUTER toast element
+    let initial_offset = match ctx.defaults.position {
+        Position::TopLeft | Position::TopCenter | Position::TopRight => -10.0,
+        Position::BottomLeft | Position::BottomCenter | Position::BottomRight => 10.0,
+    };
     let dx = drag_dx();
     let dy = drag_dy();
     let ax_h = allowed_dirs.iter().any(|d| matches!(d, SwipeDirection::Left | SwipeDirection::Right));
@@ -232,9 +253,24 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
     let use_h = ax_h && (!ax_v || dx.abs() >= dy.abs());
     let (tx, ty) = if use_h { (dx, 0.0) } else if ax_v { (0.0, dy) } else { (0.0, 0.0) };
     let ratio = ((if use_h { dx.abs() } else { dy.abs() }) / (DEFAULT_SWIPE_THRESHOLD_PX as f64)).min(1.0);
-    let opacity = 1.0 - 0.3 * ratio;
-    let transition = if snapping() && !dragging() { "transform 180ms ease-out, opacity 180ms ease-out" } else { "none" };
-    let drag_style = format!("transform: translate({:.2}px, {:.2}px); opacity: {:.3}; transition: {};", tx, ty, opacity, transition);
+    let drag_opacity = 1.0 - 0.3 * ratio;
+    // Entrance composition: start hidden and offset, then transition to visible at rest
+    let enter_transition = "transform 220ms ease, opacity 220ms ease";
+    let outer_transition = if dragging() {
+        "none"
+    } else if snapping() {
+        "transform 180ms ease-out, opacity 180ms ease-out"
+    } else if mounted() {
+        enter_transition
+    } else {
+        "none"
+    };
+    let ty_with_enter = ty + if !mounted() { initial_offset } else { 0.0 };
+    let outer_opacity = if !mounted() { 0.0 } else { drag_opacity };
+    let drag_style = format!(
+        "transform: translate({:.2}px, {:.2}px); opacity: {:.3}; transition: {};",
+        tx, ty_with_enter, outer_opacity, outer_transition
+    );
 
     // Phase 8: resolve icon element based on per-toast and global overrides
     let icon_el: Option<Element> = {
@@ -301,7 +337,7 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
             onblur: move |_| focused.set(false),
             ..props.attributes,
 
-            // Inner wrapper is static content container
+            // Inner wrapper
             div { class: "sonner-toast-inner flex items-center justify-between gap-2 px-4 py-3",
                 // Left icon (if any)
                 if let Some(icon) = icon_el {
