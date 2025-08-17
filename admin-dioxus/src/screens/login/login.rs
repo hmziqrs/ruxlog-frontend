@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::components::{use_toast, ToastOptions, ToastType};
+use crate::components::{use_toast, ToastOptions};
 use dioxus::html::geometry::euclid::Rect;
 use dioxus::{logger::tracing, prelude::*};
 
