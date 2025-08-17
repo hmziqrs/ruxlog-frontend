@@ -19,6 +19,9 @@ pub struct SonnerToastProps {
     pub icon: Option<String>,
     #[props(default = true)]
     pub close_button: bool,
+    /// When true, play exit animation (fade + slide) and expect provider to remove after delay
+    #[props(default = false)]
+    pub exiting: bool,
     #[props(default = None)]
     pub duration_ms: Option<u64>,
     #[props(default = None)]
@@ -224,10 +227,9 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
                                 if dy >=  threshold && allowed_for_task.iter().any(|d| matches!(d, SwipeDirection::Bottom)) { should_dismiss = true; }
                             }
                             if should_dismiss {
-                                // Dismiss immediately
+                                // Trigger dismiss; keep deltas to allow a natural fling-out fade
                                 dismiss.call(toast_id);
-                                // reset deltas to avoid lingering transform
-                                dx_sig.set(0.0); dy_sig.set(0.0);
+                                // Do not reset dx/dy here; exit animation will fade/slide out from current offset
                             } else {
                                 // Snap back with transition
                                 snapping_sig.set(true);
@@ -254,22 +256,34 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
     let (tx, ty) = if use_h { (dx, 0.0) } else if ax_v { (0.0, dy) } else { (0.0, 0.0) };
     let ratio = ((if use_h { dx.abs() } else { dy.abs() }) / (DEFAULT_SWIPE_THRESHOLD_PX as f64)).min(1.0);
     let drag_opacity = 1.0 - 0.3 * ratio;
-    // Entrance composition: start hidden and offset, then transition to visible at rest
+    // Entrance/Exit composition: start hidden and offset, animate to rest; on exit fade + slide away
     let enter_transition = "transform 220ms ease, opacity 220ms ease";
+    let exit_transition = "transform 220ms ease, opacity 220ms ease";
+    let is_exiting = props.exiting;
     let outer_transition = if dragging() {
         "none"
     } else if snapping() {
         "transform 180ms ease-out, opacity 180ms ease-out"
-    } else if mounted() {
-        enter_transition
-    } else {
+    } else if !mounted() {
         "none"
+    } else if is_exiting {
+        exit_transition
+    } else {
+        enter_transition
     };
-    let ty_with_enter = ty + if !mounted() { initial_offset } else { 0.0 };
-    let outer_opacity = if !mounted() { 0.0 } else { drag_opacity };
+    // Offset for enter before mount, and for exit when flagged
+    let ty_with_anim = if !mounted() {
+        ty + initial_offset
+    } else if is_exiting {
+        ty + initial_offset
+    } else {
+        ty
+    };
+    let outer_opacity = if !mounted() || is_exiting { 0.0 } else { drag_opacity };
+    let pe = if is_exiting { "pointer-events: none;" } else { "" };
     let drag_style = format!(
-        "transform: translate({:.2}px, {:.2}px); opacity: {:.3}; transition: {};",
-        tx, ty_with_enter, outer_opacity, outer_transition
+        "transform: translate({:.2}px, {:.2}px); opacity: {:.3}; transition: {}; {}",
+        tx, ty_with_anim, outer_opacity, outer_transition, pe
     );
 
     // Phase 8: resolve icon element based on per-toast and global overrides

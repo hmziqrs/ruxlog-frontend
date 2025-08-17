@@ -2,6 +2,8 @@
 
 use crate::components::portal_v2::{use_portal, PortalIn, PortalOut};
 use dioxus::prelude::*;
+use dioxus_time::sleep;
+use std::time::Duration;
 use std::collections::VecDeque;
 
 use super::state::SonnerCtx;
@@ -61,20 +63,41 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
         let mut toasts = toasts.clone();
         let mut heights_sig = heights.clone();
         use_callback(move |id: u64| {
-            // remove toast and invoke on_dismiss callback if present
-            let mut list = toasts.write();
-            let cb = if let Some(pos) = list.iter().position(|t| t.id == id) {
-                list.get(pos).and_then(|t| t.on_dismiss.clone())
-            } else { None };
-            if let Some(pos) = list.iter().position(|t| t.id == id) {
-                list.remove(pos);
+            // mark toast as exiting and schedule removal after exit animation
+            {
+                let mut list = toasts.write();
+                if let Some(pos) = list.iter().position(|t| t.id == id) {
+                    if !list[pos].delete {
+                        list[pos].delete = true;
+                    } else {
+                        // already exiting; do not schedule again
+                        return;
+                    }
+                } else {
+                    return;
+                }
             }
-            // remove any recorded height for this toast id
-            let mut hs = heights_sig.write();
-            if let Some(pos) = hs.iter().position(|h| h.toast_id == id) {
-                hs.remove(pos);
-            }
-            if let Some(cb) = cb { cb.call(id); }
+            // schedule actual removal and callback after animation time
+            let mut toasts_rm = toasts.clone();
+            let mut heights_rm = heights_sig.clone();
+            spawn(async move {
+                // keep in sync with exit transition in SonnerToast (220ms) + small buffer
+                sleep(Duration::from_millis(240)).await;
+                let cb = {
+                    let mut list = toasts_rm.write();
+                    if let Some(pos) = list.iter().position(|t| t.id == id) {
+                        let cb = list.get(pos).and_then(|t| t.on_dismiss.clone());
+                        list.remove(pos);
+                        cb
+                    } else { None }
+                };
+                // remove any recorded height for this toast id
+                let mut hs = heights_rm.write();
+                if let Some(pos) = hs.iter().position(|h| h.toast_id == id) {
+                    hs.remove(pos);
+                }
+                if let Some(cb) = cb { cb.call(id); }
+            });
         })
     };
 
@@ -313,6 +336,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                         toast_type: toast.toast_type,
                         icon: toast.icon.clone(),
                         close_button: toast.close_button,
+                        exiting: toast.delete,
                         duration_ms: toast.duration_ms,
                         on_auto_close: toast.on_auto_close.clone(),
                         style: {match props.defaults.position {
