@@ -51,7 +51,13 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
 
     let update_toast = {
         let mut toasts = toasts.clone();
-        use_callback(move |toast: ToastT| {
+        let default_duration = props.defaults.duration_ms;
+        use_callback(move |mut toast: ToastT| {
+            // If an updated toast has no duration and is no longer loading, apply default duration.
+            // This covers promise-based transitions from Loading -> Success/Error without a set duration.
+            if toast.duration_ms.is_none() && toast.toast_type != ToastType::Loading {
+                toast.duration_ms = Some(default_duration);
+            }
             let mut list = toasts.write();
             if let Some(pos) = list.iter().position(|t| t.id == toast.id) {
                 list[pos] = toast;

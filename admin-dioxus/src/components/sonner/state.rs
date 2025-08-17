@@ -131,12 +131,14 @@ impl SonnerToasts {
                 Ok(()) => {
                     loading.toast_type = ToastType::Success;
                     loading.title = Some(config.success.clone());
-                    loading.duration_ms = Some(DEFAULT_TOAST_LIFETIME_MS);
+                    // If caller provided a duration in options, use it; else leave None so provider applies its default
+                    loading.duration_ms = options.duration_ms;
                 }
                 Err(()) => {
                     loading.toast_type = ToastType::Error;
                     loading.title = Some(config.error.clone());
-                    loading.duration_ms = Some(DEFAULT_TOAST_LIFETIME_MS);
+                    // If caller provided a duration in options, use it; else leave None so provider applies its default
+                    loading.duration_ms = options.duration_ms;
                 }
             }
             update.call(loading);
