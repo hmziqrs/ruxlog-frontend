@@ -256,6 +256,21 @@ fn DemoContent() -> Element {
                 },
                 "Promise Error"
             }
+            button {
+                class: "px-3 py-2 rounded-md bg-teal-600 text-white hover:bg-teal-700",
+                onclick: move |_| {
+                    let fut = async move {
+                        sleep(Duration::from_millis(1200)).await;
+                        Ok::<(), ()>(())
+                    };
+                    let config = PromiseConfig::new("Loading...", "Completed (timeout)!", "Failed.");
+                    let mut opts = ToastOptions::default();
+                    // Custom settlement timeout for success/error
+                    opts.duration_ms = Some(1500);
+                    sonner.promise(fut, config, opts);
+                },
+                "Promise Success (timeout)"
+            }
         }
     }
 }

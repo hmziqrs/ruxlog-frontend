@@ -1,7 +1,7 @@
 //! Sonner (Dioxus) State — Phase 0/1 scaffold
 //! Provides handle types and context contracts. Provider implementation comes in Phase 2.
 
-use dioxus::prelude::*;
+use dioxus::{logger::tracing, prelude::*};
 use std::collections::VecDeque;
 use std::future::Future;
 
@@ -141,6 +141,7 @@ impl SonnerToasts {
                     loading.duration_ms = options.duration_ms;
                 }
             }
+            tracing::info!("Promise result: {:?}", options.duration_ms);
             update.call(loading);
         });
     }
