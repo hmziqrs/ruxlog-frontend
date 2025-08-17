@@ -95,7 +95,8 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
         }
         let remove_toast = remove_toast.clone();
         spawn(async move {
-            dioxus_time::sleep(Duration::from_millis(200)).await;
+            gloo_timers::future::TimeoutFuture::new(200).await;
+            // dioxus_time::sleep(Duration::from_millis(200)).await;
             remove_toast.call(id);
         });
     });
@@ -154,7 +155,8 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
                 let close = close_toast.clone();
                 let remove_id = id;
                 spawn(async move {
-                    dioxus_time::sleep(d).await;
+                    gloo_timers::future::TimeoutFuture::new(d.as_millis() as u32).await;
+                    // dioxus_time::sleep(d).await;
                     tracing::info!("[toast] provider timer fired: id={}", remove_id);
                     close.call(remove_id);
                 });
