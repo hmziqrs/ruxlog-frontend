@@ -17,7 +17,7 @@ pub struct SonnerToastProps {
     pub toast_type: ToastType,
     #[props(default = None)]
     pub icon: Option<String>,
-    #[props(default = true)]
+    #[props(default = false)]
     pub close_button: bool,
     /// When true, play exit animation (fade + slide) and expect provider to remove after delay
     #[props(default = false)]

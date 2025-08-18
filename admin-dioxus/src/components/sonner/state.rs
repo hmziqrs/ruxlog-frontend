@@ -56,7 +56,7 @@ impl SonnerToasts {
                 .duration_ms
                 .or(Some(DEFAULT_TOAST_LIFETIME_MS)),
             delete: false,
-            close_button: options.close_button.unwrap_or(true),
+            close_button: options.close_button.unwrap_or(false),
             dismissible: true,
             action: options.action.clone(),
             cancel: options.cancel.clone(),
@@ -111,7 +111,7 @@ impl SonnerToasts {
             description: None,
             duration_ms: None,
             delete: false,
-            close_button: options.close_button.unwrap_or(true),
+            close_button: options.close_button.unwrap_or(false),
             dismissible: true,
             action: options.action.clone(),
             cancel: options.cancel.clone(),
