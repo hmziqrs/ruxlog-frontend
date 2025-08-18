@@ -13,6 +13,7 @@ use super::types::{
 // Callback types used by the provider (wired in Phase 2)
 type AddToastCallback = Callback<ToastT>;
 type UpdateToastCallback = Callback<ToastT>;
+type UpdateWithOptionsCallback = Callback<(u64, Option<String>, Option<ToastType>, ToastOptions)>;
 type DismissToastCallback = Callback<u64>;
 type DeleteToastCallback = Callback<u64>;
 
@@ -28,6 +29,7 @@ pub struct SonnerCtx {
     // Imperative controls
     pub add_toast: AddToastCallback,
     pub update_toast: UpdateToastCallback,
+    pub update_with_options: UpdateWithOptionsCallback,
     pub dismiss_toast: DismissToastCallback,
     pub delete_toast: DeleteToastCallback,
 }
@@ -37,13 +39,14 @@ pub struct SonnerCtx {
 pub struct SonnerToasts {
     add_toast: AddToastCallback,
     update_toast: UpdateToastCallback,
+    update_with_options: UpdateWithOptionsCallback,
     dismiss_toast: DismissToastCallback,
     delete_toast: DeleteToastCallback,
 }
 
 impl SonnerToasts {
     /// Show a toast with given type and options.
-    pub fn show(&self, title: String, toast_type: ToastType, options: ToastOptions) {
+    pub fn show(&self, title: String, toast_type: ToastType, options: ToastOptions) -> u64 {
         let id = next_toast_id();
         let toast = ToastT {
             id,
@@ -68,21 +71,22 @@ impl SonnerToasts {
             on_dismiss: options.on_dismiss.clone(),
         };
         self.add_toast.call(toast);
+        id
     }
 
-    pub fn success(&self, title: String, options: ToastOptions) {
+    pub fn success(&self, title: String, options: ToastOptions) -> u64 {
         self.show(title, ToastType::Success, options)
     }
-    pub fn error(&self, title: String, options: ToastOptions) {
+    pub fn error(&self, title: String, options: ToastOptions) -> u64 {
         self.show(title, ToastType::Error, options)
     }
-    pub fn warning(&self, title: String, options: ToastOptions) {
+    pub fn warning(&self, title: String, options: ToastOptions) -> u64 {
         self.show(title, ToastType::Warning, options)
     }
-    pub fn info(&self, title: String, options: ToastOptions) {
+    pub fn info(&self, title: String, options: ToastOptions) -> u64 {
         self.show(title, ToastType::Info, options)
     }
-    pub fn loading(&self, title: String, options: ToastOptions) {
+    pub fn loading(&self, title: String, options: ToastOptions) -> u64 {
         self.show(title, ToastType::Loading, options)
     }
 
@@ -91,6 +95,24 @@ impl SonnerToasts {
     }
     pub fn delete(&self, id: u64) {
         self.delete_toast.call(id)
+    }
+
+    pub fn update(&self, id: u64, mut toast: ToastT) {
+        // Ensure the correct target id is used
+        toast.id = id;
+        self.update_toast.call(toast)
+    }
+
+    /// Merge changes into an existing toast by id using ToastOptions,
+    /// with optional title/type overrides (e.g., Loading -> Success).
+    pub fn update_with_options(
+        &self,
+        id: u64,
+        title: Option<String>,
+        toast_type: Option<ToastType>,
+        options: ToastOptions,
+    ) {
+        self.update_with_options.call((id, title, toast_type, options))
     }
 
     /// Promise-based toast flow (Phase 9): shows a loading toast, then updates to success or error.
@@ -158,6 +180,7 @@ pub fn consume_sonner() -> SonnerToasts {
     SonnerToasts {
         add_toast: ctx.add_toast,
         update_toast: ctx.update_toast,
+        update_with_options: ctx.update_with_options,
         dismiss_toast: ctx.dismiss_toast,
         delete_toast: ctx.delete_toast,
     }

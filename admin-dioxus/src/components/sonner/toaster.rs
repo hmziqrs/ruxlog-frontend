@@ -8,7 +8,7 @@ use std::collections::VecDeque;
 
 use super::state::SonnerCtx;
 use super::toast::SonnerToast;
-use super::types::{HeightT, Offset, Position, TextDirection, ToasterProps, ToastT, ToastType, DEFAULT_VIEWPORT_OFFSET};
+use super::types::{HeightT, Offset, Position, TextDirection, ToasterProps, ToastT, ToastType, DEFAULT_VIEWPORT_OFFSET, ToastOptions};
 
 #[derive(Props, Clone)]
 pub struct SonnerToasterProps {
@@ -46,6 +46,35 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
             }
             let mut list = toasts.write();
             list.push_back(toast);
+        })
+    };
+
+    let update_with_options = {
+        let mut toasts = toasts.clone();
+        let default_duration = props.defaults.duration_ms;
+        use_callback(move |(id, title, toast_type, options): (u64, Option<String>, Option<ToastType>, ToastOptions)| {
+            let mut list = toasts.write();
+            if let Some(pos) = list.iter().position(|t| t.id == id) {
+                let mut t = list[pos].clone();
+                if let Some(tt) = toast_type { t.toast_type = tt; }
+                if let Some(new_title) = title { t.title = Some(new_title); }
+                // Merge options: only override when provided
+                if let Some(v) = options.icon { t.icon = Some(v); }
+                if let Some(v) = options.class_name { t.class_name = Some(v); }
+                if let Some(v) = options.class_names { t.class_names = Some(v); }
+                if let Some(v) = options.toaster_id { t.toaster_id = Some(v); }
+                if let Some(v) = options.action { t.action = Some(v); }
+                if let Some(v) = options.cancel { t.cancel = Some(v); }
+                if let Some(v) = options.duration_ms { t.duration_ms = Some(v); }
+                if let Some(v) = options.on_auto_close { t.on_auto_close = Some(v); }
+                if let Some(v) = options.on_dismiss { t.on_dismiss = Some(v); }
+                if let Some(v) = options.close_button { t.close_button = v; }
+                // Apply default duration if transitioning to non-loading without a duration
+                if t.duration_ms.is_none() && t.toast_type != ToastType::Loading {
+                    t.duration_ms = Some(default_duration);
+                }
+                list[pos] = t;
+            }
         })
     };
 
@@ -137,6 +166,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
         // callbacks
         add_toast,
         update_toast,
+        update_with_options,
         dismiss_toast: dismiss_toast.clone(),
         delete_toast,
     });

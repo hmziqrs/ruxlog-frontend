@@ -3,7 +3,7 @@ use crate::components::PageHeader;
 use crate::containers::{TagFormContainer, TagForm};
 use crate::hooks::use_previous;
 use crate::store::use_tag;
-use crate::components::sonner::{use_sonner, ToastOptions, SonnerToaster, PromiseConfig};
+use crate::components::sonner::{use_sonner, ToastOptions, ToastType};
  
 
 #[component]
@@ -21,8 +21,9 @@ pub fn TagsAddScreen() -> Element {
 
     use_effect(use_reactive!(|(loading,)| {
         if prev_loading != Some(loading) {
+            let id = sonner.loading("Creating tag...".to_string(), ToastOptions::default().with_duration(None));
             if success {
-                sonner.success("Tag created successfully".to_string(), ToastOptions::default());
+                sonner.update_with_options(id, Some("Togs created successfully".to_string()), Some(ToastType::Success), ToastOptions::default());
             } else if failed {
                 sonner.error("Failed to create tag".to_string(), ToastOptions::default());
             }

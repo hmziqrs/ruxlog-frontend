@@ -15,6 +15,8 @@ pub enum ToastType {
     Loading,
 }
 
+ 
+
 impl ToastType {
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -133,6 +135,103 @@ pub struct ToastOptions {
     pub action: Option<Action>,
     /// Optional cancel/secondary action button for the toast
     pub cancel: Option<Action>,
+}
+
+impl ToastOptions {
+    /// Set the duration in milliseconds (None = let provider default apply)
+    pub fn with_duration(mut self, duration_ms: Option<u64>) -> Self {
+        self.duration_ms = duration_ms;
+        self
+    }
+
+    /// Convenience: set a concrete duration
+    pub fn duration(self, ms: u64) -> Self {
+        self.with_duration(Some(ms))
+    }
+
+    /// Set or clear the close button flag
+    pub fn with_close_button(mut self, close_button: Option<bool>) -> Self {
+        self.close_button = close_button;
+        self
+    }
+
+    /// Set the main class name
+    pub fn with_class_name<S: Into<String>>(mut self, class_name: Option<S>) -> Self {
+        self.class_name = class_name.map(Into::into);
+        self
+    }
+
+    /// Set the description class name
+    pub fn with_description_class_name<S: Into<String>>(mut self, class_name: Option<S>) -> Self {
+        self.description_class_name = class_name.map(Into::into);
+        self
+    }
+
+    /// Set per-part class names struct
+    pub fn with_class_names(mut self, class_names: Option<ToastClassNames>) -> Self {
+        self.class_names = class_names;
+        self
+    }
+
+    /// Set the toaster id this toast should target
+    pub fn with_toaster_id<S: Into<String>>(mut self, toaster_id: Option<S>) -> Self {
+        self.toaster_id = toaster_id.map(Into::into);
+        self
+    }
+
+    /// Set unstyled flag
+    pub fn with_unstyled(mut self, unstyled: Option<bool>) -> Self {
+        self.unstyled = unstyled;
+        self
+    }
+
+    /// Set per-toast icon override keyword
+    pub fn with_icon<S: Into<String>>(mut self, icon: Option<S>) -> Self {
+        self.icon = icon.map(Into::into);
+        self
+    }
+
+    /// Set the primary action button
+    pub fn with_action(mut self, action: Option<Action>) -> Self {
+        self.action = action;
+        self
+    }
+
+    /// Set the cancel/secondary action button
+    pub fn with_cancel(mut self, cancel: Option<Action>) -> Self {
+        self.cancel = cancel;
+        self
+    }
+
+    /// Set inline style for the action button
+    pub fn with_action_button_style(mut self, style: Option<BTreeMap<String, String>>) -> Self {
+        self.action_button_style = style;
+        self
+    }
+
+    /// Set inline style for the cancel button
+    pub fn with_cancel_button_style(mut self, style: Option<BTreeMap<String, String>>) -> Self {
+        self.cancel_button_style = style;
+        self
+    }
+
+    /// Set the ARIA label for the close button
+    pub fn with_close_button_aria_label<S: Into<String>>(mut self, label: Option<S>) -> Self {
+        self.close_button_aria_label = label.map(Into::into);
+        self
+    }
+
+    /// Set on_auto_close callback
+    pub fn with_on_auto_close(mut self, cb: Option<Callback<u64>>) -> Self {
+        self.on_auto_close = cb;
+        self
+    }
+
+    /// Set on_dismiss callback
+    pub fn with_on_dismiss(mut self, cb: Option<Callback<u64>>) -> Self {
+        self.on_dismiss = cb;
+        self
+    }
 }
 
 /// Configuration for promise-based toasts (Phase 9)
