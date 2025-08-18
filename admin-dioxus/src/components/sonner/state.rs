@@ -115,6 +115,36 @@ impl SonnerToasts {
         self.update_with_options.call((id, title, toast_type, options))
     }
 
+    /// Convenience: update an existing toast to Success type with a new title and options
+    pub fn update_success<T: Into<String>>(&self, id: u64, title: T, options: ToastOptions) {
+        self.update_with_options(id, Some(title.into()), Some(ToastType::Success), options)
+    }
+
+    /// Convenience: update an existing toast to Error type with a new title and options
+    pub fn update_error<T: Into<String>>(&self, id: u64, title: T, options: ToastOptions) {
+        self.update_with_options(id, Some(title.into()), Some(ToastType::Error), options)
+    }
+
+    /// Alias for update_error for ergonomic "failure" wording
+    pub fn update_failure<T: Into<String>>(&self, id: u64, title: T, options: ToastOptions) {
+        self.update_error(id, title, options)
+    }
+
+    /// Convenience: update an existing toast to Warning type
+    pub fn update_warning<T: Into<String>>(&self, id: u64, title: T, options: ToastOptions) {
+        self.update_with_options(id, Some(title.into()), Some(ToastType::Warning), options)
+    }
+
+    /// Convenience: update an existing toast to Info type
+    pub fn update_info<T: Into<String>>(&self, id: u64, title: T, options: ToastOptions) {
+        self.update_with_options(id, Some(title.into()), Some(ToastType::Info), options)
+    }
+
+    /// Convenience: update an existing toast to Loading type (e.g., resuming a pending state)
+    pub fn update_loading<T: Into<String>>(&self, id: u64, title: T, options: ToastOptions) {
+        self.update_with_options(id, Some(title.into()), Some(ToastType::Loading), options)
+    }
+
     /// Promise-based toast flow (Phase 9): shows a loading toast, then updates to success or error.
     /// This simplified variant expects a future yielding Result<(), ()> and static messages.
     pub fn promise<F>(&self, fut: F, config: PromiseConfig, options: ToastOptions)

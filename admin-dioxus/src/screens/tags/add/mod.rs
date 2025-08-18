@@ -23,9 +23,9 @@ pub fn TagsAddScreen() -> Element {
         if prev_loading != Some(loading) {
             let id = sonner.loading("Creating tag...".to_string(), ToastOptions::default().with_duration(None));
             if success {
-                sonner.update_with_options(id, Some("Togs created successfully".to_string()), Some(ToastType::Success), ToastOptions::default());
+                sonner.update_success(id, "Togs created successfully", ToastOptions::default());
             } else if failed {
-                sonner.error("Failed to create tag".to_string(), ToastOptions::default());
+                sonner.update_error(id, "Failed to create tag", ToastOptions::default());
             }
         }
     }));
