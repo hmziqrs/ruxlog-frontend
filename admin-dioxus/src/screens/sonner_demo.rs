@@ -5,6 +5,8 @@ use std::time::Duration;
 use crate::components::sonner::{use_sonner, ToastOptions, SonnerToaster, PromiseConfig};
 use crate::components::sonner::types::{ToasterProps, Position, Offset, Action};
 
+const DEFAULT_TOAST_LIFETIME_MS: u64 = 9000;
+
 #[component]
 pub fn SonnerDemoScreen() -> Element {
     // Controls for provider defaults (Phase 5 QA)
@@ -179,7 +181,7 @@ fn DemoContent() -> Element {
                 class: "px-3 py-2 rounded-md bg-green-600 text-white hover:bg-green-700",
                 onclick: move |_| {
                     let mut opts = ToastOptions::default();
-                    opts.duration_ms = Some(3000);
+                    opts.duration_ms = Some(DEFAULT_TOAST_LIFETIME_MS);
                     // let sonner_clone = sonner;
                     // opts.on_auto_close = Some(Callback::new(move |id| {
                     //     sonner_clone.info(format!("Success auto-closed: {id}"), ToastOptions::default());
@@ -192,7 +194,7 @@ fn DemoContent() -> Element {
                 class: "px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700",
                 onclick: move |_| {
                     let mut opts = ToastOptions::default();
-                    opts.duration_ms = Some(2000);
+                    opts.duration_ms = Some(DEFAULT_TOAST_LIFETIME_MS);
                     let sonner_clone = sonner;
                     opts.on_auto_close = Some(Callback::new(move |id| {
                         sonner_clone.info(format!("Error auto-closed: {id}"), ToastOptions::default());
@@ -205,7 +207,7 @@ fn DemoContent() -> Element {
                 class: "px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700",
                 onclick: move |_| {
                     let mut opts = ToastOptions::default();
-                    opts.duration_ms = Some(4000);
+                    opts.duration_ms = Some(DEFAULT_TOAST_LIFETIME_MS);
                     sonner.loading("Processing...".to_string(), opts);
                 },
                 "Show Loading"
@@ -282,7 +284,7 @@ fn DemoContent() -> Element {
                     let config = PromiseConfig::new("Loading...", "Completed (timeout)!", "Failed.");
                     let mut opts = ToastOptions::default();
                     // Custom settlement timeout for success/error
-                    opts.duration_ms = Some(1500);
+                    opts.duration_ms = Some(DEFAULT_TOAST_LIFETIME_MS);
                     sonner.promise(fut, config, opts);
                 },
                 "Promise Success (timeout)"
