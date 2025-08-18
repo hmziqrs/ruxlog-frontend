@@ -3,7 +3,7 @@ use dioxus_time::sleep;
 use std::time::Duration;
 
 use crate::components::sonner::{use_sonner, ToastOptions, SonnerToaster, PromiseConfig};
-use crate::components::sonner::types::{ToasterProps, Position, Offset};
+use crate::components::sonner::types::{ToasterProps, Position, Offset, Action};
 
 #[component]
 pub fn SonnerDemoScreen() -> Element {
@@ -209,6 +209,22 @@ fn DemoContent() -> Element {
                     sonner.loading("Processing...".to_string(), opts);
                 },
                 "Show Loading"
+            }
+            button {
+                class: "px-3 py-2 rounded-md bg-sky-600 text-white hover:bg-sky-700",
+                onclick: move |_| {
+                    let mut opts = ToastOptions::default();
+                    // let sonner_clone = sonner;
+                    opts.action = Some(Action {
+                        label: "Undo".to_string(),
+                        on_click: Some(Callback::new(move |_| {
+                            // sonner_clone.info("Undone".to_string(), ToastOptions::default());
+                        })),
+                        action_button_style: None,
+                    });
+                    sonner.info("File deleted".to_string(), opts);
+                },
+                "Show With Action"
             }
         }
         div { class: "space-x-2 mt-2",

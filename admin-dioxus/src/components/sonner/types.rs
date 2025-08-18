@@ -129,6 +129,10 @@ pub struct ToastOptions {
     pub on_dismiss: Option<Callback<u64>>, // Phase 9+: fired whenever the toast is removed (auto or manual)
     /// Per-toast icon override keyword (see ToastIcons docs)
     pub icon: Option<String>,
+    /// Optional primary action button for the toast
+    pub action: Option<Action>,
+    /// Optional cancel/secondary action button for the toast
+    pub cancel: Option<Action>,
 }
 
 /// Configuration for promise-based toasts (Phase 9)

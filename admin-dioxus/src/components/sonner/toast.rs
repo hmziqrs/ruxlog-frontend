@@ -5,11 +5,11 @@ use dioxus::prelude::*;
 use dioxus_time::sleep;
 use std::time::Duration;
 
-use super::types::{HeightT, ToastType, SwipeDirection, Position, DEFAULT_SWIPE_THRESHOLD_PX};
+use super::types::{HeightT, ToastType, SwipeDirection, Position, DEFAULT_SWIPE_THRESHOLD_PX, Action};
 use super::icons::{icon_close, icon_error, icon_info, icon_success, icon_warning, loader_spinner};
 use super::state::SonnerCtx;
 
-#[derive(Props, Clone, PartialEq)]
+#[derive(Props, Clone)]
 pub struct SonnerToastProps {
     pub id: u64,
     pub title: Option<String>,
@@ -26,9 +26,27 @@ pub struct SonnerToastProps {
     pub duration_ms: Option<u64>,
     #[props(default = None)]
     pub on_auto_close: Option<Callback<u64>>,
+    #[props(default = None)]
+    pub action: Option<Action>,
+    #[props(default = None)]
+    pub cancel: Option<Action>,
     pub on_close: Callback<MouseEvent>,
     #[props(extends = GlobalAttributes)]
     attributes: Vec<Attribute>,
+}
+
+impl PartialEq for SonnerToastProps {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.title == other.title
+            && self.description == other.description
+            && self.toast_type == other.toast_type
+            && self.icon == other.icon
+            && self.close_button == other.close_button
+            && self.exiting == other.exiting
+            && self.duration_ms == other.duration_ms
+        // Intentionally ignore action/cancel/on_close/attributes due to callbacks and dynamic bags
+    }
 }
 
 #[component]
@@ -43,6 +61,12 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
         .map(|_| format!("{id}-description"));
     let aria_labelledby_val = label_id.clone();
     let aria_describedby_val = description_id.clone();
+
+    // Precompute action/cancel options and handlers to capture into closures
+    let action_opt = props.action.clone();
+    let cancel_opt = props.cancel.clone();
+    let action_on_click = action_opt.as_ref().and_then(|a| a.on_click.clone());
+    let cancel_on_click = cancel_opt.as_ref().and_then(|a| a.on_click.clone());
 
     // Entrance animation: fade + slide in on mount
     let mounted = use_signal(|| false);
@@ -370,6 +394,31 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
 
                     if let Some(description) = &props.description {
                         div { id: description_id.clone(), class: "sonner-toast-description text-sm text-muted-foreground", {description.clone()} }
+                    }
+                }
+
+                // Action buttons (optional)
+                if action_opt.is_some() || cancel_opt.is_some() {
+                    div { class: "sonner-toast-actions flex items-center gap-2",
+                        if let Some(cancel) = &cancel_opt {
+                            button {
+                                class: "sonner-toast-cancel px-2 py-1 text-sm rounded border border-border bg-transparent hover:bg-accent text-foreground/80 hover:text-foreground",
+                                onclick: move |e| {
+                                    if let Some(cb) = cancel_on_click.clone() { cb.call(e); }
+                                },
+                                {cancel.label.clone()}
+                            }
+                        }
+                        if let Some(action) = &action_opt {
+                            button {
+                                class: "sonner-toast-action px-2 py-1 text-sm rounded bg-primary text-primary-foreground hover:opacity-90",
+                                onclick: move |e| {
+                                    if let Some(cb) = action_on_click.clone() { cb.call(e); }
+                                    ctx.dismiss_toast.call(props.id);
+                                },
+                                {action.label.clone()}
+                            }
+                        }
                     }
                 }
 

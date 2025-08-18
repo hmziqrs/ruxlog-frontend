@@ -345,6 +345,8 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                         exiting: toast.delete,
                         duration_ms: toast.duration_ms,
                         on_auto_close: toast.on_auto_close.clone(),
+                        action: toast.action.clone(),
+                        cancel: toast.cancel.clone(),
                         style: {match props.defaults.position {
                             // Top cluster (mirror bottom semantics: show the last N toasts)
                             Position::TopLeft | Position::TopRight | Position::TopCenter => {
