@@ -1,47 +1,21 @@
-use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use crate::components::PageHeader;
 use crate::containers::{TagFormContainer, TagForm};
-use crate::hooks::use_previous;
 use crate::store::use_tag;
-use crate::components::sonner::{use_sonner, ToastOptions, ToastType};
+use crate::hooks::{use_stateframe_toast, StateframeToastConfig};
  
 
 #[component]
 pub fn TagsAddScreen() -> Element {
     let tags = use_tag();
-    let sonner = use_sonner();
-    let mut toast_id = use_signal::<Option<u64>>(|| None);
-
-
-    let state = tags.add.read();
-    let loading = state.is_loading();
-    let success = state.is_success();
-    let failed = state.is_failed();
-
-    let prev_loading = use_previous(loading);
-
-    use_effect(use_reactive!(|(loading,)| {
-        if prev_loading.is_some() && prev_loading.unwrap_or_default() != loading {
-            if toast_id().is_none() {
-                let id = sonner.loading("Creating tag...".to_string(), ToastOptions::default().with_duration(None));
-                toast_id.set(Some(id));
-            } else {
-                let exists = sonner.exists(toast_id().unwrap());
-                if exists {
-                    sonner.update_loading(toast_id().unwrap(), "Creating tag...".to_string(), ToastOptions::default().with_duration(None));
-                } else {
-                    let id = sonner.loading("Creating tag...".to_string(), ToastOptions::default().with_duration(None));
-                    toast_id.set(Some(id));
-                }
-            }
-            if success {
-                sonner.update_success(toast_id().unwrap(), "Togs created successfully", ToastOptions::default());
-            } else if failed {
-                sonner.update_error(toast_id().unwrap(), "Failed to create tag", ToastOptions::default());
-            }
-        }
-    }));
+    // Wire StateFrame->Sonner toast for add flow
+    let cfg = StateframeToastConfig {
+        loading_title: "Creating tag...".into(),
+        success_title: Some("Tag created successfully".into()),
+        error_title: Some("Failed to create tag".into()),
+        ..Default::default()
+    };
+    use_stateframe_toast(&tags.add, cfg);
 
 
     rsx! {
