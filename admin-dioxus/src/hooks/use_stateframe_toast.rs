@@ -8,7 +8,8 @@ pub struct StateframeToastConfig {
     pub success_title: Option<String>,
     pub error_title: Option<String>,
     pub loading_options: ToastOptions,
-    pub settled_options: ToastOptions,
+    pub success_options: ToastOptions,
+    pub error_options: ToastOptions,
 }
 
 impl Default for StateframeToastConfig {
@@ -19,8 +20,9 @@ impl Default for StateframeToastConfig {
             error_title: None,
             // Keep loading indefinite; provider will set duration on settle if None
             loading_options: ToastOptions::default().with_duration(None),
-            // Let provider default duration apply when updating to success/error
-            settled_options: ToastOptions::default(),
+            // Let provider default duration apply on settle unless caller overrides
+            success_options: ToastOptions::default(),
+            error_options: ToastOptions::default(),
         }
     }
 }
@@ -68,14 +70,14 @@ pub fn use_stateframe_toast<T: Clone + 'static>(
                             .clone()
                             .or_else(|| message.clone())
                             .unwrap_or_else(|| "Operation completed".to_string());
-                        sonner.update_success(id, title, cfg.settled_options.clone());
+                        sonner.update_success(id, title, cfg.success_options.clone());
                     } else if failed {
                         let title = cfg
                             .error_title
                             .clone()
                             .or_else(|| message.clone())
                             .unwrap_or_else(|| "Operation failed".to_string());
-                        sonner.update_error(id, title, cfg.settled_options.clone());
+                        sonner.update_error(id, title, cfg.error_options.clone());
                     }
                 }
             }
