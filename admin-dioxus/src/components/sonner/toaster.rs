@@ -2,7 +2,7 @@
 
 use crate::components::portal_v2::{use_portal, PortalIn, PortalOut};
 use dioxus::prelude::*;
-use dioxus::logger::tracing;
+// use dioxus::logger::tracing;
 use dioxus_time::sleep;
 use std::time::Duration;
 use std::collections::VecDeque;
@@ -398,10 +398,10 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                                         let h_i = heights_px.get(i).cloned().unwrap_or(fallback_h);
                                         let top_px = (visible_height - (dist_from_slice_top + h_i)).max(0);
                                         let z = 1000 - (count - i) as i32;
-                                        tracing::info!(
-                                            "Sonner top render: id={}, i={}, z-index={}, height_px={}, top={}px, pos={:?}",
-                                            toast.id, i, z, h_i, top_px, props.defaults.position
-                                        );
+                                        // tracing::info!(
+                                        //     "Sonner top render: id={}, i={}, z-index={}, height_px={}, top={}px, pos={:?}",
+                                        //     toast.id, i, z, h_i, top_px, props.defaults.position
+                                        // );
                                         format!(
                                             "position:absolute; {} top:{}px; pointer-events: auto; z-index:{}; will-change: transform, opacity, top;",
                                             h_align,
@@ -437,10 +437,10 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                                         let bottom_px = offsets.get(i).cloned().unwrap_or(0);
                                         let z = 1000 + (count - i) as i32;
                                         let h_i = heights_px.get(i).cloned().unwrap_or(fallback_h);
-                                        tracing::info!(
-                                            "Sonner bottom render: id={}, i={}, z-index={}, height_px={}, bottom={}px, pos={:?}",
-                                            toast.id, i, z, h_i, bottom_px, props.defaults.position
-                                        );
+                                        // tracing::info!(
+                                        //     "Sonner bottom render: id={}, i={}, z-index={}, height_px={}, bottom={}px, pos={:?}",
+                                        //     toast.id, i, z, h_i, bottom_px, props.defaults.position
+                                        // );
                                         format!(
                                             "position:absolute; {} bottom:{}px; pointer-events: auto; z-index:{}; will-change: transform, opacity, bottom;",
                                             h_align,

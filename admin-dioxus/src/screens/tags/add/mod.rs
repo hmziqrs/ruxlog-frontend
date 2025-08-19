@@ -1,3 +1,4 @@
+use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use crate::components::PageHeader;
 use crate::containers::{TagFormContainer, TagForm};
@@ -10,6 +11,7 @@ use crate::components::sonner::{use_sonner, ToastOptions, ToastType};
 pub fn TagsAddScreen() -> Element {
     let tags = use_tag();
     let sonner = use_sonner();
+    let mut toast_id = use_signal::<Option<u64>>(|| None);
 
 
     let state = tags.add.read();
@@ -20,12 +22,17 @@ pub fn TagsAddScreen() -> Element {
     let prev_loading = use_previous(loading);
 
     use_effect(use_reactive!(|(loading,)| {
-        if prev_loading != Some(loading) {
-            let id = sonner.loading("Creating tag...".to_string(), ToastOptions::default().with_duration(None));
+        if prev_loading.is_some() && prev_loading.unwrap_or_default() != loading {
+            if toast_id().is_none() {
+                let id = sonner.loading("Creating tag...".to_string(), ToastOptions::default().with_duration(None));
+                toast_id.set(Some(id));
+            } else {
+                sonner.update_loading(toast_id().unwrap(), "Creating tag...".to_string(), ToastOptions::default().with_duration(None));
+            }
             if success {
-                sonner.update_success(id, "Togs created successfully", ToastOptions::default());
+                sonner.update_success(toast_id().unwrap(), "Togs created successfully", ToastOptions::default());
             } else if failed {
-                sonner.update_error(id, "Failed to create tag", ToastOptions::default());
+                sonner.update_error(toast_id().unwrap(), "Failed to create tag", ToastOptions::default());
             }
         }
     }));
