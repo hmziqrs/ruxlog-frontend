@@ -30,6 +30,14 @@ pub struct SonnerToastProps {
     pub action: Option<Action>,
     #[props(default = None)]
     pub cancel: Option<Action>,
+    /// Provider-computed layout CSS (position/top|bottom/z-index/left|right/pointer-events/will-change)
+    /// IMPORTANT: Should NOT include `transform` or `transition`.
+    #[props(default = None)]
+    pub layout_css: Option<String>,
+    /// Optional base transform to compose before live drag (e.g., scale for overflow stacking)
+    /// Example: Some("scale(0.88)")
+    #[props(default = None)]
+    pub base_transform: Option<String>,
     pub on_close: Callback<MouseEvent>,
     #[props(extends = GlobalAttributes)]
     attributes: Vec<Attribute>,
@@ -45,6 +53,8 @@ impl PartialEq for SonnerToastProps {
             && self.close_button == other.close_button
             && self.exiting == other.exiting
             && self.duration_ms == other.duration_ms
+            && self.layout_css == other.layout_css
+            && self.base_transform == other.base_transform
         // Intentionally ignore action/cancel/on_close/attributes due to callbacks and dynamic bags
     }
 }
@@ -281,8 +291,8 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
     let ratio = ((if use_h { dx.abs() } else { dy.abs() }) / (DEFAULT_SWIPE_THRESHOLD_PX as f64)).min(1.0);
     let drag_opacity = 1.0 - 0.3 * ratio;
     // Entrance/Exit composition: start hidden and offset, animate to rest; on exit fade + slide away
-    let enter_transition = "transform 220ms ease, opacity 220ms ease";
-    let exit_transition = "transform 220ms ease, opacity 220ms ease";
+    let enter_transition = "transform 220ms ease, opacity 220ms ease, top 200ms ease, bottom 200ms ease";
+    let exit_transition = "transform 220ms ease, opacity 220ms ease, top 200ms ease, bottom 200ms ease";
     let is_exiting = props.exiting;
     let outer_transition = if dragging() {
         "none"
@@ -307,10 +317,16 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
     let pe = if is_exiting { "pointer-events: none;" } else { "" };
     let is_center = matches!(ctx.defaults.position, Position::TopCenter | Position::BottomCenter);
     let center_prefix = if is_center { "translateX(-50%) " } else { "" };
+    let base_tf = props.base_transform.clone().unwrap_or_default();
+    let base_tf = if base_tf.is_empty() { String::new() } else { format!("{} ", base_tf) };
     let drag_style = format!(
-        "transform: {}translate({:.2}px, {:.2}px); opacity: {:.3}; transition: {}; {}",
-        center_prefix, tx, ty_with_anim, outer_opacity, outer_transition, pe
+        "transform: {}{}translate({:.2}px, {:.2}px); opacity: {:.3}; transition: {}; {}",
+        center_prefix, base_tf, tx, ty_with_anim, outer_opacity, outer_transition, pe
     );
+
+    // Final style = provider layout + our drag/animation style. Put our style last so it wins on conflicts.
+    let layout_css = props.layout_css.clone().unwrap_or_default();
+    let final_style = format!("{} {}", layout_css, drag_style);
 
     // Phase 8: resolve icon element based on per-toast and global overrides
     let icon_el: Option<Element> = {
@@ -361,7 +377,7 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
 
     rsx! {
         div {
-            id,
+            id: "{id}",
             role: "alertdialog",
             aria_labelledby: "{aria_labelledby_val}",
             aria_describedby: aria_describedby_val,
@@ -369,13 +385,13 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
             tabindex: "0",
             class: "sonner-toast w-72 rounded-md border border-border bg-background text-foreground shadow-sm",
             "data-type": props.toast_type.as_str(),
-            style: "{drag_style}",
+            // Apply our combined style
+            style: "{final_style}",
             onmouseenter: move |_| hovered.set(true),
             onmouseleave: move |_| hovered.set(false),
             onfocus: move |_| focused.set(true),
             onblur: move |_| focused.set(false),
             ..props.attributes,
-            // Apply drag/enter/exit transform LAST to override any provider style
 
             // Inner wrapper
             div { class: "sonner-toast-inner flex items-center justify-between gap-2 px-4 py-3",

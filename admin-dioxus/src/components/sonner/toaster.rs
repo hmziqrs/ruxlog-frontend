@@ -2,6 +2,7 @@
 
 use crate::components::portal_v2::{use_portal, PortalIn, PortalOut};
 use dioxus::prelude::*;
+use dioxus::logger::tracing;
 use dioxus_time::sleep;
 use std::time::Duration;
 use std::collections::VecDeque;
@@ -377,136 +378,105 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                         on_auto_close: toast.on_auto_close.clone(),
                         action: toast.action.clone(),
                         cancel: toast.cancel.clone(),
-                        style: {match props.defaults.position {
+                        layout_css: {Some(match props.defaults.position {
                             // Top cluster (mirror bottom semantics: show the last N toasts)
                             Position::TopLeft | Position::TopRight | Position::TopCenter => {
-                                let (h_align, translate_prefix) = match props.defaults.position {
-                                    Position::TopLeft => ("left:0;", ""),
-                                    Position::TopRight => ("right:0;", ""),
-                                    Position::TopCenter => ("left:50%;", "translateX(-50%)"),
-                                    _ => ("", ""),
+                                let h_align = match props.defaults.position {
+                                    Position::TopLeft => "left:0;",
+                                    Position::TopRight => "right:0;",
+                                    Position::TopCenter => "left:50%;",
+                                    _ => "",
                                 };
                                 if visible_count == 0 {
-                                    if translate_prefix.is_empty() {
-                                        "position:absolute; top:0px; opacity:0;".to_string()
-                                    } else {
-                                        format!("position:absolute; {}; top:0px; opacity:0; transform: {};", h_align, translate_prefix)
-                                    }
+                                    format!("position:absolute; {} top:0px; pointer-events: none; z-index:{}; will-change: transform, opacity, top;", h_align, 1000)
                                 } else {
                                     let visible_start = count - visible_count;
                                     if i >= visible_start {
                                         // Visible region: newest at top (top:0), older pushed down
-                                        // Mirror bottom logic: top = visible_height - (dist_from_slice_top + h_i)
                                         let base_top = offsets.get(visible_start).cloned().unwrap_or(0);
                                         let dist_from_slice_top = offsets.get(i).cloned().unwrap_or(0) - base_top;
                                         let h_i = heights_px.get(i).cloned().unwrap_or(fallback_h);
                                         let top_px = (visible_height - (dist_from_slice_top + h_i)).max(0);
-                                        if translate_prefix.is_empty() {
-                                            format!(
-                                                "position:absolute; {} top:{}px; transform: none; pointer-events: auto; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, top 200ms ease; will-change: transform, opacity, top;",
-                                                h_align,
-                                                top_px,
-                                                1000 - (count - i) as i32
-                                            )
-                                        } else {
-                                            format!(
-                                                "position:absolute; {} top:{}px; transform: {}; pointer-events: auto; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, top 200ms ease; will-change: transform, opacity, top;",
-                                                h_align,
-                                                top_px,
-                                                translate_prefix,
-                                                1000 - (count - i) as i32
-                                            )
-                                        }
+                                        let z = 1000 - (count - i) as i32;
+                                        tracing::info!(
+                                            "Sonner top render: id={}, i={}, z-index={}, height_px={}, top={}px, pos={:?}",
+                                            toast.id, i, z, h_i, top_px, props.defaults.position
+                                        );
+                                        format!(
+                                            "position:absolute; {} top:{}px; pointer-events: auto; z-index:{}; will-change: transform, opacity, top;",
+                                            h_align,
+                                            top_px,
+                                            z
+                                        )
                                     } else {
                                         // Overflow above the visible cluster (older toasts)
-                                        let overflow_index = visible_start - i; // 1 for first overflow above visible cluster
-                                        let scale = (1.0 - (overflow_index as f32) * 0.06).max(0.82);
-                                        let opacity = (1.0 - (overflow_index as f32) * 0.15).max(0.4);
-                                        let base_top = 0; // stack at the very top edge
-                                        if translate_prefix.is_empty() {
-                                            format!(
-                                                "position:absolute; {} top:{}px; transform: scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, top 200ms ease; will-change: transform, opacity, top;",
-                                                h_align,
-                                                base_top,
-                                                scale,
-                                                opacity,
-                                                1000 - (count - visible_start) as i32
-                                            )
-                                        } else {
-                                            format!(
-                                                "position:absolute; {} top:{}px; transform: {} scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, top 200ms ease; will-change: transform, opacity, top;",
-                                                h_align,
-                                                base_top,
-                                                translate_prefix,
-                                                scale,
-                                                opacity,
-                                                1000 - (count - visible_start) as i32
-                                            )
-                                        }
+                                        let base_top = 0; // stack at top edge
+                                        let z = 1000 - (count - visible_start) as i32;
+                                        format!(
+                                            "position:absolute; {} top:{}px; pointer-events: none; z-index:{}; will-change: transform, opacity, top;",
+                                            h_align,
+                                            base_top,
+                                            z
+                                        )
                                     }
                                 }
                             }
                             // Bottom cluster
                             Position::BottomLeft | Position::BottomRight | Position::BottomCenter => {
-                                let (h_align, translate_prefix) = match props.defaults.position {
-                                    Position::BottomLeft => ("left:0;", ""),
-                                    Position::BottomRight => ("right:0;", ""),
-                                    Position::BottomCenter => ("left:50%;", "translateX(-50%)"),
-                                    _ => ("", ""),
+                                let h_align = match props.defaults.position {
+                                    Position::BottomLeft => "left:0;",
+                                    Position::BottomRight => "right:0;",
+                                    Position::BottomCenter => "left:50%;",
+                                    _ => "",
                                 };
                                 if visible_count == 0 {
-                                    if translate_prefix.is_empty() {
-                                        "position:absolute; bottom:0px; opacity:0;".to_string()
-                                    } else {
-                                        format!("position:absolute; {}; bottom:0px; opacity:0; transform: {};", h_align, translate_prefix)
-                                    }
+                                    format!("position:absolute; {} bottom:0px; pointer-events: none; z-index:{}; will-change: transform, opacity, bottom;", h_align, 1000)
                                 } else {
                                     let visible_start = count - visible_count;
                                     if i >= visible_start {
                                         let bottom_px = offsets.get(i).cloned().unwrap_or(0);
-                                        if translate_prefix.is_empty() {
-                                            format!(
-                                                "position:absolute; {} bottom:{}px; transform: none; pointer-events: auto; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, bottom 200ms ease; will-change: transform, opacity, bottom;",
-                                                h_align,
-                                                bottom_px,
-                                                1000 - (count - i) as i32
-                                            )
-                                        } else {
-                                            format!(
-                                                "position:absolute; {} bottom:{}px; transform: {}; pointer-events: auto; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, bottom 200ms ease; will-change: transform, opacity, bottom;",
-                                                h_align,
-                                                bottom_px,
-                                                translate_prefix,
-                                                1000 - (count - i) as i32
-                                            )
-                                        }
+                                        let z = 1000 + (count - i) as i32;
+                                        let h_i = heights_px.get(i).cloned().unwrap_or(fallback_h);
+                                        tracing::info!(
+                                            "Sonner bottom render: id={}, i={}, z-index={}, height_px={}, bottom={}px, pos={:?}",
+                                            toast.id, i, z, h_i, bottom_px, props.defaults.position
+                                        );
+                                        format!(
+                                            "position:absolute; {} bottom:{}px; pointer-events: auto; z-index:{}; will-change: transform, opacity, bottom;",
+                                            h_align,
+                                            bottom_px,
+                                            z
+                                        )
                                     } else {
-                                        let overflow_index = visible_start - i; // 1 for first overflow above visible cluster
-                                        let scale = (1.0 - (overflow_index as f32) * 0.06).max(0.82);
-                                        let opacity = (1.0 - (overflow_index as f32) * 0.15).max(0.4);
                                         let base_bottom = offsets.get(visible_start).cloned().unwrap_or(0);
-                                        if translate_prefix.is_empty() {
-                                            format!(
-                                                "position:absolute; {} bottom:{}px; transform: scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, bottom 200ms ease; will-change: transform, opacity, bottom;",
-                                                h_align,
-                                                base_bottom,
-                                                scale,
-                                                opacity,
-                                                1000 - (count - visible_start) as i32
-                                            )
-                                        } else {
-                                            format!(
-                                                "position:absolute; {} bottom:{}px; transform: {} scale({:.3}); opacity: {:.3}; pointer-events: none; z-index:{}; transition: transform 200ms ease, opacity 200ms ease, bottom 200ms ease; will-change: transform, opacity, bottom;",
-                                                h_align,
-                                                base_bottom,
-                                                translate_prefix,
-                                                scale,
-                                                opacity,
-                                                1000 - (count - visible_start) as i32
-                                            )
-                                        }
+                                        let z = 1000 - (count - visible_start) as i32;
+                                        format!(
+                                            "position:absolute; {} bottom:{}px; pointer-events: none; z-index:{}; will-change: transform, opacity, bottom;",
+                                            h_align,
+                                            base_bottom,
+                                            z
+                                        )
                                     }
                                 }
+                            }
+                        })},
+                        base_transform: {match props.defaults.position {
+                            Position::TopLeft | Position::TopRight | Position::TopCenter => {
+                                let visible_start = count.saturating_sub(visible_count);
+                                if visible_count > 0 && i < visible_start {
+                                    // Overflow above visible cluster
+                                    let overflow_index = visible_start - i; // 1,2,..
+                                    let scale = (1.0 - (overflow_index as f32) * 0.06).max(0.82);
+                                    Some(format!("scale({:.3})", scale))
+                                } else { None }
+                            }
+                            Position::BottomLeft | Position::BottomRight | Position::BottomCenter => {
+                                let visible_start = count.saturating_sub(visible_count);
+                                if visible_count > 0 && i < visible_start {
+                                    let overflow_index = visible_start - i;
+                                    let scale = (1.0 - (overflow_index as f32) * 0.06).max(0.82);
+                                    Some(format!("scale({:.3})", scale))
+                                } else { None }
                             }
                         }},
                         on_close: {

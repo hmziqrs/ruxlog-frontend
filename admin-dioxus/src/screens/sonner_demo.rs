@@ -5,7 +5,7 @@ use std::time::Duration;
 use crate::components::sonner::{use_sonner, ToastOptions, SonnerToaster, PromiseConfig};
 use crate::components::sonner::types::{ToasterProps, Position, Offset, Action};
 
-const DEFAULT_TOAST_LIFETIME_MS: u64 = 9000;
+const DEFAULT_TOAST_LIFETIME_MS: u64 = 29000;
 
 #[component]
 pub fn SonnerDemoScreen() -> Element {
