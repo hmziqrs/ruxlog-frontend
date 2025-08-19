@@ -97,6 +97,15 @@ impl SonnerToasts {
         self.delete_toast.call(id)
     }
 
+    /// Check if a toast with the given id currently exists in the provider.
+    /// Note: this returns true even if the toast is in the exiting state
+    /// (i.e., marked for deletion but not yet removed after the exit animation).
+    pub fn exists(&self, id: u64) -> bool {
+        let ctx = consume_context::<SonnerCtx>();
+        let list = ctx.toasts.peek();
+        list.iter().any(|t| t.id == id)
+    }
+
     pub fn update(&self, id: u64, mut toast: ToastT) {
         // Ensure the correct target id is used
         toast.id = id;

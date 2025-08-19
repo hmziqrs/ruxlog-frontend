@@ -27,7 +27,13 @@ pub fn TagsAddScreen() -> Element {
                 let id = sonner.loading("Creating tag...".to_string(), ToastOptions::default().with_duration(None));
                 toast_id.set(Some(id));
             } else {
-                sonner.update_loading(toast_id().unwrap(), "Creating tag...".to_string(), ToastOptions::default().with_duration(None));
+                let exists = sonner.exists(toast_id().unwrap());
+                if exists {
+                    sonner.update_loading(toast_id().unwrap(), "Creating tag...".to_string(), ToastOptions::default().with_duration(None));
+                } else {
+                    let id = sonner.loading("Creating tag...".to_string(), ToastOptions::default().with_duration(None));
+                    toast_id.set(Some(id));
+                }
             }
             if success {
                 sonner.update_success(toast_id().unwrap(), "Togs created successfully", ToastOptions::default());
