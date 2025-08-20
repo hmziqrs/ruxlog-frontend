@@ -7,17 +7,9 @@ pub fn get_base_url() -> String {
     format!("http://{}", APP_API_URL)
 }
 
-// pub fn get_auth_token() -> Option<String> {
-//     LocalStorage::get(AUTH_TOKEN_KEY).ok()
-// }
-
 fn create_headers(mut req: RequestBuilder) -> RequestBuilder {
-    req = req.header("Content-Type", "application/json");
-    // if let Some(token) = get_auth_token() {
-    //     req = req.header("Authorization", &format!("Bearer {}", token));
-    // }
-    req = req.header("csrf-token", APP_CSRF_TOKEN);
-    req.credentials(RequestCredentials::Include)
+    req = req.header("Content-Type", "application/json").header("csrf-token", APP_CSRF_TOKEN).credentials(RequestCredentials::Include);
+    req
 }
 
 pub fn get(endpoint: &str) -> RequestBuilder {
