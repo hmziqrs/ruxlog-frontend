@@ -222,6 +222,7 @@ fn DemoContent() -> Element {
                         on_click: Some(Callback::new(move |_| {
                             // sonner_clone.info("Undone".to_string(), ToastOptions::default());
                         })),
+                        dismiss_toast: true,
                         action_button_style: None,
                     });
                     sonner.info("File deleted".to_string(), opts);

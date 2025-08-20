@@ -77,6 +77,7 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
     let cancel_opt = props.cancel.clone();
     let action_on_click = action_opt.as_ref().and_then(|a| a.on_click.clone());
     let cancel_on_click = cancel_opt.as_ref().and_then(|a| a.on_click.clone());
+    let action_dismiss_toast = action_opt.as_ref().map(|a| a.dismiss_toast).unwrap_or(true);
 
     // Entrance animation: fade + slide in on mount
     let mounted = use_signal(|| false);
@@ -430,7 +431,7 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
                                 class: "sonner-toast-action px-2 py-1 text-sm rounded bg-primary text-primary-foreground hover:opacity-90",
                                 onclick: move |e| {
                                     if let Some(cb) = action_on_click.clone() { cb.call(e); }
-                                    ctx.dismiss_toast.call(props.id);
+                                    if action_dismiss_toast { ctx.dismiss_toast.call(props.id); }
                                 },
                                 {action.label.clone()}
                             }

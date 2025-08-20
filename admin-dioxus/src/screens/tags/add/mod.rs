@@ -15,7 +15,10 @@ pub fn TagsAddScreen() -> Element {
         success_title: Some("Tag created successfully".into()),
         error_title: Some("Failed to create tag".into()),
         error_options: ToastOptions::default().with_action(Some(Action::with_on_click("Retry".into(), Callback::new(move |_| {
-            //
+            let payload = tags.add.peek().meta.clone();
+            spawn(async move {
+                tags.add(payload.unwrap()).await;
+            });
         })))), 
         ..Default::default()
     };

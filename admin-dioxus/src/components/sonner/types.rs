@@ -15,8 +15,6 @@ pub enum ToastType {
     Loading,
 }
 
- 
-
 impl ToastType {
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -69,8 +67,9 @@ pub enum Offset {
 #[derive(Clone)]
 pub struct Action {
     pub label: String,
-    pub on_click: Option<Callback<MouseEvent>>, // Phase 1: pass id later if needed
-    pub action_button_style: Option<BTreeMap<String, String>>, // CSS-like style map
+    pub on_click: Option<Callback<MouseEvent>>,
+    pub dismiss_toast: bool,
+    pub action_button_style: Option<BTreeMap<String, String>>,
 }
 
 impl Action {
@@ -78,6 +77,7 @@ impl Action {
         Self {
             label,
             on_click,
+            dismiss_toast: false,
             action_button_style,
         }
     }
@@ -86,8 +86,15 @@ impl Action {
         Self {
             label,
             on_click: Some(on_click),
+            dismiss_toast: false,
             action_button_style: None,
         }
+    }
+
+    /// Set whether clicking the action should dismiss the toast
+    pub fn with_dismiss_toast(mut self, dismiss: bool) -> Self {
+        self.dismiss_toast = dismiss;
+        self
     }
 }
 
@@ -96,6 +103,7 @@ impl std::fmt::Debug for Action {
         f.debug_struct("Action")
             .field("label", &self.label)
             .field("has_on_click", &self.on_click.is_some())
+            .field("dismiss_toast", &self.dismiss_toast)
             .field("action_button_style", &self.action_button_style)
             .finish()
     }
