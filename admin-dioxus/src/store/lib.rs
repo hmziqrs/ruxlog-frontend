@@ -69,12 +69,7 @@ impl<T: Clone, Q: Clone> Default for StateFrame<T, Q> {
 
 impl<T: Clone, Q: Clone> StateFrame<T, Q> {
     pub fn new() -> Self {
-        Self {
-            status: StateFrameStatus::Init,
-            data: None,
-            message: None,
-            meta: None,
-        }
+        Self::default()
     }
 
     pub fn new_with_loading(message: Option<String>) -> Self {
