@@ -91,37 +91,21 @@ impl TagsState {
     }
 
     pub async fn list(&self) {
-        let empty_body = "{}".to_string();
         let _ = exec_json_to_state::<PaginatedList<Tag>>(
             &self.list,
-            http_client::post("/tag/v1/list/query", &()),
+            http_client::post("/tag/v1/list/query", &"{}"),
             "tags",
         )
         .await;
     }
 
     pub async fn list_with_query(&self, query: TagsListQuery) {
-        self.list.write().set_loading(None);
-        let result = http_client::post("/tag/v1/list/query", &query).send().await;
-        match result {
-            Ok(response) => {
-                if (200..300).contains(&response.status()) {
-                    match response.json::<PaginatedList<Tag>>().await {
-                        Ok(tags) => {
-                            self.list.write().set_success(Some(tags.clone()), None);
-                        }
-                        Err(e) => {
-                            self.list.write().set_failed(Some(format!("Failed to parse tags: {}", e)));
-                        }
-                    }
-                } else {
-                    self.list.write().set_api_error(&response).await;
-                }
-            }
-            Err(e) => {
-                self.list.write().set_failed(Some(format!("Network error: {}", e)));
-            }
-        }
+        let _ = exec_json_to_state::<PaginatedList<Tag>>(
+            &self.list,
+            http_client::post("/tag/v1/list/query", &query),
+            "tags",
+        )
+        .await;
     }
 
     pub async fn view(&self, id: i32) {
