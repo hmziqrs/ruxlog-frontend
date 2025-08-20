@@ -1,6 +1,5 @@
 use dioxus::prelude::*;
 
-use crate::hooks::use_previous;
 use crate::router::Route;
 use crate::store::{use_tag, Tag, TagsListQuery};
 use crate::components::{ListEmptyState, ListErrorBanner, ListToolbar, LoadingOverlay, PageHeader, Pagination, use_toast, ToastOptions};
@@ -10,7 +9,7 @@ use crate::ui::shadcn::{
 };
 use crate::utils::dates::format_short_date_dt;
 use hmziq_dioxus_free_icons::{
-    icons::ld_icons::{LdEllipsis, LdTag},
+    icons::ld_icons::LdEllipsis,
     Icon,
 };
 
@@ -21,7 +20,7 @@ use gloo_timers::future::sleep;
 pub fn TagsListScreen() -> Element {
     let nav = use_navigator();
     let tags_state = use_tag();
-    let toasts = use_toast();
+    
     let mut search_query = use_signal(|| String::new());
     let mut status_filter = use_signal(|| "all".to_string()); // all | active | inactive
     let mut page = use_signal(|| 1u64);
@@ -45,13 +44,6 @@ pub fn TagsListScreen() -> Element {
     let list_success = list.is_success();
     let list_failed = list.is_failed();
 
-    let prev_loading = use_previous(list_loading);
-
-    use_effect(use_reactive!(|(list_loading,)| {
-        if prev_loading != Some(list_loading) && list_success {
-            toasts.success("Tags loaded successfully".to_string(), ToastOptions::new().description(""));
-        }
-    }));
 
     // Snapshot data for rendering
     let (tags, total_items, current_page, _per_page) = if let Some(p) = list.data.clone() {
@@ -61,16 +53,12 @@ pub fn TagsListScreen() -> Element {
     };
     let has_data = !tags.is_empty();
 
-    let total = tags.len();
-    let active = tags.iter().filter(|t| t.is_active).count();
-    let inactive = total.saturating_sub(active);
 
     // Client-side filter by status to match the reference behavior
-    let status_val = status_filter.read().clone();
     let filtered_tags: Vec<Tag> = tags
         .iter()
         .cloned()
-        .filter(|t| match status_val.as_str() {
+        .filter(|t| match status_filter.read().as_str() {
             "active" => t.is_active,
             "inactive" => !t.is_active,
             _ => true,
@@ -105,50 +93,7 @@ pub fn TagsListScreen() -> Element {
                 }
             }
 
-            // Stats
-            div { class: "container mx-auto px-4 py-6 md:py-8",
-                div { class: "grid grid-cols-1 gap-2 sm:grid-cols-3",
-                    Card { class: "border-muted shadow-none",
-                        div { class: "flex items-center justify-between p-4",
-                            div { class: "space-y-1",
-                                p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Total" }
-                                if list_loading && !has_data { 
-                                    div { class: "h-6 w-16 rounded bg-muted animate-pulse" }
-                                } else { 
-                                    p { class: "text-2xl font-semibold tabular-nums", "{total}" }
-                                }
-                            }
-                            div { class: "w-5 h-5 text-zinc-500 dark:text-zinc-400", Icon { icon: LdTag {} } }
-                        }
-                    }
-                    Card { class: "border-muted shadow-none",
-                        div { class: "flex items-center justify-between p-4",
-                            div { class: "space-y-1",
-                                p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Active" }
-                                if list_loading && !has_data { 
-                                    div { class: "h-6 w-16 rounded bg-muted animate-pulse" }
-                                } else { 
-                                    p { class: "text-2xl font-semibold tabular-nums", "{active}" }
-                                }
-                            }
-                            div { class: "h-5 w-5 rounded-full bg-green-500/15 ring-4 ring-green-500/10" }
-                        }
-                    }
-                    Card { class: "border-muted shadow-none",
-                        div { class: "flex items-center justify-between p-4",
-                            div { class: "space-y-1",
-                                p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Inactive" }
-                                if list_loading && !has_data { 
-                                    div { class: "h-6 w-16 rounded bg-muted animate-pulse" }
-                                } else { 
-                                    p { class: "text-2xl font-semibold tabular-nums", "{inactive}" }
-                                }
-                            }
-                            div { class: "h-5 w-5 rounded-full bg-zinc-500/15 ring-4 ring-zinc-500/10" }
-                        }
-                    }
-                }
-            }
+            
 
             // Content
             div { class: "container mx-auto px-4 py-8 md:py-12",
