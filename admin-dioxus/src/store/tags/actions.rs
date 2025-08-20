@@ -94,7 +94,7 @@ impl TagsState {
         let empty_body = "{}".to_string();
         let _ = exec_json_to_state::<PaginatedList<Tag>>(
             &self.list,
-            http_client::post("/tag/v1/list/query", &empty_body),
+            http_client::post("/tag/v1/list/query", &()),
             "tags",
         )
         .await;

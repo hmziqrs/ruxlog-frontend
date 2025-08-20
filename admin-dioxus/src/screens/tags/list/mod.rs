@@ -268,7 +268,6 @@ pub fn TagsListScreen() -> Element {
                                                                         let id = tag_id;
                                                                         spawn({  async move {
                                                                             tags_state.remove(id).await;
-                                                                            tags_state.list().await;
                                                                         }});
                                                                     }, "Delete" }
                                                             }
