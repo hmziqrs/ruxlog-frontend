@@ -29,8 +29,8 @@ impl Default for StateFrameToastConfig {
 
 /// Wire a StateFrame<T> to Sonner toasts.
 /// Shows/updates a loading toast when entering Loading, and updates to Success/Error when leaving Loading.
-pub fn use_state_frame_toast<T: Clone + 'static>(
-    frame: &GlobalSignal<StateFrame<T>>,
+pub fn use_state_frame_toast<D: Clone + 'static, M: Clone + 'static>(
+    frame: &GlobalSignal<StateFrame<D, M>>,
     cfg: StateFrameToastConfig,
 ) {
     let sonner = use_sonner();

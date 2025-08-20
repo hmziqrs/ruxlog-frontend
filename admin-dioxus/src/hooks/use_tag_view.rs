@@ -37,7 +37,7 @@ pub fn use_tag_view(id: i32) -> TagViewState {
     let is_loading = frame.map(|f| f.is_loading()).unwrap_or(true);
     let is_failed = frame.map(|f| f.is_failed()).unwrap_or(false);
     let message = frame.and_then(|f| f.message.clone());
-    let tag = frame.and_then(|f| f.data.clone()).flatten();
+    let tag = frame.and_then(|f| f.data.clone()).into_iter().next();
 
     TagViewState {
         is_loading,

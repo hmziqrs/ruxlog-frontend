@@ -6,6 +6,7 @@ use std::collections::HashMap;
 impl TagsState {
     pub async fn add(&self, payload: TagsAddPayload) {
         self.add.write().set_loading(None);
+        self.add.write().set_meta(Some(payload.clone()));
         let result = http_client::post("/tag/v1/create", &payload).send().await;
         match result {
             Ok(response) => {
@@ -56,7 +57,7 @@ impl TagsState {
                             view_map
                                 .entry(id)
                                 .or_insert_with(StateFrame::new)
-                                .set_success(Some(Some(tag.clone())), None);
+                                .set_success(Some(tag.clone()), None);
                         }
                         Err(e) => {
                             edit_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Failed to parse tag: {}", e)));
@@ -152,7 +153,7 @@ impl TagsState {
                 if (200..300).contains(&response.status()) {
                     match response.json::<Tag>().await {
                         Ok(tag) => {
-                            view_map.entry(id).or_insert_with(StateFrame::new).set_success(Some(Some(tag.clone())), None);
+                            view_map.entry(id).or_insert_with(StateFrame::new).set_success(Some(tag.clone()), None);
                         }
                         Err(e) => {
                             view_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Failed to parse tag: {}", e)));
@@ -174,10 +175,5 @@ impl TagsState {
         *self.remove.write() = HashMap::new();
         *self.list.write() = StateFrame::new();
         *self.view.write() = HashMap::new();
-        // *self.data_add.write() = None;
-        // *self.data_edit.write() = None;
-        // *self.data_remove.write() = None;
-        // *self.data_list.write() = vec![];
-        // *self.data_view.write() = HashMap::new();
     }
 }

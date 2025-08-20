@@ -61,16 +61,11 @@ pub struct TagsEditPayload {
 }
 
 pub struct TagsState {
-    pub add: GlobalSignal<StateFrame<TagsAddPayload>>,
+    pub add: GlobalSignal<StateFrame<(), TagsAddPayload>>,
     pub edit: GlobalSignal<HashMap<i32, StateFrame<TagsEditPayload>>>,
     pub remove: GlobalSignal<HashMap<i32, StateFrame<()>>>,
     pub list: GlobalSignal<StateFrame<PaginatedList<Tag>>>,
-    pub view: GlobalSignal<HashMap<i32, StateFrame<Option<Tag>>>>,
-    // pub data_add: GlobalSignal<Option<()>>,
-    // pub data_edit: GlobalSignal<Option<()>>,
-    // pub data_remove: GlobalSignal<Option<()>>,
-    // pub data_list: GlobalSignal<Vec<Tag>>,
-    // pub data_view: GlobalSignal<HashMap<i32, Tag>>,
+    pub view: GlobalSignal<HashMap<i32, StateFrame<Tag>>>,
 }
 
 impl TagsState {
@@ -81,11 +76,6 @@ impl TagsState {
             remove: GlobalSignal::new(|| HashMap::new()),
             list: GlobalSignal::new(|| StateFrame::new()),
             view: GlobalSignal::new(|| HashMap::new()),
-            // data_add: GlobalSignal::new(|| None),
-            // data_edit: GlobalSignal::new(|| None),
-            // data_remove: GlobalSignal::new(|| None),
-            // data_list: GlobalSignal::new(|| vec![]),
-            // data_view: GlobalSignal::new(|| HashMap::new()),
         }
     }
 }
