@@ -62,8 +62,8 @@ pub struct TagsEditPayload {
 
 pub struct TagsState {
     pub add: GlobalSignal<StateFrame<(), TagsAddPayload>>,
-    pub edit: GlobalSignal<HashMap<i32, StateFrame<TagsEditPayload>>>,
-    pub remove: GlobalSignal<HashMap<i32, StateFrame<()>>>,
+    pub edit: GlobalSignal<HashMap<i32, StateFrame<(), TagsEditPayload>>>,
+    pub remove: GlobalSignal<HashMap<i32, StateFrame>>,
     pub list: GlobalSignal<StateFrame<PaginatedList<Tag>>>,
     pub view: GlobalSignal<HashMap<i32, StateFrame<Tag>>>,
 }

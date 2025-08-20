@@ -1,5 +1,6 @@
-use gloo_net::http::Response;
-use serde::{Deserialize, Serialize};
+use dioxus::prelude::GlobalSignal;
+use gloo_net::http::{Request, Response};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum StateFrameStatus {
@@ -149,4 +150,44 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
 pub struct ApiError {
     pub message: String,
     pub status: Option<u16>,
+}
+
+/// Send a request, parse JSON into `T`, and update the provided `StateFrame<T>`.
+/// Returns `Some(T)` on success to allow callers to perform cache-sync logic if needed.
+pub async fn exec_json_to_state<T>(
+    state: &GlobalSignal<StateFrame<T>>,
+    req: Request,
+    parse_label: &str,
+) -> Option<T>
+where
+    T: DeserializeOwned + Clone + 'static,
+{
+    state.write().set_loading(None);
+    match req.send().await {
+        Ok(response) => {
+            if (200..300).contains(&response.status()) {
+                match response.json::<T>().await {
+                    Ok(data) => {
+                        state.write().set_success(Some(data.clone()), None);
+                        Some(data)
+                    }
+                    Err(e) => {
+                        state
+                            .write()
+                            .set_failed(Some(format!("Failed to parse {}: {}", parse_label, e)));
+                        None
+                    }
+                }
+            } else {
+                state.write().set_api_error(&response).await;
+                None
+            }
+        }
+        Err(e) => {
+            state
+                .write()
+                .set_failed(Some(format!("Network error: {}", e)));
+            None
+        }
+    }
 }

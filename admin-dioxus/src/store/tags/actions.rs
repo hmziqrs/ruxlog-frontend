@@ -1,6 +1,6 @@
 use super::{Tag, TagsAddPayload, TagsEditPayload, TagsListQuery, TagsState};
 use crate::services::http_client;
-use crate::store::{PaginatedList, StateFrame};
+use crate::store::{exec_json_to_state, PaginatedList, StateFrame};
 use std::collections::HashMap;
 
 impl TagsState {
@@ -91,28 +91,13 @@ impl TagsState {
     }
 
     pub async fn list(&self) {
-        self.list.write().set_loading(None);
         let empty_body = "{}".to_string();
-        let result = http_client::post("/tag/v1/list/query", &empty_body).send().await;
-        match result {
-            Ok(response) => {
-                if (200..300).contains(&response.status()) {
-                    match response.json::<PaginatedList<Tag>>().await {
-                        Ok(tags) => {
-                            self.list.write().set_success(Some(tags.clone()), None);
-                        }
-                        Err(e) => {
-                            self.list.write().set_failed(Some(format!("Failed to parse tags: {}", e)));
-                        }
-                    }
-                } else {
-                    self.list.write().set_api_error(&response).await;
-                }
-            }
-            Err(e) => {
-                self.list.write().set_failed(Some(format!("Network error: {}", e)));
-            }
-        }
+        let _ = exec_json_to_state::<PaginatedList<Tag>>(
+            &self.list,
+            http_client::post("/tag/v1/list/query", &empty_body),
+            "tags",
+        )
+        .await;
     }
 
     pub async fn list_with_query(&self, query: TagsListQuery) {
