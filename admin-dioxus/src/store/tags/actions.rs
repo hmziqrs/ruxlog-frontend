@@ -11,13 +11,9 @@ impl TagsState {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
                     match response.json::<Tag>().await {
-                        Ok(tag) => {
+                        Ok(_) => {
                             self.add.write().set_success(None, None);
                             self.list().await;
-                            // let mut tmp = self.list.write();
-                            // let mut tmp_list = tmp.data.clone().unwrap();
-                            // tmp_list.data.insert(0, tag);
-                            // tmp.set_success(Some(tmp_list), None);
                         }
                         Err(e) => {
                             self.add.write().set_failed(Some(format!("Failed to parse tag: {}", e)));
