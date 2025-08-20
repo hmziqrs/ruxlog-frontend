@@ -73,6 +73,24 @@ pub struct Action {
     pub action_button_style: Option<BTreeMap<String, String>>, // CSS-like style map
 }
 
+impl Action {
+    pub fn new(label: String, on_click: Option<Callback<MouseEvent>>, action_button_style: Option<BTreeMap<String, String>>) -> Self {
+        Self {
+            label,
+            on_click,
+            action_button_style,
+        }
+    }
+
+    pub fn with_on_click(label: String, on_click: Callback<MouseEvent>) -> Self {
+        Self {
+            label,
+            on_click: Some(on_click),
+            action_button_style: None,
+        }
+    }
+}
+
 impl std::fmt::Debug for Action {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Action")

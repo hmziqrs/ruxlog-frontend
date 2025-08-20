@@ -1,21 +1,25 @@
 use dioxus::prelude::*;
+use crate::components::sonner::{Action, ToastOptions};
 use crate::components::PageHeader;
 use crate::containers::{TagFormContainer, TagForm};
 use crate::store::use_tag;
-use crate::hooks::{use_stateframe_toast, StateframeToastConfig};
+use crate::hooks::{use_state_frame_toast, StateFrameToastConfig};
  
 
 #[component]
 pub fn TagsAddScreen() -> Element {
     let tags = use_tag();
     // Wire StateFrame->Sonner toast for add flow
-    let cfg = StateframeToastConfig {
+    let cfg = StateFrameToastConfig {
         loading_title: "Creating tag...".into(),
         success_title: Some("Tag created successfully".into()),
         error_title: Some("Failed to create tag".into()),
+        error_options: ToastOptions::default().with_action(Some(Action::with_on_click("Retry".into(), Callback::new(move |_| {
+            //
+        })))), 
         ..Default::default()
     };
-    use_stateframe_toast(&tags.add, cfg);
+    use_state_frame_toast(&tags.add, cfg);
 
 
     rsx! {
