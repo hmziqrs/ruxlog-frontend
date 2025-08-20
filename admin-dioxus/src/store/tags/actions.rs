@@ -5,8 +5,7 @@ use std::collections::HashMap;
 
 impl TagsState {
     pub async fn add(&self, payload: TagsAddPayload) {
-        self.add.write().set_loading(None);
-        self.add.write().set_meta(Some(payload.clone()));
+        self.add.write().set_loading_meta(Some(payload.clone()), None);
         let result = http_client::post("/tag/v1/create", &payload).send().await;
         match result {
             Ok(response) => {

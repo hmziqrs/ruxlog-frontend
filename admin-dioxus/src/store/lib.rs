@@ -111,6 +111,12 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
         self.message = message;
     }
 
+    pub fn set_loading_meta(&mut self, meta: Option<Q>, message: Option<String>) {
+        self.status = StateFrameStatus::Loading;
+        self.meta = meta;
+        self.message = message;
+    }
+
     pub fn set_success(&mut self, data: Option<T>, message: Option<String>) {
         self.status = StateFrameStatus::Success;
         self.data = data;
@@ -125,6 +131,7 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
     pub fn set_meta(&mut self, meta: Option<Q>) {
         self.meta = meta;
     }
+
 
     pub async fn set_api_error(&mut self, response: &Response) {
         match response.json::<ApiError>().await {
