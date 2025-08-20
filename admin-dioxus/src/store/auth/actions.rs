@@ -4,10 +4,6 @@ use crate::{
     store::{StateFrame},
 };
 use dioxus::{logger::tracing, prelude::*};
-#[cfg(target_arch = "wasm32")]
-use wasm_cookies::{CookieOptions, SameSite};
-
-const USER_ID_COOKIE: &str = "id";
 
 impl User {
     pub fn new(id: i32, name: String, email: String, role: UserRole, is_verified: bool) -> Self {
@@ -39,32 +35,6 @@ impl AuthState {
             login_status: GlobalSignal::new(|| StateFrame::new()),
             logout_status: GlobalSignal::new(|| StateFrame::new()),
             init_status: GlobalSignal::new(|| StateFrame::new()),
-        }
-    }
-
-    fn check_id_cookie_exist() -> bool {
-        #[cfg(target_arch = "wasm32")]
-        {
-            wasm_cookies::get(USER_ID_COOKIE).is_some()
-        }
-
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            // Fallback for non-wasm targets (like tests)
-            tracing::warn!("Cookie operations not available in non-wasm environment");
-            false
-        }
-    }
-
-    fn delete_id_cookie() {
-        #[cfg(target_arch = "wasm32")]
-        {
-            wasm_cookies::delete(USER_ID_COOKIE);
-        }
-
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            tracing::warn!("Cookie operations not available in non-wasm environment");
         }
     }
 
@@ -102,7 +72,6 @@ impl AuthState {
                     match response.json::<User>().await {
                         Ok(user) => {
                             if !user.is_verified || !user.is_admin() {
-                                Self::delete_id_cookie();
                                 self.init_status.write().set_failed(Some(
                                     "User not allowed to access this page.".to_string(),
                                 ));
