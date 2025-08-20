@@ -3,7 +3,7 @@ use crate::components::sonner::{use_sonner, ToastOptions};
 use crate::store::StateFrame;
 
 #[derive(Clone)]
-pub struct StateframeToastConfig {
+pub struct StateFrameToastConfig {
     pub loading_title: String,
     pub success_title: Option<String>,
     pub error_title: Option<String>,
@@ -12,7 +12,7 @@ pub struct StateframeToastConfig {
     pub error_options: ToastOptions,
 }
 
-impl Default for StateframeToastConfig {
+impl Default for StateFrameToastConfig {
     fn default() -> Self {
         Self {
             loading_title: "Processing...".to_string(),
@@ -29,9 +29,9 @@ impl Default for StateframeToastConfig {
 
 /// Wire a StateFrame<T> to Sonner toasts.
 /// Shows/updates a loading toast when entering Loading, and updates to Success/Error when leaving Loading.
-pub fn use_stateframe_toast<T: Clone + 'static>(
+pub fn use_state_frame_toast<T: Clone + 'static>(
     frame: &GlobalSignal<StateFrame<T>>,
-    cfg: StateframeToastConfig,
+    cfg: StateFrameToastConfig,
 ) {
     let sonner = use_sonner();
     let mut toast_id = use_signal::<Option<u64>>(|| None);
