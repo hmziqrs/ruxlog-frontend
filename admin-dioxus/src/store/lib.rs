@@ -10,10 +10,11 @@ pub enum StateFrameStatus {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct StateFrame<T: Clone> {
+pub struct StateFrame<D: Clone = (), M: Clone = ()> {
     pub status: StateFrameStatus,
-    pub data: Option<T>,
     pub message: Option<String>,
+    pub data: Option<D>,
+    pub meta: Option<M>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -55,22 +56,24 @@ impl<T> IntoIterator for PaginatedList<T> {
     }
 }
 
-impl<T: Clone> Default for StateFrame<T> {
+impl<T: Clone, Q: Clone> Default for StateFrame<T, Q> {
     fn default() -> Self {
         Self {
             status: StateFrameStatus::Init,
             data: None,
             message: None,
+            meta: None,
         }
     }
 }
 
-impl<T: Clone> StateFrame<T> {
+impl<T: Clone, Q: Clone> StateFrame<T, Q> {
     pub fn new() -> Self {
         Self {
             status: StateFrameStatus::Init,
             data: None,
             message: None,
+            meta: None,
         }
     }
 
@@ -79,6 +82,7 @@ impl<T: Clone> StateFrame<T> {
             status: StateFrameStatus::Loading,
             data: None,
             message,
+            meta: None,
         }
     }
 
@@ -87,6 +91,7 @@ impl<T: Clone> StateFrame<T> {
             status: StateFrameStatus::Success,
             data,
             message: None,
+            meta: None,
         }
     }
 
@@ -120,6 +125,10 @@ impl<T: Clone> StateFrame<T> {
     pub fn set_failed(&mut self, message: Option<String>) {
         self.status = StateFrameStatus::Failed;
         self.message = message;
+    }
+
+    pub fn set_meta(&mut self, meta: Option<Q>) {
+        self.meta = meta;
     }
 
     pub async fn set_api_error(&mut self, response: &Response) {

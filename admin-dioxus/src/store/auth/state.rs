@@ -8,10 +8,10 @@ use crate::store::StateFrame;
 pub struct AuthState {
     pub user: GlobalSignal<Option<User>>,
 
-    pub login_status: GlobalSignal<StateFrame<bool>>,
-    pub logout_status: GlobalSignal<StateFrame<bool>>,
+    pub login_status: GlobalSignal<StateFrame>,
+    pub logout_status: GlobalSignal<StateFrame>,
 
-    pub init_status: GlobalSignal<StateFrame<bool>>,
+    pub init_status: GlobalSignal<StateFrame>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

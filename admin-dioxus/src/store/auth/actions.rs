@@ -36,9 +36,9 @@ impl AuthState {
     pub fn new() -> Self {
         AuthState {
             user: GlobalSignal::new(|| None),
-            login_status: GlobalSignal::new(|| StateFrame::<bool>::new()),
-            logout_status: GlobalSignal::new(|| StateFrame::<bool>::new()),
-            init_status: GlobalSignal::new(|| StateFrame::<bool>::new()),
+            login_status: GlobalSignal::new(|| StateFrame::new()),
+            logout_status: GlobalSignal::new(|| StateFrame::new()),
+            init_status: GlobalSignal::new(|| StateFrame::new()),
         }
     }
 
@@ -171,8 +171,8 @@ impl AuthState {
 
     pub fn reset(&self) {
         *self.user.write() = None;
-        *self.login_status.write() = StateFrame::<bool>::new();
-        *self.logout_status.write() = StateFrame::<bool>::new();
-        *self.init_status.write() = StateFrame::<bool>::new();
+        *self.login_status.write() = StateFrame::new();
+        *self.logout_status.write() = StateFrame::new();
+        *self.init_status.write() = StateFrame::new();
     }
 }
