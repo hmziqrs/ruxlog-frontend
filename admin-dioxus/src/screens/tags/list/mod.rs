@@ -34,8 +34,8 @@ pub fn TagsListScreen() -> Element {
 
     // Fetch tags whenever filters or reload_tick changes
     use_effect(move || {
-        let q = filters.read().clone();
-        let _tick = reload_tick.read().clone();
+        let q = filters();
+        let _tick = reload_tick();
         let tags_state = tags_state;
         spawn(async move {
             tags_state.list_with_query(q).await;
@@ -73,7 +73,7 @@ pub fn TagsListScreen() -> Element {
                         message: "Failed to load tags. Please try again.".to_string(),
                         retry_label: Some("Retry".to_string()),
                         on_retry: Some(EventHandler::new(move |_| {
-                            let next = { let v = *reload_tick.read(); v + 1 };
+                            let next = *reload_tick.peek() + 1u64;
                             reload_tick.set(next);
                         })),
                     }
@@ -82,17 +82,15 @@ pub fn TagsListScreen() -> Element {
             
             div { class: "container mx-auto px-4 py-8 md:py-12",
                 ListToolbar {
-                    search_value: search_input.read().clone(),
+                    search_value: search_input(),
                     search_placeholder: "Search tags by name, description, or slug".to_string(),
                     disabled: list_loading,
                     on_search_input: move |val: String| {
                         search_input.set(val.clone());
-                        let search_input = search_input.clone();
-                        let mut filters = filters.clone();
                         spawn(async move {
                             sleep(Duration::from_millis(500)).await;
-                            if search_input.read().as_str() == val.as_str() {
-                                let mut q = filters.read().clone();
+                            if search_input.peek().as_str() == val.as_str() {
+                                let mut q = filters.peek().clone();
                                 q.page = Some(1);
                                 q.search = if val.is_empty() { None } else { Some(val) };
                                 filters.set(q);
@@ -105,7 +103,7 @@ pub fn TagsListScreen() -> Element {
                         None => "All".to_string(),
                     },
                     on_status_select: move |value: String| {
-                        let mut q = filters.read().clone();
+                        let mut q = filters.peek().clone();
                         q.page = Some(1);
                         q.is_active = match value.as_str() {
                             "Active" | "active" => Some(true),
@@ -158,7 +156,7 @@ pub fn TagsListScreen() -> Element {
                                                         on_clear: move |_| {
                                                             // Reset UI and filters
                                                             search_input.set(String::new());
-                                                            let mut q = filters.read().clone();
+                                                            let mut q = filters.peek().clone();
                                                             q.page = Some(1);
                                                             q.search = None;
                                                             filters.set(q);
@@ -223,13 +221,13 @@ pub fn TagsListScreen() -> Element {
                                 disabled: list_loading,
                                 on_prev: move |_| {
                                     let new_page = current_page.saturating_sub(1).max(1);
-                                    let mut q = filters.read().clone();
+                                    let mut q = filters.peek().clone();
                                     q.page = Some(new_page);
                                     filters.set(q);
                                 },
                                 on_next: move |_| {
                                     let new_page = current_page + 1;
-                                    let mut q = filters.read().clone();
+                                    let mut q = filters.peek().clone();
                                     q.page = Some(new_page);
                                     filters.set(q);
                                 },
