@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 use crate::router::Route;
 use crate::store::{use_tag, Tag, TagsListQuery};
-use crate::components::{ListEmptyState, ListErrorBanner, ListToolbar, LoadingOverlay, PageHeader, Pagination, use_toast, ToastOptions};
+use crate::components::{ListEmptyState, ListErrorBanner, ListToolbar, LoadingOverlay, PageHeader, Pagination};
 use crate::ui::shadcn::{
     Badge, BadgeVariant, Button, ButtonVariant, Card, DropdownMenu, DropdownMenuContent,
     DropdownMenuItem, DropdownMenuTrigger,
@@ -21,20 +21,23 @@ pub fn TagsListScreen() -> Element {
     let nav = use_navigator();
     let tags_state = use_tag();
     
-    let mut search_query = use_signal(|| String::new());
-    let mut status_filter = use_signal(|| "all".to_string()); // all | active | inactive
-    let mut page = use_signal(|| 1u64);
-    let mut sort_order = use_signal(|| "desc".to_string()); // asc | desc
+    // UI state: one unified filters signal matching backend V1TagQueryParams
+    let mut filters = use_signal(|| TagsListQuery {
+        page: Some(1),
+        search: None,
+        sorts: None,
+        is_active: None,
+    });
+    let mut search_input = use_signal(|| String::new());
+    let mut reload_tick = use_signal(|| 0u64);
 
 
-    // Fetch tags on mount
+    // Fetch tags whenever filters or reload_tick changes
     use_effect(move || {
+        let q = filters.read().clone();
+        let _tick = reload_tick.read().clone();
+        let tags_state = tags_state;
         spawn(async move {
-            let q = TagsListQuery {
-                page: Some(page.read().clone()),
-                search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) },
-                sort_order: Some(sort_order.read().clone()),
-            };
             tags_state.list_with_query(q).await;
         });
     });
@@ -51,79 +54,66 @@ pub fn TagsListScreen() -> Element {
     } else {
         (Vec::<Tag>::new(), 0, 1, 10)
     };
+
     let has_data = !tags.is_empty();
 
 
-    // Client-side filter by status to match the reference behavior
-    let filtered_tags: Vec<Tag> = tags
-        .iter()
-        .cloned()
-        .filter(|t| match status_filter.read().as_str() {
-            "active" => t.is_active,
-            "inactive" => !t.is_active,
-            _ => true,
-        })
-        .collect();
 
     rsx! {
-        // Page wrapper
         div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
-            // Unified autonomous header
             PageHeader {
                 title: "Tags".to_string(),
                 description: "Organize your content with tags. Create, edit, and manage tags.".to_string(),
                 actions: Some(rsx!{ Button { onclick: move |_| { nav.push(Route::TagsAddScreen {}); }, "New Tag" } })
             }
 
-            // Optional error banner
             if list_failed {
                 div { class: "container mx-auto px-4 pt-4",
                     ListErrorBanner {
                         message: "Failed to load tags. Please try again.".to_string(),
                         retry_label: Some("Retry".to_string()),
                         on_retry: Some(EventHandler::new(move |_| {
-                            let q = TagsListQuery {
-                                page: Some(page.read().clone()),
-                                search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) },
-                                sort_order: Some(sort_order.read().clone()),
-                            };
-                            spawn(async move { tags_state.list_with_query(q).await; });
+                            let next = { let v = *reload_tick.read(); v + 1 };
+                            reload_tick.set(next);
                         })),
                     }
                 }
             }
-
             
-
-            // Content
             div { class: "container mx-auto px-4 py-8 md:py-12",
-                // Toolbar
                 ListToolbar {
-                    search_value: search_query.read().clone(),
+                    search_value: search_input.read().clone(),
                     search_placeholder: "Search tags by name, description, or slug".to_string(),
                     disabled: list_loading,
                     on_search_input: move |val: String| {
-                        // Update UI state immediately, but debounce the fetch by 500ms.
-                        search_query.set(val.clone());
-                        page.set(1);
-                        let search_query = search_query.clone();
-                        let sort_order = sort_order.clone();
-                        let tags_state = tags_state;
+                        search_input.set(val.clone());
+                        let search_input = search_input.clone();
+                        let mut filters = filters.clone();
                         spawn(async move {
                             sleep(Duration::from_millis(500)).await;
-                            // Only fetch if the input hasn't changed during the debounce window
-                            if search_query.read().as_str() == val.as_str() {
-                                let q = TagsListQuery {
-                                    page: Some(1),
-                                    search: if val.is_empty() { None } else { Some(val) },
-                                    sort_order: Some(sort_order.read().clone()),
-                                };
-                                tags_state.list_with_query(q).await;
+                            if search_input.read().as_str() == val.as_str() {
+                                let mut q = filters.read().clone();
+                                q.page = Some(1);
+                                q.search = if val.is_empty() { None } else { Some(val) };
+                                filters.set(q);
                             }
                         });
                     },
-                    status_selected: status_filter.read().clone(),
-                    on_status_select: move |value| { status_filter.set(value); },
+                    status_selected: match filters.read().is_active {
+                        Some(true) => "Active".to_string(),
+                        Some(false) => "Inactive".to_string(),
+                        None => "All".to_string(),
+                    },
+                    on_status_select: move |value: String| {
+                        let mut q = filters.read().clone();
+                        q.page = Some(1);
+                        q.is_active = match value.as_str() {
+                            "Active" | "active" => Some(true),
+                            "Inactive" | "inactive" => Some(false),
+                            _ => None,
+                        };
+                        filters.set(q);
+                    },
                 }
 
                 // Table
@@ -142,7 +132,7 @@ pub fn TagsListScreen() -> Element {
                                     }
                                 }
                                 tbody {
-                                    if filtered_tags.is_empty() {
+                                    if tags.is_empty() {
                                         if list_loading && !has_data {
                                             { (0..6).map(|_| rsx!{
                                                 tr { class: "border-b border-border/60",
@@ -166,10 +156,12 @@ pub fn TagsListScreen() -> Element {
                                                         clear_label: "Clear search".to_string(),
                                                         create_label: "Create your first tag".to_string(),
                                                         on_clear: move |_| {
-                                                            search_query.set(String::new());
-                                                            page.set(1);
-                                                            let q = TagsListQuery { page: Some(1), search: None, sort_order: Some(sort_order.read().clone()) };
-                                                            spawn(async move { tags_state.list_with_query(q).await; });
+                                                            // Reset UI and filters
+                                                            search_input.set(String::new());
+                                                            let mut q = filters.read().clone();
+                                                            q.page = Some(1);
+                                                            q.search = None;
+                                                            filters.set(q);
                                                         },
                                                         on_create: move |_| { nav.push(Route::TagsAddScreen {}); },
                                                     }
@@ -177,7 +169,7 @@ pub fn TagsListScreen() -> Element {
                                             }
                                         }
                                     } else {
-                                        {filtered_tags.iter().map(|tag| {
+                                        {tags.iter().cloned().map(|tag| {
                                             let tag_id = tag.id;
                                             rsx! {
                                             tr { class: "border-b border-border/60 hover:bg-muted/40 transition-colors",
@@ -231,15 +223,15 @@ pub fn TagsListScreen() -> Element {
                                 disabled: list_loading,
                                 on_prev: move |_| {
                                     let new_page = current_page.saturating_sub(1).max(1);
-                                    page.set(new_page);
-                                    let q = TagsListQuery { page: Some(new_page), search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sort_order: Some(sort_order.read().clone()) };
-                                    spawn(async move { tags_state.list_with_query(q).await; });
+                                    let mut q = filters.read().clone();
+                                    q.page = Some(new_page);
+                                    filters.set(q);
                                 },
                                 on_next: move |_| {
                                     let new_page = current_page + 1;
-                                    page.set(new_page);
-                                    let q = TagsListQuery { page: Some(new_page), search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sort_order: Some(sort_order.read().clone()) };
-                                    spawn(async move { tags_state.list_with_query(q).await; });
+                                    let mut q = filters.read().clone();
+                                    q.page = Some(new_page);
+                                    filters.set(q);
                                 },
                             }
                         }

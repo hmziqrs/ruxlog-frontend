@@ -34,10 +34,17 @@ impl Default for Tag {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub struct SortParam {
+    pub field: String,
+    pub order: String, // "asc" | "desc"
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct TagsListQuery {
     pub page: Option<u64>,
     pub search: Option<String>,
-    pub sort_order: Option<String>,
+    pub sorts: Option<Vec<SortParam>>, // [{ field, order }]
+    pub is_active: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
