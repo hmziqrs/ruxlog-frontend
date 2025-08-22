@@ -1886,9 +1886,17 @@
     --tw-duration: 300ms;
     transition-duration: 300ms;
   }
+  .duration-400 {
+    --tw-duration: 400ms;
+    transition-duration: 400ms;
+  }
   .duration-500 {
     --tw-duration: 500ms;
     transition-duration: 500ms;
+  }
+  .ease-in-out {
+    --tw-ease: var(--ease-in-out);
+    transition-timing-function: var(--ease-in-out);
   }
   .ease-out {
     --tw-ease: var(--ease-out);
@@ -1905,6 +1913,12 @@
   .select-none {
     -webkit-user-select: none;
     user-select: none;
+  }
+  .fade-in {
+    --tw-enter-opacity: 0;
+  }
+  .fade-out {
+    --tw-exit-opacity: 0;
   }
   .paused {
     animation-play-state: paused;

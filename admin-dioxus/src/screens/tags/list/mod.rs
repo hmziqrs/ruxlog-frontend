@@ -120,7 +120,7 @@ pub fn TagsListScreen() -> Element {
                                 }
                                 tbody {
                                     if !tags.is_empty() {
-                                        if has_data {
+                                        if !has_data {
                                             { (0..6).map(|_| rsx!{
                                                 tr { class: "border-b border-border/60",
                                                     td { class: "py-3 px-4",
@@ -237,7 +237,7 @@ pub fn TagsListScreen() -> Element {
                             }
                         }
                         // Loading overlay when we have data
-                        if list_loading && has_data { LoadingOverlay { visible: true } }
+                        LoadingOverlay { visible: list_loading && has_data }
                     }
                 }
             }

@@ -1,20 +1,48 @@
-use dioxus::prelude::*;
+use std::time::Duration;
+use dioxus::{logger::tracing, prelude::*};
 
 #[derive(Props, PartialEq, Clone)]
 pub struct LoadingOverlayProps {
     #[props(default = false)]
-    pub visible: bool,
+    pub visible: ReadOnlySignal<bool>,
 }
+const FADE_MS: u64 = 400;
 
-/// Full-cover loading overlay with a small spinner. Place inside a relatively-positioned container.
 #[component]
 pub fn LoadingOverlay(props: LoadingOverlayProps) -> Element {
-    if !props.visible {
+    let mut should_render = use_signal(|| false);
+    let visible_sig = props.visible.clone();
+    let visible_for_render = visible_sig.clone();
+
+    use_effect(move || {
+        let is_visible = visible_sig();
+        // tracing::info!("use effect value check: {} - {}", is_visible, should_render());
+        if is_visible && !should_render() {
+            // tracing::info!("is visible check");
+            should_render.set(true);
+        } else if !is_visible && should_render() {
+            // tracing::info!("Pre spawn");
+            spawn(async move {
+                // tracing::info!("Pre sleep");
+                dioxus_time::sleep(Duration::from_millis(FADE_MS)).await;
+                // tracing::info!("Post spawn delay");
+                should_render.set(false);
+            });
+        }
+    });
+    
+    tracing::info!("LoadingOverlay: {} {}", visible_for_render(), should_render());
+
+
+    if !should_render() {
         return rsx! { Fragment {} };
     }
+    
+
+    let opacity = if visible_for_render() { "opacity-100" } else { "opacity-0" };
 
     rsx! {
-        div { class: "absolute inset-0 z-10 bg-background/50 backdrop-blur-[1px] flex items-center justify-center",
+        div { class: format!("absolute inset-0 z-10 bg-background/50 backdrop-blur-[1px] flex items-center justify-center duration-400 ease-in-out {}", opacity),
             div { class: "h-6 w-6 rounded-full border-2 border-zinc-300 border-t-zinc-700 animate-spin" }
         }
     }
