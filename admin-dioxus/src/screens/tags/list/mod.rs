@@ -21,7 +21,6 @@ pub fn TagsListScreen() -> Element {
     let nav = use_navigator();
     let tags_state = use_tag();
     
-    // UI state: one unified filters signal matching backend V1TagQueryParams
     let mut filters = use_signal(|| TagsListQuery {
         page: Some(1),
         search: None,
@@ -32,7 +31,6 @@ pub fn TagsListScreen() -> Element {
     let mut reload_tick = use_signal(|| 0u64);
 
 
-    // Fetch tags whenever filters or reload_tick changes
     use_effect(move || {
         let q = filters();
         let _tick = reload_tick();
@@ -47,8 +45,6 @@ pub fn TagsListScreen() -> Element {
     let list_success = list.is_success();
     let list_failed = list.is_failed();
 
-
-    // Snapshot data for rendering
     let (tags, total_items, current_page, _per_page) = if let Some(p) = list.data.clone() {
         (p.data.clone(), p.total, p.page, p.per_page)
     } else {
@@ -67,7 +63,7 @@ pub fn TagsListScreen() -> Element {
                 actions: Some(rsx!{ Button { onclick: move |_| { nav.push(Route::TagsAddScreen {}); }, "New Tag" } })
             }
 
-            if list_failed {
+            if !list_failed {
                 div { class: "container mx-auto px-4 pt-4",
                     ListErrorBanner {
                         message: "Failed to load tags. Please try again.".to_string(),
@@ -114,7 +110,6 @@ pub fn TagsListScreen() -> Element {
                     },
                 }
 
-                // Table
                 Card { class: "border-muted shadow-none overflow-hidden mt-4",
                     div { class: "relative",
                         div { class: "overflow-x-auto",
