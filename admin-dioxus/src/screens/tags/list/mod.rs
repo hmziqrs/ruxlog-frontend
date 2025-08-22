@@ -23,7 +23,7 @@ pub fn TagsListScreen() -> Element {
     
     let mut filters = use_signal(|| TagsListQuery::new());
     let mut search_input = use_signal(|| String::new());
-    let mut reload_tick = use_signal(|| 0u64);
+    let mut reload_tick = use_signal(|| 0u32);
 
 
     use_effect(move || {
@@ -37,13 +37,12 @@ pub fn TagsListScreen() -> Element {
 
     let list = tags_state.list.read();
     let list_loading = list.is_loading();
-    let list_success = list.is_success();
     let list_failed = list.is_failed();
 
-    let (tags, total_items, current_page, _per_page) = if let Some(p) = list.data.clone() {
-        (p.data.clone(), p.total, p.page, p.per_page)
+    let (tags, current_page) = if let Some(p) = &list.data {
+        (p.data.clone(), p.page)
     } else {
-        (Vec::<Tag>::new(), 0, 1, 10)
+        (Vec::<Tag>::new(), 1)
     };
 
     let has_data = !tags.is_empty();
@@ -64,7 +63,7 @@ pub fn TagsListScreen() -> Element {
                         message: "Failed to load tags. Please try again.".to_string(),
                         retry_label: Some("Retry".to_string()),
                         on_retry: Some(EventHandler::new(move |_| {
-                            let next = *reload_tick.peek() + 1u64;
+                            let next = *reload_tick.peek() + 1u32;
                             reload_tick.set(next);
                         })),
                     }
