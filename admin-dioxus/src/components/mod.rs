@@ -37,3 +37,6 @@ pub use image_upload::*;
 
 mod portal_v2;
 pub use portal_v2::*;
+
+mod data_table_screen;
+pub use data_table_screen::*;
