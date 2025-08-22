@@ -119,17 +119,34 @@ pub fn TagsListScreen() -> Element {
                                     }
                                 }
                                 tbody {
-                                    if tags.is_empty() {
-                                        if list_loading && !has_data {
+                                    if !tags.is_empty() {
+                                        if has_data {
                                             { (0..6).map(|_| rsx!{
                                                 tr { class: "border-b border-border/60",
-                                                    td { colspan: "6", class: "py-3 px-4",
+                                                    td { class: "py-3 px-4",
                                                         div { class: "flex items-center gap-3",
-                                                            div { class: "h-3.5 w-3.5 rounded-full bg-muted animate-pulse" }
-                                                            div { class: "flex-1 space-y-2",
-                                                                div { class: "h-4 w-1/3 rounded bg-muted animate-pulse" }
-                                                                div { class: "h-3 w-2/3 rounded bg-muted animate-pulse" }
+                                                            div { class: "h-3.5 w-3.5 shrink-0 rounded-full bg-muted animate-pulse" }
+                                                            div { class: "min-w-0 space-y-2",
+                                                                div { class: "h-4 w-24 rounded bg-muted animate-pulse" }
+                                                                div { class: "mt-1 h-3 w-20 rounded bg-muted animate-pulse md:hidden" }
                                                             }
+                                                        }
+                                                    }
+                                                    td { class: "hidden py-3 px-4 md:table-cell",
+                                                        div { class: "h-4 w-64 rounded bg-muted animate-pulse" }
+                                                    }
+                                                    td { class: "hidden py-3 px-4 md:table-cell",
+                                                        div { class: "h-4 w-24 rounded bg-muted animate-pulse" }
+                                                    }
+                                                    td { class: "hidden py-3 px-4 md:table-cell",
+                                                        div { class: "h-4 w-20 rounded bg-muted animate-pulse" }
+                                                    }
+                                                    td { class: "py-3 px-4",
+                                                        div { class: "h-6 w-20 rounded-full bg-muted animate-pulse" }
+                                                    }
+                                                    td { class: "py-3 px-4",
+                                                        div { class: "flex items-center justify-end",
+                                                            div { class: "h-8 w-8 rounded bg-muted animate-pulse" }
                                                         }
                                                     }
                                                 }

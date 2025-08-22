@@ -694,6 +694,9 @@
   .w-16 {
     width: calc(0.25rem * 16);
   }
+  .w-20 {
+    width: calc(0.25rem * 20);
+  }
   .w-24 {
     width: calc(0.25rem * 24);
   }
@@ -702,6 +705,9 @@
   }
   .w-28 {
     width: calc(0.25rem * 28);
+  }
+  .w-32 {
+    width: calc(0.25rem * 32);
   }
   .w-40 {
     width: calc(0.25rem * 40);

@@ -17,6 +17,16 @@ pub struct Tag {
     pub is_active: bool,
 }
 
+impl Tag {
+    pub fn row_keys(&self) -> Vec<String> {
+        vec!["id", "name", "slug", "created_at", "updated_at", "description", "color", "text_color", "is_active"].into_iter().map(|s| s.to_string()).collect()
+    }
+
+    pub fn row_values(&self) -> Vec<String> {
+        vec![self.id.to_string(), self.name.clone(), self.slug.clone(), self.created_at.to_string(), self.updated_at.to_string(), self.description.clone().unwrap_or("".to_string()), self.color.clone(), self.text_color.clone(), self.is_active.to_string()].into_iter().map(|s| s.to_string()).collect()
+    }
+}
+
 impl Default for Tag {
     fn default() -> Self {
         Self {
