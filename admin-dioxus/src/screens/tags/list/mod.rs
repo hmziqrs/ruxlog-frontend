@@ -57,7 +57,7 @@ pub fn TagsListScreen() -> Element {
                 actions: Some(rsx!{ Button { onclick: move |_| { nav.push(Route::TagsAddScreen {}); }, "New Tag" } })
             }
 
-            if !list_failed {
+            if list_failed {
                 div { class: "container mx-auto px-4 pt-4",
                     ListErrorBanner {
                         message: "Failed to load tags. Please try again.".to_string(),
@@ -119,8 +119,8 @@ pub fn TagsListScreen() -> Element {
                                     }
                                 }
                                 tbody {
-                                    if !tags.is_empty() {
-                                        if !has_data {
+                                    if tags.is_empty() {
+                                        if list_loading && !has_data {
                                             { (0..6).map(|_| rsx!{
                                                 tr { class: "border-b border-border/60",
                                                     td { class: "py-3 px-4",

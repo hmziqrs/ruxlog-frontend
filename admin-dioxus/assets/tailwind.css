@@ -1059,6 +1059,9 @@
   .rounded-\[4px\] {
     border-radius: 4px;
   }
+  .rounded-\[inherit\] {
+    border-radius: inherit;
+  }
   .rounded-full {
     border-radius: calc(infinity * 1px);
   }
