@@ -21,12 +21,7 @@ pub fn TagsListScreen() -> Element {
     let nav = use_navigator();
     let tags_state = use_tag();
     
-    let mut filters = use_signal(|| TagsListQuery {
-        page: Some(1),
-        search: None,
-        sorts: None,
-        is_active: None,
-    });
+    let mut filters = use_signal(|| TagsListQuery::new());
     let mut search_input = use_signal(|| String::new());
     let mut reload_tick = use_signal(|| 0u64);
 
@@ -87,7 +82,7 @@ pub fn TagsListScreen() -> Element {
                             sleep(Duration::from_millis(500)).await;
                             if search_input.peek().as_str() == val.as_str() {
                                 let mut q = filters.peek().clone();
-                                q.page = Some(1);
+                                q.page = 1;
                                 q.search = if val.is_empty() { None } else { Some(val) };
                                 filters.set(q);
                             }
@@ -100,7 +95,7 @@ pub fn TagsListScreen() -> Element {
                     },
                     on_status_select: move |value: String| {
                         let mut q = filters.peek().clone();
-                        q.page = Some(1);
+                        q.page = 1;
                         q.is_active = match value.as_str() {
                             "Active" | "active" => Some(true),
                             "Inactive" | "inactive" => Some(false),
@@ -110,7 +105,7 @@ pub fn TagsListScreen() -> Element {
                     },
                 }
 
-                Card { class: "border-muted shadow-none overflow-hidden mt-4",
+                Card { class: "border-muted shadow-none mt-4",
                     div { class: "relative",
                         div { class: "overflow-x-auto",
                             table { class: "w-full border-collapse",
@@ -151,10 +146,7 @@ pub fn TagsListScreen() -> Element {
                                                         on_clear: move |_| {
                                                             // Reset UI and filters
                                                             search_input.set(String::new());
-                                                            let mut q = filters.peek().clone();
-                                                            q.page = Some(1);
-                                                            q.search = None;
-                                                            filters.set(q);
+                                                            filters.set(TagsListQuery::new());
                                                         },
                                                         on_create: move |_| { nav.push(Route::TagsAddScreen {}); },
                                                     }
@@ -217,13 +209,13 @@ pub fn TagsListScreen() -> Element {
                                 on_prev: move |_| {
                                     let new_page = current_page.saturating_sub(1).max(1);
                                     let mut q = filters.peek().clone();
-                                    q.page = Some(new_page);
+                                    q.page = new_page;
                                     filters.set(q);
                                 },
                                 on_next: move |_| {
                                     let new_page = current_page + 1;
                                     let mut q = filters.peek().clone();
-                                    q.page = Some(new_page);
+                                    q.page = new_page;
                                     filters.set(q);
                                 },
                             }

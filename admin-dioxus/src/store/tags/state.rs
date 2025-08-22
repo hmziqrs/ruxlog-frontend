@@ -41,10 +41,23 @@ pub struct SortParam {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct TagsListQuery {
-    pub page: Option<u64>,
+    pub page: u64,
     pub search: Option<String>,
     pub sorts: Option<Vec<SortParam>>, // [{ field, order }]
     pub is_active: Option<bool>,
+    pub created_at_gt: Option<DateTime<Utc>>,
+    pub created_at_lt: Option<DateTime<Utc>>,
+    pub updated_at_gt: Option<DateTime<Utc>>,
+    pub updated_at_lt: Option<DateTime<Utc>>,
+}
+
+impl TagsListQuery {
+    pub fn new() -> Self {
+        Self {
+            page: 1,
+            ..Default::default()
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
