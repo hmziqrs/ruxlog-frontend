@@ -57,7 +57,6 @@ pub fn TagsListScreen() -> Element {
                 description: "Organize your content with tags".to_string(),
                 actions: Some(rsx!{ 
                     Button { 
-                        class: "bg-transparent hover:bg-muted/50 border border-zinc-200 dark:border-zinc-800",
                         onclick: move |_| { nav.push(Route::TagsAddScreen {}); }, 
                         "New Tag" 
                     } 
