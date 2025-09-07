@@ -7,7 +7,7 @@ use crate::components::{DataTableScreen, HeaderColumn, ListEmptyState, ListToolb
 use crate::hooks::{use_list_screen_with_handlers, ListScreenConfig};
 use crate::ui::shadcn::{
     Badge, BadgeVariant, Button, ButtonVariant, DropdownMenu, DropdownMenuContent,
-    DropdownMenuItem, DropdownMenuTrigger,
+    DropdownMenuItem, DropdownMenuTrigger, Checkbox,
 };
 use crate::utils::dates::format_short_date_dt;
 use hmziq_dioxus_free_icons::{
@@ -22,6 +22,8 @@ pub fn TagsListScreen() -> Element {
     let tags_state = use_tag();
     
     let filters = use_signal(|| TagsListQuery::new());
+    // Local selection state for the current page
+    let selected_ids = use_signal(|| Vec::<i32>::new());
     
     // Use the enhanced hook that creates handlers for us
     let (list_state, handlers) = use_list_screen_with_handlers(
@@ -35,10 +37,13 @@ pub fn TagsListScreen() -> Element {
     // Effect to load data when filters change - using the trait method
     use_effect({
         let list_state = list_state;
+        let mut selected_ids = selected_ids;
         move || {
             let q = filters();
             let _tick = list_state.reload_tick();
             let tags_state = tags_state;
+            // Clear any selection on query changes (page, search, filters, sorts)
+            selected_ids.set(Vec::new());
             spawn(async move {
                 tags_state.fetch_list_with_query(q).await;
             });
@@ -57,8 +62,9 @@ pub fn TagsListScreen() -> Element {
 
     let has_data = !tags.is_empty();
 
-    // Define header columns
+    // Define header columns (prepend a blank cell for the selection checkbox column)
     let headers = vec![
+        HeaderColumn::new("", false, "w-12 py-3 px-4", None),
         HeaderColumn::new("Name", true, "py-3 px-4 text-left font-medium text-sm", Some("name")),
         HeaderColumn::new("Description", false, "hidden py-3 px-4 text-left font-medium text-sm md:table-cell", None),
         HeaderColumn::new("Posts", false, "hidden py-3 px-4 text-left font-medium text-sm md:table-cell", None),
@@ -125,6 +131,8 @@ pub fn TagsListScreen() -> Element {
                     SkeletonTableRows {
                         row_count: 6,
                         cells: vec![
+                            // Selection checkbox placeholder
+                            SkeletonCellConfig::custom(crate::components::UICellType::Default, "w-12 py-3 px-4"),
                             SkeletonCellConfig::avatar(),
                             SkeletonCellConfig::custom(crate::components::UICellType::Default, "hidden py-3 px-4 md:table-cell"),
                             SkeletonCellConfig::default(true),
@@ -135,7 +143,7 @@ pub fn TagsListScreen() -> Element {
                     }
                 } else {
                     tr { class: "border-b border-zinc-200 dark:border-zinc-800",
-                        td { colspan: "6", class: "py-12 px-4 text-center",
+                        td { colspan: "7", class: "py-12 px-4 text-center",
                             ListEmptyState {
                                 title: "No tags found".to_string(),
                                 description: "Try adjusting your search or create a new tag to get started.".to_string(),
@@ -148,10 +156,54 @@ pub fn TagsListScreen() -> Element {
                     }
                 }
             } else {
+                // Bulk actions row when there are selections
+                if !selected_ids.read().is_empty() {
+                    tr { class: "border-b border-zinc-200 dark:border-zinc-800 bg-muted/30",
+                        td { colspan: "7", class: "py-3 px-4",
+                            div { class: "flex items-center justify-between",
+                                span { class: "text-sm text-muted-foreground", "{selected_ids.read().len()} tags selected" }
+                                div { class: "flex items-center gap-2",
+                                    Button { variant: ButtonVariant::Outline, class: "h-8", onclick: {
+                                            let mut selected_ids = selected_ids;
+                                            move |_| { selected_ids.set(Vec::new()); }
+                                        }, "Activate" }
+                                    Button { variant: ButtonVariant::Outline, class: "h-8", onclick: {
+                                            let mut selected_ids = selected_ids;
+                                            move |_| { selected_ids.set(Vec::new()); }
+                                        }, "Deactivate" }
+                                    Button { variant: ButtonVariant::Outline, class: "h-8 text-red-600 border-red-200 dark:border-red-800 dark:hover:bg-red-950/20 hover:bg-red-50", onclick: {
+                                            let mut selected_ids = selected_ids;
+                                            move |_| { selected_ids.set(Vec::new()); }
+                                        }, "Delete" }
+                                }
+                            }
+                        }
+                    }
+                }
                 {tags.iter().cloned().map(|tag| {
                     let tag_id = tag.id;
                     rsx! {
                         tr { class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-muted/30 transition-colors",
+                            // Selection checkbox cell
+                            td { class: "py-3 px-4 w-12",
+                                Checkbox {
+                                    checked: selected_ids.read().contains(&tag_id),
+                                    onchange: Some(EventHandler::new({
+                                        let mut selected_ids = selected_ids;
+                                        move |checked: bool| {
+                                            let mut current = selected_ids.peek().clone();
+                                            if checked {
+                                                if !current.contains(&tag_id) {
+                                                    current.push(tag_id);
+                                                }
+                                            } else {
+                                                current.retain(|&id| id != tag_id);
+                                            }
+                                            selected_ids.set(current);
+                                        }
+                                    })),
+                                }
+                            }
                             td { class: "py-3 px-4",
                                 div { class: "flex items-center gap-3",
                                     div { class: "h-4 w-4 text-muted-foreground", "#" }
