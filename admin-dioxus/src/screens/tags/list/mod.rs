@@ -125,6 +125,37 @@ pub fn TagsListScreen() -> Element {
             }),
             on_prev: move |_| { handlers.handle_prev.call(current_page); },
             on_next: move |_| { handlers.handle_next.call(current_page); },
+            // Render selection actions between toolbar and table (below_toolbar slot)
+            below_toolbar: if !selected_ids.read().is_empty() {
+                Some(rsx! {
+                    div { class: "w-full flex items-center justify-between bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-md px-4 py-3 shadow-sm",
+                        span { class: "text-sm text-muted-foreground", "{selected_ids.read().len()} selected" }
+                        div { class: "flex items-center gap-2",
+                            Button { variant: ButtonVariant::Outline, class: "h-8",
+                                onclick: {
+                                    let mut selected_ids = selected_ids;
+                                    move |_| { selected_ids.set(Vec::new()); }
+                                },
+                                "Activate"
+                            }
+                            Button { variant: ButtonVariant::Outline, class: "h-8",
+                                onclick: {
+                                    let mut selected_ids = selected_ids;
+                                    move |_| { selected_ids.set(Vec::new()); }
+                                },
+                                "Deactivate"
+                            }
+                            Button { variant: ButtonVariant::Outline, class: "h-8 text-red-600 border-red-200 dark:border-red-800 dark:hover:bg-red-950/20 hover:bg-red-50",
+                                onclick: {
+                                    let mut selected_ids = selected_ids;
+                                    move |_| { selected_ids.set(Vec::new()); }
+                                },
+                                "Delete"
+                            }
+                        }
+                    }
+                })
+            } else { None },
             // Table body content only - headers are now handled by DataTableScreen
             if tags.is_empty() {
                 if list_loading && !has_data {
@@ -156,30 +187,6 @@ pub fn TagsListScreen() -> Element {
                     }
                 }
             } else {
-                // Bulk actions row when there are selections
-                if !selected_ids.read().is_empty() {
-                    tr { class: "border-b border-zinc-200 dark:border-zinc-800 bg-muted/30",
-                        td { colspan: "7", class: "py-3 px-4",
-                            div { class: "flex items-center justify-between",
-                                span { class: "text-sm text-muted-foreground", "{selected_ids.read().len()} tags selected" }
-                                div { class: "flex items-center gap-2",
-                                    Button { variant: ButtonVariant::Outline, class: "h-8", onclick: {
-                                            let mut selected_ids = selected_ids;
-                                            move |_| { selected_ids.set(Vec::new()); }
-                                        }, "Activate" }
-                                    Button { variant: ButtonVariant::Outline, class: "h-8", onclick: {
-                                            let mut selected_ids = selected_ids;
-                                            move |_| { selected_ids.set(Vec::new()); }
-                                        }, "Deactivate" }
-                                    Button { variant: ButtonVariant::Outline, class: "h-8 text-red-600 border-red-200 dark:border-red-800 dark:hover:bg-red-950/20 hover:bg-red-50", onclick: {
-                                            let mut selected_ids = selected_ids;
-                                            move |_| { selected_ids.set(Vec::new()); }
-                                        }, "Delete" }
-                                }
-                            }
-                        }
-                    }
-                }
                 {tags.iter().cloned().map(|tag| {
                     let tag_id = tag.id;
                     rsx! {

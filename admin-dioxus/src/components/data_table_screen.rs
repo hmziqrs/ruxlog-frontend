@@ -67,6 +67,14 @@ pub struct DataTableScreenProps<T: Clone + PartialEq + 'static> {
     pub show_pagination: bool,
     #[props(default = true)]
     pub show_loading_overlay: bool,
+
+    /// Optional center overlay content rendered absolutely centered over the table container
+    #[props(optional)]
+    pub center_overlay: Option<Element>,
+
+    /// Optional content rendered between the toolbar and the table (e.g., bulk actions bar)
+    #[props(optional)]
+    pub below_toolbar: Option<Element>,
 }
 
 #[component]
@@ -103,6 +111,13 @@ pub fn DataTableScreen<T: Clone + PartialEq + 'static>(props: DataTableScreenPro
                 // Toolbar (optional)
                 if let Some(toolbar_props) = props.toolbar.clone() {
                     ListToolbar { ..toolbar_props }
+                }
+
+                // Below-toolbar slot (optional)
+                if let Some(below) = props.below_toolbar.clone() {
+                    div { class: "mt-3",
+                        {below}
+                    }
                 }
 
                 div { class: "bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-lg mt-4",
@@ -153,6 +168,16 @@ pub fn DataTableScreen<T: Clone + PartialEq + 'static>(props: DataTableScreenPro
                             }
                         }
 
+                        // Center overlay (e.g., bulk actions when rows are selected)
+                        if let Some(center_node) = props.center_overlay.clone() {
+                            div { class: "absolute inset-0 z-10 flex items-center justify-center pointer-events-none",
+                                // re-enable pointer events only for the action content
+                                div { class: "pointer-events-auto",
+                                    {center_node}
+                                }
+                            }
+                        }
+                        
                         
                         // Pagination
                         if props.show_pagination {
