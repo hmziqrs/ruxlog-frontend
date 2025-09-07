@@ -2,9 +2,9 @@ use dioxus::prelude::*;
 
 use crate::router::Route;
 use crate::store::{use_tag, Tag, TagsListQuery};
-use crate::components::{ListEmptyState, ListErrorBanner, ListToolbar, LoadingOverlay, PageHeader, Pagination, SkeletonTableRows, SkeletonCellConfig};
+use crate::components::{DataTableScreen, ListEmptyState, ListToolbarProps, PageHeaderProps, ListErrorBannerProps, SkeletonTableRows, SkeletonCellConfig};
 use crate::ui::shadcn::{
-    Badge, BadgeVariant, Button, ButtonVariant, Card, DropdownMenu, DropdownMenuContent,
+    Badge, BadgeVariant, Button, ButtonVariant, DropdownMenu, DropdownMenuContent,
     DropdownMenuItem, DropdownMenuTrigger,
 };
 use crate::utils::dates::format_short_date_dt;
@@ -50,175 +50,158 @@ pub fn TagsListScreen() -> Element {
 
 
     rsx! {
-        div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
-            PageHeader {
+        DataTableScreen::<Tag> {
+            frame: (tags_state.list)(),
+            header: Some(PageHeaderProps {
                 title: "Tags".to_string(),
                 description: "Organize your content with tags. Create, edit, and manage tags.".to_string(),
-                actions: Some(rsx!{ Button { onclick: move |_| { nav.push(Route::TagsAddScreen {}); }, "New Tag" } })
-            }
-
-            if list_failed {
-                div { class: "container mx-auto px-4 pt-4",
-                    ListErrorBanner {
-                        message: "Failed to load tags. Please try again.".to_string(),
-                        retry_label: Some("Retry".to_string()),
-                        on_retry: Some(EventHandler::new(move |_| {
-                            let next = *reload_tick.peek() + 1u32;
-                            reload_tick.set(next);
-                        })),
+                actions: Some(rsx!{ Button { onclick: move |_| { nav.push(Route::TagsAddScreen {}); }, "New Tag" } }),
+                class: None,
+                embedded: false,
+            }),
+            error_banner: Some(ListErrorBannerProps {
+                message: "Failed to load tags. Please try again.".to_string(),
+                retry_label: Some("Retry".to_string()),
+                on_retry: Some(EventHandler::new(move |_| {
+                    let next = *reload_tick.peek() + 1u32;
+                    reload_tick.set(next);
+                })),
+            }),
+            toolbar: Some(ListToolbarProps {
+                search_value: search_input(),
+                search_placeholder: "Search tags by name, description, or slug".to_string(),
+                disabled: list_loading,
+                on_search_input: EventHandler::new(move |val: String| {
+                    search_input.set(val.clone());
+                    spawn(async move {
+                        sleep(Duration::from_millis(500)).await;
+                        if search_input.peek().as_str() == val.as_str() {
+                            let mut q = filters.peek().clone();
+                            q.page = 1;
+                            q.search = if val.is_empty() { None } else { Some(val) };
+                            filters.set(q);
+                        }
+                    });
+                }),
+                status_selected: match filters.read().is_active {
+                    Some(true) => "Active".to_string(),
+                    Some(false) => "Inactive".to_string(),
+                    None => "All".to_string(),
+                },
+                on_status_select: EventHandler::new(move |value: String| {
+                    let mut q = filters.peek().clone();
+                    q.page = 1;
+                    q.is_active = match value.as_str() {
+                        "Active" | "active" => Some(true),
+                        "Inactive" | "inactive" => Some(false),
+                        _ => None,
+                    };
+                    filters.set(q);
+                }),
+            }),
+            on_prev: move |_| {
+                let new_page = current_page.saturating_sub(1).max(1);
+                let mut q = filters.peek().clone();
+                q.page = new_page;
+                filters.set(q);
+            },
+            on_next: move |_| {
+                let new_page = current_page + 1;
+                let mut q = filters.peek().clone();
+                q.page = new_page;
+                filters.set(q);
+            },
+            div { class: "overflow-x-auto",
+                table { class: "w-full border-collapse",
+                    thead { class: "sticky top-0 z-[1] bg-muted/60 backdrop-blur supports-[backdrop-filter]:bg-muted/40",
+                        tr { class: "border-b border-border/60",
+                            th { class: "py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground", "Name" }
+                            th { class: "hidden py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground md:table-cell", "Description" }
+                            th { class: "hidden py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground md:table-cell", "Slug" }
+                            th { class: "hidden py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground md:table-cell", "Created" }
+                            th { class: "py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground", "Status" }
+                            th { class: "py-3.5 px-4 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground", "Actions" }
+                        }
                     }
-                }
-            }
-            
-            div { class: "container mx-auto px-4 py-8 md:py-12",
-                ListToolbar {
-                    search_value: search_input(),
-                    search_placeholder: "Search tags by name, description, or slug".to_string(),
-                    disabled: list_loading,
-                    on_search_input: move |val: String| {
-                        search_input.set(val.clone());
-                        spawn(async move {
-                            sleep(Duration::from_millis(500)).await;
-                            if search_input.peek().as_str() == val.as_str() {
-                                let mut q = filters.peek().clone();
-                                q.page = 1;
-                                q.search = if val.is_empty() { None } else { Some(val) };
-                                filters.set(q);
-                            }
-                        });
-                    },
-                    status_selected: match filters.read().is_active {
-                        Some(true) => "Active".to_string(),
-                        Some(false) => "Inactive".to_string(),
-                        None => "All".to_string(),
-                    },
-                    on_status_select: move |value: String| {
-                        let mut q = filters.peek().clone();
-                        q.page = 1;
-                        q.is_active = match value.as_str() {
-                            "Active" | "active" => Some(true),
-                            "Inactive" | "inactive" => Some(false),
-                            _ => None,
-                        };
-                        filters.set(q);
-                    },
-                }
-
-                Card { class: "border-muted shadow-none mt-4",
-                    div { class: "relative",
-                        div { class: "overflow-x-auto",
-                            table { class: "w-full border-collapse",
-                                thead { class: "sticky top-0 z-[1] bg-muted/60 backdrop-blur supports-[backdrop-filter]:bg-muted/40",
-                                    tr { class: "border-b border-border/60",
-                                        th { class: "py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground", "Name" }
-                                        th { class: "hidden py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground md:table-cell", "Description" }
-                                        th { class: "hidden py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground md:table-cell", "Slug" }
-                                        th { class: "hidden py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground md:table-cell", "Created" }
-                                        th { class: "py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground", "Status" }
-                                        th { class: "py-3.5 px-4 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground", "Actions" }
+                    tbody {
+                        if tags.is_empty() {
+                            if list_loading && !has_data {
+                                SkeletonTableRows {
+                                    row_count: 6,
+                                    cells: vec![
+                                        SkeletonCellConfig::avatar(),
+                                        SkeletonCellConfig::custom(crate::components::UICellType::Default, "hidden py-3 px-4 md:table-cell"),
+                                        SkeletonCellConfig::default(true),
+                                        SkeletonCellConfig::default(true),
+                                        SkeletonCellConfig::badge(),
+                                        SkeletonCellConfig::action(),
+                                    ],
+                                }
+                            } else {
+                                tr { class: "border-b border-border/60",
+                                    td { colspan: "6", class: "py-16 px-4",
+                                        ListEmptyState {
+                                            title: "No tags found".to_string(),
+                                            description: "Try adjusting your search or create a new tag to get started.".to_string(),
+                                            clear_label: "Clear search".to_string(),
+                                            create_label: "Create your first tag".to_string(),
+                                            on_clear: move |_| {
+                                                // Reset UI and filters
+                                                search_input.set(String::new());
+                                                filters.set(TagsListQuery::new());
+                                            },
+                                            on_create: move |_| { nav.push(Route::TagsAddScreen {}); },
+                                        }
                                     }
                                 }
-                                tbody {
-                                    if !tags.is_empty() {
-                                        if has_data {
-                                            SkeletonTableRows {
-                                                row_count: 6,
-                                                cells: vec![
-                                                    SkeletonCellConfig::avatar(),
-                                                    SkeletonCellConfig::custom(crate::components::UICellType::Default, "hidden py-3 px-4 md:table-cell"),
-                                                    SkeletonCellConfig::default(true),
-                                                    SkeletonCellConfig::default(true),
-                                                    SkeletonCellConfig::badge(),
-                                                    SkeletonCellConfig::action(),
-                                                ],
+                            }
+                        } else {
+                            {tags.iter().cloned().map(|tag| {
+                                let tag_id = tag.id;
+                                rsx! {
+                                tr { class: "border-b border-border/60 hover:bg-muted/40 transition-colors",
+                                    td { class: "py-3 px-4",
+                                        div { class: "flex items-center gap-3",
+                                            div { class: "h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-black/5 dark:ring-white/10", style: format!("background-color: {}", if tag.color.is_empty() { "#94a3b8" } else { &tag.color }) }
+                                            div { class: "min-w-0",
+                                                div { class: "font-medium leading-none", "{tag.name}" }
+                                                div { class: "mt-1 text-xs text-muted-foreground md:hidden", span { class: "truncate", "{tag.slug}" } }
                                             }
+                                        }
+                                    }
+                                    td { class: "hidden max-w-[28rem] py-3 px-4 text-muted-foreground md:table-cell", span { class: "line-clamp-1", {tag.description.clone().unwrap_or("—".to_string())} } }
+                                    td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{tag.slug}" }
+                                    td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{format_short_date_dt(&tag.created_at)}" }
+                                    td { class: "py-3 px-4",
+                                        if tag.is_active {
+                                            Badge { class: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/30", "Active" }
                                         } else {
-                                            tr { class: "border-b border-border/60",
-                                                td { colspan: "6", class: "py-16 px-4",
-                                                    ListEmptyState {
-                                                        title: "No tags found".to_string(),
-                                                        description: "Try adjusting your search or create a new tag to get started.".to_string(),
-                                                        clear_label: "Clear search".to_string(),
-                                                        create_label: "Create your first tag".to_string(),
-                                                        on_clear: move |_| {
-                                                            // Reset UI and filters
-                                                            search_input.set(String::new());
-                                                            filters.set(TagsListQuery::new());
-                                                        },
-                                                        on_create: move |_| { nav.push(Route::TagsAddScreen {}); },
-                                                    }
+                                            Badge { variant: BadgeVariant::Secondary, class: "bg-muted text-foreground/70 hover:bg-muted", "Inactive" }
+                                        }
+                                    }
+                                    td { class: "py-3 px-4",
+                                        div { class: "flex items-center justify-end gap-1.5",
+                                            DropdownMenu {
+                                                DropdownMenuTrigger {
+                                                    Button { variant: ButtonVariant::Ghost, class: "h-8 w-8", div { class: "w-4 h-4", Icon { icon: LdEllipsis {} } } }
+                                                }
+                                                DropdownMenuContent { class: "w-44 border-border bg-popover",
+                                                    DropdownMenuItem { onclick: move |_| { nav.push(Route::TagsEditScreen { id: tag_id }); }, "Edit" }
+                                                    DropdownMenuItem { onclick: move |_| { nav.push(Route::PostsListScreen {}); }, "View Posts" }
+                                                    DropdownMenuItem { class: "text-red-600 dark:text-red-400", onclick: move |_| {
+                                                            let id = tag_id;
+                                                            spawn({  async move {
+                                                                tags_state.remove(id).await;
+                                                            }});
+                                                        }, "Delete" }
                                                 }
                                             }
                                         }
-                                    } else {
-                                        {tags.iter().cloned().map(|tag| {
-                                            let tag_id = tag.id;
-                                            rsx! {
-                                            tr { class: "border-b border-border/60 hover:bg-muted/40 transition-colors",
-                                                td { class: "py-3 px-4",
-                                                    div { class: "flex items-center gap-3",
-                                                        div { class: "h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-black/5 dark:ring-white/10", style: format!("background-color: {}", if tag.color.is_empty() { "#94a3b8" } else { &tag.color }) }
-                                                        div { class: "min-w-0",
-                                                            div { class: "font-medium leading-none", "{tag.name}" }
-                                                            div { class: "mt-1 text-xs text-muted-foreground md:hidden", span { class: "truncate", "{tag.slug}" } }
-                                                        }
-                                                    }
-                                                }
-                                                td { class: "hidden max-w-[28rem] py-3 px-4 text-muted-foreground md:table-cell", span { class: "line-clamp-1", {tag.description.clone().unwrap_or("—".to_string())} } }
-                                                td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{tag.slug}" }
-                                                td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{format_short_date_dt(&tag.created_at)}" }
-                                                td { class: "py-3 px-4",
-                                                    if tag.is_active {
-                                                        Badge { class: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/30", "Active" }
-                                                    } else {
-                                                        Badge { variant: BadgeVariant::Secondary, class: "bg-muted text-foreground/70 hover:bg-muted", "Inactive" }
-                                                    }
-                                                }
-                                                td { class: "py-3 px-4",
-                                                    div { class: "flex items-center justify-end gap-1.5",
-                                                        DropdownMenu {
-                                                            DropdownMenuTrigger {
-                                                                Button { variant: ButtonVariant::Ghost, class: "h-8 w-8", div { class: "w-4 h-4", Icon { icon: LdEllipsis {} } } }
-                                                            }
-                                                            DropdownMenuContent { class: "w-44 border-border bg-popover",
-                                                                DropdownMenuItem { onclick: move |_| { nav.push(Route::TagsEditScreen { id: tag_id }); }, "Edit" }
-                                                                DropdownMenuItem { onclick: move |_| { nav.push(Route::PostsListScreen {}); }, "View Posts" }
-                                                                DropdownMenuItem { class: "text-red-600 dark:text-red-400", onclick: move |_| {
-                                                                        let id = tag_id;
-                                                                        spawn({  async move {
-                                                                            tags_state.remove(id).await;
-                                                                        }});
-                                                                    }, "Delete" }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            }
-                                        })}
                                     }
                                 }
-                            }
-                            // Pagination
-                            Pagination::<Tag> {
-                                page: list.data.clone(),
-                                disabled: list_loading,
-                                on_prev: move |_| {
-                                    let new_page = current_page.saturating_sub(1).max(1);
-                                    let mut q = filters.peek().clone();
-                                    q.page = new_page;
-                                    filters.set(q);
-                                },
-                                on_next: move |_| {
-                                    let new_page = current_page + 1;
-                                    let mut q = filters.peek().clone();
-                                    q.page = new_page;
-                                    filters.set(q);
-                                },
-                            }
+                                }
+                            })}
                         }
-                        // Loading overlay when we have data
-                        LoadingOverlay { visible: list_loading && has_data }
                     }
                 }
             }

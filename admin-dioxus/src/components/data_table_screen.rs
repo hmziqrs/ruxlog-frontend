@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::components::{
-    ListErrorBanner, ListErrorBannerProps, LoadingOverlay, PageHeader, PageHeaderProps, Pagination,
+    ListErrorBanner, ListErrorBannerProps, ListToolbar, ListToolbarProps, LoadingOverlay, PageHeader, PageHeaderProps, Pagination,
 };
 use crate::store::{PaginatedList, StateFrame};
 use crate::ui::shadcn::Card;
@@ -18,6 +18,10 @@ pub struct DataTableScreenProps<T: Clone + PartialEq + 'static> {
     /// Error banner configuration (spread as `ListErrorBanner { ..props }`)
     #[props(optional)]
     pub error_banner: Option<ListErrorBannerProps>,
+
+    /// Toolbar configuration (spread as `ListToolbar { ..props }`)
+    #[props(optional)]
+    pub toolbar: Option<ListToolbarProps>,
 
     /// Custom table markup (thead/tbody/etc.) to render inside the card
     pub children: Element,
@@ -64,6 +68,11 @@ pub fn DataTableScreen<T: Clone + PartialEq + 'static>(props: DataTableScreenPro
 
             // Main content
             div { class: "container mx-auto px-4 py-8 md:py-12",
+                // Toolbar (optional)
+                if let Some(toolbar_props) = props.toolbar.clone() {
+                    ListToolbar { ..toolbar_props }
+                }
+
                 Card { class: "border-muted shadow-none mt-4",
                     div { class: "relative",
                         // Caller-provided table markup (thead/tbody/etc.)
