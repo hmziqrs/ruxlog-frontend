@@ -115,12 +115,12 @@ pub fn DataTableScreen<T: Clone + PartialEq + 'static>(props: DataTableScreenPro
 
                 // Below-toolbar slot (optional)
                 if let Some(below) = props.below_toolbar.clone() {
-                    div { class: "mt-3",
+                    div { class: "mt-6 md:mt-8 mb-6 md:mb-8",
                         {below}
                     }
                 }
 
-                div { class: "bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-lg mt-4",
+                div { class: "bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-lg mt-10 md:mt-12",
                     div { class: "relative",
                         table { class: "w-full",
                             // Auto-generated thead if headers provided

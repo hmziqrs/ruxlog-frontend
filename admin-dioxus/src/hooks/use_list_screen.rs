@@ -131,6 +131,8 @@ where
     Q: ListQuery + 'static,
 {
     let list_state = use_list_screen(config);
+    // Debounce generation counter to ensure only the latest input applies
+    let debounce_gen = use_signal(|| 0u64);
 
     // Create handlers
     let handle_sort = {
@@ -147,9 +149,23 @@ where
     
     let handle_search = {
         let mut filters = filters;
+        let list_state_local = list_state;
+        let mut debounce_gen = debounce_gen;
         move |val: String| {
+            // Keep the controlled input in sync immediately
+            list_state_local.set_search(val.clone());
+
+            // Advance debounce generation and capture this tick
+            let this_tick = debounce_gen() + 1;
+            debounce_gen.set(this_tick);
+
+            // Only the latest tick should win after the delay
             spawn(async move {
                 sleep(Duration::from_millis(500)).await;
+                // If another keystroke happened since we scheduled this, abort
+                if debounce_gen() != this_tick {
+                    return;
+                }
                 let mut q = filters.peek().clone();
                 q.set_page(1);
                 q.set_search(if val.is_empty() { None } else { Some(val) });

@@ -40,7 +40,9 @@ pub fn ListToolbar(props: ListToolbarProps) -> Element {
                             class: "pl-8 w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 text-sm",
                             placeholder: "{props.search_placeholder}",
                             value: props.search_value.clone(),
-                            disabled: props.disabled,
+                            // Do not disable the input to avoid losing focus when loading toggles
+                            // Keep it interactive and rely on debounced handlers upstream
+                            // aria-disabled: props.disabled, // Uncomment if you want semantic disabled without functional loss
                             oninput: move |e| {
                                 props.on_search_input.call(e.value());
                             },
