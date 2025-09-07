@@ -1,20 +1,21 @@
 use dioxus::prelude::*;
 
 use crate::router::Route;
-use crate::store::{use_tag, Tag, TagsListQuery, SortParam};
+use crate::store::{use_tag, Tag, TagsListQuery};
 use crate::components::{DataTableScreen, HeaderColumn, ListEmptyState, ListToolbarProps, PageHeaderProps, ListErrorBannerProps, SkeletonTableRows, SkeletonCellConfig};
+use crate::hooks::{use_list_screen, ListScreenConfig};
+use std::time::Duration;
+use gloo_timers::future::sleep;
 use crate::ui::shadcn::{
     Badge, BadgeVariant, Button, ButtonVariant, DropdownMenu, DropdownMenuContent,
     DropdownMenuItem, DropdownMenuTrigger,
 };
 use crate::utils::dates::format_short_date_dt;
 use hmziq_dioxus_free_icons::{
-    icons::ld_icons::{LdEllipsis, LdArrowUpDown},
+    icons::ld_icons::{LdEllipsis},
     Icon,
 };
 
-use std::time::Duration;
-use gloo_timers::future::sleep;
 
 #[component]
 pub fn TagsListScreen() -> Element {
@@ -22,19 +23,24 @@ pub fn TagsListScreen() -> Element {
     let tags_state = use_tag();
     
     let mut filters = use_signal(|| TagsListQuery::new());
-    let mut search_input = use_signal(|| String::new());
-    let mut reload_tick = use_signal(|| 0u32);
-    let mut sort_field = use_signal(|| "name".to_string());
-    let mut sort_order = use_signal(|| "asc".to_string());
+    
+    // Use the list screen hook for common state management
+    let list_state = use_list_screen(Some(ListScreenConfig {
+        default_sort_field: "name".to_string(),
+        default_sort_order: "asc".to_string(),
+    }));
 
 
-    use_effect(move || {
-        let q = filters();
-        let _tick = reload_tick();
-        let tags_state = tags_state;
-        spawn(async move {
-            tags_state.list_with_query(q).await;
-        });
+    use_effect({
+        let list_state = list_state;
+        move || {
+            let q = filters();
+            let _tick = list_state.reload_tick();
+            let tags_state = tags_state;
+            spawn(async move {
+                tags_state.list_with_query(q).await;
+            });
+        }
     });
 
     let list = tags_state.list.read();
@@ -59,28 +65,38 @@ pub fn TagsListScreen() -> Element {
         HeaderColumn::new("", false, "w-12 py-3 px-4", None),
     ];
 
-    let mut handle_sort = move |field: String| {
-        let current_field = sort_field();
-        let current_order = sort_order();
-        
-        if current_field == field {
-            // Toggle order for same field
-            let new_order = if current_order == "asc" { "desc" } else { "asc" };
-            sort_order.set(new_order.to_string());
-        } else {
-            // New field, default to asc
-            sort_field.set(field.clone());
-            sort_order.set("asc".to_string());
+    // Create handlers using the hook
+    let handle_sort = {
+        let list_state = list_state.clone();
+        let mut filters = filters;
+        move |field: String| {
+            list_state.handle_sort(field);
+            // Update filters with new sort
+            let mut q = filters.peek().clone();
+            q.page = 1; // Reset to first page when sorting
+            q.sorts = Some(list_state.get_sort_params());
+            filters.set(q);
         }
-        
-        // Update filters with new sort
-        let mut q = filters.peek().clone();
-        q.page = 1; // Reset to first page when sorting
-        q.sorts = Some(vec![SortParam {
-            field: sort_field(),
-            order: sort_order(),
-        }]);
-        filters.set(q);
+    };
+    
+    let handle_search = {
+        let mut filters = filters;
+        move |val: String| {
+            spawn(async move {
+                sleep(Duration::from_millis(500)).await;
+                let mut q = filters.peek().clone();
+                q.page = 1;
+                q.search = if val.is_empty() { None } else { Some(val) };
+                filters.set(q);
+            });
+        }
+    };
+    
+    let handle_retry = {
+        let list_state = list_state.clone();
+        move || {
+            list_state.trigger_reload();
+        }
     };
 
     rsx! {
@@ -99,32 +115,18 @@ pub fn TagsListScreen() -> Element {
                 embedded: false,
             }),
             headers: Some(headers),
-            current_sort_field: Some(sort_field()),
+            current_sort_field: Some(list_state.sort_field()),
             on_sort: Some(EventHandler::new(handle_sort)),
             error_banner: Some(ListErrorBannerProps {
                 message: "Failed to load tags. Please try again.".to_string(),
                 retry_label: Some("Retry".to_string()),
-                on_retry: Some(EventHandler::new(move |_| {
-                    let next = *reload_tick.peek() + 1u32;
-                    reload_tick.set(next);
-                })),
+                on_retry: Some(EventHandler::new(move |_| handle_retry())),
             }),
             toolbar: Some(ListToolbarProps {
-                search_value: search_input(),
+                search_value: list_state.search_input(),
                 search_placeholder: "Search tags by name, description, or slug".to_string(),
                 disabled: list_loading,
-                on_search_input: EventHandler::new(move |val: String| {
-                    search_input.set(val.clone());
-                    spawn(async move {
-                        sleep(Duration::from_millis(500)).await;
-                        if search_input.peek().as_str() == val.as_str() {
-                            let mut q = filters.peek().clone();
-                            q.page = 1;
-                            q.search = if val.is_empty() { None } else { Some(val) };
-                            filters.set(q);
-                        }
-                    });
-                }),
+                on_search_input: EventHandler::new(handle_search),
                 status_selected: match filters.read().is_active {
                     Some(true) => "Active".to_string(),
                     Some(false) => "Inactive".to_string(),
@@ -175,10 +177,14 @@ pub fn TagsListScreen() -> Element {
                                 description: "Try adjusting your search or create a new tag to get started.".to_string(),
                                 clear_label: "Clear search".to_string(),
                                 create_label: "Create your first tag".to_string(),
-                                on_clear: move |_| {
-                                    // Reset UI and filters
-                                    search_input.set(String::new());
-                                    filters.set(TagsListQuery::new());
+                                on_clear: {
+                                    let list_state = list_state.clone();
+                                    let mut filters = filters;
+                                    move |_| {
+                                        // Reset UI and filters
+                                        list_state.clear_search();
+                                        filters.set(TagsListQuery::new());
+                                    }
                                 },
                                 on_create: move |_| { nav.push(Route::TagsAddScreen {}); },
                             }
