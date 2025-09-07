@@ -4,7 +4,6 @@ use crate::components::{
     ListErrorBanner, ListErrorBannerProps, ListToolbar, ListToolbarProps, LoadingOverlay, PageHeader, PageHeaderProps, Pagination,
 };
 use crate::store::{PaginatedList, StateFrame};
-use crate::ui::shadcn::Card;
 
 #[derive(Props, PartialEq, Clone)]
 pub struct DataTableScreenProps<T: Clone + PartialEq + 'static> {
@@ -50,7 +49,7 @@ pub fn DataTableScreen<T: Clone + PartialEq + 'static>(props: DataTableScreenPro
         .unwrap_or(false);
 
     rsx! {
-        div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
+        div { class: "min-h-screen bg-transparent",
             // Page header (optional)
             if let Some(header_props) = props.header.clone() {
                 PageHeader { ..header_props }
@@ -73,7 +72,7 @@ pub fn DataTableScreen<T: Clone + PartialEq + 'static>(props: DataTableScreenPro
                     ListToolbar { ..toolbar_props }
                 }
 
-                Card { class: "border-muted shadow-none mt-4",
+                div { class: "bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-lg mt-4",
                     div { class: "relative",
                         // Caller-provided table markup (thead/tbody/etc.)
                         { props.children }

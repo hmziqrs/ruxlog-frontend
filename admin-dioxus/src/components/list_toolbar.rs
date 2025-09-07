@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::icons::ld_icons::LdSearch;
 use hmziq_dioxus_free_icons::Icon;
 
-use crate::ui::shadcn::{Card, Select, SelectGroup};
+use crate::ui::shadcn::{Select, SelectGroup};
 
 #[derive(Props, PartialEq, Clone)]
 pub struct ListToolbarProps {
@@ -27,17 +27,17 @@ pub struct ListToolbarProps {
 #[component]
 pub fn ListToolbar(props: ListToolbarProps) -> Element {
     rsx! {
-        Card { class: "border-muted shadow-none",
-            div { class: "flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between",
+        div { class: "bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-lg p-4",
+            div { class: "flex flex-col gap-3 md:flex-row md:items-center md:justify-between",
                 // Search
                 div { class: "w-full md:w-96",
                     label { class: "sr-only", r#for: "search", "Search" }
                     div { class: "relative",
-                        div { class: "pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-zinc-500 dark:text-zinc-400", Icon { icon: LdSearch {} } }
+                        div { class: "pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground", Icon { icon: LdSearch {} } }
                         input {
                             id: "search",
                             r#type: "search",
-                            class: "pl-8 w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm",
+                            class: "pl-8 w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 text-sm",
                             placeholder: "{props.search_placeholder}",
                             value: props.search_value.clone(),
                             disabled: props.disabled,

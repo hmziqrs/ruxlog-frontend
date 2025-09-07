@@ -54,8 +54,14 @@ pub fn TagsListScreen() -> Element {
             frame: (tags_state.list)(),
             header: Some(PageHeaderProps {
                 title: "Tags".to_string(),
-                description: "Organize your content with tags. Create, edit, and manage tags.".to_string(),
-                actions: Some(rsx!{ Button { onclick: move |_| { nav.push(Route::TagsAddScreen {}); }, "New Tag" } }),
+                description: "Organize your content with tags".to_string(),
+                actions: Some(rsx!{ 
+                    Button { 
+                        class: "bg-transparent hover:bg-muted/50 border border-zinc-200 dark:border-zinc-800",
+                        onclick: move |_| { nav.push(Route::TagsAddScreen {}); }, 
+                        "New Tag" 
+                    } 
+                }),
                 class: None,
                 embedded: false,
             }),
@@ -111,16 +117,16 @@ pub fn TagsListScreen() -> Element {
                 q.page = new_page;
                 filters.set(q);
             },
-            div { class: "overflow-x-auto",
-                table { class: "w-full border-collapse",
-                    thead { class: "sticky top-0 z-[1] bg-muted/60 backdrop-blur supports-[backdrop-filter]:bg-muted/40",
-                        tr { class: "border-b border-border/60",
-                            th { class: "py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground", "Name" }
-                            th { class: "hidden py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground md:table-cell", "Description" }
-                            th { class: "hidden py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground md:table-cell", "Slug" }
-                            th { class: "hidden py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground md:table-cell", "Created" }
-                            th { class: "py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground", "Status" }
-                            th { class: "py-3.5 px-4 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground", "Actions" }
+            div { class: "bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden",
+                table { class: "w-full border-collapse bg-transparent",
+                    thead { class: "bg-transparent",
+                        tr { class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-transparent",
+                            th { class: "py-3 px-4 text-left font-medium text-sm", "Name" }
+                            th { class: "hidden py-3 px-4 text-left font-medium text-sm md:table-cell", "Description" }
+                            th { class: "hidden py-3 px-4 text-left font-medium text-sm md:table-cell", "Posts" }
+                            th { class: "hidden py-3 px-4 text-left font-medium text-sm md:table-cell", "Created" }
+                            th { class: "py-3 px-4 text-left font-medium text-sm", "Status" }
+                            th { class: "w-12 py-3 px-4", "" }
                         }
                     }
                     tbody {
@@ -138,8 +144,8 @@ pub fn TagsListScreen() -> Element {
                                     ],
                                 }
                             } else {
-                                tr { class: "border-b border-border/60",
-                                    td { colspan: "6", class: "py-16 px-4",
+                                tr { class: "border-b border-zinc-200 dark:border-zinc-800",
+                                    td { colspan: "6", class: "py-12 px-4 text-center",
                                         ListEmptyState {
                                             title: "No tags found".to_string(),
                                             description: "Try adjusting your search or create a new tag to get started.".to_string(),
@@ -159,42 +165,40 @@ pub fn TagsListScreen() -> Element {
                             {tags.iter().cloned().map(|tag| {
                                 let tag_id = tag.id;
                                 rsx! {
-                                tr { class: "border-b border-border/60 hover:bg-muted/40 transition-colors",
+                                tr { class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-muted/30 transition-colors",
                                     td { class: "py-3 px-4",
                                         div { class: "flex items-center gap-3",
-                                            div { class: "h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-black/5 dark:ring-white/10", style: format!("background-color: {}", if tag.color.is_empty() { "#94a3b8" } else { &tag.color }) }
+                                            div { class: "h-4 w-4 text-muted-foreground", "#" }
                                             div { class: "min-w-0",
                                                 div { class: "font-medium leading-none", "{tag.name}" }
-                                                div { class: "mt-1 text-xs text-muted-foreground md:hidden", span { class: "truncate", "{tag.slug}" } }
+                                                div { class: "mt-1 text-xs text-muted-foreground", {tag.description.clone().unwrap_or_default()} }
                                             }
                                         }
                                     }
-                                    td { class: "hidden max-w-[28rem] py-3 px-4 text-muted-foreground md:table-cell", span { class: "line-clamp-1", {tag.description.clone().unwrap_or("—".to_string())} } }
-                                    td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{tag.slug}" }
+                                    td { class: "hidden max-w-xs py-3 px-4 text-muted-foreground md:table-cell", span { class: "truncate", {tag.description.clone().unwrap_or("—".to_string())} } }
+                                    td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "0" }
                                     td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{format_short_date_dt(&tag.created_at)}" }
                                     td { class: "py-3 px-4",
                                         if tag.is_active {
-                                            Badge { class: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/30", "Active" }
+                                            Badge { class: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400", "Active" }
                                         } else {
-                                            Badge { variant: BadgeVariant::Secondary, class: "bg-muted text-foreground/70 hover:bg-muted", "Inactive" }
+                                            Badge { variant: BadgeVariant::Secondary, class: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400", "Inactive" }
                                         }
                                     }
                                     td { class: "py-3 px-4",
-                                        div { class: "flex items-center justify-end gap-1.5",
-                                            DropdownMenu {
-                                                DropdownMenuTrigger {
-                                                    Button { variant: ButtonVariant::Ghost, class: "h-8 w-8", div { class: "w-4 h-4", Icon { icon: LdEllipsis {} } } }
-                                                }
-                                                DropdownMenuContent { class: "w-44 border-border bg-popover",
-                                                    DropdownMenuItem { onclick: move |_| { nav.push(Route::TagsEditScreen { id: tag_id }); }, "Edit" }
-                                                    DropdownMenuItem { onclick: move |_| { nav.push(Route::PostsListScreen {}); }, "View Posts" }
-                                                    DropdownMenuItem { class: "text-red-600 dark:text-red-400", onclick: move |_| {
-                                                            let id = tag_id;
-                                                            spawn({  async move {
-                                                                tags_state.remove(id).await;
-                                                            }});
-                                                        }, "Delete" }
-                                                }
+                                        DropdownMenu {
+                                            DropdownMenuTrigger {
+                                                Button { variant: ButtonVariant::Ghost, class: "h-8 w-8 p-0 bg-transparent hover:bg-muted/50", div { class: "w-4 h-4", Icon { icon: LdEllipsis {} } } }
+                                            }
+                                            DropdownMenuContent { class: "bg-background border-zinc-200 dark:border-zinc-800",
+                                                DropdownMenuItem { onclick: move |_| { nav.push(Route::TagsEditScreen { id: tag_id }); }, "Edit" }
+                                                DropdownMenuItem { onclick: move |_| { nav.push(Route::PostsListScreen {}); }, "View Posts" }
+                                                DropdownMenuItem { class: "text-red-600", onclick: move |_| {
+                                                        let id = tag_id;
+                                                        spawn({  async move {
+                                                            tags_state.remove(id).await;
+                                                        }});
+                                                    }, "Delete" }
                                             }
                                         }
                                     }
