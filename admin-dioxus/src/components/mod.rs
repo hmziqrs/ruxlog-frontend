@@ -40,3 +40,6 @@ pub use portal_v2::*;
 
 mod data_table_screen;
 pub use data_table_screen::*;
+
+mod skeleton_table_rows;
+pub use skeleton_table_rows::*;
