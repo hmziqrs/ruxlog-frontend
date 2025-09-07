@@ -12,6 +12,7 @@ pub mod router;
 pub mod screens;
 pub mod services;
 pub mod store;
+pub mod types;
 pub mod ui;
 pub mod utils;
 

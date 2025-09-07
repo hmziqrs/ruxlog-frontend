@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use dioxus::prelude::*;
 use crate::store::{StateFrame, PaginatedList};
+use crate::types::SortParam;
 use std::collections::HashMap;
 use chrono::{DateTime, Utc};
 
@@ -43,11 +44,6 @@ impl Default for Tag {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-pub struct SortParam {
-    pub field: String,
-    pub order: String, // "asc" | "desc"
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct TagsListQuery {

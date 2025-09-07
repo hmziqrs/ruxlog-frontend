@@ -1,17 +1,17 @@
 use dioxus::prelude::*;
-use crate::store::SortParam;
+use crate::types::{SortParam, Order};
 
 #[derive(Debug, Clone)]
 pub struct ListScreenConfig {
     pub default_sort_field: String,
-    pub default_sort_order: String,
+    pub default_sort_order: Order,
 }
 
 impl Default for ListScreenConfig {
     fn default() -> Self {
         Self {
             default_sort_field: "name".to_string(),
-            default_sort_order: "asc".to_string(),
+            default_sort_order: Order::Asc,
         }
     }
 }
@@ -20,7 +20,7 @@ impl Default for ListScreenConfig {
 pub struct ListScreenState {
     pub search_input: Signal<String>,
     pub sort_field: Signal<String>,
-    pub sort_order: Signal<String>,
+    pub sort_order: Signal<Order>,
     pub reload_tick: Signal<u32>,
 }
 
@@ -43,7 +43,7 @@ impl ListScreenState {
         self.sort_field.read().clone()
     }
 
-    pub fn sort_order(&self) -> String {
+    pub fn sort_order(&self) -> Order {
         self.sort_order.read().clone()
     }
 
@@ -68,12 +68,15 @@ impl ListScreenState {
         
         if current_field == field {
             // Toggle order for same field
-            let new_order = if current_order == "asc" { "desc" } else { "asc" };
-            sort_order.set(new_order.to_string());
+            let new_order = match current_order {
+                Order::Asc => Order::Desc,
+                Order::Desc => Order::Asc,
+            };
+            sort_order.set(new_order);
         } else {
             // New field, default to asc
             sort_field.set(field);
-            sort_order.set("asc".to_string());
+            sort_order.set(Order::Asc);
         }
     }
 

@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 
 use crate::router::Route;
 use crate::store::{use_tag, Tag, TagsListQuery};
+use crate::types::Order;
 use crate::components::{DataTableScreen, HeaderColumn, ListEmptyState, ListToolbarProps, PageHeaderProps, ListErrorBannerProps, SkeletonTableRows, SkeletonCellConfig};
 use crate::hooks::{use_list_screen, ListScreenConfig};
 use std::time::Duration;
@@ -27,7 +28,7 @@ pub fn TagsListScreen() -> Element {
     // Use the list screen hook for common state management
     let list_state = use_list_screen(Some(ListScreenConfig {
         default_sort_field: "name".to_string(),
-        default_sort_order: "asc".to_string(),
+        default_sort_order: Order::Asc,
     }));
 
 
