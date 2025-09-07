@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::router::Route;
-use crate::store::{use_tag, Tag, TagsListQuery};
+use crate::store::{use_tag, Tag, TagsListQuery, ListStore, ListQuery};
 use crate::types::Order;
 use crate::components::{DataTableScreen, HeaderColumn, ListEmptyState, ListToolbarProps, PageHeaderProps, ListErrorBannerProps, SkeletonTableRows, SkeletonCellConfig};
 use crate::hooks::{use_list_screen, ListScreenConfig};
@@ -32,6 +32,7 @@ pub fn TagsListScreen() -> Element {
     }));
 
 
+    // Using the ListStore trait for a more generic approach
     use_effect({
         let list_state = list_state;
         move || {
@@ -39,7 +40,8 @@ pub fn TagsListScreen() -> Element {
             let _tick = list_state.reload_tick();
             let tags_state = tags_state;
             spawn(async move {
-                tags_state.list_with_query(q).await;
+                // Using the trait method instead of direct method call
+                tags_state.fetch_list_with_query(q).await;
             });
         }
     });
@@ -74,8 +76,8 @@ pub fn TagsListScreen() -> Element {
             list_state.handle_sort(field);
             // Update filters with new sort
             let mut q = filters.peek().clone();
-            q.page = 1; // Reset to first page when sorting
-            q.sorts = Some(list_state.get_sort_params());
+            q.set_page(1); // Reset to first page when sorting
+            q.set_sorts(Some(list_state.get_sort_params()));
             filters.set(q);
         }
     };
@@ -86,8 +88,8 @@ pub fn TagsListScreen() -> Element {
             spawn(async move {
                 sleep(Duration::from_millis(500)).await;
                 let mut q = filters.peek().clone();
-                q.page = 1;
-                q.search = if val.is_empty() { None } else { Some(val) };
+                q.set_page(1);
+                q.set_search(if val.is_empty() { None } else { Some(val) });
                 filters.set(q);
             });
         }
@@ -97,6 +99,21 @@ pub fn TagsListScreen() -> Element {
         let list_state = list_state.clone();
         move || {
             list_state.trigger_reload();
+        }
+    };
+
+    let handle_status_select = {
+        let mut filters = filters;
+        move |value: String| {
+            let mut q = filters.peek().clone();
+            q.set_page(1);
+            // Custom logic for tags - this could be extracted to a trait method later
+            q.is_active = match value.as_str() {
+                "Active" | "active" => Some(true),
+                "Inactive" | "inactive" => Some(false),
+                _ => None,
+            };
+            filters.set(q);
         }
     };
 
@@ -147,13 +164,13 @@ pub fn TagsListScreen() -> Element {
             on_prev: move |_| {
                 let new_page = current_page.saturating_sub(1).max(1);
                 let mut q = filters.peek().clone();
-                q.page = new_page;
+                q.set_page(new_page); // Using trait method
                 filters.set(q);
             },
             on_next: move |_| {
                 let new_page = current_page + 1;
                 let mut q = filters.peek().clone();
-                q.page = new_page;
+                q.set_page(new_page); // Using trait method
                 filters.set(q);
             },
             // Table body content only - headers are now handled by DataTableScreen
