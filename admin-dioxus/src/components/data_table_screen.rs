@@ -4,6 +4,27 @@ use crate::components::{
     ListErrorBanner, ListErrorBannerProps, ListToolbar, ListToolbarProps, LoadingOverlay, PageHeader, PageHeaderProps, Pagination,
 };
 use crate::store::{PaginatedList, StateFrame};
+use crate::ui::shadcn::{Button, ButtonVariant};
+use hmziq_dioxus_free_icons::{icons::ld_icons::LdArrowUpDown, Icon};
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct HeaderColumn {
+    pub label: String,
+    pub sortable: bool,
+    pub class: String,
+    pub field: Option<String>,
+}
+
+impl HeaderColumn {
+    pub fn new(label: &str, sortable: bool, class: &str, field: Option<&str>) -> Self {
+        Self {
+            label: label.to_string(),
+            sortable,
+            class: class.to_string(),
+            field: field.map(|s| s.to_string()),
+        }
+    }
+}
 
 #[derive(Props, PartialEq, Clone)]
 pub struct DataTableScreenProps<T: Clone + PartialEq + 'static> {
@@ -22,7 +43,19 @@ pub struct DataTableScreenProps<T: Clone + PartialEq + 'static> {
     #[props(optional)]
     pub toolbar: Option<ListToolbarProps>,
 
-    /// Custom table markup (thead/tbody/etc.) to render inside the card
+    /// Optional header columns configuration for automatic thead generation
+    #[props(optional)]
+    pub headers: Option<Vec<HeaderColumn>>,
+
+    /// Current sort field for header highlighting
+    #[props(optional)]
+    pub current_sort_field: Option<String>,
+
+    /// Callback for header sort click
+    #[props(optional)]
+    pub on_sort: Option<EventHandler<String>>,
+
+    /// Custom table body markup to render inside tbody
     pub children: Element,
 
     /// Pagination handlers
@@ -74,9 +107,53 @@ pub fn DataTableScreen<T: Clone + PartialEq + 'static>(props: DataTableScreenPro
 
                 div { class: "bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-lg mt-4",
                     div { class: "relative",
-                        // Caller-provided table markup (thead/tbody/etc.)
-                        { props.children }
+                        table { class: "w-full",
+                            // Auto-generated thead if headers provided
+                            if let Some(headers) = &props.headers {
+                                thead { class: "bg-transparent",
+                                    tr { class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-transparent",
+                                        {headers.iter().map(|header| {
+                                            let is_current_sort = props.current_sort_field.as_ref()
+                                                .and_then(|field| header.field.as_ref().map(|f| f == field))
+                                                .unwrap_or(false);
+                                            
+                                            rsx! {
+                                                th { class: "{header.class}",
+                                                    if header.sortable {
+                                                        Button {
+                                                            variant: ButtonVariant::Ghost,
+                                                            class: "h-8 bg-transparent hover:bg-muted/50 -ml-3 text-left justify-start font-medium p-2",
+                                                            onclick: {
+                                                                let field = header.field.clone().unwrap_or_default();
+                                                                let on_sort = props.on_sort.clone();
+                                                                move |_| {
+                                                                    if let Some(handler) = &on_sort {
+                                                                        handler.call(field.clone());
+                                                                    }
+                                                                }
+                                                            },
+                                                            "{header.label}"
+                                                            if is_current_sort {
+                                                                div { class: "ml-2 h-4 w-4", Icon { icon: LdArrowUpDown {} } }
+                                                            }
+                                                        }
+                                                    } else {
+                                                        "{header.label}"
+                                                    }
+                                                }
+                                            }
+                                        })}
+                                    }
+                                }
+                            }
+                            
+                            // Caller-provided tbody content
+                            tbody {
+                                { props.children }
+                            }
+                        }
 
+                        
                         // Pagination
                         if props.show_pagination {
                             Pagination::<T> {

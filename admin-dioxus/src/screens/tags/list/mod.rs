@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 use crate::router::Route;
 use crate::store::{use_tag, Tag, TagsListQuery, SortParam};
-use crate::components::{DataTableScreen, ListEmptyState, ListToolbarProps, PageHeaderProps, ListErrorBannerProps, SkeletonTableRows, SkeletonCellConfig};
+use crate::components::{DataTableScreen, HeaderColumn, ListEmptyState, ListToolbarProps, PageHeaderProps, ListErrorBannerProps, SkeletonTableRows, SkeletonCellConfig};
 use crate::ui::shadcn::{
     Badge, BadgeVariant, Button, ButtonVariant, DropdownMenu, DropdownMenuContent,
     DropdownMenuItem, DropdownMenuTrigger,
@@ -51,12 +51,12 @@ pub fn TagsListScreen() -> Element {
 
     // Define header columns
     let headers = vec![
-        ("Name", true, "py-3 px-4 text-left font-medium text-sm", Some("name")),
-        ("Description", false, "hidden py-3 px-4 text-left font-medium text-sm md:table-cell", None),
-        ("Posts", false, "hidden py-3 px-4 text-left font-medium text-sm md:table-cell", None),
-        ("Created", true, "hidden py-3 px-4 text-left font-medium text-sm md:table-cell", Some("created_at")),
-        ("Status", false, "py-3 px-4 text-left font-medium text-sm", None),
-        ("", false, "w-12 py-3 px-4", None),
+        HeaderColumn::new("Name", true, "py-3 px-4 text-left font-medium text-sm", Some("name")),
+        HeaderColumn::new("Description", false, "hidden py-3 px-4 text-left font-medium text-sm md:table-cell", None),
+        HeaderColumn::new("Posts", false, "hidden py-3 px-4 text-left font-medium text-sm md:table-cell", None),
+        HeaderColumn::new("Created", true, "hidden py-3 px-4 text-left font-medium text-sm md:table-cell", Some("created_at")),
+        HeaderColumn::new("Status", false, "py-3 px-4 text-left font-medium text-sm", None),
+        HeaderColumn::new("", false, "w-12 py-3 px-4", None),
     ];
 
     let mut handle_sort = move |field: String| {
@@ -98,6 +98,9 @@ pub fn TagsListScreen() -> Element {
                 class: None,
                 embedded: false,
             }),
+            headers: Some(headers),
+            current_sort_field: Some(sort_field()),
+            on_sort: Some(EventHandler::new(handle_sort)),
             error_banner: Some(ListErrorBannerProps {
                 message: "Failed to load tags. Please try again.".to_string(),
                 retry_label: Some("Retry".to_string()),
@@ -150,116 +153,82 @@ pub fn TagsListScreen() -> Element {
                 q.page = new_page;
                 filters.set(q);
             },
-            div { class: "bg-transparent border-zinc-200 dark:border-zinc-800",
-                table { class: "w-full",
-                    thead { class: "bg-transparent",
-                        tr { class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-transparent",
-                            {headers.iter().map(|(label, sortable, class, field)| {
-                                let current_sort_field = sort_field();
-                                let is_current_sort = field.as_ref().map_or(false, |f| f == &current_sort_field);
-                                
-                                rsx! {
-                                    th { class: "{class}",
-                                        if *sortable {
-                                            Button {
-                                                variant: ButtonVariant::Ghost,
-                                                class: "h-8 bg-transparent hover:bg-muted/50 -ml-3 text-left justify-start font-medium p-2",
-                                                onclick: {
-                                                    let field = field.clone().unwrap_or_default().to_string();
-                                                    move |_| handle_sort(field.clone())
-                                                },
-                                                "{label}"
-                                                if is_current_sort {
-                                                    div { class: "ml-2 h-4 w-4", Icon { icon: LdArrowUpDown {} } }
-                                                }
-                                            }
-                                        } else {
-                                            "{label}"
-                                        }
-                                    }
-                                }
-                            })}
-                        }
+            // Table body content only - headers are now handled by DataTableScreen
+            if tags.is_empty() {
+                if list_loading && !has_data {
+                    SkeletonTableRows {
+                        row_count: 6,
+                        cells: vec![
+                            SkeletonCellConfig::avatar(),
+                            SkeletonCellConfig::custom(crate::components::UICellType::Default, "hidden py-3 px-4 md:table-cell"),
+                            SkeletonCellConfig::default(true),
+                            SkeletonCellConfig::default(true),
+                            SkeletonCellConfig::badge(),
+                            SkeletonCellConfig::action(),
+                        ],
                     }
-                    tbody {
-                        if tags.is_empty() {
-                            if list_loading && !has_data {
-                                SkeletonTableRows {
-                                    row_count: 6,
-                                    cells: vec![
-                                        SkeletonCellConfig::avatar(),
-                                        SkeletonCellConfig::custom(crate::components::UICellType::Default, "hidden py-3 px-4 md:table-cell"),
-                                        SkeletonCellConfig::default(true),
-                                        SkeletonCellConfig::default(true),
-                                        SkeletonCellConfig::badge(),
-                                        SkeletonCellConfig::action(),
-                                    ],
-                                }
-                            } else {
-                                tr { class: "border-b border-zinc-200 dark:border-zinc-800",
-                                    td { colspan: "6", class: "py-12 px-4 text-center",
-                                        ListEmptyState {
-                                            title: "No tags found".to_string(),
-                                            description: "Try adjusting your search or create a new tag to get started.".to_string(),
-                                            clear_label: "Clear search".to_string(),
-                                            create_label: "Create your first tag".to_string(),
-                                            on_clear: move |_| {
-                                                // Reset UI and filters
-                                                search_input.set(String::new());
-                                                filters.set(TagsListQuery::new());
-                                            },
-                                            on_create: move |_| { nav.push(Route::TagsAddScreen {}); },
-                                        }
-                                    }
-                                }
+                } else {
+                    tr { class: "border-b border-zinc-200 dark:border-zinc-800",
+                        td { colspan: "6", class: "py-12 px-4 text-center",
+                            ListEmptyState {
+                                title: "No tags found".to_string(),
+                                description: "Try adjusting your search or create a new tag to get started.".to_string(),
+                                clear_label: "Clear search".to_string(),
+                                create_label: "Create your first tag".to_string(),
+                                on_clear: move |_| {
+                                    // Reset UI and filters
+                                    search_input.set(String::new());
+                                    filters.set(TagsListQuery::new());
+                                },
+                                on_create: move |_| { nav.push(Route::TagsAddScreen {}); },
                             }
-                        } else {
-                            {tags.iter().cloned().map(|tag| {
-                                let tag_id = tag.id;
-                                rsx! {
-                                tr { class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-muted/30 transition-colors",
-                                    td { class: "py-3 px-4",
-                                        div { class: "flex items-center gap-3",
-                                            div { class: "h-4 w-4 text-muted-foreground", "#" }
-                                            div { class: "min-w-0",
-                                                div { class: "font-medium leading-none", "{tag.name}" }
-                                                div { class: "mt-1 text-xs text-muted-foreground", {tag.description.clone().unwrap_or_default()} }
-                                            }
-                                        }
-                                    }
-                                    td { class: "hidden max-w-xs py-3 px-4 text-muted-foreground md:table-cell", span { class: "truncate", {tag.description.clone().unwrap_or("—".to_string())} } }
-                                    td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "0" }
-                                    td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{format_short_date_dt(&tag.created_at)}" }
-                                    td { class: "py-3 px-4",
-                                        if tag.is_active {
-                                            Badge { class: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400", "Active" }
-                                        } else {
-                                            Badge { variant: BadgeVariant::Secondary, class: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400", "Inactive" }
-                                        }
-                                    }
-                                    td { class: "py-3 px-4",
-                                        DropdownMenu {
-                                            DropdownMenuTrigger {
-                                                Button { variant: ButtonVariant::Ghost, class: "h-8 w-8 p-0 bg-transparent hover:bg-muted/50", div { class: "w-4 h-4", Icon { icon: LdEllipsis {} } } }
-                                            }
-                                            DropdownMenuContent { class: "bg-background border-zinc-200 dark:border-zinc-800",
-                                                DropdownMenuItem { onclick: move |_| { nav.push(Route::TagsEditScreen { id: tag_id }); }, "Edit" }
-                                                DropdownMenuItem { onclick: move |_| { nav.push(Route::PostsListScreen {}); }, "View Posts" }
-                                                DropdownMenuItem { class: "text-red-600", onclick: move |_| {
-                                                        let id = tag_id;
-                                                        spawn({  async move {
-                                                            tags_state.remove(id).await;
-                                                        }});
-                                                    }, "Delete" }
-                                            }
-                                        }
-                                    }
-                                }
-                                }
-                            })}
                         }
                     }
                 }
+            } else {
+                {tags.iter().cloned().map(|tag| {
+                    let tag_id = tag.id;
+                    rsx! {
+                        tr { class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-muted/30 transition-colors",
+                            td { class: "py-3 px-4",
+                                div { class: "flex items-center gap-3",
+                                    div { class: "h-4 w-4 text-muted-foreground", "#" }
+                                    div { class: "min-w-0",
+                                        div { class: "font-medium leading-none", "{tag.name}" }
+                                        div { class: "mt-1 text-xs text-muted-foreground", {tag.description.clone().unwrap_or_default()} }
+                                    }
+                                }
+                            }
+                            td { class: "hidden max-w-xs py-3 px-4 text-muted-foreground md:table-cell", span { class: "truncate", {tag.description.clone().unwrap_or("—".to_string())} } }
+                            td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "0" }
+                            td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{format_short_date_dt(&tag.created_at)}" }
+                            td { class: "py-3 px-4",
+                                if tag.is_active {
+                                    Badge { class: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400", "Active" }
+                                } else {
+                                    Badge { variant: BadgeVariant::Secondary, class: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400", "Inactive" }
+                                }
+                            }
+                            td { class: "py-3 px-4",
+                                DropdownMenu {
+                                    DropdownMenuTrigger {
+                                        Button { variant: ButtonVariant::Ghost, class: "h-8 w-8 p-0 bg-transparent hover:bg-muted/50", div { class: "w-4 h-4", Icon { icon: LdEllipsis {} } } }
+                                    }
+                                    DropdownMenuContent { class: "bg-background border-zinc-200 dark:border-zinc-800",
+                                        DropdownMenuItem { onclick: move |_| { nav.push(Route::TagsEditScreen { id: tag_id }); }, "Edit" }
+                                        DropdownMenuItem { onclick: move |_| { nav.push(Route::PostsListScreen {}); }, "View Posts" }
+                                        DropdownMenuItem { class: "text-red-600", onclick: move |_| {
+                                                let id = tag_id;
+                                                spawn({  async move {
+                                                    tags_state.remove(id).await;
+                                                }});
+                                            }, "Delete" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })}
             }
         }
     }
