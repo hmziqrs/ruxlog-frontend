@@ -27,7 +27,7 @@ pub struct ListToolbarProps {
 #[component]
 pub fn ListToolbar(props: ListToolbarProps) -> Element {
     rsx! {
-        div { class: "bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-lg p-4",
+        div { class: "bg-transparent",
             div { class: "flex flex-col gap-3 md:flex-row md:items-center md:justify-between",
                 // Search
                 div { class: "w-full md:w-96",

@@ -116,8 +116,8 @@ pub fn TagsListScreen() -> Element {
                 q.page = new_page;
                 filters.set(q);
             },
-            div { class: "bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden",
-                table { class: "w-full border-collapse bg-transparent",
+            div { class: "bg-transparent border-zinc-200 dark:border-zinc-800",
+                table { class: "w-full",
                     thead { class: "bg-transparent",
                         tr { class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-transparent",
                             th { class: "py-3 px-4 text-left font-medium text-sm", "Name" }
