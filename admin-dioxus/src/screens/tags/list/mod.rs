@@ -4,9 +4,7 @@ use crate::router::Route;
 use crate::store::{use_tag, Tag, TagsListQuery, ListStore, ListQuery};
 use crate::types::Order;
 use crate::components::{DataTableScreen, HeaderColumn, ListEmptyState, ListToolbarProps, PageHeaderProps, ListErrorBannerProps, SkeletonTableRows, SkeletonCellConfig};
-use crate::hooks::{use_list_screen, ListScreenConfig};
-use std::time::Duration;
-use gloo_timers::future::sleep;
+use crate::hooks::{use_list_screen_with_handlers, ListScreenConfig};
 use crate::ui::shadcn::{
     Badge, BadgeVariant, Button, ButtonVariant, DropdownMenu, DropdownMenuContent,
     DropdownMenuItem, DropdownMenuTrigger,
@@ -23,16 +21,18 @@ pub fn TagsListScreen() -> Element {
     let nav = use_navigator();
     let tags_state = use_tag();
     
-    let mut filters = use_signal(|| TagsListQuery::new());
+    let filters = use_signal(|| TagsListQuery::new());
     
-    // Use the list screen hook for common state management
-    let list_state = use_list_screen(Some(ListScreenConfig {
-        default_sort_field: "name".to_string(),
-        default_sort_order: Order::Asc,
-    }));
+    // Use the enhanced hook that creates handlers for us
+    let (list_state, handlers) = use_list_screen_with_handlers(
+        Some(ListScreenConfig {
+            default_sort_field: "name".to_string(),
+            default_sort_order: Order::Asc,
+        }),
+        filters,
+    );
 
-
-    // Using the ListStore trait for a more generic approach
+    // Effect to load data when filters change - using the trait method
     use_effect({
         let list_state = list_state;
         move || {
@@ -40,7 +40,6 @@ pub fn TagsListScreen() -> Element {
             let _tick = list_state.reload_tick();
             let tags_state = tags_state;
             spawn(async move {
-                // Using the trait method instead of direct method call
                 tags_state.fetch_list_with_query(q).await;
             });
         }
@@ -48,7 +47,7 @@ pub fn TagsListScreen() -> Element {
 
     let list = tags_state.list.read();
     let list_loading = list.is_loading();
-    let list_failed = list.is_failed();
+    let _list_failed = list.is_failed();
 
     let (tags, current_page) = if let Some(p) = &list.data {
         (p.data.clone(), p.page)
@@ -68,46 +67,12 @@ pub fn TagsListScreen() -> Element {
         HeaderColumn::new("", false, "w-12 py-3 px-4", None),
     ];
 
-    // Create handlers using the hook
-    let handle_sort = {
-        let list_state = list_state.clone();
-        let mut filters = filters;
-        move |field: String| {
-            list_state.handle_sort(field);
-            // Update filters with new sort
-            let mut q = filters.peek().clone();
-            q.set_page(1); // Reset to first page when sorting
-            q.set_sorts(Some(list_state.get_sort_params()));
-            filters.set(q);
-        }
-    };
-    
-    let handle_search = {
-        let mut filters = filters;
-        move |val: String| {
-            spawn(async move {
-                sleep(Duration::from_millis(500)).await;
-                let mut q = filters.peek().clone();
-                q.set_page(1);
-                q.set_search(if val.is_empty() { None } else { Some(val) });
-                filters.set(q);
-            });
-        }
-    };
-    
-    let handle_retry = {
-        let list_state = list_state.clone();
-        move || {
-            list_state.trigger_reload();
-        }
-    };
-
+    // Custom status filter handler for tags - the rest is handled by the enhanced hook
     let handle_status_select = {
         let mut filters = filters;
         move |value: String| {
             let mut q = filters.peek().clone();
             q.set_page(1);
-            // Custom logic for tags - this could be extracted to a trait method later
             q.is_active = match value.as_str() {
                 "Active" | "active" => Some(true),
                 "Inactive" | "inactive" => Some(false),
@@ -134,45 +99,26 @@ pub fn TagsListScreen() -> Element {
             }),
             headers: Some(headers),
             current_sort_field: Some(list_state.sort_field()),
-            on_sort: Some(EventHandler::new(handle_sort)),
+            on_sort: Some(handlers.handle_sort.clone()),
             error_banner: Some(ListErrorBannerProps {
                 message: "Failed to load tags. Please try again.".to_string(),
                 retry_label: Some("Retry".to_string()),
-                on_retry: Some(EventHandler::new(move |_| handle_retry())),
+                on_retry: Some(EventHandler::new(move |_| handlers.handle_retry.call(()))),
             }),
             toolbar: Some(ListToolbarProps {
                 search_value: list_state.search_input(),
                 search_placeholder: "Search tags by name, description, or slug".to_string(),
                 disabled: list_loading,
-                on_search_input: EventHandler::new(handle_search),
+                on_search_input: handlers.handle_search.clone(),
                 status_selected: match filters.read().is_active {
                     Some(true) => "Active".to_string(),
                     Some(false) => "Inactive".to_string(),
                     None => "All".to_string(),
                 },
-                on_status_select: EventHandler::new(move |value: String| {
-                    let mut q = filters.peek().clone();
-                    q.page = 1;
-                    q.is_active = match value.as_str() {
-                        "Active" | "active" => Some(true),
-                        "Inactive" | "inactive" => Some(false),
-                        _ => None,
-                    };
-                    filters.set(q);
-                }),
+                on_status_select: EventHandler::new(handle_status_select),
             }),
-            on_prev: move |_| {
-                let new_page = current_page.saturating_sub(1).max(1);
-                let mut q = filters.peek().clone();
-                q.set_page(new_page); // Using trait method
-                filters.set(q);
-            },
-            on_next: move |_| {
-                let new_page = current_page + 1;
-                let mut q = filters.peek().clone();
-                q.set_page(new_page); // Using trait method
-                filters.set(q);
-            },
+            on_prev: move |_| { handlers.handle_prev.call(current_page); },
+            on_next: move |_| { handlers.handle_next.call(current_page); },
             // Table body content only - headers are now handled by DataTableScreen
             if tags.is_empty() {
                 if list_loading && !has_data {
@@ -195,15 +141,7 @@ pub fn TagsListScreen() -> Element {
                                 description: "Try adjusting your search or create a new tag to get started.".to_string(),
                                 clear_label: "Clear search".to_string(),
                                 create_label: "Create your first tag".to_string(),
-                                on_clear: {
-                                    let list_state = list_state.clone();
-                                    let mut filters = filters;
-                                    move |_| {
-                                        // Reset UI and filters
-                                        list_state.clear_search();
-                                        filters.set(TagsListQuery::new());
-                                    }
-                                },
+                                on_clear: move |_| { handlers.handle_clear.call(()); },
                                 on_create: move |_| { nav.push(Route::TagsAddScreen {}); },
                             }
                         }
