@@ -29,7 +29,7 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
 
             div { class: "grid grid-cols-1 gap-10 lg:grid-cols-3",
                 div { class: "lg:col-span-2 space-y-8",
-                    div { class: "rounded-xl border border-border bg-card shadow-sm",
+                    div { class: "rounded-xl border border-border/70 bg-transparent shadow-sm",
                         div { class: "px-6 py-6",
                             h2 { class: "text-lg font-semibold", "Tag details" }
                             p { class: "text-sm text-muted-foreground", "Basic information and metadata for your tag." }
@@ -37,7 +37,7 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                         div { class: "px-6 py-6 space-y-6",
                             AppInput { name: "name", form, label: "Name", placeholder: "e.g. Product Updates" }
 
-                            div { class: "h-px bg-border" }
+                            div { class: "h-px bg-border/60" }
 
                             div { class: "space-y-3",
                                 div { class: "flex items-center justify-between",
@@ -56,7 +56,7 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                                 AppInput { form, name: "slug", r#type: "text", placeholder: "product-updates" }
                                 div { class: "flex items-center gap-2",
                                     span { class: "text-xs text-muted-foreground", "URL preview:" }
-                                    code { class: "rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground",
+                                    code { class: "rounded border border-border/60 bg-transparent px-1.5 py-0.5 text-xs text-muted-foreground",
                                         {
                                             let slug = form.read().data.slug.clone();
                                             let safe = if slug.trim().is_empty() { "your-tag-slug".to_string() } else { slug };
@@ -66,12 +66,12 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                                 }
                             }
 
-                            div { class: "h-px bg-border" }
+                            div { class: "h-px bg-border/60" }
 
                             div { class: "space-y-3",
                                 label { class: "block text-sm font-medium text-foreground", "Description" }
                                 textarea {
-                                    class: "w-full h-32 resize-none rounded-md border border-border bg-muted/60 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:border-ring focus:bg-background focus:ring-2 focus:ring-ring/40",
+                                    class: "w-full h-32 resize-none rounded-md border border-border/70 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:border-ring focus:ring-2 focus:ring-ring/40",
                                     placeholder: "Briefly describe what posts belong in this tag.",
                                     value: form.read().data.description.clone(),
                                     oninput: move |event| { form.write().update_field("description", event.value()); }
@@ -80,8 +80,8 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                         }
                     }
 
-                    div { class: "flex items-start gap-3 rounded-lg border border-border bg-muted/60 p-5 backdrop-blur",
-                        div { class: "mt-0.5 h-4 w-4 rounded-full bg-muted" }
+                    div { class: "flex items-start gap-3 rounded-lg border border-border/60 bg-transparent p-5",
+                        div { class: "mt-0.5 h-4 w-4 rounded-full border border-border/40" }
                         div { class: "space-y-1",
                             p { class: "text-sm font-medium text-foreground", "Design tip" }
                             p { class: "text-sm text-muted-foreground", "Use contrasting colors to ensure the tag remains legible in both light and dark themes." }
@@ -90,7 +90,7 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                 }
 
                 div { class: "space-y-8 lg:sticky lg:top-28 h-fit",
-                    div { class: "rounded-xl border border-border bg-card shadow-sm",
+                    div { class: "rounded-xl border border-border/70 bg-transparent shadow-sm",
                         div { class: "px-6 pt-6",
                             h2 { class: "text-lg font-semibold", "Appearance" }
                             p { class: "text-sm text-muted-foreground", "Choose a color and preview the tag." }
@@ -130,7 +130,7 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                                         label { class: "block text-sm font-medium text-foreground", "Preview" }
                                         div { class: "flex items-center gap-3",
                                             TagBadge { tag: preview_tag.clone(), size: TagSize::Md }
-                                            code { class: "text-xs rounded border border-border px-1.5 py-0.5 text-muted-foreground", {color} }
+                                            code { class: "text-xs rounded border border-border/60 bg-transparent px-1.5 py-0.5 text-muted-foreground", {color} }
                                         }
                                         p { class: "text-xs text-muted-foreground", if data.custom_text_color { "Using custom text color." } else { "Text color auto-adjusts for readability." } }
                                     }
@@ -139,7 +139,7 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                         }
                     }
 
-                    div { class: "rounded-xl border border-border bg-card shadow-sm",
+                    div { class: "rounded-xl border border-border/70 bg-transparent shadow-sm",
                         div { class: "px-6 pt-6",
                             h2 { class: "text-lg font-semibold", "Visibility" }
                             p { class: "text-sm text-muted-foreground", "Control whether this tag is available publicly." }

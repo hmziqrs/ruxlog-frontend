@@ -30,7 +30,7 @@ pub fn TagsAddScreen() -> Element {
 
     rsx! {
         // Page wrapper
-        div { class: "min-h-screen bg-gradient-to-b from-background via-muted/40 to-background text-foreground",
+        div { class: "min-h-screen bg-transparent text-foreground",
             // Unified autonomous header
             PageHeader {
                 title: "Create Tag".to_string(),
@@ -39,16 +39,16 @@ pub fn TagsAddScreen() -> Element {
 
             // Content: render reusable form component; submission handled here
             div { class: "container mx-auto px-4 py-10 md:py-12",
-                TagFormContainer {
-                    title: Some("New Tag".to_string()),
-                    submit_label: Some("Create Tag".to_string()),
-                    on_submit: move |val: TagForm| {
-                        let payload = val.to_add_payload();
-                        let tags = tags;
-                        spawn(async move {
-                            tags.add(payload).await;
-                        });
-                    },
+                    TagFormContainer {
+                        title: Some("New Tag".to_string()),
+                        submit_label: Some("Create Tag".to_string()),
+                        on_submit: move |val: TagForm| {
+                            let payload = val.to_add_payload();
+                            let tags = tags;
+                            spawn(async move {
+                                tags.add(payload).await;
+                            });
+                        },
                 }
             }
         }

@@ -55,7 +55,7 @@ where
                 disabled: props.disabled,
                 readonly: props.readonly,
                 r#type: props.r#type.clone(),
-                class: "w-full rounded-md border border-border bg-muted/60 px-4 py-2.5 text-foreground placeholder:text-muted-foreground shadow-sm transition-colors duration-200 focus:border-ring focus:bg-background focus:ring-2 focus:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-60",
+                class: "w-full rounded-md border border-border/70 bg-transparent px-4 py-2.5 text-foreground placeholder:text-muted-foreground shadow-sm transition-colors duration-200 focus:border-ring focus:ring-2 focus:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-60",
                 value: field.value.clone(),
                 placeholder: props.placeholder.clone(),
                 onchange: move |event| {
