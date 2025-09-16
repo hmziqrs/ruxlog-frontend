@@ -5,6 +5,7 @@ use crate::components::{AppInput, ColorPicker, TagBadge, TagSize};
 use crate::hooks::OxForm;
 use crate::router::Route;
 use crate::store::Tag;
+use crate::ui::custom::AppPortal;
 use crate::ui::shadcn::{Button, ButtonSize, ButtonVariant, Checkbox};
 use crate::utils::colors::get_contrast_yiq;
 
@@ -27,6 +28,7 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
     let tag_form_hook = use_tag_form(initial_tag_form);
     let mut form = tag_form_hook.form;
     let mut auto_slug = tag_form_hook.auto_slug;
+    let mut reset_dialog_open = use_signal(|| false);
     let is_form_dirty = form.read().is_dirty();
 
     rsx! {
@@ -165,8 +167,7 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                         Button { class: "flex-1 w-auto", variant: ButtonVariant::Outline,
                             onclick: move |_| {
                                 if form.peek().is_dirty() {
-                                    form.set(OxForm::new(reset_template.clone()));
-                                    auto_slug.set(true);
+                                    reset_dialog_open.set(true);
                                 } else {
                                     nav.push(Route::TagsListScreen {});
                                 }
@@ -179,6 +180,33 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                                 form.write().on_submit(move |val| { submit.call(val); });
                             },
                             {props.submit_label.clone().unwrap_or_else(|| "Save Tag".to_string())}
+                        }
+                    }
+                }
+            }
+        }
+        if reset_dialog_open() {
+            AppPortal {
+                class: "bg-black/20 backdrop-blur-sm flex items-center justify-center px-4",
+                div { class: "w-full max-w-md rounded-lg border border-border/60 bg-background p-6 shadow-lg",
+                    div { class: "space-y-2",
+                        h2 { class: "text-lg font-semibold", "Reset form?" }
+                        p { class: "text-sm text-muted-foreground", "All changes will be cleared and the form will return to its default state." }
+                    }
+                    div { class: "mt-6 flex justify-end gap-2",
+                        Button { variant: ButtonVariant::Outline,
+                            onclick: move |_| {
+                                reset_dialog_open.set(false);
+                            },
+                            "Cancel"
+                        }
+                        Button { variant: ButtonVariant::Destructive,
+                            onclick: move |_| {
+                                form.set(OxForm::new(reset_template.clone()));
+                                auto_slug.set(true);
+                                reset_dialog_open.set(false);
+                            },
+                            "Reset form"
                         }
                     }
                 }
