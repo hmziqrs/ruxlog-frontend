@@ -109,7 +109,7 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
     } else {
         rsx! {
             // Top region with breadcrumb and header
-            div { class: "border-b border-zinc-200 dark:border-zinc-800 bg-gradient-to-b from-zinc-50/60 to-transparent dark:from-zinc-950/40",
+            div { class: "border-b border-border/60 bg-transparent transition-colors duration-300",
                 div { class: container_class,
                     // Breadcrumb
                     Breadcrumb {
