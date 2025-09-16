@@ -1,6 +1,9 @@
+use crate::services::http_client::{HttpError, HttpRequest, HttpResponse};
 use dioxus::prelude::GlobalSignal;
-use gloo_net::http::{Request, Response};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use std::collections::HashMap;
+use std::future::Future;
+use std::hash::Hash;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum StateFrameStatus {
@@ -133,7 +136,7 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
         self.meta = meta;
     }
 
-    pub async fn set_api_error(&mut self, response: &Response) {
+    pub async fn set_api_error(&mut self, response: &HttpResponse) {
         match response.json::<ApiError>().await {
             Ok(api_error) => {
                 self.set_failed(Some(api_error.message));
@@ -155,7 +158,7 @@ pub struct ApiError {
 /// Returns `Some(T)` on success to allow callers to perform cache-sync logic if needed.
 pub async fn list_state_abstraction<T>(
     state: &GlobalSignal<StateFrame<T>>,
-    req: Request,
+    req: HttpRequest,
     parse_label: &str,
 ) -> Option<T>
 where
@@ -185,6 +188,68 @@ where
         Err(e) => {
             state
                 .write()
+                .set_failed(Some(format!("Network error: {}", e)));
+            None
+        }
+    }
+}
+
+/// Shared helper to fetch a single record and hydrate a keyed `StateFrame` map.
+/// Returns `Some(Parsed)` on success so callers can optionally sync additional caches.
+pub async fn view_state_abstraction<K, StoreData, Parsed, F, MapFn>(
+    state: &GlobalSignal<HashMap<K, StateFrame<StoreData>>>,
+    id: K,
+    send_future: F,
+    parse_label: &str,
+    map_to_store: MapFn,
+) -> Option<Parsed>
+where
+    K: Eq + Hash + Copy + 'static,
+    StoreData: Clone + 'static,
+    Parsed: DeserializeOwned + Clone + 'static,
+    F: Future<Output = Result<HttpResponse, HttpError>>,
+    MapFn: Fn(&Parsed) -> StoreData,
+{
+    {
+        let mut map = state.write();
+        map.entry(id)
+            .or_insert_with(StateFrame::new)
+            .set_loading(None);
+    }
+
+    match send_future.await {
+        Ok(response) => {
+            if (200..300).contains(&response.status()) {
+                match response.json::<Parsed>().await {
+                    Ok(parsed) => {
+                        let store_value = map_to_store(&parsed);
+                        let mut map = state.write();
+                        map.entry(id)
+                            .or_insert_with(StateFrame::new)
+                            .set_success(Some(store_value), None);
+                        Some(parsed)
+                    }
+                    Err(e) => {
+                        let mut map = state.write();
+                        map.entry(id)
+                            .or_insert_with(StateFrame::new)
+                            .set_failed(Some(format!("Failed to parse {}: {}", parse_label, e)));
+                        None
+                    }
+                }
+            } else {
+                let mut map = state.write();
+                map.entry(id)
+                    .or_insert_with(StateFrame::new)
+                    .set_api_error(&response)
+                    .await;
+                None
+            }
+        }
+        Err(e) => {
+            let mut map = state.write();
+            map.entry(id)
+                .or_insert_with(StateFrame::new)
                 .set_failed(Some(format!("Network error: {}", e)));
             None
         }

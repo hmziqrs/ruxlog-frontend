@@ -1,6 +1,6 @@
 use super::{Tag, TagsAddPayload, TagsEditPayload, TagsListQuery, TagsState};
 use crate::services::http_client;
-use crate::store::{list_state_abstraction, PaginatedList, StateFrame};
+use crate::store::{list_state_abstraction, view_state_abstraction, PaginatedList, StateFrame};
 use std::collections::HashMap;
 
 impl TagsState {
@@ -148,46 +148,14 @@ impl TagsState {
     }
 
     pub async fn view(&self, id: i32) {
-        let mut view_map = self.view.write();
-        view_map
-            .entry(id)
-            .or_insert_with(StateFrame::new)
-            .set_loading(None);
-        let result = http_client::post(&format!("/tag/v1/view/{}", id), &())
-            .send()
-            .await;
-        match result {
-            Ok(response) => {
-                if (200..300).contains(&response.status()) {
-                    match response.json::<Tag>().await {
-                        Ok(tag) => {
-                            view_map
-                                .entry(id)
-                                .or_insert_with(StateFrame::new)
-                                .set_success(Some(tag.clone()), None);
-                        }
-                        Err(e) => {
-                            view_map
-                                .entry(id)
-                                .or_insert_with(StateFrame::new)
-                                .set_failed(Some(format!("Failed to parse tag: {}", e)));
-                        }
-                    }
-                } else {
-                    view_map
-                        .entry(id)
-                        .or_insert_with(StateFrame::new)
-                        .set_api_error(&response)
-                        .await;
-                }
-            }
-            Err(e) => {
-                view_map
-                    .entry(id)
-                    .or_insert_with(StateFrame::new)
-                    .set_failed(Some(format!("Network error: {}", e)));
-            }
-        }
+        let _ = view_state_abstraction(
+            &self.view,
+            id,
+            http_client::post(&format!("/tag/v1/view/{}", id), &()).send(),
+            "tag",
+            |tag: &Tag| tag.clone(),
+        )
+        .await;
     }
 
     pub fn reset(&self) {

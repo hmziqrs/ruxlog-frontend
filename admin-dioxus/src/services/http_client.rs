@@ -1,7 +1,12 @@
 use crate::env::{APP_API_URL, APP_CSRF_TOKEN};
-use gloo_net::http::{Request, RequestBuilder};
+use gloo_net::http::{Request, RequestBuilder, Response};
 use serde::Serialize;
 use web_sys::RequestCredentials;
+
+pub type HttpRequest = Request;
+pub type HttpRequestBuilder = RequestBuilder;
+pub type HttpResponse = Response;
+pub type HttpError = gloo_net::Error;
 
 pub fn get_base_url() -> String {
     format!("http://{}", APP_API_URL)
