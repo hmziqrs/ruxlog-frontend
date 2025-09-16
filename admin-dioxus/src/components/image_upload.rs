@@ -1,9 +1,12 @@
-use dioxus::prelude::*;
-use hmziq_dioxus_free_icons::{Icon, icons::ld_icons::{LdPlus, LdX}};
 use crate::ui::shadcn::{Button, ButtonSize, ButtonVariant};
-use web_sys::{HtmlInputElement, Url};
-use wasm_bindgen::JsCast;
+use dioxus::prelude::*;
+use hmziq_dioxus_free_icons::{
+    icons::ld_icons::{LdPlus, LdX},
+    Icon,
+};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use wasm_bindgen::JsCast;
+use web_sys::{HtmlInputElement, Url};
 
 static INPUT_ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
@@ -27,10 +30,12 @@ pub struct ImageUploadProps {
 #[component]
 pub fn ImageUpload(props: ImageUploadProps) -> Element {
     let mut last_blob_url = use_signal(|| Option::<String>::None);
-    let input_id = use_signal(|| format!(
-        "image-upload-{}",
-        INPUT_ID_COUNTER.fetch_add(1, Ordering::Relaxed)
-    ));
+    let input_id = use_signal(|| {
+        format!(
+            "image-upload-{}",
+            INPUT_ID_COUNTER.fetch_add(1, Ordering::Relaxed)
+        )
+    });
 
     let value = props.value.clone().unwrap_or_default();
     let has_image = !value.trim().is_empty();

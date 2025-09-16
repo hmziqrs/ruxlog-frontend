@@ -1,11 +1,11 @@
 #![cfg(not(target_arch = "wasm32"))]
+use crate::env::{APP_API_URL, APP_CSRF_TOKEN};
 use once_cell::sync::Lazy;
 use reqwest::{
     header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE},
     Client, Method, Response,
 };
 use serde::Serialize;
-use crate::env::{APP_API_URL, APP_CSRF_TOKEN};
 
 /// Create the base URL, mirroring `src/services/http_client.rs`.
 pub fn get_base_url() -> String {
@@ -57,10 +57,16 @@ pub async fn delete(endpoint: &str) -> reqwest::Result<Response> {
     req(endpoint, Method::DELETE).send().await
 }
 
-pub async fn post_json<T: Serialize + ?Sized>(endpoint: &str, body: &T) -> reqwest::Result<Response> {
+pub async fn post_json<T: Serialize + ?Sized>(
+    endpoint: &str,
+    body: &T,
+) -> reqwest::Result<Response> {
     req(endpoint, Method::POST).json(body).send().await
 }
 
-pub async fn put_json<T: Serialize + ?Sized>(endpoint: &str, body: &T) -> reqwest::Result<Response> {
+pub async fn put_json<T: Serialize + ?Sized>(
+    endpoint: &str,
+    body: &T,
+) -> reqwest::Result<Response> {
     req(endpoint, Method::PUT).json(body).send().await
 }

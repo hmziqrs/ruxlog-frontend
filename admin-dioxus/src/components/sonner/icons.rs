@@ -1,9 +1,16 @@
 //! Sonner Icons — minimal inline SVG set + loader bars
 use dioxus::prelude::*;
-use hmziq_dioxus_free_icons::{Icon, icons::ld_icons::{LdTriangleAlert, LdCheck, LdInfo, LdLoaderCircle, LdX}};
+use hmziq_dioxus_free_icons::{
+    icons::ld_icons::{LdCheck, LdInfo, LdLoaderCircle, LdTriangleAlert, LdX},
+    Icon,
+};
 
 fn class_attr(base: &str, extra: Option<&str>) -> String {
-    if let Some(e) = extra { format!("{} {}", base, e) } else { base.to_string() }
+    if let Some(e) = extra {
+        format!("{} {}", base, e)
+    } else {
+        base.to_string()
+    }
 }
 
 pub fn icon_success(extra_class: Option<&str>) -> Element {

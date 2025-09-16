@@ -1,19 +1,21 @@
 use dioxus::prelude::*;
 
+use crate::components::{
+    ListEmptyState, ListErrorBanner, ListToolbar, LoadingOverlay, PageHeader, Pagination,
+};
 use crate::router::Route;
 use crate::store::{use_category, Category, CategoryListQuery};
-use crate::components::{PageHeader, ListToolbar, Pagination, LoadingOverlay, ListEmptyState, ListErrorBanner};
 use crate::ui::shadcn::{
     Badge, BadgeVariant, Button, ButtonVariant, Card, DropdownMenu, DropdownMenuContent,
     DropdownMenuItem, DropdownMenuTrigger,
 };
 use crate::utils::dates::format_short_date_dt;
+use gloo_timers::future::sleep;
 use hmziq_dioxus_free_icons::{
     icons::ld_icons::{LdEllipsis, LdTag},
     Icon,
 };
 use std::time::Duration;
-use gloo_timers::future::sleep;
 
 #[component]
 pub fn CategoriesListScreen() -> Element {
@@ -29,7 +31,11 @@ pub fn CategoriesListScreen() -> Element {
         spawn(async move {
             let q = CategoryListQuery {
                 page: Some(page.read().clone()),
-                search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) },
+                search: if search_query.read().is_empty() {
+                    None
+                } else {
+                    Some(search_query.read().clone())
+                },
                 sort_order: Some(sort_order.read().clone()),
                 parent_id: None,
             };
@@ -101,9 +107,9 @@ pub fn CategoriesListScreen() -> Element {
                         div { class: "flex items-center justify-between p-4",
                             div { class: "space-y-1",
                                 p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Total" }
-                                if list_loading && !has_data { 
+                                if list_loading && !has_data {
                                     div { class: "h-6 w-16 rounded bg-muted animate-pulse" }
-                                } else { 
+                                } else {
                                     p { class: "text-2xl font-semibold tabular-nums", "{total}" }
                                 }
                             }
@@ -114,9 +120,9 @@ pub fn CategoriesListScreen() -> Element {
                         div { class: "flex items-center justify-between p-4",
                             div { class: "space-y-1",
                                 p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Active" }
-                                if list_loading && !has_data { 
+                                if list_loading && !has_data {
                                     div { class: "h-6 w-16 rounded bg-muted animate-pulse" }
-                                } else { 
+                                } else {
                                     p { class: "text-2xl font-semibold tabular-nums", "{active}" }
                                 }
                             }
@@ -127,9 +133,9 @@ pub fn CategoriesListScreen() -> Element {
                         div { class: "flex items-center justify-between p-4",
                             div { class: "space-y-1",
                                 p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Inactive" }
-                                if list_loading && !has_data { 
+                                if list_loading && !has_data {
                                     div { class: "h-6 w-16 rounded bg-muted animate-pulse" }
-                                } else { 
+                                } else {
                                     p { class: "text-2xl font-semibold tabular-nums", "{inactive}" }
                                 }
                             }

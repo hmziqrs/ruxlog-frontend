@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
-use crate::components::ToastProvider;
 use crate::components::sonner::SonnerToaster;
+use crate::components::ToastProvider;
 
 pub mod components;
 mod config;

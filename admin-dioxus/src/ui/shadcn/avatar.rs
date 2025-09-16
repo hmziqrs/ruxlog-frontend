@@ -34,12 +34,11 @@ pub enum AvatarImageStatus {
     Success,
 }
 
-
 #[component]
 pub fn Avatar(props: AvatarProps) -> Element {
     use_context_provider(|| Signal::new(AvatarImageStatus::Loading));
     let mut class = vec!["relative flex size-8 shrink-0 overflow-hidden rounded-full".to_string()];
-    
+
     if let Some(custom_class) = props.class {
         class.push(custom_class);
     }
@@ -56,11 +55,10 @@ pub fn AvatarImage(props: AvatarImageProps) -> Element {
 
     let is_error = *status.read() == AvatarImageStatus::Error;
     let is_loading = *status.read() == AvatarImageStatus::Loading;
-    
+
     if let Some(custom_class) = props.class {
         class.push(custom_class);
     }
-
 
     if is_error || props.src.is_empty() {
         class.push("hidden".to_string());
@@ -89,8 +87,9 @@ pub fn AvatarImage(props: AvatarImageProps) -> Element {
 
 #[component]
 pub fn AvatarFallback(props: AvatarFallbackProps) -> Element {
-    let mut class = vec!["flex size-full items-center justify-center rounded-full bg-muted".to_string()];
-    
+    let mut class =
+        vec!["flex size-full items-center justify-center rounded-full bg-muted".to_string()];
+
     if let Some(custom_class) = props.class {
         class.push(custom_class);
     }

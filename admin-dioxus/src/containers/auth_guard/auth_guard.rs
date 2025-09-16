@@ -37,10 +37,7 @@ pub fn AuthGuardContainer() -> Element {
             let user = auth_store.user.read().clone();
             let is_open_route = OPEN_ROUTES.iter().any(|r| r == &route_for_logic);
             let is_logged_in = user.is_some();
-            let is_admin = user
-                .as_ref()
-                .map(|u| u.is_admin())
-                .unwrap_or(false);
+            let is_admin = user.as_ref().map(|u| u.is_admin()).unwrap_or(false);
             let nav = nav_for_logic.clone();
             let route = route_for_logic.clone();
 

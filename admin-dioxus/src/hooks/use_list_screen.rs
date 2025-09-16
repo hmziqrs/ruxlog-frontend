@@ -1,8 +1,8 @@
-use dioxus::prelude::*;
-use crate::types::{SortParam, Order};
 use crate::store::ListQuery;
-use std::time::Duration;
+use crate::types::{Order, SortParam};
+use dioxus::prelude::*;
 use gloo_timers::future::sleep;
+use std::time::Duration;
 
 #[derive(Debug, Clone)]
 pub struct ListScreenConfig {
@@ -65,10 +65,10 @@ impl ListScreenState {
     pub fn handle_sort(&self, field: String) {
         let mut sort_field = self.sort_field;
         let mut sort_order = self.sort_order;
-        
+
         let current_field = sort_field();
         let current_order = sort_order();
-        
+
         if current_field == field {
             // Toggle order for same field
             let new_order = match current_order {
@@ -101,7 +101,7 @@ impl ListScreenState {
 }
 
 /// Generic hook for list screen logic
-/// 
+///
 /// Usage:
 /// ```rust
 /// let list_state = use_list_screen(Some(ListScreenConfig::default()));
@@ -146,7 +146,7 @@ where
             filters.set(q);
         }
     };
-    
+
     let handle_search = {
         let mut filters = filters;
         let list_state_local = list_state;
@@ -173,7 +173,7 @@ where
             });
         }
     };
-    
+
     let handle_retry = {
         let list_state = list_state;
         move |_| {

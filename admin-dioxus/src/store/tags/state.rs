@@ -1,9 +1,9 @@
-use serde::{Deserialize, Serialize};
-use dioxus::prelude::*;
-use crate::store::{StateFrame, PaginatedList, ListQuery, ListStore};
+use crate::store::{ListQuery, ListStore, PaginatedList, StateFrame};
 use crate::types::SortParam;
-use std::collections::HashMap;
 use chrono::{DateTime, Utc};
+use dioxus::prelude::*;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Tag {
@@ -34,7 +34,6 @@ impl Default for Tag {
     }
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct TagsListQuery {
     pub page: u64,
@@ -60,27 +59,27 @@ impl ListQuery for TagsListQuery {
     fn new() -> Self {
         Self::new()
     }
-    
+
     fn page(&self) -> u64 {
         self.page
     }
-    
+
     fn set_page(&mut self, page: u64) {
         self.page = page;
     }
-    
+
     fn search(&self) -> Option<String> {
         self.search.clone()
     }
-    
+
     fn set_search(&mut self, search: Option<String>) {
         self.search = search;
     }
-    
+
     fn sorts(&self) -> Option<Vec<SortParam>> {
         self.sorts.clone()
     }
-    
+
     fn set_sorts(&mut self, sorts: Option<Vec<SortParam>>) {
         self.sorts = sorts;
     }
@@ -132,11 +131,11 @@ impl ListStore<Tag, TagsListQuery> for TagsState {
     fn list_frame(&self) -> &GlobalSignal<StateFrame<PaginatedList<Tag>>> {
         &self.list
     }
-    
+
     async fn fetch_list(&self) {
         self.list().await;
     }
-    
+
     async fn fetch_list_with_query(&self, query: TagsListQuery) {
         self.list_with_query(query).await;
     }

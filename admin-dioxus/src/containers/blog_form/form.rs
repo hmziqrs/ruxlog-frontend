@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use dioxus::prelude::*;
+use std::collections::HashMap;
 use validator::{Validate, ValidationError};
 
 use crate::hooks::{OxForm, OxFormModel};
@@ -15,15 +15,15 @@ pub struct BlogForm {
     #[validate(length(min = 1, message = "Slug is required"))]
     #[validate(custom(function = "validate_slug"))]
     pub slug: String,
-    
+
     pub excerpt: String,
-    
+
     pub featured_image_url: String,
-    
+
     pub is_published: bool,
-    
+
     pub category_id: Option<i32>,
-    
+
     pub tag_ids: Vec<i32>,
 }
 
@@ -80,7 +80,10 @@ impl OxFormModel for BlogForm {
         map.insert("content".to_string(), self.content.clone());
         map.insert("slug".to_string(), self.slug.clone());
         map.insert("excerpt".to_string(), self.excerpt.clone());
-        map.insert("featured_image_url".to_string(), self.featured_image_url.clone());
+        map.insert(
+            "featured_image_url".to_string(),
+            self.featured_image_url.clone(),
+        );
         map.insert("is_published".to_string(), self.is_published.to_string());
         if let Some(category_id) = self.category_id {
             map.insert("category_id".to_string(), category_id.to_string());
@@ -113,13 +116,15 @@ pub fn use_blog_form(initial_state: BlogForm) -> UseBlogForm {
     let mut form_signal: Signal<OxForm<BlogForm>> = use_signal(|| OxForm::new(initial_state));
     let auto_slug: Signal<bool> = use_signal(|| true);
     let form_data = form_signal.read();
-    
+
     let title = form_data.data.title.clone();
-    
+
     use_effect(move || {
         if *auto_slug.read() && !title.is_empty() {
             let sanitized_slug = BlogForm::sanitize_slug(&title);
-            form_signal.write().update_field("slug", sanitized_slug.to_string());
+            form_signal
+                .write()
+                .update_field("slug", sanitized_slug.to_string());
         }
     });
 

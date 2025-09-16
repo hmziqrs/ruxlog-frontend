@@ -133,7 +133,6 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
         self.meta = meta;
     }
 
-
     pub async fn set_api_error(&mut self, response: &Response) {
         match response.json::<ApiError>().await {
             Ok(api_error) => {

@@ -6,7 +6,9 @@ use std::collections::HashMap;
 impl CategoryState {
     pub async fn add(&self, payload: CategoryAddPayload) {
         self.add.write().set_loading(None);
-        let result = http_client::post("/category/v1/create", &payload).send().await;
+        let result = http_client::post("/category/v1/create", &payload)
+            .send()
+            .await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
@@ -18,7 +20,9 @@ impl CategoryState {
                             self.list().await;
                         }
                         Err(e) => {
-                            self.add.write().set_failed(Some(format!("Failed to parse category: {}", e)));
+                            self.add
+                                .write()
+                                .set_failed(Some(format!("Failed to parse category: {}", e)));
                         }
                     }
                 } else {
@@ -26,21 +30,31 @@ impl CategoryState {
                 }
             }
             Err(e) => {
-                self.add.write().set_failed(Some(format!("Network error: {}", e)));
+                self.add
+                    .write()
+                    .set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }
 
     pub async fn edit(&self, id: i32, payload: CategoryEditPayload) {
         let mut edit_map = self.edit.write();
-        edit_map.entry(id).or_insert_with(StateFrame::new).set_loading(None);
-        let result = http_client::post(&format!("/category/v1/update/{}", id), &payload).send().await;
+        edit_map
+            .entry(id)
+            .or_insert_with(StateFrame::new)
+            .set_loading(None);
+        let result = http_client::post(&format!("/category/v1/update/{}", id), &payload)
+            .send()
+            .await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
                     match response.json::<Category>().await {
                         Ok(category) => {
-                            edit_map.entry(id).or_insert_with(StateFrame::new).set_success(None, None);
+                            edit_map
+                                .entry(id)
+                                .or_insert_with(StateFrame::new)
+                                .set_success(None, None);
                             // Update paged cache if present
                             let mut lp = self.list_with_query.write();
                             if let Some(mut tmp_list) = lp.data.clone() {
@@ -66,37 +80,62 @@ impl CategoryState {
                                 .set_success(Some(Some(category.clone())), None);
                         }
                         Err(e) => {
-                            edit_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Failed to parse category: {}", e)));
+                            edit_map
+                                .entry(id)
+                                .or_insert_with(StateFrame::new)
+                                .set_failed(Some(format!("Failed to parse category: {}", e)));
                         }
                     }
                 } else {
-                    edit_map.entry(id).or_insert_with(StateFrame::new).set_api_error(&response).await;
+                    edit_map
+                        .entry(id)
+                        .or_insert_with(StateFrame::new)
+                        .set_api_error(&response)
+                        .await;
                 }
             }
             Err(e) => {
-                edit_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Network error: {}", e)));
+                edit_map
+                    .entry(id)
+                    .or_insert_with(StateFrame::new)
+                    .set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }
 
     pub async fn remove(&self, id: i32) {
         let mut remove_map = self.remove.write();
-        remove_map.entry(id).or_insert_with(StateFrame::new).set_loading(None);
-        let result = http_client::post(&format!("/category/v1/delete/{}", id), &()).send().await;
+        remove_map
+            .entry(id)
+            .or_insert_with(StateFrame::new)
+            .set_loading(None);
+        let result = http_client::post(&format!("/category/v1/delete/{}", id), &())
+            .send()
+            .await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
-                    remove_map.entry(id).or_insert_with(StateFrame::new).set_success(None, None);
+                    remove_map
+                        .entry(id)
+                        .or_insert_with(StateFrame::new)
+                        .set_success(None, None);
                     // Release guard before awaiting
                     drop(remove_map);
                     // Refresh simple list for parity with add()
                     self.list().await;
                 } else {
-                    remove_map.entry(id).or_insert_with(StateFrame::new).set_api_error(&response).await;
+                    remove_map
+                        .entry(id)
+                        .or_insert_with(StateFrame::new)
+                        .set_api_error(&response)
+                        .await;
                 }
             }
             Err(e) => {
-                remove_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Network error: {}", e)));
+                remove_map
+                    .entry(id)
+                    .or_insert_with(StateFrame::new)
+                    .set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }
@@ -109,10 +148,14 @@ impl CategoryState {
                 if (200..300).contains(&response.status()) {
                     match response.json::<Vec<Category>>().await {
                         Ok(categories) => {
-                            self.list.write().set_success(Some(categories.clone()), None);
+                            self.list
+                                .write()
+                                .set_success(Some(categories.clone()), None);
                         }
                         Err(e) => {
-                            self.list.write().set_failed(Some(format!("Failed to parse categories: {}", e)));
+                            self.list
+                                .write()
+                                .set_failed(Some(format!("Failed to parse categories: {}", e)));
                         }
                     }
                 } else {
@@ -120,23 +163,31 @@ impl CategoryState {
                 }
             }
             Err(e) => {
-                self.list.write().set_failed(Some(format!("Network error: {}", e)));
+                self.list
+                    .write()
+                    .set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }
 
     pub async fn list_with_query(&self, query: CategoryListQuery) {
         self.list_with_query.write().set_loading(None);
-        let result = http_client::post("/category/v1/list/query", &query).send().await;
+        let result = http_client::post("/category/v1/list/query", &query)
+            .send()
+            .await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
                     match response.json::<PaginatedList<Category>>().await {
                         Ok(categories) => {
-                            self.list_with_query.write().set_success(Some(categories.clone()), None);
+                            self.list_with_query
+                                .write()
+                                .set_success(Some(categories.clone()), None);
                         }
                         Err(e) => {
-                            self.list_with_query.write().set_failed(Some(format!("Failed to parse categories: {}", e)));
+                            self.list_with_query
+                                .write()
+                                .set_failed(Some(format!("Failed to parse categories: {}", e)));
                         }
                     }
                 } else {
@@ -144,32 +195,52 @@ impl CategoryState {
                 }
             }
             Err(e) => {
-                self.list_with_query.write().set_failed(Some(format!("Network error: {}", e)));
+                self.list_with_query
+                    .write()
+                    .set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }
 
     pub async fn view(&self, id: i32) {
         let mut view_map = self.view.write();
-        view_map.entry(id).or_insert_with(StateFrame::new).set_loading(None);
-        let result = http_client::get(&format!("/category/v1/view/{}", id)).send().await;
+        view_map
+            .entry(id)
+            .or_insert_with(StateFrame::new)
+            .set_loading(None);
+        let result = http_client::get(&format!("/category/v1/view/{}", id))
+            .send()
+            .await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
                     match response.json::<Category>().await {
                         Ok(category) => {
-                            view_map.entry(id).or_insert_with(StateFrame::new).set_success(Some(Some(category.clone())), None);
+                            view_map
+                                .entry(id)
+                                .or_insert_with(StateFrame::new)
+                                .set_success(Some(Some(category.clone())), None);
                         }
                         Err(e) => {
-                            view_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Failed to parse category: {}", e)));
+                            view_map
+                                .entry(id)
+                                .or_insert_with(StateFrame::new)
+                                .set_failed(Some(format!("Failed to parse category: {}", e)));
                         }
                     }
                 } else {
-                    view_map.entry(id).or_insert_with(StateFrame::new).set_api_error(&response).await;
+                    view_map
+                        .entry(id)
+                        .or_insert_with(StateFrame::new)
+                        .set_api_error(&response)
+                        .await;
                 }
             }
             Err(e) => {
-                view_map.entry(id).or_insert_with(StateFrame::new).set_failed(Some(format!("Network error: {}", e)));
+                view_map
+                    .entry(id)
+                    .or_insert_with(StateFrame::new)
+                    .set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }

@@ -2,9 +2,11 @@ use dioxus::prelude::*;
 
 use super::form::{use_category_form, CategoryForm};
 use crate::components::{AppInput, ColorPicker, ImageUpload};
-use crate::ui::shadcn::{Button, ButtonSize, ButtonVariant, Checkbox, Skeleton, Combobox, ComboboxItem};
 use crate::store::use_category;
-use hmziq_dioxus_free_icons::{Icon, icons::ld_icons::LdX};
+use crate::ui::shadcn::{
+    Button, ButtonSize, ButtonVariant, Checkbox, Combobox, ComboboxItem, Skeleton,
+};
+use hmziq_dioxus_free_icons::{icons::ld_icons::LdX, Icon};
 
 #[derive(Props, PartialEq, Clone)]
 pub struct CategoryFormContainerProps {

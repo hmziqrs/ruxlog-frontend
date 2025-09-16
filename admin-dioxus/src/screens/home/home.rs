@@ -258,7 +258,12 @@ pub fn HomeScreen() -> Element {
 }
 
 #[component]
-fn StatCard(title: &'static str, value: &'static str, change: &'static str, icon: &'static str) -> Element {
+fn StatCard(
+    title: &'static str,
+    value: &'static str,
+    change: &'static str,
+    icon: &'static str,
+) -> Element {
     rsx! {
         div { class: "bg-zinc-200/40 dark:bg-zinc-900/60 border  p-6 rounded-xl flex flex-col gap-2 shadow",
             div { class: "flex items-center justify-between",
@@ -282,7 +287,13 @@ fn StatCard(title: &'static str, value: &'static str, change: &'static str, icon
 }
 
 #[component]
-fn RecentPostRow(title: &'static str, author: &'static str, status: &'static str, views: &'static str, published: &'static str) -> Element {
+fn RecentPostRow(
+    title: &'static str,
+    author: &'static str,
+    status: &'static str,
+    views: &'static str,
+    published: &'static str,
+) -> Element {
     let (status_bg, status_fg) = match status {
         "Published" => ("bg-green-900/50", "text-green-400"),
         "Draft" => ("bg-zinc-800", "text-zinc-400"),
@@ -309,7 +320,12 @@ fn RecentPostRow(title: &'static str, author: &'static str, status: &'static str
 }
 
 #[component]
-fn RecentCommentRow(user: &'static str, comment: &'static str, post: &'static str, time: &'static str) -> Element {
+fn RecentCommentRow(
+    user: &'static str,
+    comment: &'static str,
+    post: &'static str,
+    time: &'static str,
+) -> Element {
     rsx! {
         div { class: "flex items-start space-x-4 border-b  pb-4 last:border-b-0",
             div { class: "h-10 w-10 rounded-full bg-zinc-400 dark:bg-zinc-700 flex items-center justify-center text-zinc-100 font-bold" }
@@ -328,7 +344,12 @@ fn RecentCommentRow(user: &'static str, comment: &'static str, post: &'static st
 }
 
 #[component]
-fn MiniStatCard(title: &'static str, value: &'static str, icon: &'static str, color: &'static str) -> Element {
+fn MiniStatCard(
+    title: &'static str,
+    value: &'static str,
+    icon: &'static str,
+    color: &'static str,
+) -> Element {
     rsx! {
         div {
             class: format!(

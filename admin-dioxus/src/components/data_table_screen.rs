@@ -1,7 +1,8 @@
 use dioxus::prelude::*;
 
 use crate::components::{
-    ListErrorBanner, ListErrorBannerProps, ListToolbar, ListToolbarProps, LoadingOverlay, PageHeader, PageHeaderProps, Pagination,
+    ListErrorBanner, ListErrorBannerProps, ListToolbar, ListToolbarProps, LoadingOverlay,
+    PageHeader, PageHeaderProps, Pagination,
 };
 use crate::store::{PaginatedList, StateFrame};
 use crate::ui::shadcn::{Button, ButtonVariant};
@@ -131,7 +132,7 @@ pub fn DataTableScreen<T: Clone + PartialEq + 'static>(props: DataTableScreenPro
                                             let is_current_sort = props.current_sort_field.as_ref()
                                                 .and_then(|field| header.field.as_ref().map(|f| f == field))
                                                 .unwrap_or(false);
-                                            
+
                                             rsx! {
                                                 th { class: "{header.class}",
                                                     if header.sortable {
@@ -161,7 +162,7 @@ pub fn DataTableScreen<T: Clone + PartialEq + 'static>(props: DataTableScreenPro
                                     }
                                 }
                             }
-                            
+
                             // Caller-provided tbody content
                             tbody {
                                 { props.children }
@@ -177,8 +178,8 @@ pub fn DataTableScreen<T: Clone + PartialEq + 'static>(props: DataTableScreenPro
                                 }
                             }
                         }
-                        
-                        
+
+
                         // Pagination
                         if props.show_pagination {
                             Pagination::<T> {

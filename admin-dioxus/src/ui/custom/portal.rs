@@ -23,14 +23,11 @@ pub fn AppPortal(props: AppPortalProps) -> Element {
     // let portal_index=  use_index();
     // let mut z_index = use_signal(|| 10);
 
-
     // use_effect(move || {
     //     let index = portal_index() + 1;
     //     *portal_index.write() = index;
     //     z_index.set(z_index() + index);
     // });
-
-
 
     rsx! {
         div {

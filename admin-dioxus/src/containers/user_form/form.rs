@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use dioxus::prelude::*;
+use std::collections::HashMap;
 use validator::{Validate, ValidationError};
 
 use crate::hooks::{OxForm, OxFormModel};
@@ -50,7 +50,7 @@ pub struct UserForm {
 
     #[validate(custom(function = "validate_password"))]
     pub password: Option<String>,
-    
+
     pub is_update: bool,
 }
 
@@ -89,13 +89,13 @@ impl OxFormModel for UserForm {
         map.insert("email".to_string(), self.email.clone());
         map.insert("role".to_string(), self.role.to_string());
         map.insert("is_verified".to_string(), self.is_verified.to_string());
-        
+
         if let Some(password) = &self.password {
             map.insert("password".to_string(), password.clone());
         } else {
             map.insert("password".to_string(), String::new());
         }
-        
+
         map
     }
 

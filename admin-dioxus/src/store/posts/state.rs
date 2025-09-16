@@ -2,8 +2,8 @@ use std::fmt;
 
 use crate::store::{PaginatedList, StateFrame};
 use dioxus::prelude::*;
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PostAuthor {

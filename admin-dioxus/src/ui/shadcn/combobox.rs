@@ -1,7 +1,10 @@
 use dioxus::prelude::*;
-use hmziq_dioxus_free_icons::{Icon, icons::ld_icons::{LdCheck, LdChevronsUpDown}};
+use hmziq_dioxus_free_icons::{
+    icons::ld_icons::{LdCheck, LdChevronsUpDown},
+    Icon,
+};
 
-use crate::ui::shadcn::{Popover, PopoverContent, PopoverTrigger, PopoverClose};
+use crate::ui::shadcn::{Popover, PopoverClose, PopoverContent, PopoverTrigger};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ComboboxItem {
@@ -40,7 +43,7 @@ pub struct ComboboxProps {
 pub fn Combobox(props: ComboboxProps) -> Element {
     let mut value = use_signal(|| props.value.clone());
     let mut query = use_signal(|| String::new());
-    
+
     // Handle incoming prop changes
     use_effect(move || {
         if props.value != *value.peek() {
@@ -49,7 +52,9 @@ pub fn Combobox(props: ComboboxProps) -> Element {
     });
 
     // Find the selected item to display in the trigger
-    let selected_item = props.items.iter()
+    let selected_item = props
+        .items
+        .iter()
         .find(|item| Some(&item.value) == value.read().as_ref());
 
     let display_text = selected_item
@@ -57,7 +62,7 @@ pub fn Combobox(props: ComboboxProps) -> Element {
         .unwrap_or(props.placeholder.clone());
 
     let mut class = vec!["relative".to_string()];
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class.clone());
     }

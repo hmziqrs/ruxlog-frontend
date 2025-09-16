@@ -9,35 +9,35 @@ use std::collections::HashMap;
 pub struct ButtonProps {
     /// The content to be displayed inside the button
     children: Element,
-    
+
     /// Additional CSS classes to apply to the button
     #[props(default)]
     class: Option<String>,
-    
+
     /// The variant style of the button
     #[props(default = ButtonVariant::Default)]
     variant: ButtonVariant,
-    
+
     /// The size of the button
     #[props(default = ButtonSize::Default)]
     size: ButtonSize,
-    
+
     /// Whether the button is disabled
     #[props(default = false)]
     disabled: bool,
-    
+
     /// Optional click handler for the button
     #[props(default)]
     onclick: Option<EventHandler<MouseEvent>>,
-    
+
     /// HTML type attribute for the button
     #[props(default = "button".to_string())]
     r#type: String,
-    
+
     /// Optional aria-label for accessibility
     #[props(default)]
     aria_label: Option<String>,
-    
+
     /// Optional data attributes to add to the button
     #[props(default)]
     data_attributes: Option<HashMap<String, String>>,
@@ -97,12 +97,11 @@ pub fn Button(props: ButtonProps) -> Element {
         get_variant_class(props.variant).to_string(),
         get_size_class(props.size).to_string(),
     ];
-    
+
     // Add custom class if provided
     if let Some(custom_class) = &props.class {
         class.push(custom_class.clone());
     }
-    
 
     rsx! {
         button {

@@ -1,5 +1,5 @@
-use std::time::Duration;
 use dioxus::{logger::tracing, prelude::*};
+use std::time::Duration;
 
 #[derive(Props, PartialEq, Clone)]
 pub struct LoadingOverlayProps {
@@ -30,16 +30,22 @@ pub fn LoadingOverlay(props: LoadingOverlayProps) -> Element {
             });
         }
     });
-    
-    tracing::info!("LoadingOverlay: {} {}", visible_for_render(), should_render());
 
+    tracing::info!(
+        "LoadingOverlay: {} {}",
+        visible_for_render(),
+        should_render()
+    );
 
     if !should_render() {
         return rsx! { Fragment {} };
     }
-    
 
-    let opacity = if visible_for_render() { "opacity-100" } else { "opacity-0" };
+    let opacity = if visible_for_render() {
+        "opacity-100"
+    } else {
+        "opacity-0"
+    };
 
     rsx! {
         div { class: format!("absolute inset-0 z-10 bg-background/50 backdrop-blur-[1px] flex items-center justify-center duration-400 ease-in-out {}", opacity),

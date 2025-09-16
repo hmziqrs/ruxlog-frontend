@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::components::PageHeader;
-use crate::containers::{CategoryFormContainer, CategoryForm};
+use crate::containers::{CategoryForm, CategoryFormContainer};
 use crate::store::use_category;
 
 #[component]

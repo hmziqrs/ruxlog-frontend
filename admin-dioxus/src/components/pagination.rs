@@ -1,6 +1,6 @@
-use dioxus::prelude::*;
-use crate::ui::shadcn::{Button, ButtonVariant};
 use crate::store::PaginatedList;
+use crate::ui::shadcn::{Button, ButtonVariant};
+use dioxus::prelude::*;
 
 #[derive(Props, PartialEq, Clone)]
 pub struct PaginationProps<T: Clone + PartialEq + 'static> {

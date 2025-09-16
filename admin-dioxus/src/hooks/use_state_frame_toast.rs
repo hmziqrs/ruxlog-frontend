@@ -1,6 +1,6 @@
-use dioxus::prelude::*;
 use crate::components::sonner::{use_sonner, ToastOptions};
 use crate::store::StateFrame;
+use dioxus::prelude::*;
 
 #[derive(Clone)]
 pub struct StateFrameToastConfig {
@@ -52,10 +52,15 @@ pub fn use_state_frame_toast<D: Clone + 'static, M: Clone + 'static>(
             if !prev && loading {
                 match toast_id() {
                     Some(id) if sonner.exists(id) => {
-                        sonner.update_loading(id, cfg.loading_title.clone(), cfg.loading_options.clone());
+                        sonner.update_loading(
+                            id,
+                            cfg.loading_title.clone(),
+                            cfg.loading_options.clone(),
+                        );
                     }
                     _ => {
-                        let id = sonner.loading(cfg.loading_title.clone(), cfg.loading_options.clone());
+                        let id =
+                            sonner.loading(cfg.loading_title.clone(), cfg.loading_options.clone());
                         toast_id.set(Some(id));
                     }
                 }

@@ -1,5 +1,5 @@
 use dioxus::{logger::tracing, prelude::*};
-use hmziq_dioxus_free_icons::{Icon, icons::ld_icons::LdX};
+use hmziq_dioxus_free_icons::{icons::ld_icons::LdX, Icon};
 
 use crate::ui::custom::AppPortal;
 
@@ -21,7 +21,7 @@ pub struct PopoverProps {
 #[component]
 pub fn Popover(props: PopoverProps) -> Element {
     use_context_provider(|| Signal::new(PopoverContext(false)));
-    
+
     rsx! {
         div { "data-slot": "popover", {props.children} }
     }
@@ -60,7 +60,7 @@ pub struct PopoverAnchorProps {
 #[component]
 pub fn PopoverAnchor(props: PopoverAnchorProps) -> Element {
     let class_str = props.class.clone().unwrap_or_default();
-    
+
     rsx! {
         div { "data-slot": "popover-anchor", class: class_str, {props.children} }
     }
@@ -124,7 +124,7 @@ pub struct PopoverCloseProps {
 pub fn PopoverClose(props: PopoverCloseProps) -> Element {
     let mut open = use_context::<Signal<PopoverContext>>();
     let class_str = props.class.clone().unwrap_or_default();
-    
+
     rsx! {
         button {
             "data-slot": "popover-close",

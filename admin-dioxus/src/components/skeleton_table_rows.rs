@@ -43,14 +43,14 @@ pub fn SkeletonTableRows(props: SkeletonTableRowsProps) -> Element {
             } else {
                 props.row_class.clone()
             };
-            
+
             rsx! {
                 tr { class: "{row_class}",
                     { props.cells.iter().map(|cell_config| {
                         let colspan_attr = cell_config.colspan.map(|n| format!("{}", n));
-                        
+
                         rsx! {
-                            td { 
+                            td {
                                 class: "{cell_config.class}",
                                 colspan: colspan_attr,
                                 { render_skeleton_cell(cell_config.cell_type) }
@@ -99,7 +99,7 @@ impl SkeletonCellConfig {
             colspan: None,
         }
     }
-    
+
     /// Creates a default cell config with standard styling, optionally hidden on mobile
     pub fn default(hidden_mobile: bool) -> Self {
         let class = if hidden_mobile {
@@ -107,14 +107,14 @@ impl SkeletonCellConfig {
         } else {
             "py-3 px-4".to_string()
         };
-        
+
         Self {
             cell_type: UICellType::Default,
             class,
             colspan: None,
         }
     }
-    
+
     /// Creates a badge cell config with standard styling
     pub fn badge() -> Self {
         Self {
@@ -123,7 +123,7 @@ impl SkeletonCellConfig {
             colspan: None,
         }
     }
-    
+
     /// Creates an action cell config with standard styling
     pub fn action() -> Self {
         Self {
@@ -132,7 +132,7 @@ impl SkeletonCellConfig {
             colspan: None,
         }
     }
-    
+
     /// Creates a custom cell config
     pub fn custom(cell_type: UICellType, class: impl Into<String>) -> Self {
         Self {
@@ -141,7 +141,7 @@ impl SkeletonCellConfig {
             colspan: None,
         }
     }
-    
+
     /// Adds colspan to the cell config
     pub fn with_colspan(mut self, colspan: u32) -> Self {
         self.colspan = Some(colspan);

@@ -41,7 +41,9 @@ pub fn TagBadge(props: TagBadgeProps) -> Element {
     .map(|s| s.to_string())
     .collect::<Vec<_>>();
 
-    if let Some(c) = &props.class { classes.push(c.clone()); }
+    if let Some(c) = &props.class {
+        classes.push(c.clone());
+    }
 
     // Inline style for dynamic background and text color
     let style = format!(

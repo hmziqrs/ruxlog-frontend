@@ -16,8 +16,9 @@ pub struct ProgressProps {
 pub fn Progress(props: ProgressProps) -> Element {
     // Clamp value between 0 and 100
     let value = props.value.clamp(0, 100);
-    
-    let mut class = vec!["bg-primary/20 relative h-2 w-full overflow-hidden rounded-full".to_string()];
+
+    let mut class =
+        vec!["bg-primary/20 relative h-2 w-full overflow-hidden rounded-full".to_string()];
 
     if let Some(custom_class) = &props.class {
         class.push(custom_class.clone());

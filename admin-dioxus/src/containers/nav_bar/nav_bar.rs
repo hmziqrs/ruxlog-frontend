@@ -1,8 +1,6 @@
 use dioxus::prelude::*;
+use hmziq_dioxus_free_icons::icons::ld_icons::{LdBell, LdMenu, LdMoon, LdSearch, LdSun};
 use hmziq_dioxus_free_icons::Icon;
-use hmziq_dioxus_free_icons::icons::ld_icons::{
-    LdBell, LdMenu, LdMoon, LdSearch, LdSun,
-};
 
 use crate::config::DarkMode;
 use crate::{components::Sidebar, router::Route, store::use_auth};

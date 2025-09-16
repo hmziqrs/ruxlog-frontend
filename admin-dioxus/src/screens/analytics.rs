@@ -1,12 +1,12 @@
 use dioxus::prelude::*;
 
-use crate::ui::shadcn::Button;
 use crate::components::{use_toast, ToastOptions};
+use crate::ui::shadcn::Button;
 
 #[component]
 pub fn AnalyticsScreen() -> Element {
-    let  toast = use_toast();
-        
+    let toast = use_toast();
+
     rsx! {
         div { class: "container mx-auto p-8 min-h-screen",
             h1 { class: "text-3xl font-bold mb-4 text-zinc-900 dark:text-zinc-100", "Analytics" }

@@ -73,7 +73,11 @@ pub struct Action {
 }
 
 impl Action {
-    pub fn new(label: String, on_click: Option<Callback<MouseEvent>>, action_button_style: Option<BTreeMap<String, String>>) -> Self {
+    pub fn new(
+        label: String,
+        on_click: Option<Callback<MouseEvent>>,
+        action_button_style: Option<BTreeMap<String, String>>,
+    ) -> Self {
         Self {
             label,
             on_click,
@@ -269,7 +273,11 @@ pub struct PromiseConfig {
 }
 
 impl PromiseConfig {
-    pub fn new<L: Into<String>, S: Into<String>, E: Into<String>>(loading: L, success: S, error: E) -> Self {
+    pub fn new<L: Into<String>, S: Into<String>, E: Into<String>>(
+        loading: L,
+        success: S,
+        error: E,
+    ) -> Self {
         Self {
             loading: loading.into(),
             success: success.into(),
@@ -298,7 +306,7 @@ pub struct ToastT {
     pub position: Position,
     pub test_id: Option<String>,
     pub on_auto_close: Option<Callback<u64>>, // Phase 3: notify when a toast auto-closes
-    pub on_dismiss: Option<Callback<u64>>, // Phase 9+: notify when a toast is dismissed/removed
+    pub on_dismiss: Option<Callback<u64>>,    // Phase 9+: notify when a toast is dismissed/removed
 }
 
 impl Default for ToastT {

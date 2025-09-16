@@ -1,12 +1,10 @@
 //! Defines the [`Toast`] component and its sub-components, which provide a notification system for displaying temporary messages to users.
 
-use crate::{
-    hooks::use_unique_id
-};
+use crate::hooks::use_unique_id;
 
-use dioxus::logger::tracing;
 use super::portal_v2::{use_portal, PortalIn, PortalOut};
 use dioxus::dioxus_core::DynamicNode;
+use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use dioxus_time::use_timeout;
 use std::collections::VecDeque;
@@ -64,7 +62,6 @@ pub struct ToastProviderProps {
     pub render_toast: Callback<ToastPropsWithOwner, Element>,
     children: Element,
 }
-
 
 #[component]
 pub fn ToastProvider(props: ToastProviderProps) -> Element {
@@ -151,7 +148,11 @@ pub fn ToastProvider(props: ToastProviderProps) -> Element {
 
             // Provider-level auto-dismiss: schedule animated close if a duration exists
             if let Some(d) = duration {
-                tracing::info!("[toast] provider timer scheduled: id={}, duration={:?}", id, d);
+                tracing::info!(
+                    "[toast] provider timer scheduled: id={}, duration={:?}",
+                    id,
+                    d
+                );
                 let close = close_toast.clone();
                 let remove_id = id;
                 spawn(async move {
@@ -278,7 +279,11 @@ pub fn Toast(props: ToastProps) -> Element {
         .as_ref()
         .map(|_| format!("{id}-description"));
     let ctx = use_context::<ToastCtx>();
-    let effective_duration = if props.permanent { None } else { props.duration };
+    let effective_duration = if props.permanent {
+        None
+    } else {
+        props.duration
+    };
     let toast_id_for_timeout = props.id;
     let close_toast_for_timeout = ctx.close_toast;
     let timeout = use_timeout(
@@ -419,7 +424,6 @@ impl Toasts {
         self.show(title, ToastType::Info, options);
     }
 }
-
 
 pub fn use_toast() -> Toasts {
     use_hook(consume_toast)

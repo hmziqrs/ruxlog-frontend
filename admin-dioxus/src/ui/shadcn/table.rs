@@ -101,9 +101,7 @@ pub struct TableFooterProps {
 /// TableFooter component
 #[component]
 pub fn TableFooter(props: TableFooterProps) -> Element {
-    let mut class = vec![
-        "bg-muted/50 border-t font-medium [&>tr]:last:border-b-0".to_string(),
-    ];
+    let mut class = vec!["bg-muted/50 border-t font-medium [&>tr]:last:border-b-0".to_string()];
 
     if let Some(custom_class) = &props.class {
         class.push(custom_class.clone());
@@ -134,9 +132,7 @@ pub struct TableRowProps {
 /// TableRow component
 #[component]
 pub fn TableRow(props: TableRowProps) -> Element {
-    let mut class = vec![
-        "hover:bg-muted/50 border-b transition-colors".to_string(),
-    ];
+    let mut class = vec!["hover:bg-muted/50 border-b transition-colors".to_string()];
 
     if props.selected {
         class.push("bg-muted".to_string());
@@ -170,7 +166,8 @@ pub struct TableHeadProps {
 #[component]
 pub fn TableHead(props: TableHeadProps) -> Element {
     let mut class = vec![
-        "text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap".to_string(),
+        "text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap"
+            .to_string(),
         "[&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]".to_string(),
     ];
 

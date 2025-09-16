@@ -12,11 +12,11 @@ pub enum AlertVariant {
 pub struct AlertProps {
     /// The content to be displayed inside the alert
     children: Element,
-    
+
     /// Additional CSS classes to apply to the alert
     #[props(default)]
     class: Option<String>,
-    
+
     /// The variant of the alert
     #[props(default = AlertVariant::Default)]
     variant: AlertVariant,
@@ -27,7 +27,7 @@ pub struct AlertProps {
 pub struct AlertTitleProps {
     /// The content to be displayed inside the alert title
     children: Element,
-    
+
     /// Additional CSS classes to apply to the title
     #[props(default)]
     class: Option<String>,
@@ -38,7 +38,7 @@ pub struct AlertTitleProps {
 pub struct AlertDescriptionProps {
     /// The content to be displayed inside the alert description
     children: Element,
-    
+
     /// Additional CSS classes to apply to the description
     #[props(default)]
     class: Option<String>,
@@ -60,12 +60,12 @@ pub fn Alert(props: AlertProps) -> Element {
         "relative w-full rounded-lg border px-4 py-3 text-sm grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current".to_string(),
         get_variant_class(props.variant).to_string(),
     ];
-    
+
     // Add custom class if provided
     if let Some(custom_class) = props.class {
         class.push(custom_class);
     }
-    
+
     rsx! {
         div { role: "alert", class: class.join(" "), {props.children} }
     }
@@ -74,15 +74,13 @@ pub fn Alert(props: AlertProps) -> Element {
 /// AlertTitle component
 #[component]
 pub fn AlertTitle(props: AlertTitleProps) -> Element {
-    let mut class = vec![
-        "col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight".to_string(),
-    ];
-    
+    let mut class = vec!["col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight".to_string()];
+
     // Add custom class if provided
     if let Some(custom_class) = &props.class {
         class.push(custom_class.clone());
     }
-    
+
     rsx! {
         div { class: class.join(" "), {props.children} }
     }
@@ -94,12 +92,12 @@ pub fn AlertDescription(props: AlertDescriptionProps) -> Element {
     let mut class = vec![
         "text-muted-foreground col-start-2 grid justify-items-start gap-1 text-sm [&_p]:leading-relaxed".to_string(),
     ];
-    
+
     // Add custom class if provided
     if let Some(custom_class) = &props.class {
         class.push(custom_class.clone());
     }
-    
+
     rsx! {
         div { class: class.join(" "), {props.children} }
     }

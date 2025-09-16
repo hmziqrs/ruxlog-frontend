@@ -2,7 +2,6 @@ use crate::{dioxus_core::provide_root_context, hooks::use_effect_cleanup};
 use dioxus::prelude::*;
 use std::collections::HashMap;
 
-
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PortalId(usize);
 

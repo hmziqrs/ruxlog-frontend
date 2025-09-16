@@ -1,14 +1,17 @@
+use crate::env::{APP_API_URL, APP_CSRF_TOKEN};
 use gloo_net::http::{Request, RequestBuilder};
 use serde::Serialize;
 use web_sys::RequestCredentials;
-use crate::env::{APP_API_URL, APP_CSRF_TOKEN};
 
 pub fn get_base_url() -> String {
     format!("http://{}", APP_API_URL)
 }
 
 fn create_headers(mut req: RequestBuilder) -> RequestBuilder {
-    req = req.header("Content-Type", "application/json").header("csrf-token", APP_CSRF_TOKEN).credentials(RequestCredentials::Include);
+    req = req
+        .header("Content-Type", "application/json")
+        .header("csrf-token", APP_CSRF_TOKEN)
+        .credentials(RequestCredentials::Include);
     req
 }
 

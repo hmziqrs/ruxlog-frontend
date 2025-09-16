@@ -1,10 +1,10 @@
 use dioxus::prelude::*;
 
-use crate::components::{PageHeader, FormTwoColumnSkeleton};
+use crate::components::{FormTwoColumnSkeleton, PageHeader};
 use crate::containers::{TagForm, TagFormContainer};
+use crate::hooks::use_tag_view;
 use crate::store::use_tag;
 use crate::ui::shadcn::Button;
-use crate::hooks::use_tag_view;
 
 #[component]
 pub fn TagsEditScreen(id: i32) -> Element {
@@ -61,4 +61,3 @@ pub fn TagsEditScreen(id: i32) -> Element {
         }
     }
 }
-

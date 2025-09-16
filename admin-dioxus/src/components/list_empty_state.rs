@@ -1,6 +1,6 @@
+use crate::ui::shadcn::Button;
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::{icons::ld_icons::LdTag, Icon};
-use crate::ui::shadcn::Button;
 
 #[derive(Props, PartialEq, Clone)]
 pub struct ListEmptyStateProps {

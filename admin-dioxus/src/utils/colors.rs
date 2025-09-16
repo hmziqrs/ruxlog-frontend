@@ -6,7 +6,10 @@ pub fn hex_to_rgb(hex: &str) -> Option<(u8, u8, u8)> {
     let full = match hex.len() {
         3 => {
             let mut s = String::with_capacity(6);
-            for c in hex.chars() { s.push(c); s.push(c); }
+            for c in hex.chars() {
+                s.push(c);
+                s.push(c);
+            }
             s
         }
         6 => hex.to_string(),
@@ -24,7 +27,11 @@ pub fn hex_to_rgb(hex: &str) -> Option<(u8, u8, u8)> {
 pub fn get_contrast_yiq(hex: &str) -> &'static str {
     if let Some((r, g, b)) = hex_to_rgb(hex) {
         let yiq = (r as u32 * 299 + g as u32 * 587 + b as u32 * 114) / 1000;
-        if yiq >= 128 { "#111111" } else { "#ffffff" }
+        if yiq >= 128 {
+            "#111111"
+        } else {
+            "#ffffff"
+        }
     } else {
         "#111111"
     }

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use hmziq_dioxus_free_icons::{Icon, icons::ld_icons::LdCheck}; 
+use hmziq_dioxus_free_icons::{icons::ld_icons::LdCheck, Icon};
 
 /// Properties for the Checkbox component
 #[derive(Props, PartialEq, Clone)]
@@ -7,19 +7,19 @@ pub struct CheckboxProps {
     /// Additional CSS classes to apply to the checkbox
     #[props(default)]
     pub class: Option<String>,
-    
+
     /// Whether the checkbox is checked
     #[props(default)]
     pub checked: bool,
-    
+
     /// Whether the checkbox is disabled
     #[props(default)]
     pub disabled: bool,
-    
+
     /// Callback when checkbox value changes
     #[props(default)]
     pub onchange: Option<EventHandler<bool>>,
-    
+
     /// Whether the input is in an error state
     #[props(default)]
     pub invalid: bool,
@@ -37,7 +37,7 @@ pub fn Checkbox(props: CheckboxProps) -> Element {
             "aria-invalid:border-destructive".to_string(),
         ]);
     }
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class.clone());
     }

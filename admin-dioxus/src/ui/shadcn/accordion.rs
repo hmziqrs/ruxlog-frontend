@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use hmziq_dioxus_free_icons::icons::ld_icons::{ LdChevronDown, };
+use hmziq_dioxus_free_icons::icons::ld_icons::LdChevronDown;
 use hmziq_dioxus_free_icons::Icon;
 
 #[derive(PartialEq, Clone)]
@@ -29,7 +29,6 @@ pub struct AccordionProps {
 
     #[props(extends = GlobalAttributes)]
     pub attributes: Vec<Attribute>,
-
 }
 
 #[component]
@@ -55,10 +54,9 @@ pub struct AccordionItemProps {
     pub attributes: Vec<Attribute>,
 
     pub value: i32,
-
 }
 
-#[derive( PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub struct AccordionItemState(pub i32);
 
 #[component]
@@ -84,7 +82,6 @@ pub struct AccordionTriggerProps {
 
     #[props(extends = GlobalAttributes)]
     pub attributes: Vec<Attribute>,
-
 }
 
 #[component]
@@ -130,7 +127,6 @@ pub struct AccordionContentProps {
 
     #[props(extends = GlobalAttributes)]
     pub attributes: Vec<Attribute>,
-
 }
 
 #[component]

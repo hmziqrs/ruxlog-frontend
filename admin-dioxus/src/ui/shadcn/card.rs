@@ -67,8 +67,9 @@ pub struct CardActionProps {
 /// Card component
 #[component]
 pub fn Card(props: CardProps) -> Element {
-    let mut class = vec!["bg-card text-card-foreground flex flex-col rounded-xl border".to_string()];
-    
+    let mut class =
+        vec!["bg-card text-card-foreground flex flex-col rounded-xl border".to_string()];
+
     if let Some(custom_class) = props.class {
         class.push(custom_class);
     }
@@ -82,7 +83,7 @@ pub fn Card(props: CardProps) -> Element {
 #[component]
 pub fn CardHeader(props: CardHeaderProps) -> Element {
     let mut class = vec!["@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6".to_string()];
-    
+
     if let Some(custom_class) = props.class {
         class.push(custom_class);
     }
@@ -96,7 +97,7 @@ pub fn CardHeader(props: CardHeaderProps) -> Element {
 #[component]
 pub fn CardTitle(props: CardTitleProps) -> Element {
     let mut class = vec!["leading-none font-semibold".to_string()];
-    
+
     if let Some(custom_class) = props.class {
         class.push(custom_class);
     }
@@ -110,7 +111,7 @@ pub fn CardTitle(props: CardTitleProps) -> Element {
 #[component]
 pub fn CardDescription(props: CardDescriptionProps) -> Element {
     let mut class = vec!["text-muted-foreground text-sm".to_string()];
-    
+
     if let Some(custom_class) = props.class {
         class.push(custom_class);
     }
@@ -123,8 +124,9 @@ pub fn CardDescription(props: CardDescriptionProps) -> Element {
 /// CardAction component
 #[component]
 pub fn CardAction(props: CardActionProps) -> Element {
-    let mut class = vec!["col-start-2 row-span-2 row-start-1 self-start justify-self-end".to_string()];
-    
+    let mut class =
+        vec!["col-start-2 row-span-2 row-start-1 self-start justify-self-end".to_string()];
+
     if let Some(custom_class) = props.class {
         class.push(custom_class);
     }
@@ -138,7 +140,7 @@ pub fn CardAction(props: CardActionProps) -> Element {
 #[component]
 pub fn CardContent(props: CardContentProps) -> Element {
     let mut class = vec!["px-6".to_string()];
-    
+
     if let Some(custom_class) = props.class {
         class.push(custom_class);
     }
@@ -152,7 +154,7 @@ pub fn CardContent(props: CardContentProps) -> Element {
 #[component]
 pub fn CardFooter(props: CardFooterProps) -> Element {
     let mut class = vec!["flex items-center px-6 [.border-t]:pt-6".to_string()];
-    
+
     if let Some(custom_class) = props.class {
         class.push(custom_class);
     }

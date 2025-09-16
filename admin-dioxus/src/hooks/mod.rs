@@ -16,8 +16,8 @@ pub use use_state_frame_toast::{use_state_frame_toast, StateFrameToastConfig};
 mod use_list_screen;
 pub use use_list_screen::*;
 
-use std::sync::atomic::{AtomicUsize, Ordering};
 use dioxus::prelude::*;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Run some cleanup code when the component is unmounted if the effect was run.
 pub fn use_effect_cleanup<F: FnOnce() + 'static>(#[allow(unused)] cleanup: F) {

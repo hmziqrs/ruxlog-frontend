@@ -9,7 +9,6 @@ pub struct TabsProps {
     pub class: Option<String>,
 
     pub state: Signal<TabsState>,
-
 }
 
 #[derive(PartialEq, Clone)]
@@ -20,10 +19,7 @@ pub struct TabItem {
 
 impl TabItem {
     pub fn new(label: String, disable: bool) -> Self {
-        Self {
-            label,
-            disable,
-        }
+        Self { label, disable }
     }
 }
 
@@ -40,7 +36,7 @@ impl TabsState {
             items: tabs,
         }
     }
-    
+
     pub fn set_active_tab(&mut self, index: usize) {
         if index < self.items.len() && !self.items[index].disable {
             self.active_index = index;
@@ -52,7 +48,7 @@ impl TabsState {
         loop {
             tracing::info!("next_tab: {}", initial_tab);
             self.active_index = {
-                if self.active_index + 1 >= self.items.len()-1 {
+                if self.active_index + 1 >= self.items.len() - 1 {
                     0
                 } else {
                     self.active_index + 1
@@ -77,7 +73,7 @@ impl TabsState {
                 if self.active_index == 0 {
                     self.items.len() - 1
                 } else {
-                    self.active_index-1
+                    self.active_index - 1
                 }
             };
             if self.items[self.active_index].disable {
@@ -98,7 +94,7 @@ pub fn Tabs(props: TabsProps) -> Element {
     let mut state = props.state;
     let active_index = state.read().active_index;
     let mut refs = use_signal(|| HashMap::<usize, Rc<MountedData>>::new());
-    
+
     let mut class = vec!["flex flex-col gap-2".to_string()];
     if let Some(custom_class) = props.class.clone() {
         class.push(custom_class);

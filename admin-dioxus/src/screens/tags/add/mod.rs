@@ -1,33 +1,36 @@
 use dioxus::prelude::*;
+
 use crate::components::sonner::{Action, ToastOptions};
 use crate::components::PageHeader;
-use crate::containers::{TagFormContainer, TagForm};
-use crate::store::use_tag;
+use crate::containers::{TagForm, TagFormContainer};
 use crate::hooks::{use_state_frame_toast, StateFrameToastConfig};
- 
+use crate::store::use_tag;
 
 #[component]
 pub fn TagsAddScreen() -> Element {
     let tags = use_tag();
+
     // Wire StateFrame->Sonner toast for add flow
     let cfg = StateFrameToastConfig {
         loading_title: "Creating tag...".into(),
         success_title: Some("Tag created successfully".into()),
         error_title: Some("Failed to create tag".into()),
-        error_options: ToastOptions::default().with_action(Some(Action::with_on_click("Retry".into(), Callback::new(move |_| {
-            let payload = tags.add.peek().meta.clone();
-            spawn(async move {
-                tags.add(payload.unwrap()).await;
-            });
-        })))), 
+        error_options: ToastOptions::default().with_action(Some(Action::with_on_click(
+            "Retry".into(),
+            Callback::new(move |_| {
+                let payload = tags.add.peek().meta.clone();
+                spawn(async move {
+                    tags.add(payload.unwrap()).await;
+                });
+            }),
+        ))),
         ..Default::default()
     };
     use_state_frame_toast(&tags.add, cfg);
 
-
     rsx! {
         // Page wrapper
-        div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
+        div { class: "min-h-screen bg-gradient-to-b from-background via-muted/40 to-background text-foreground",
             // Unified autonomous header
             PageHeader {
                 title: "Create Tag".to_string(),

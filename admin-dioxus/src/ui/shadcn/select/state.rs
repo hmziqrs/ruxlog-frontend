@@ -12,7 +12,7 @@ pub struct SelectProps {
 pub struct SelectContext {
     pub groups: Vec<SelectGroup>,
     pub selected: Option<String>,
-    
+
     pub is_open: bool,
     pub internal_groups: Vec<InternalSelectGroup>,
     pub max_index: usize,
@@ -36,7 +36,6 @@ pub struct InternalSelectGroup {
     pub label: String,
     pub items: Vec<InternalSelectItem>,
 }
-
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct InternalSelectItem {
@@ -86,7 +85,8 @@ impl SelectContext {
     }
 
     pub fn select_active_index(&mut self) {
-        let active_item = self.internal_groups
+        let active_item = self
+            .internal_groups
             .iter()
             .flat_map(|group| group.items.iter())
             .find(|item| item.index == self.active_index);
@@ -114,7 +114,7 @@ impl SelectContext {
     }
 
     pub fn next_index(&mut self) {
-        if self.active_index < self.max_index - 1  {
+        if self.active_index < self.max_index - 1 {
             self.active_index += 1;
         } else {
             self.active_index = 0;
@@ -125,8 +125,7 @@ impl SelectContext {
         if self.active_index > 0 {
             self.active_index -= 1;
         } else {
-            self.active_index = self.max_index-1;
+            self.active_index = self.max_index - 1;
         }
     }
-
 }

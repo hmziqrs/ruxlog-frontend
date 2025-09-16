@@ -1,5 +1,8 @@
 use dioxus::prelude::*;
-use hmziq_dioxus_free_icons::{Icon, icons::ld_icons::{LdChevronRight, LdEllipsis}};
+use hmziq_dioxus_free_icons::{
+    icons::ld_icons::{LdChevronRight, LdEllipsis},
+    Icon,
+};
 
 #[derive(Props, PartialEq, Clone)]
 pub struct BreadcrumbProps {
@@ -31,7 +34,6 @@ pub struct BreadcrumbLinkProps {
     pub href: Option<String>,
     #[props(default)]
     pub onclick: Option<Callback<()>>,
-    
 }
 
 #[derive(Props, PartialEq, Clone)]
@@ -58,7 +60,7 @@ pub struct BreadcrumbEllipsisProps {
 #[component]
 pub fn Breadcrumb(props: BreadcrumbProps) -> Element {
     let class_str = props.class.clone().unwrap_or_default();
-    
+
     rsx! {
         nav {
             "data-slot": "breadcrumb",
@@ -71,8 +73,11 @@ pub fn Breadcrumb(props: BreadcrumbProps) -> Element {
 
 #[component]
 pub fn BreadcrumbList(props: BreadcrumbListProps) -> Element {
-    let mut class = vec!["text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm break-words sm:gap-2.5".to_string()];
-    
+    let mut class = vec![
+        "text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm break-words sm:gap-2.5"
+            .to_string(),
+    ];
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class.clone());
     }
@@ -85,7 +90,7 @@ pub fn BreadcrumbList(props: BreadcrumbListProps) -> Element {
 #[component]
 pub fn BreadcrumbItem(props: BreadcrumbItemProps) -> Element {
     let mut class = vec!["inline-flex items-center gap-1.5 cursor-pointer".to_string()];
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class.clone());
     }
@@ -98,7 +103,7 @@ pub fn BreadcrumbItem(props: BreadcrumbItemProps) -> Element {
 #[component]
 pub fn BreadcrumbLink(props: BreadcrumbLinkProps) -> Element {
     let mut class = vec!["hover:text-foreground transition-colors".to_string()];
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class.clone());
     }
@@ -121,7 +126,7 @@ pub fn BreadcrumbLink(props: BreadcrumbLinkProps) -> Element {
 #[component]
 pub fn BreadcrumbPage(props: BreadcrumbPageProps) -> Element {
     let mut class = vec!["text-foreground font-normal".to_string()];
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class.clone());
     }
@@ -141,7 +146,7 @@ pub fn BreadcrumbPage(props: BreadcrumbPageProps) -> Element {
 #[component]
 pub fn BreadcrumbSeparator(props: BreadcrumbSeparatorProps) -> Element {
     let mut class = vec!["[&>svg]:size-3.5".to_string()];
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class.clone());
     }
@@ -158,7 +163,7 @@ pub fn BreadcrumbSeparator(props: BreadcrumbSeparatorProps) -> Element {
                     {children}
                 }
             }
-        },
+        }
         None => {
             rsx! {
                 li {
@@ -176,7 +181,7 @@ pub fn BreadcrumbSeparator(props: BreadcrumbSeparatorProps) -> Element {
 #[component]
 pub fn BreadcrumbEllipsis(props: BreadcrumbEllipsisProps) -> Element {
     let mut class = vec!["flex size-9 items-center justify-center".to_string()];
-    
+
     if let Some(custom_class) = &props.class {
         class.push(custom_class.clone());
     }

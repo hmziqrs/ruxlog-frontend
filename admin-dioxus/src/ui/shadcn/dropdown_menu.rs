@@ -119,7 +119,7 @@ pub fn DropdownMenuItem(props: DropdownMenuItemProps) -> Element {
     if props.inset {
         class.push("pl-8".to_string());
     }
-    
+
     if let Some(custom_class) = props.class {
         class.push(custom_class);
     }

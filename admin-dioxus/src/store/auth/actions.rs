@@ -1,8 +1,5 @@
 use super::{AuthState, LoginPayload, User, UserRole};
-use crate::{
-    services::http_client,
-    store::{StateFrame},
-};
+use crate::{services::http_client, store::StateFrame};
 use dioxus::{logger::tracing, prelude::*};
 
 impl User {

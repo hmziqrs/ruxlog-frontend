@@ -1,10 +1,10 @@
-use std::collections::HashMap;
 use dioxus::prelude::*;
+use std::collections::HashMap;
 use validator::{Validate, ValidationError};
 
 use crate::hooks::{OxForm, OxFormModel};
-use crate::utils::colors::get_contrast_yiq;
 use crate::store::{CategoryAddPayload, CategoryEditPayload};
+use crate::utils::colors::get_contrast_yiq;
 
 #[derive(Debug, Validate, Clone, PartialEq)]
 pub struct CategoryForm {
@@ -14,7 +14,7 @@ pub struct CategoryForm {
     #[validate(length(min = 1, message = "Slug is required"))]
     #[validate(custom(function = "validate_slug"))]
     pub slug: String,
-    
+
     pub description: String,
     // Hex color like #3b82f6
     pub color: String,
@@ -92,12 +92,28 @@ impl CategoryForm {
 
     // Convert the form to the backend add payload contract
     pub fn to_add_payload(&self) -> CategoryAddPayload {
-        let description = if self.description.trim().is_empty() { None } else { Some(self.description.clone()) };
+        let description = if self.description.trim().is_empty() {
+            None
+        } else {
+            Some(self.description.clone())
+        };
         let text_color = Some(self.effective_text_color());
         let is_active = Some(self.active);
-        let cover_image = if self.cover_image.trim().is_empty() { None } else { Some(self.cover_image.clone()) };
-        let logo_image = if self.logo_image.trim().is_empty() { None } else { Some(self.logo_image.clone()) };
-        let parent_id = if self.parent_id.trim().is_empty() { None } else { self.parent_id.trim().parse::<i32>().ok() };
+        let cover_image = if self.cover_image.trim().is_empty() {
+            None
+        } else {
+            Some(self.cover_image.clone())
+        };
+        let logo_image = if self.logo_image.trim().is_empty() {
+            None
+        } else {
+            Some(self.logo_image.clone())
+        };
+        let parent_id = if self.parent_id.trim().is_empty() {
+            None
+        } else {
+            self.parent_id.trim().parse::<i32>().ok()
+        };
 
         CategoryAddPayload {
             name: self.name.clone(),
@@ -114,13 +130,30 @@ impl CategoryForm {
 
     // Convert the form to the backend edit payload contract
     pub fn to_edit_payload(&self) -> CategoryEditPayload {
-        let description = if self.description.trim().is_empty() { Some(None) } else { Some(Some(self.description.clone())) };
-        let cover_image = if self.cover_image.trim().is_empty() { Some(None) } else { Some(Some(self.cover_image.clone())) };
-        let logo_image = if self.logo_image.trim().is_empty() { Some(None) } else { Some(Some(self.logo_image.clone())) };
+        let description = if self.description.trim().is_empty() {
+            Some(None)
+        } else {
+            Some(Some(self.description.clone()))
+        };
+        let cover_image = if self.cover_image.trim().is_empty() {
+            Some(None)
+        } else {
+            Some(Some(self.cover_image.clone()))
+        };
+        let logo_image = if self.logo_image.trim().is_empty() {
+            Some(None)
+        } else {
+            Some(Some(self.logo_image.clone()))
+        };
         let parent_id = if self.parent_id.trim().is_empty() {
             Some(None)
         } else {
-            self.parent_id.trim().parse::<i32>().ok().map(|v| Some(v)).or(Some(None))
+            self.parent_id
+                .trim()
+                .parse::<i32>()
+                .ok()
+                .map(|v| Some(v))
+                .or(Some(None))
         };
 
         CategoryEditPayload {
@@ -147,9 +180,20 @@ impl OxFormModel for CategoryForm {
         map.insert("text_color".to_string(), self.text_color.clone());
         map.insert(
             "custom_text_color".to_string(),
-            if self.custom_text_color { "true".to_string() } else { "false".to_string() }
+            if self.custom_text_color {
+                "true".to_string()
+            } else {
+                "false".to_string()
+            },
         );
-        map.insert("active".to_string(), if self.active { "true".to_string() } else { "false".to_string() });
+        map.insert(
+            "active".to_string(),
+            if self.active {
+                "true".to_string()
+            } else {
+                "false".to_string()
+            },
+        );
         map.insert("cover_image".to_string(), self.cover_image.clone());
         map.insert("logo_image".to_string(), self.logo_image.clone());
         map.insert("parent_id".to_string(), self.parent_id.to_string());
@@ -190,13 +234,15 @@ pub fn use_category_form(initial_state: CategoryForm) -> UseCategoryForm {
     let mut form_signal: Signal<OxForm<CategoryForm>> = use_signal(|| OxForm::new(initial_state));
     let auto_slug: Signal<bool> = use_signal(|| true);
     let form_data = form_signal.read();
-    
+
     let name = form_data.data.name.clone();
-    
+
     use_effect(move || {
         if *auto_slug.read() && !name.is_empty() {
             let sanitized_slug = CategoryForm::sanitize_slug(&name);
-            form_signal.write().update_field("slug", sanitized_slug.to_string());
+            form_signal
+                .write()
+                .update_field("slug", sanitized_slug.to_string());
         }
     });
 

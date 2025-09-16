@@ -1,7 +1,7 @@
 mod input;
 mod sidebar;
-mod toast;
 pub mod sonner;
+mod toast;
 // mod command;
 
 pub use input::*;

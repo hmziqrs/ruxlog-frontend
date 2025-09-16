@@ -5,9 +5,11 @@ use dioxus::prelude::*;
 use dioxus_time::sleep;
 use std::time::Duration;
 
-use super::types::{HeightT, ToastType, SwipeDirection, Position, DEFAULT_SWIPE_THRESHOLD_PX, Action};
 use super::icons::{icon_close, icon_error, icon_info, icon_success, icon_warning, loader_spinner};
 use super::state::SonnerCtx;
+use super::types::{
+    Action, HeightT, Position, SwipeDirection, ToastType, DEFAULT_SWIPE_THRESHOLD_PX,
+};
 
 #[derive(Props, Clone)]
 pub struct SonnerToastProps {
@@ -113,11 +115,17 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
             spawn(async move {
                 if let Ok(h) = eval.recv::<i32>().await {
                     let mut vec = heights_sig.write();
-                    if let Some(existing) = vec.iter_mut().find(|r| r.toast_id == toast_id_for_height) {
+                    if let Some(existing) =
+                        vec.iter_mut().find(|r| r.toast_id == toast_id_for_height)
+                    {
                         existing.height_px = h as i32;
                         existing.position = position;
                     } else {
-                        vec.push(HeightT { height_px: h as i32, toast_id: toast_id_for_height, position });
+                        vec.push(HeightT {
+                            height_px: h as i32,
+                            toast_id: toast_id_for_height,
+                            position,
+                        });
                     }
                 }
             });
@@ -201,7 +209,8 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
         let toast_id = props.id;
         let allowed = allowed_dirs.clone();
         use_effect(move || {
-            let script = format!(r#"(function() {{
+            let script = format!(
+                r#"(function() {{
                 const el = document.getElementById('{id}');
                 if (!el) {{ dioxus.send(['noop',0,0]); return; }}
                 if (el.dataset.dragBound === '1') {{ return; }}
@@ -238,28 +247,63 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
                 }}
                 el.addEventListener('mousedown', onDown);
                 el.addEventListener('touchstart', onDown, {{ passive: true }});
-            }})()"#);
+            }})()"#
+            );
             let mut eval = dioxus::document::eval(&script);
             let allowed_for_task = allowed.clone();
             spawn(async move {
                 while let Ok((typ, dx, dy)) = eval.recv::<(String, f64, f64)>().await {
                     match typ.as_str() {
-                        "start" => { dragging_sig.set(true); snapping_sig.set(false); }
-                        "move" => { dx_sig.set(dx); dy_sig.set(dy); }
+                        "start" => {
+                            dragging_sig.set(true);
+                            snapping_sig.set(false);
+                        }
+                        "move" => {
+                            dx_sig.set(dx);
+                            dy_sig.set(dy);
+                        }
                         "end" => {
                             dragging_sig.set(false);
                             // Project movement onto allowed axis and decide dismissal with sign check
-                            let ax_h = allowed_for_task.iter().any(|d| matches!(d, SwipeDirection::Left | SwipeDirection::Right));
-                            let ax_v = allowed_for_task.iter().any(|d| matches!(d, SwipeDirection::Top | SwipeDirection::Bottom));
+                            let ax_h = allowed_for_task
+                                .iter()
+                                .any(|d| matches!(d, SwipeDirection::Left | SwipeDirection::Right));
+                            let ax_v = allowed_for_task
+                                .iter()
+                                .any(|d| matches!(d, SwipeDirection::Top | SwipeDirection::Bottom));
                             let use_h = ax_h && (!ax_v || dx.abs() >= dy.abs());
                             let threshold = DEFAULT_SWIPE_THRESHOLD_PX as f64;
                             let mut should_dismiss = false;
                             if use_h {
-                                if dx <= -threshold && allowed_for_task.iter().any(|d| matches!(d, SwipeDirection::Left)) { should_dismiss = true; }
-                                if dx >=  threshold && allowed_for_task.iter().any(|d| matches!(d, SwipeDirection::Right)) { should_dismiss = true; }
+                                if dx <= -threshold
+                                    && allowed_for_task
+                                        .iter()
+                                        .any(|d| matches!(d, SwipeDirection::Left))
+                                {
+                                    should_dismiss = true;
+                                }
+                                if dx >= threshold
+                                    && allowed_for_task
+                                        .iter()
+                                        .any(|d| matches!(d, SwipeDirection::Right))
+                                {
+                                    should_dismiss = true;
+                                }
                             } else if ax_v {
-                                if dy <= -threshold && allowed_for_task.iter().any(|d| matches!(d, SwipeDirection::Top)) { should_dismiss = true; }
-                                if dy >=  threshold && allowed_for_task.iter().any(|d| matches!(d, SwipeDirection::Bottom)) { should_dismiss = true; }
+                                if dy <= -threshold
+                                    && allowed_for_task
+                                        .iter()
+                                        .any(|d| matches!(d, SwipeDirection::Top))
+                                {
+                                    should_dismiss = true;
+                                }
+                                if dy >= threshold
+                                    && allowed_for_task
+                                        .iter()
+                                        .any(|d| matches!(d, SwipeDirection::Bottom))
+                                {
+                                    should_dismiss = true;
+                                }
                             }
                             if should_dismiss {
                                 // Trigger dismiss; keep deltas to allow a natural fling-out fade
@@ -268,7 +312,8 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
                             } else {
                                 // Snap back with transition
                                 snapping_sig.set(true);
-                                dx_sig.set(0.0); dy_sig.set(0.0);
+                                dx_sig.set(0.0);
+                                dy_sig.set(0.0);
                             }
                         }
                         _ => {}
@@ -285,15 +330,28 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
     };
     let dx = drag_dx();
     let dy = drag_dy();
-    let ax_h = allowed_dirs.iter().any(|d| matches!(d, SwipeDirection::Left | SwipeDirection::Right));
-    let ax_v = allowed_dirs.iter().any(|d| matches!(d, SwipeDirection::Top | SwipeDirection::Bottom));
+    let ax_h = allowed_dirs
+        .iter()
+        .any(|d| matches!(d, SwipeDirection::Left | SwipeDirection::Right));
+    let ax_v = allowed_dirs
+        .iter()
+        .any(|d| matches!(d, SwipeDirection::Top | SwipeDirection::Bottom));
     let use_h = ax_h && (!ax_v || dx.abs() >= dy.abs());
-    let (tx, ty) = if use_h { (dx, 0.0) } else if ax_v { (0.0, dy) } else { (0.0, 0.0) };
-    let ratio = ((if use_h { dx.abs() } else { dy.abs() }) / (DEFAULT_SWIPE_THRESHOLD_PX as f64)).min(1.0);
+    let (tx, ty) = if use_h {
+        (dx, 0.0)
+    } else if ax_v {
+        (0.0, dy)
+    } else {
+        (0.0, 0.0)
+    };
+    let ratio =
+        ((if use_h { dx.abs() } else { dy.abs() }) / (DEFAULT_SWIPE_THRESHOLD_PX as f64)).min(1.0);
     let drag_opacity = 1.0 - 0.3 * ratio;
     // Entrance/Exit composition: start hidden and offset, animate to rest; on exit fade + slide away
-    let enter_transition = "transform 220ms ease, opacity 220ms ease, top 200ms ease, bottom 200ms ease";
-    let exit_transition = "transform 220ms ease, opacity 220ms ease, top 200ms ease, bottom 200ms ease";
+    let enter_transition =
+        "transform 220ms ease, opacity 220ms ease, top 200ms ease, bottom 200ms ease";
+    let exit_transition =
+        "transform 220ms ease, opacity 220ms ease, top 200ms ease, bottom 200ms ease";
     let is_exiting = props.exiting;
     let outer_transition = if dragging() {
         "none"
@@ -314,12 +372,27 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
     } else {
         ty
     };
-    let outer_opacity = if !mounted() || is_exiting { 0.0 } else { drag_opacity };
-    let pe = if is_exiting { "pointer-events: none;" } else { "" };
-    let is_center = matches!(ctx.defaults.position, Position::TopCenter | Position::BottomCenter);
+    let outer_opacity = if !mounted() || is_exiting {
+        0.0
+    } else {
+        drag_opacity
+    };
+    let pe = if is_exiting {
+        "pointer-events: none;"
+    } else {
+        ""
+    };
+    let is_center = matches!(
+        ctx.defaults.position,
+        Position::TopCenter | Position::BottomCenter
+    );
     let center_prefix = if is_center { "translateX(-50%) " } else { "" };
     let base_tf = props.base_transform.clone().unwrap_or_default();
-    let base_tf = if base_tf.is_empty() { String::new() } else { format!("{} ", base_tf) };
+    let base_tf = if base_tf.is_empty() {
+        String::new()
+    } else {
+        format!("{} ", base_tf)
+    };
     let drag_style = format!(
         "transform: {}{}translate({:.2}px, {:.2}px); opacity: {:.3}; transition: {}; {}",
         center_prefix, base_tf, tx, ty_with_anim, outer_opacity, outer_transition, pe
@@ -332,16 +405,13 @@ pub fn SonnerToast(props: SonnerToastProps) -> Element {
     // Phase 8: resolve icon element based on per-toast and global overrides
     let icon_el: Option<Element> = {
         // Prefer per-toast keyword, else provider defaults by type
-        let kw_opt = props
-            .icon
-            .clone()
-            .or_else(|| match props.toast_type {
-                ToastType::Success => ctx.defaults.icons.success.clone(),
-                ToastType::Info => ctx.defaults.icons.info.clone(),
-                ToastType::Warning => ctx.defaults.icons.warning.clone(),
-                ToastType::Error => ctx.defaults.icons.error.clone(),
-                ToastType::Loading => ctx.defaults.icons.loading.clone(),
-            });
+        let kw_opt = props.icon.clone().or_else(|| match props.toast_type {
+            ToastType::Success => ctx.defaults.icons.success.clone(),
+            ToastType::Info => ctx.defaults.icons.info.clone(),
+            ToastType::Warning => ctx.defaults.icons.warning.clone(),
+            ToastType::Error => ctx.defaults.icons.error.clone(),
+            ToastType::Loading => ctx.defaults.icons.loading.clone(),
+        });
 
         if let Some(kw) = kw_opt {
             let k = kw.to_lowercase();

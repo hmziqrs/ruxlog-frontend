@@ -1,5 +1,8 @@
 use dioxus::{logger::tracing, prelude::*};
-use hmziq_dioxus_free_icons::{icons::ld_icons::{LdChevronDown, LdCheck}, Icon};
+use hmziq_dioxus_free_icons::{
+    icons::ld_icons::{LdCheck, LdChevronDown},
+    Icon,
+};
 
 use crate::ui::custom::AppPortal;
 

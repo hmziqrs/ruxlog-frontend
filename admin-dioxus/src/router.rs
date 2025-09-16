@@ -5,18 +5,18 @@ use crate::containers::AuthGuardContainer;
 use crate::containers::NavBarContainer;
 use crate::screens::AnalyticsScreen;
 use crate::screens::CategoriesAddScreen;
-use crate::screens::CategoriesListScreen;
 use crate::screens::CategoriesEditScreen;
+use crate::screens::CategoriesListScreen;
 use crate::screens::HomeScreen;
 use crate::screens::LoginScreen;
 use crate::screens::PostsAddScreen;
 use crate::screens::PostsListScreen;
+use crate::screens::SonnerDemoScreen;
 use crate::screens::TagsAddScreen;
-use crate::screens::TagsListScreen;
 use crate::screens::TagsEditScreen;
+use crate::screens::TagsListScreen;
 use crate::screens::UsersAddScreen;
 use crate::screens::UsersListScreen;
-use crate::screens::SonnerDemoScreen;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]

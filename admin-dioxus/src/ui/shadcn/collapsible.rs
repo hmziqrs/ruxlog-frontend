@@ -14,7 +14,7 @@ pub struct CollapsibleProps {
 #[component]
 pub fn Collapsible(props: CollapsibleProps) -> Element {
     use_context_provider(|| Signal::new(CollapsibleContext(false)));
-    
+
     let mut class = vec![];
     if let Some(custom_class) = props.class {
         class.push(custom_class);
@@ -28,7 +28,7 @@ pub fn Collapsible(props: CollapsibleProps) -> Element {
 #[component]
 pub fn CollapsibleTrigger(props: CollapsibleProps) -> Element {
     let mut open = use_context::<Signal<CollapsibleContext>>();
-    
+
     let mut class = vec![];
     if let Some(custom_class) = props.class {
         class.push(custom_class);
@@ -51,14 +51,14 @@ pub fn CollapsibleTrigger(props: CollapsibleProps) -> Element {
 #[component]
 pub fn CollapsibleContent(props: CollapsibleProps) -> Element {
     let open = use_context::<Signal<CollapsibleContext>>();
-    
+
     let mut class = vec![];
     if let Some(custom_class) = props.class {
         class.push(custom_class);
     }
 
     if !open.read().0 {
-        return rsx!{};
+        return rsx! {};
     }
 
     rsx! {

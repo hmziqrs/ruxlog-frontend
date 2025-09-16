@@ -1,10 +1,10 @@
-use std::collections::HashMap;
 use dioxus::prelude::*;
+use std::collections::HashMap;
 use validator::{Validate, ValidationError};
 
 use crate::hooks::{OxForm, OxFormModel};
-use crate::utils::colors::get_contrast_yiq;
 use crate::store::{TagsAddPayload, TagsEditPayload};
+use crate::utils::colors::get_contrast_yiq;
 
 #[derive(Debug, Validate, Clone, PartialEq)]
 pub struct TagForm {
@@ -14,7 +14,7 @@ pub struct TagForm {
     #[validate(length(min = 1, message = "Slug is required"))]
     #[validate(custom(function = "validate_slug"))]
     pub slug: String,
-    
+
     pub description: String,
     // Hex color like #3b82f6
     pub color: String,
@@ -82,8 +82,16 @@ impl TagForm {
 
     // Convert the form to the backend add payload contract
     pub fn to_add_payload(&self) -> TagsAddPayload {
-        let description = if self.description.trim().is_empty() { None } else { Some(self.description.clone()) };
-        let color = if self.color.trim().is_empty() { None } else { Some(self.color.clone()) };
+        let description = if self.description.trim().is_empty() {
+            None
+        } else {
+            Some(self.description.clone())
+        };
+        let color = if self.color.trim().is_empty() {
+            None
+        } else {
+            Some(self.color.clone())
+        };
         let text_color = Some(self.effective_text_color());
         let is_active = Some(self.active);
 
@@ -99,8 +107,16 @@ impl TagForm {
 
     // Convert the form to the backend edit payload contract
     pub fn to_edit_payload(&self) -> TagsEditPayload {
-        let description = if self.description.trim().is_empty() { None } else { Some(self.description.clone()) };
-        let color = if self.color.trim().is_empty() { None } else { Some(self.color.clone()) };
+        let description = if self.description.trim().is_empty() {
+            None
+        } else {
+            Some(self.description.clone())
+        };
+        let color = if self.color.trim().is_empty() {
+            None
+        } else {
+            Some(self.color.clone())
+        };
         let text_color = Some(self.effective_text_color());
         let is_active = Some(self.active);
 
@@ -125,9 +141,20 @@ impl OxFormModel for TagForm {
         map.insert("text_color".to_string(), self.text_color.clone());
         map.insert(
             "custom_text_color".to_string(),
-            if self.custom_text_color { "true".to_string() } else { "false".to_string() }
+            if self.custom_text_color {
+                "true".to_string()
+            } else {
+                "false".to_string()
+            },
         );
-        map.insert("active".to_string(), if self.active { "true".to_string() } else { "false".to_string() });
+        map.insert(
+            "active".to_string(),
+            if self.active {
+                "true".to_string()
+            } else {
+                "false".to_string()
+            },
+        );
         map
     }
 
@@ -161,13 +188,15 @@ pub fn use_tag_form(initial_state: TagForm) -> UseTagForm {
     let mut form_signal: Signal<OxForm<TagForm>> = use_signal(|| OxForm::new(initial_state));
     let auto_slug: Signal<bool> = use_signal(|| true);
     let form_data = form_signal.read();
-    
+
     let name = form_data.data.name.clone();
-    
+
     use_effect(move || {
         if *auto_slug.read() && !name.is_empty() {
             let sanitized_slug = TagForm::sanitize_slug(&name);
-            form_signal.write().update_field("slug", sanitized_slug.to_string());
+            form_signal
+                .write()
+                .update_field("slug", sanitized_slug.to_string());
         }
     });
 

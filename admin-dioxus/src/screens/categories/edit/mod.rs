@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::components::{PageHeader, FormTwoColumnSkeleton};
+use crate::components::{FormTwoColumnSkeleton, PageHeader};
 use crate::containers::{CategoryForm, CategoryFormContainer};
 use crate::hooks::use_category_view;
 use crate::store::use_category;

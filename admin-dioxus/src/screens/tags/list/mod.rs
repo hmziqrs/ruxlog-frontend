@@ -1,30 +1,29 @@
 use dioxus::prelude::*;
 
-use crate::router::Route;
-use crate::store::{use_tag, Tag, TagsListQuery, ListStore, ListQuery};
-use crate::types::Order;
-use crate::components::{DataTableScreen, HeaderColumn, ListEmptyState, ListToolbarProps, PageHeaderProps, ListErrorBannerProps, SkeletonTableRows, SkeletonCellConfig};
+use crate::components::{
+    DataTableScreen, HeaderColumn, ListEmptyState, ListErrorBannerProps, ListToolbarProps,
+    PageHeaderProps, SkeletonCellConfig, SkeletonTableRows,
+};
 use crate::hooks::{use_list_screen_with_handlers, ListScreenConfig};
+use crate::router::Route;
+use crate::store::{use_tag, ListQuery, ListStore, Tag, TagsListQuery};
+use crate::types::Order;
 use crate::ui::shadcn::{
-    Badge, BadgeVariant, Button, ButtonVariant, DropdownMenu, DropdownMenuContent,
-    DropdownMenuItem, DropdownMenuTrigger, Checkbox,
+    Badge, BadgeVariant, Button, ButtonVariant, Checkbox, DropdownMenu, DropdownMenuContent,
+    DropdownMenuItem, DropdownMenuTrigger,
 };
 use crate::utils::dates::format_short_date_dt;
-use hmziq_dioxus_free_icons::{
-    icons::ld_icons::{LdEllipsis},
-    Icon,
-};
-
+use hmziq_dioxus_free_icons::{icons::ld_icons::LdEllipsis, Icon};
 
 #[component]
 pub fn TagsListScreen() -> Element {
     let nav = use_navigator();
     let tags_state = use_tag();
-    
+
     let filters = use_signal(|| TagsListQuery::new());
     // Local selection state for the current page
     let selected_ids = use_signal(|| Vec::<i32>::new());
-    
+
     // Use the enhanced hook that creates handlers for us
     let (list_state, handlers) = use_list_screen_with_handlers(
         Some(ListScreenConfig {
@@ -65,11 +64,36 @@ pub fn TagsListScreen() -> Element {
     // Define header columns (prepend a blank cell for the selection checkbox column)
     let headers = vec![
         HeaderColumn::new("", false, "w-12 py-3 px-4", None),
-        HeaderColumn::new("Name", true, "py-3 px-4 text-left font-medium text-sm", Some("name")),
-        HeaderColumn::new("Description", false, "hidden py-3 px-4 text-left font-medium text-sm md:table-cell", None),
-        HeaderColumn::new("Posts", false, "hidden py-3 px-4 text-left font-medium text-sm md:table-cell", None),
-        HeaderColumn::new("Created", true, "hidden py-3 px-4 text-left font-medium text-sm md:table-cell", Some("created_at")),
-        HeaderColumn::new("Status", false, "py-3 px-4 text-left font-medium text-sm", None),
+        HeaderColumn::new(
+            "Name",
+            true,
+            "py-3 px-4 text-left font-medium text-sm",
+            Some("name"),
+        ),
+        HeaderColumn::new(
+            "Description",
+            false,
+            "hidden py-3 px-4 text-left font-medium text-sm md:table-cell",
+            None,
+        ),
+        HeaderColumn::new(
+            "Posts",
+            false,
+            "hidden py-3 px-4 text-left font-medium text-sm md:table-cell",
+            None,
+        ),
+        HeaderColumn::new(
+            "Created",
+            true,
+            "hidden py-3 px-4 text-left font-medium text-sm md:table-cell",
+            Some("created_at"),
+        ),
+        HeaderColumn::new(
+            "Status",
+            false,
+            "py-3 px-4 text-left font-medium text-sm",
+            None,
+        ),
         HeaderColumn::new("", false, "w-12 py-3 px-4", None),
     ];
 
@@ -94,11 +118,11 @@ pub fn TagsListScreen() -> Element {
             header: Some(PageHeaderProps {
                 title: "Tags".to_string(),
                 description: "Organize your content with tags".to_string(),
-                actions: Some(rsx!{ 
-                    Button { 
-                        onclick: move |_| { nav.push(Route::TagsAddScreen {}); }, 
-                        "New Tag" 
-                    } 
+                actions: Some(rsx!{
+                    Button {
+                        onclick: move |_| { nav.push(Route::TagsAddScreen {}); },
+                        "New Tag"
+                    }
                 }),
                 class: None,
                 embedded: false,

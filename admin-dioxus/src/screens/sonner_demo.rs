@@ -2,8 +2,8 @@ use dioxus::prelude::*;
 use dioxus_time::sleep;
 use std::time::Duration;
 
-use crate::components::sonner::{use_sonner, ToastOptions, SonnerToaster, PromiseConfig};
-use crate::components::sonner::types::{ToasterProps, Position, Offset, Action};
+use crate::components::sonner::types::{Action, Offset, Position, ToasterProps};
+use crate::components::sonner::{use_sonner, PromiseConfig, SonnerToaster, ToastOptions};
 
 const DEFAULT_TOAST_LIFETIME_MS: u64 = 29000;
 
@@ -56,10 +56,10 @@ pub fn SonnerDemoScreen() -> Element {
                     ("Bottom Center", Position::BottomCenter),
                     ("Bottom Right", Position::BottomRight),
                 ] {
-                    button { 
-                        class: { if position() == pos { 
+                    button {
+                        class: { if position() == pos {
                             "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
-                        } else { 
+                        } else {
                             "px-2 py-1 rounded border hover:bg-accent text-sm"
                         }},
                         onclick: move |_| position.set(pos),
@@ -91,10 +91,10 @@ pub fn SonnerDemoScreen() -> Element {
             div { class: "flex flex-wrap gap-2 items-center",
                 div { class: "font-medium mr-2", "Offset:" }
                 for label in ["16px", "24px", "32px", "48px"] {
-                    button { 
-                        class: { if offset_str() == label { 
+                    button {
+                        class: { if offset_str() == label {
                             "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
-                        } else { 
+                        } else {
                             "px-2 py-1 rounded border hover:bg-accent text-sm"
                         }},
                         onclick: move |_| offset_str.set(label.to_string()),
@@ -103,10 +103,10 @@ pub fn SonnerDemoScreen() -> Element {
                 }
                 div { class: "font-medium ml-4 mr-2", "Mobile Offset:" }
                 for label in ["8px", "12px", "16px", "24px"] {
-                    button { 
-                        class: { if mobile_offset_str() == label { 
+                    button {
+                        class: { if mobile_offset_str() == label {
                             "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
-                        } else { 
+                        } else {
                             "px-2 py-1 rounded border hover:bg-accent text-sm"
                         }},
                         onclick: move |_| mobile_offset_str.set(label.to_string()),
@@ -115,10 +115,10 @@ pub fn SonnerDemoScreen() -> Element {
                 }
                 div { class: "font-medium ml-4 mr-2", "Breakpoint:" }
                 for (label, bp) in [("640", 640), ("768", 768), ("1024", 1024)] {
-                    button { 
-                        class: { if breakpoint() == bp { 
+                    button {
+                        class: { if breakpoint() == bp {
                             "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
-                        } else { 
+                        } else {
                             "px-2 py-1 rounded border hover:bg-accent text-sm"
                         }},
                         onclick: move |_| breakpoint.set(bp),
@@ -129,10 +129,10 @@ pub fn SonnerDemoScreen() -> Element {
             div { class: "flex flex-wrap gap-2 items-center",
                 div { class: "font-medium mr-2", "Visible:" }
                 for n in [1usize, 2, 3, 4, 5] {
-                    button { 
-                        class: { if visible() == n { 
+                    button {
+                        class: { if visible() == n {
                             "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
-                        } else { 
+                        } else {
                             "px-2 py-1 rounded border hover:bg-accent text-sm"
                         }},
                         onclick: move |_| visible.set(n),
@@ -140,19 +140,19 @@ pub fn SonnerDemoScreen() -> Element {
                     }
                 }
                 div { class: "font-medium ml-4 mr-2", "Expand:" }
-                button { 
-                    class: { if !expand() { 
+                button {
+                    class: { if !expand() {
                         "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
-                    } else { 
+                    } else {
                         "px-2 py-1 rounded border hover:bg-accent text-sm"
                     }},
                     onclick: move |_| expand.set(false),
                     "Off"
                 }
-                button { 
-                    class: { if expand() { 
+                button {
+                    class: { if expand() {
                         "px-2 py-1 rounded border text-sm bg-primary text-primary-foreground"
-                    } else { 
+                    } else {
                         "px-2 py-1 rounded border hover:bg-accent text-sm"
                     }},
                     onclick: move |_| expand.set(true),
@@ -174,7 +174,6 @@ pub fn SonnerDemoScreen() -> Element {
 fn DemoContent() -> Element {
     let sonner = use_sonner();
 
-    
     rsx! {
         div { class: "space-x-2",
             button {

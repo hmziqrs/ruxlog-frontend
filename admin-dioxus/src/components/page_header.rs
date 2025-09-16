@@ -66,11 +66,11 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
             Breadcrumb {
                 BreadcrumbList {
                     // Dashboard root
-                    BreadcrumbItem { 
+                    BreadcrumbItem {
                         BreadcrumbLink {
                             onclick: Some(Callback::new(move |_| { nav.push(Route::HomeScreen {}); })),
                             "Dashboard"
-                        } 
+                        }
                     }
                     BreadcrumbSeparator {}
 
@@ -115,12 +115,12 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
                     Breadcrumb {
                         BreadcrumbList {
                             // Dashboard root
-                            BreadcrumbItem { 
+                            BreadcrumbItem {
                                 BreadcrumbLink {
                                     // href can be omitted; we handle nav in onclick
                                     onclick: Some(Callback::new(move |_| { nav.push(Route::HomeScreen {}); })),
                                     "Dashboard"
-                                } 
+                                }
                             }
                             BreadcrumbSeparator {}
 

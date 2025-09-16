@@ -1,5 +1,5 @@
-use dioxus::prelude::*;
 use crate::ui::{custom::AppPortal, shadcn::Button};
+use dioxus::prelude::*;
 
 /// Props for AlertDialog root component
 #[derive(Props, PartialEq, Clone)]
@@ -16,7 +16,9 @@ pub struct AlertDialogState(bool);
 #[component]
 pub fn AlertDialog(props: AlertDialogProps) -> Element {
     use_context_provider(|| {
-        let signal = props.signal.unwrap_or_else(|| Signal::new(AlertDialogState(false)));
+        let signal = props
+            .signal
+            .unwrap_or_else(|| Signal::new(AlertDialogState(false)));
         signal
     });
     rsx! {
@@ -63,7 +65,8 @@ pub fn AlertDialogPortal(props: AlertDialogPortalProps) -> Element {
 /// Props for AlertDialogOverlay
 #[derive(Props, PartialEq, Clone)]
 pub struct AlertDialogOverlayProps {
-    #[props(default)] pub class: Option<String>,
+    #[props(default)]
+    pub class: Option<String>,
 }
 
 /// Overlay backdrop component
@@ -78,7 +81,8 @@ pub fn AlertDialogOverlay(props: AlertDialogOverlayProps) -> Element {
 #[derive(Props, PartialEq, Clone)]
 pub struct AlertDialogContentProps {
     pub children: Element,
-    #[props(default)] pub class: Option<String>,
+    #[props(default)]
+    pub class: Option<String>,
 }
 
 /// Content component for dialog body
@@ -95,7 +99,8 @@ pub fn AlertDialogContent(props: AlertDialogContentProps) -> Element {
 #[derive(Props, PartialEq, Clone)]
 pub struct AlertDialogTitleProps {
     pub children: Element,
-    #[props(default)] pub class: Option<String>,
+    #[props(default)]
+    pub class: Option<String>,
 }
 
 /// Title component
@@ -112,7 +117,8 @@ pub fn AlertDialogTitle(props: AlertDialogTitleProps) -> Element {
 #[derive(Props, PartialEq, Clone)]
 pub struct AlertDialogDescriptionProps {
     pub children: Element,
-    #[props(default)] pub class: Option<String>,
+    #[props(default)]
+    pub class: Option<String>,
 }
 
 /// Description component
@@ -133,7 +139,6 @@ pub struct AlertDialogActionProps {
     pub class: Option<String>,
     #[props(optional)]
     onclick: Option<EventHandler<MouseEvent>>,
-
 }
 
 /// Action button closes dialog
@@ -158,7 +163,8 @@ pub fn AlertDialogAction(props: AlertDialogActionProps) -> Element {
 #[derive(Props, PartialEq, Clone)]
 pub struct AlertDialogCancelProps {
     pub children: Element,
-    #[props(default)] pub class: Option<String>,
+    #[props(default)]
+    pub class: Option<String>,
 }
 
 #[component]
@@ -175,11 +181,11 @@ pub fn AlertDialogCancel(props: AlertDialogCancelProps) -> Element {
 
 // re-export for ease of use
 pub use AlertDialog as Root;
-pub use AlertDialogTrigger as Trigger;
-pub use AlertDialogPortal as Portal;
-pub use AlertDialogOverlay as Overlay;
-pub use AlertDialogContent as Content;
 pub use AlertDialogAction as Action;
 pub use AlertDialogCancel as Cancel;
-pub use AlertDialogTitle as Title;
+pub use AlertDialogContent as Content;
 pub use AlertDialogDescription as Description;
+pub use AlertDialogOverlay as Overlay;
+pub use AlertDialogPortal as Portal;
+pub use AlertDialogTitle as Title;
+pub use AlertDialogTrigger as Trigger;

@@ -6,7 +6,11 @@ use uuid::Uuid;
 
 // Helper function to get state string
 fn get_state(open: bool) -> &'static str {
-    if open { "open" } else { "closed" }
+    if open {
+        "open"
+    } else {
+        "closed"
+    }
 }
 
 // --- Context ---
@@ -65,7 +69,11 @@ pub struct CollapsibleProps {
 #[component]
 pub fn AppCollapsible(props: CollapsibleProps) -> Element {
     let is_controlled = props.open.is_some();
-    let initial_open = if is_controlled { props.open.unwrap() } else { props.default_open };
+    let initial_open = if is_controlled {
+        props.open.unwrap()
+    } else {
+        props.default_open
+    };
     let mut is_open = use_signal(|| initial_open);
     let mut is_disabled = use_signal(|| props.disabled);
     let content_id = use_signal(|| format!("collapsible-content-{}", Uuid::new_v4()));
@@ -75,7 +83,7 @@ pub fn AppCollapsible(props: CollapsibleProps) -> Element {
     let on_open_change_ref = use_signal(|| Rc::new(RefCell::new(on_open_change_callback)));
 
     // Update internal state if controlled prop changes
-    use_effect(move | | {
+    use_effect(move || {
         if let Some(controlled_open) = props.open {
             if controlled_open != *is_open.read() {
                 is_open.set(controlled_open);
@@ -84,7 +92,7 @@ pub fn AppCollapsible(props: CollapsibleProps) -> Element {
     });
 
     // Update disabled state if prop changes
-     use_effect(move | | {
+    use_effect(move || {
         if props.disabled != *is_disabled.read() {
             is_disabled.set(props.disabled);
         }
@@ -102,13 +110,9 @@ pub fn AppCollapsible(props: CollapsibleProps) -> Element {
         }
     }))));
 
-
-    use_context_provider(|| CollapsibleContext::new(
-        content_id,
-        is_disabled,
-        is_open,
-        handle_open_toggle.clone(),
-    ));
+    use_context_provider(|| {
+        CollapsibleContext::new(content_id, is_disabled, is_open, handle_open_toggle.clone())
+    });
 
     let current_open_state = *is_open.read();
     let current_disabled_state = *is_disabled.read();
@@ -178,7 +182,7 @@ pub fn AppCollapsibleContent(props: CollapsibleContentProps) -> Element {
     let is_visible = props.force_mount || is_open;
 
     if !is_visible {
-        return rsx! {}; 
+        return rsx! {};
     }
 
     rsx! {
@@ -198,4 +202,3 @@ pub fn AppCollapsibleContent(props: CollapsibleContentProps) -> Element {
 // pub const Root: fn(CollapsibleProps) -> Element = Collapsible;
 // pub const Trigger: fn(CollapsibleTriggerProps) -> Element = CollapsibleTrigger;
 // pub const Content: fn(CollapsibleContentProps) -> Element = CollapsibleContent;
-

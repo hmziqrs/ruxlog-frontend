@@ -6,8 +6,8 @@ use std::collections::VecDeque;
 use std::future::Future;
 
 use super::types::{
-    ToastOptions, ToastT, ToastType, DEFAULT_TOAST_LIFETIME_MS, Position, HeightT, ToasterProps,
-    PromiseConfig,
+    HeightT, Position, PromiseConfig, ToastOptions, ToastT, ToastType, ToasterProps,
+    DEFAULT_TOAST_LIFETIME_MS,
 };
 
 // Callback types used by the provider (wired in Phase 2)
@@ -55,9 +55,7 @@ impl SonnerToasts {
             toast_type,
             icon: options.icon.clone(),
             description: None,
-            duration_ms: options
-                .duration_ms
-                .or(Some(DEFAULT_TOAST_LIFETIME_MS)),
+            duration_ms: options.duration_ms.or(Some(DEFAULT_TOAST_LIFETIME_MS)),
             delete: false,
             close_button: options.close_button.unwrap_or(false),
             dismissible: true,
@@ -121,7 +119,8 @@ impl SonnerToasts {
         toast_type: Option<ToastType>,
         options: ToastOptions,
     ) {
-        self.update_with_options.call((id, title, toast_type, options))
+        self.update_with_options
+            .call((id, title, toast_type, options))
     }
 
     /// Convenience: update an existing toast to Success type with a new title and options

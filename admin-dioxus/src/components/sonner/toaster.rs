@@ -4,12 +4,15 @@ use crate::components::portal_v2::{use_portal, PortalIn, PortalOut};
 use dioxus::prelude::*;
 // use dioxus::logger::tracing;
 use dioxus_time::sleep;
-use std::time::Duration;
 use std::collections::VecDeque;
+use std::time::Duration;
 
 use super::state::SonnerCtx;
 use super::toast::SonnerToast;
-use super::types::{HeightT, Offset, Position, TextDirection, ToasterProps, ToastT, ToastType, DEFAULT_VIEWPORT_OFFSET, ToastOptions};
+use super::types::{
+    HeightT, Offset, Position, TextDirection, ToastOptions, ToastT, ToastType, ToasterProps,
+    DEFAULT_VIEWPORT_OFFSET,
+};
 
 #[derive(Props, Clone)]
 pub struct SonnerToasterProps {
@@ -53,30 +56,61 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
     let update_with_options = {
         let mut toasts = toasts.clone();
         let default_duration = props.defaults.duration_ms;
-        use_callback(move |(id, title, toast_type, options): (u64, Option<String>, Option<ToastType>, ToastOptions)| {
-            let mut list = toasts.write();
-            if let Some(pos) = list.iter().position(|t| t.id == id) {
-                let mut t = list[pos].clone();
-                if let Some(tt) = toast_type { t.toast_type = tt; }
-                if let Some(new_title) = title { t.title = Some(new_title); }
-                // Merge options: only override when provided
-                if let Some(v) = options.icon { t.icon = Some(v); }
-                if let Some(v) = options.class_name { t.class_name = Some(v); }
-                if let Some(v) = options.class_names { t.class_names = Some(v); }
-                if let Some(v) = options.toaster_id { t.toaster_id = Some(v); }
-                if let Some(v) = options.action { t.action = Some(v); }
-                if let Some(v) = options.cancel { t.cancel = Some(v); }
-                if let Some(v) = options.duration_ms { t.duration_ms = Some(v); }
-                if let Some(v) = options.on_auto_close { t.on_auto_close = Some(v); }
-                if let Some(v) = options.on_dismiss { t.on_dismiss = Some(v); }
-                if let Some(v) = options.close_button { t.close_button = v; }
-                // Apply default duration if transitioning to non-loading without a duration
-                if t.duration_ms.is_none() && t.toast_type != ToastType::Loading {
-                    t.duration_ms = Some(default_duration);
+        use_callback(
+            move |(id, title, toast_type, options): (
+                u64,
+                Option<String>,
+                Option<ToastType>,
+                ToastOptions,
+            )| {
+                let mut list = toasts.write();
+                if let Some(pos) = list.iter().position(|t| t.id == id) {
+                    let mut t = list[pos].clone();
+                    if let Some(tt) = toast_type {
+                        t.toast_type = tt;
+                    }
+                    if let Some(new_title) = title {
+                        t.title = Some(new_title);
+                    }
+                    // Merge options: only override when provided
+                    if let Some(v) = options.icon {
+                        t.icon = Some(v);
+                    }
+                    if let Some(v) = options.class_name {
+                        t.class_name = Some(v);
+                    }
+                    if let Some(v) = options.class_names {
+                        t.class_names = Some(v);
+                    }
+                    if let Some(v) = options.toaster_id {
+                        t.toaster_id = Some(v);
+                    }
+                    if let Some(v) = options.action {
+                        t.action = Some(v);
+                    }
+                    if let Some(v) = options.cancel {
+                        t.cancel = Some(v);
+                    }
+                    if let Some(v) = options.duration_ms {
+                        t.duration_ms = Some(v);
+                    }
+                    if let Some(v) = options.on_auto_close {
+                        t.on_auto_close = Some(v);
+                    }
+                    if let Some(v) = options.on_dismiss {
+                        t.on_dismiss = Some(v);
+                    }
+                    if let Some(v) = options.close_button {
+                        t.close_button = v;
+                    }
+                    // Apply default duration if transitioning to non-loading without a duration
+                    if t.duration_ms.is_none() && t.toast_type != ToastType::Loading {
+                        t.duration_ms = Some(default_duration);
+                    }
+                    list[pos] = t;
                 }
-                list[pos] = t;
-            }
-        })
+            },
+        )
     };
 
     let update_toast = {
@@ -125,14 +159,18 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                         let cb = list.get(pos).and_then(|t| t.on_dismiss.clone());
                         list.remove(pos);
                         cb
-                    } else { None }
+                    } else {
+                        None
+                    }
                 };
                 // remove any recorded height for this toast id
                 let mut hs = heights_rm.write();
                 if let Some(pos) = hs.iter().position(|h| h.toast_id == id) {
                     hs.remove(pos);
                 }
-                if let Some(cb) = cb { cb.call(id); }
+                if let Some(cb) = cb {
+                    cb.call(id);
+                }
             });
         })
     };
@@ -144,7 +182,9 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
             let mut list = toasts.write();
             let cb = if let Some(pos) = list.iter().position(|t| t.id == id) {
                 list.get(pos).and_then(|t| t.on_dismiss.clone())
-            } else { None };
+            } else {
+                None
+            };
             if let Some(pos) = list.iter().position(|t| t.id == id) {
                 list.remove(pos);
             }
@@ -153,7 +193,9 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
             if let Some(pos) = hs.iter().position(|h| h.toast_id == id) {
                 hs.remove(pos);
             }
-            if let Some(cb) = cb { cb.call(id); }
+            if let Some(cb) = cb {
+                cb.call(id);
+            }
         })
     };
 
@@ -270,11 +312,17 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
 
     // Visible count handling (expand = show all)
     let requested_visible = props.defaults.visible_toasts.max(1);
-    let max_visible = if props.defaults.expand { usize::MAX } else { requested_visible };
+    let max_visible = if props.defaults.expand {
+        usize::MAX
+    } else {
+        requested_visible
+    };
     let visible_count = count.min(max_visible);
 
     // Container height from visible toasts only
-    let visible_height = if visible_count == 0 { 0 } else {
+    let visible_height = if visible_count == 0 {
+        0
+    } else {
         match props.defaults.position {
             Position::TopLeft | Position::TopRight | Position::TopCenter => {
                 let start = count - visible_count;
@@ -293,18 +341,35 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
 
     // Phase 5: Offsets per position (desktop/mobile)
     let is_mobile = *viewport_width.read() <= props.defaults.mobile_breakpoint_px;
-    let active_offset: &Offset = if is_mobile { &props.defaults.mobile_offset } else { &props.defaults.offset };
+    let active_offset: &Offset = if is_mobile {
+        &props.defaults.mobile_offset
+    } else {
+        &props.defaults.offset
+    };
 
     // Resolve per-side offset with sensible fallback to DEFAULT_VIEWPORT_OFFSET
     let resolve = |off: &Offset, side: &str| -> String {
         match off {
             Offset::Number(n) => format!("{}px", n),
             Offset::Text(s) => s.clone(),
-            Offset::Sides { top, right, bottom, left } => match side {
-                "top" => top.clone().unwrap_or_else(|| DEFAULT_VIEWPORT_OFFSET.to_string()),
-                "right" => right.clone().unwrap_or_else(|| DEFAULT_VIEWPORT_OFFSET.to_string()),
-                "bottom" => bottom.clone().unwrap_or_else(|| DEFAULT_VIEWPORT_OFFSET.to_string()),
-                "left" => left.clone().unwrap_or_else(|| DEFAULT_VIEWPORT_OFFSET.to_string()),
+            Offset::Sides {
+                top,
+                right,
+                bottom,
+                left,
+            } => match side {
+                "top" => top
+                    .clone()
+                    .unwrap_or_else(|| DEFAULT_VIEWPORT_OFFSET.to_string()),
+                "right" => right
+                    .clone()
+                    .unwrap_or_else(|| DEFAULT_VIEWPORT_OFFSET.to_string()),
+                "bottom" => bottom
+                    .clone()
+                    .unwrap_or_else(|| DEFAULT_VIEWPORT_OFFSET.to_string()),
+                "left" => left
+                    .clone()
+                    .unwrap_or_else(|| DEFAULT_VIEWPORT_OFFSET.to_string()),
                 _ => DEFAULT_VIEWPORT_OFFSET.to_string(),
             },
         }
@@ -332,10 +397,9 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
             resolve(active_offset, "right")
         ),
         // For center positions, let the toasts self-center; container just spans inline.
-        Position::TopCenter => format!(
-            "top: {}; left: 0; right: 0;",
-            resolve(active_offset, "top")
-        ),
+        Position::TopCenter => {
+            format!("top: {}; left: 0; right: 0;", resolve(active_offset, "top"))
+        }
         Position::BottomCenter => format!(
             "bottom: {}; left: 0; right: 0;",
             resolve(active_offset, "bottom")
@@ -353,7 +417,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
 
         PortalIn { portal,
             // Container region
-            div { 
+            div {
                 role: "region",
                 aria_label: "{container_label}",
                 tabindex: "-1",
