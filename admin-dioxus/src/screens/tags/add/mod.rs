@@ -4,11 +4,14 @@ use crate::components::sonner::{Action, ToastOptions};
 use crate::components::PageHeader;
 use crate::containers::{TagForm, TagFormContainer};
 use crate::hooks::{use_state_frame_toast, StateFrameToastConfig};
+use crate::router::Route;
 use crate::store::use_tag;
+use crate::ui::shadcn::{Button, ButtonVariant};
 
 #[component]
 pub fn TagsAddScreen() -> Element {
     let tags = use_tag();
+    let nav = use_navigator();
 
     // Wire StateFrame->Sonner toast for add flow
     let cfg = StateFrameToastConfig {
@@ -35,6 +38,13 @@ pub fn TagsAddScreen() -> Element {
             PageHeader {
                 title: "Create Tag".to_string(),
                 description: "Define how your tag looks and behaves. Keep names concise and meaningful.".to_string(),
+                actions: Some(rsx! {
+                    Button {
+                        variant: ButtonVariant::Outline,
+                        onclick: move |_| { nav.push(Route::TagsListScreen {}); },
+                        "Back to Tags"
+                    }
+                }),
             }
 
             // Content: render reusable form component; submission handled here

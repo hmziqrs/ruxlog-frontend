@@ -2,6 +2,8 @@ use dioxus::prelude::*;
 
 use super::form::{use_tag_form, TagForm};
 use crate::components::{AppInput, ColorPicker, TagBadge, TagSize};
+use crate::hooks::OxForm;
+use crate::router::Route;
 use crate::store::Tag;
 use crate::ui::shadcn::{Button, ButtonSize, ButtonVariant, Checkbox};
 use crate::utils::colors::get_contrast_yiq;
@@ -19,9 +21,13 @@ pub struct TagFormContainerProps {
 
 #[component]
 pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
+    let nav = use_navigator();
     let initial_tag_form = props.initial.clone().unwrap_or_else(TagForm::new);
+    let reset_template = initial_tag_form.clone();
     let tag_form_hook = use_tag_form(initial_tag_form);
     let mut form = tag_form_hook.form;
+    let mut auto_slug = tag_form_hook.auto_slug;
+    let is_form_dirty = form.read().is_dirty();
 
     rsx! {
         div {
@@ -156,7 +162,17 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                     }
 
                     div { class: "flex gap-3 pt-4",
-                        Button { class: "flex-1 w-auto", variant: ButtonVariant::Outline, "Cancel" }
+                        Button { class: "flex-1 w-auto", variant: ButtonVariant::Outline,
+                            onclick: move |_| {
+                                if form.peek().is_dirty() {
+                                    form.set(OxForm::new(reset_template.clone()));
+                                    auto_slug.set(true);
+                                } else {
+                                    nav.push(Route::TagsListScreen {});
+                                }
+                            },
+                            {if is_form_dirty { "Reset" } else { "Cancel" }}
+                        }
                         Button { class: "flex-1 w-auto",
                             onclick: move |_| {
                                 let submit = props.on_submit.clone();
