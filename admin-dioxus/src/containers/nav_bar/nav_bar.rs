@@ -44,7 +44,7 @@ pub fn NavBarContainer() -> Element {
     rsx! {
         Sidebar { expanded: sidebar_open, toggle: move |_| sidebar_open.toggle() }
 
-        header { class: "sticky top-0 z-10 border-b border-white/20 dark:border-white/10 bg-zinc-100/30 dark:bg-zinc-900/25 backdrop-blur-xl shadow-sm transition-colors duration-300",
+        header { class: "sticky top-0 z-10 backdrop-blur-xl duration-300",
             div { class: "flex h-16 items-center justify-between px-4",
                 div { class: "flex items-center",
                     button {
