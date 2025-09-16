@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use hmziq_dioxus_free_icons::icons::ld_icons::{LdBell, LdMenu, LdMoon, LdSearch, LdSun};
+use hmziq_dioxus_free_icons::icons::ld_icons::{LdBell, LdMenu, LdMoon, LdSun};
 use hmziq_dioxus_free_icons::Icon;
 
 use crate::config::DarkMode;
@@ -44,7 +44,7 @@ pub fn NavBarContainer() -> Element {
     rsx! {
         Sidebar { expanded: sidebar_open, toggle: move |_| sidebar_open.toggle() }
 
-        header { class: "bg-zinc-200/60 dark:bg-zinc-900/60 backdrop-blur-sm shadow transition-colors duration-300 sticky top-0 z-1",
+        header { class: "sticky top-0 z-10 border-b border-white/20 dark:border-white/10 bg-zinc-100/30 dark:bg-zinc-900/25 backdrop-blur-xl shadow-sm transition-colors duration-300",
             div { class: "flex h-16 items-center justify-between px-4",
                 div { class: "flex items-center",
                     button {
@@ -59,24 +59,6 @@ pub fn NavBarContainer() -> Element {
                         onclick: toggle_sidebar,
                         div { class: "w-4 h-4",
                             Icon { icon: LdMenu }
-                        }
-                    }
-                }
-
-                div { class: "hidden md:block flex-1 px-4 lg:px-6",
-                    div { class: "relative max-w-md",
-                        div { class: "pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3",
-                            div { class: "w-4 h-4",
-                                Icon {
-                                    icon: LdSearch,
-                                    class: "text-zinc-500 dark:text-zinc-400",
-                                }
-                            }
-                        }
-                        input {
-                            class: "block w-full rounded-lg border  bg-zinc-50 dark:bg-zinc-700 py-2 pl-10 pr-3 text-sm text-zinc-700 dark:text-zinc-200 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors duration-200",
-                            placeholder: "Search...",
-                            r#type: "text",
                         }
                     }
                 }
