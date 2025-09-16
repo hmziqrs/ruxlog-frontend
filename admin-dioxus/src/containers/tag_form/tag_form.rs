@@ -29,7 +29,7 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
 
             div { class: "grid grid-cols-1 gap-10 lg:grid-cols-3",
                 div { class: "lg:col-span-2 space-y-8",
-                    div { class: "rounded-xl border border-border/70 bg-transparent shadow-sm",
+                    div { class: "rounded-xl border border-border/70 bg-transparent",
                         div { class: "px-6 py-6",
                             h2 { class: "text-lg font-semibold", "Tag details" }
                             p { class: "text-sm text-muted-foreground", "Basic information and metadata for your tag." }
@@ -90,7 +90,7 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                 }
 
                 div { class: "space-y-8 lg:sticky lg:top-28 h-fit",
-                    div { class: "rounded-xl border border-border/70 bg-transparent shadow-sm",
+                    div { class: "rounded-xl border border-border/70 bg-transparent",
                         div { class: "px-6 pt-6",
                             h2 { class: "text-lg font-semibold", "Appearance" }
                             p { class: "text-sm text-muted-foreground", "Choose a color and preview the tag." }
@@ -139,7 +139,7 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                         }
                     }
 
-                    div { class: "rounded-xl border border-border/70 bg-transparent shadow-sm",
+                    div { class: "rounded-xl border border-border/70 bg-transparent",
                         div { class: "px-6 pt-6",
                             h2 { class: "text-lg font-semibold", "Visibility" }
                             p { class: "text-sm text-muted-foreground", "Control whether this tag is available publicly." }
