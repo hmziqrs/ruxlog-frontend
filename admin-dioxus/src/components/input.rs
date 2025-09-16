@@ -1,6 +1,16 @@
 use crate::hooks::{OxForm, OxFormModel};
 use dioxus::prelude::*;
 
+const BASE_INPUT_CLASS: &str = "w-full rounded-md border border-border/70 bg-transparent px-4 py-2.5 text-foreground placeholder:text-muted-foreground shadow-sm transition-colors duration-200 focus:border-ring focus:ring-2 focus:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-60";
+
+fn compose_input_class(extra: &Option<String>) -> String {
+    let mut classes = vec![BASE_INPUT_CLASS.to_string()];
+    if let Some(extra) = extra {
+        classes.push(extra.clone());
+    }
+    classes.join(" ")
+}
+
 #[derive(Props, PartialEq, Clone)]
 pub struct AppInputProps<T: OxFormModel + 'static> {
     form: Signal<OxForm<T>>,
@@ -9,6 +19,10 @@ pub struct AppInputProps<T: OxFormModel + 'static> {
     label: Option<String>,
     #[props(default = None)]
     placeholder: Option<String>,
+    #[props(default = None)]
+    id: Option<String>,
+    #[props(default = None)]
+    class: Option<String>,
     #[props(default = String::from("text"))]
     r#type: String,
     #[props(default = None)]
@@ -44,6 +58,8 @@ where
     let onblur_handler = props.onblur.clone();
     let onfocus_handler = props.onfocus.clone();
 
+    let input_class = compose_input_class(&props.class);
+
     rsx! {
         div {
             if let Some(label) = &props.label {
@@ -52,10 +68,11 @@ where
                 }
             }
             input {
+                id: props.id.clone(),
                 disabled: props.disabled,
                 readonly: props.readonly,
                 r#type: props.r#type.clone(),
-                class: "w-full rounded-md border border-border/70 bg-transparent px-4 py-2.5 text-foreground placeholder:text-muted-foreground shadow-sm transition-colors duration-200 focus:border-ring focus:ring-2 focus:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-60",
+                class: "{input_class}",
                 value: field.value.clone(),
                 placeholder: props.placeholder.clone(),
                 onchange: move |event| {
@@ -83,6 +100,56 @@ where
                     {error.clone()}
                 }
             }
+        }
+    }
+}
+
+#[derive(Props, PartialEq, Clone)]
+pub struct SimpleInputProps {
+    pub value: String,
+    #[props(default = None)]
+    pub placeholder: Option<String>,
+    #[props(default = None)]
+    pub id: Option<String>,
+    #[props(default = None)]
+    pub class: Option<String>,
+    #[props(default = String::from("text"))]
+    pub r#type: String,
+    #[props(default = None)]
+    pub oninput: Option<EventHandler<String>>,
+    #[props(default = None)]
+    pub onchange: Option<EventHandler<String>>,
+    #[props(default = false)]
+    pub disabled: bool,
+    #[props(default = false)]
+    pub readonly: bool,
+}
+
+#[component]
+pub fn SimpleInput(props: SimpleInputProps) -> Element {
+    let input_class = compose_input_class(&props.class);
+    let oninput_handler = props.oninput.clone();
+    let onchange_handler = props.onchange.clone();
+
+    rsx! {
+        input {
+            id: props.id.clone(),
+            r#type: props.r#type.clone(),
+            class: "{input_class}",
+            value: props.value.clone(),
+            placeholder: props.placeholder.clone(),
+            disabled: props.disabled,
+            readonly: props.readonly,
+            oninput: move |event| {
+                if let Some(handler) = &oninput_handler {
+                    handler.call(event.value());
+                }
+            },
+            onchange: move |event| {
+                if let Some(handler) = &onchange_handler {
+                    handler.call(event.value());
+                }
+            },
         }
     }
 }

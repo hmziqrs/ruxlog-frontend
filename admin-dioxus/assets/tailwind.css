@@ -1582,6 +1582,9 @@
   .pl-8 {
     padding-left: calc(0.25rem * 8);
   }
+  .pl-9 {
+    padding-left: calc(0.25rem * 9);
+  }
   .pl-10 {
     padding-left: calc(0.25rem * 10);
   }
