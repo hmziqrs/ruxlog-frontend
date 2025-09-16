@@ -1,6 +1,6 @@
 use super::{Tag, TagsAddPayload, TagsEditPayload, TagsListQuery, TagsState};
 use crate::services::http_client;
-use crate::store::{exec_json_to_state, PaginatedList, StateFrame};
+use crate::store::{list_state_abstraction, PaginatedList, StateFrame};
 use std::collections::HashMap;
 
 impl TagsState {
@@ -130,7 +130,7 @@ impl TagsState {
     }
 
     pub async fn list(&self) {
-        let _ = exec_json_to_state::<PaginatedList<Tag>>(
+        let _ = list_state_abstraction::<PaginatedList<Tag>>(
             &self.list,
             http_client::post("/tag/v1/list/query", &"{}"),
             "tags",
@@ -139,7 +139,7 @@ impl TagsState {
     }
 
     pub async fn list_with_query(&self, query: TagsListQuery) {
-        let _ = exec_json_to_state::<PaginatedList<Tag>>(
+        let _ = list_state_abstraction::<PaginatedList<Tag>>(
             &self.list,
             http_client::post("/tag/v1/list/query", &query),
             "tags",

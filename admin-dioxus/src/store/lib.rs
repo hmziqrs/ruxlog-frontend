@@ -153,7 +153,7 @@ pub struct ApiError {
 
 /// Send a request, parse JSON into `T`, and update the provided `StateFrame<T>`.
 /// Returns `Some(T)` on success to allow callers to perform cache-sync logic if needed.
-pub async fn exec_json_to_state<T>(
+pub async fn list_state_abstraction<T>(
     state: &GlobalSignal<StateFrame<T>>,
     req: Request,
     parse_label: &str,
