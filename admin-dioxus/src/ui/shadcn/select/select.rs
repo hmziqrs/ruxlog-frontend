@@ -49,7 +49,7 @@ pub fn Select(props: SelectProps) -> Element {
             div {
                 // variant: ButtonVariant::Outline,
                 tabindex: "0",
-                class: "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+                class: "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
                 onclick: move |_| {
                     state.write().toggle();
                 },
@@ -71,7 +71,7 @@ pub fn Select(props: SelectProps) -> Element {
                     },
                 }
                 div {
-                    class: "absolute mt-[1px] bg-background text-popover-foreground z-50 min-w-[15rem] overflow-hidden rounded-lg border shadow-md animate-in fade-in-0 zoom-in-95",
+                    class: "absolute mt-[1px] bg-background text-popover-foreground z-50 min-w-[15rem] overflow-hidden rounded-lg border animate-in fade-in-0 zoom-in-95",
                     onclick: move |e| {
                         e.stop_propagation();
                     },
