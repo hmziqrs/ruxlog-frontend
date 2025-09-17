@@ -98,8 +98,7 @@ pub fn use_state_frame_map_toast<K, D, M>(
     map: &GlobalSignal<HashMap<K, StateFrame<D, M>>>,
     id: K,
     cfg: StateFrameToastConfig,
-)
-where
+) where
     K: Eq + Hash + Copy + 'static,
     D: Clone + 'static,
     M: Clone + 'static,
@@ -107,11 +106,7 @@ where
     let sonner = use_sonner();
     let mut toast_id = use_signal::<Option<u64>>(|| None);
 
-    let frame = map
-        .read()
-        .get(&id)
-        .cloned()
-        .unwrap_or_else(StateFrame::new);
+    let frame = map.read().get(&id).cloned().unwrap_or_else(StateFrame::new);
     let loading = frame.is_loading();
     let success = frame.is_success();
     let failed = frame.is_failed();

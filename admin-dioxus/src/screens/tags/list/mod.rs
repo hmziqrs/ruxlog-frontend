@@ -71,6 +71,12 @@ pub fn TagsListScreen() -> Element {
             Some("name"),
         ),
         HeaderColumn::new(
+            "Slug",
+            true,
+            "hidden py-3 px-4 text-left font-medium text-sm md:table-cell",
+            Some("slug"),
+        ),
+        HeaderColumn::new(
             "Description",
             false,
             "hidden py-3 px-4 text-left font-medium text-sm md:table-cell",
@@ -87,6 +93,12 @@ pub fn TagsListScreen() -> Element {
             true,
             "hidden py-3 px-4 text-left font-medium text-sm md:table-cell",
             Some("created_at"),
+        ),
+        HeaderColumn::new(
+            "Updated",
+            true,
+            "hidden py-3 px-4 text-left font-medium text-sm md:table-cell",
+            Some("updated_at"),
         ),
         HeaderColumn::new(
             "Status",
@@ -188,8 +200,10 @@ pub fn TagsListScreen() -> Element {
                         cells: vec![
                             // Selection checkbox placeholder
                             SkeletonCellConfig::custom(crate::components::UICellType::Default, "w-12 py-3 px-4"),
-                            SkeletonCellConfig::avatar(),
-                            SkeletonCellConfig::custom(crate::components::UICellType::Default, "hidden py-3 px-4 md:table-cell"),
+                            SkeletonCellConfig::default(false),
+                            SkeletonCellConfig::default(true),
+                            SkeletonCellConfig::default(true),
+                            SkeletonCellConfig::default(true),
                             SkeletonCellConfig::default(true),
                             SkeletonCellConfig::default(true),
                             SkeletonCellConfig::badge(),
@@ -198,7 +212,7 @@ pub fn TagsListScreen() -> Element {
                     }
                 } else {
                     tr { class: "border-b border-zinc-200 dark:border-zinc-800",
-                        td { colspan: "7", class: "py-12 px-4 text-center",
+                        td { colspan: "9", class: "py-12 px-4 text-center",
                             ListEmptyState {
                                 title: "No tags found".to_string(),
                                 description: "Try adjusting your search or create a new tag to get started.".to_string(),
@@ -236,17 +250,17 @@ pub fn TagsListScreen() -> Element {
                                 }
                             }
                             td { class: "py-3 px-4",
-                                div { class: "flex items-center gap-3",
-                                    div { class: "h-4 w-4 text-muted-foreground", "#" }
-                                    div { class: "min-w-0",
-                                        div { class: "font-medium leading-none", "{tag.name}" }
-                                        div { class: "mt-1 text-xs text-muted-foreground", {tag.description.clone().unwrap_or_default()} }
-                                    }
-                                }
+                                span { class: "font-medium leading-none truncate", "{tag.name}" }
                             }
-                            td { class: "hidden max-w-xs py-3 px-4 text-muted-foreground md:table-cell", span { class: "truncate", {tag.description.clone().unwrap_or("—".to_string())} } }
+                            td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell",
+                                span { class: "truncate font-mono text-xs md:text-sm", "{tag.slug}" }
+                            }
+                            td { class: "hidden max-w-xs py-3 px-4 text-muted-foreground md:table-cell",
+                                span { class: "truncate", {tag.description.clone().unwrap_or("—".to_string())} }
+                            }
                             td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "0" }
                             td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{format_short_date_dt(&tag.created_at)}" }
+                            td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{format_short_date_dt(&tag.updated_at)}" }
                             td { class: "py-3 px-4",
                                 if tag.is_active {
                                     Badge { class: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400", "Active" }
