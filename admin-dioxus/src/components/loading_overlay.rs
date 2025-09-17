@@ -1,4 +1,4 @@
-use dioxus::{prelude::*};
+use dioxus::prelude::*;
 use std::time::Duration;
 
 #[derive(Props, PartialEq, Clone)]
