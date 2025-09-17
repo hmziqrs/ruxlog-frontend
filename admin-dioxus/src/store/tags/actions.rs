@@ -27,11 +27,14 @@ impl TagsState {
     }
 
     pub async fn edit(&self, id: i32, payload: TagsEditPayload) {
-        let mut edit_map = self.edit.write();
-        edit_map
-            .entry(id)
-            .or_insert_with(StateFrame::new)
-            .set_loading_meta(Some(payload.clone()), None);
+        {
+            let mut edit_map = self.edit.write();
+            edit_map
+                .entry(id)
+                .or_insert_with(StateFrame::new)
+                .set_loading_meta(Some(payload.clone()), None);
+        }
+
         let result = http_client::post(&format!("/tag/v1/update/{}", id), &payload)
             .send()
             .await;
@@ -40,10 +43,13 @@ impl TagsState {
                 if (200..300).contains(&response.status()) {
                     match response.json::<Tag>().await {
                         Ok(tag) => {
-                            edit_map
-                                .entry(id)
-                                .or_insert_with(StateFrame::new)
-                                .set_success(None, None);
+                            {
+                                let mut edit_map = self.edit.write();
+                                edit_map
+                                    .entry(id)
+                                    .or_insert_with(StateFrame::new)
+                                    .set_success(None, None);
+                            }
 
                             if let Some(check_list_item) = &self.list.peek().data {
                                 if !check_list_item.data.iter().any(|t| t.id == id) {
@@ -58,11 +64,15 @@ impl TagsState {
                                     return;
                                 }
                             }
-                            if let Some(view_frame) = self.view.write().get_mut(&id) {
-                                view_frame.set_success(Some(tag), None);
+                            {
+                                let mut view_map = self.view.write();
+                                if let Some(view_frame) = view_map.get_mut(&id) {
+                                    view_frame.set_success(Some(tag), None);
+                                }
                             }
                         }
                         Err(e) => {
+                            let mut edit_map = self.edit.write();
                             edit_map
                                 .entry(id)
                                 .or_insert_with(StateFrame::new)
@@ -70,6 +80,7 @@ impl TagsState {
                         }
                     }
                 } else {
+                    let mut edit_map = self.edit.write();
                     edit_map
                         .entry(id)
                         .or_insert_with(StateFrame::new)
@@ -78,6 +89,7 @@ impl TagsState {
                 }
             }
             Err(e) => {
+                let mut edit_map = self.edit.write();
                 edit_map
                     .entry(id)
                     .or_insert_with(StateFrame::new)
