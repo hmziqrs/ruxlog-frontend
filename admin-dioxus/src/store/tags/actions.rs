@@ -47,10 +47,10 @@ impl TagsState {
 
                             if let Some(check_list_item) = &self.list.peek().data {
                                 if !check_list_item.data.iter().any(|t| t.id == id) {
-                                    // update the item in the list
                                     let mut list_frame = self.list.write();
                                     if let Some(list) = &mut list_frame.data {
-                                        if let Some(item) = list.data.iter_mut().find(|t| t.id == id)
+                                        if let Some(item) =
+                                            list.data.iter_mut().find(|t| t.id == id)
                                         {
                                             *item = tag.clone();
                                         }

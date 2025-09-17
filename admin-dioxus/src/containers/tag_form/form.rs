@@ -181,27 +181,10 @@ impl OxFormModel for TagForm {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UseTagForm {
     pub form: Signal<OxForm<TagForm>>,
-    pub auto_slug: Signal<bool>,
 }
 
 pub fn use_tag_form(initial_state: TagForm) -> UseTagForm {
-    let mut form_signal: Signal<OxForm<TagForm>> = use_signal(|| OxForm::new(initial_state));
-    let auto_slug: Signal<bool> = use_signal(|| true);
-    let form_data = form_signal.read();
+    let form_signal: Signal<OxForm<TagForm>> = use_signal(move || OxForm::new(initial_state));
 
-    let name = form_data.data.name.clone();
-
-    use_effect(move || {
-        if *auto_slug.read() && !name.is_empty() {
-            let sanitized_slug = TagForm::sanitize_slug(&name);
-            form_signal
-                .write()
-                .update_field("slug", sanitized_slug.to_string());
-        }
-    });
-
-    UseTagForm {
-        form: form_signal,
-        auto_slug,
-    }
+    UseTagForm { form: form_signal }
 }

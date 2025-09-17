@@ -27,7 +27,6 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
     let reset_template = initial_tag_form.clone();
     let tag_form_hook = use_tag_form(initial_tag_form);
     let mut form = tag_form_hook.form;
-    let mut auto_slug = tag_form_hook.auto_slug;
     let mut reset_dialog_open = use_signal(|| false);
     let is_form_dirty = form.read().is_dirty();
 
@@ -203,7 +202,6 @@ pub fn TagFormContainer(props: TagFormContainerProps) -> Element {
                         Button { variant: ButtonVariant::Destructive,
                             onclick: move |_| {
                                 form.set(OxForm::new(reset_template.clone()));
-                                auto_slug.set(true);
                                 reset_dialog_open.set(false);
                             },
                             "Reset form"
