@@ -67,43 +67,43 @@ pub fn TagsListScreen() -> Element {
         HeaderColumn::new(
             "Name",
             true,
-            "py-3 px-4 text-left font-medium text-sm",
+            "py-3 px-4 text-left font-medium text-xs md:text-sm whitespace-nowrap",
             Some("name"),
         ),
         HeaderColumn::new(
             "Slug",
             true,
-            "hidden py-3 px-4 text-left font-medium text-sm md:table-cell",
+            "py-3 px-4 text-left font-medium text-xs md:text-sm whitespace-nowrap",
             Some("slug"),
         ),
         HeaderColumn::new(
             "Description",
             false,
-            "hidden py-3 px-4 text-left font-medium text-sm md:table-cell",
+            "py-3 px-4 text-left font-medium text-xs md:text-sm",
             None,
         ),
         HeaderColumn::new(
             "Posts",
             false,
-            "hidden py-3 px-4 text-left font-medium text-sm md:table-cell",
+            "py-3 px-4 text-left font-medium text-xs md:text-sm whitespace-nowrap",
             None,
         ),
         HeaderColumn::new(
             "Created",
             true,
-            "hidden py-3 px-4 text-left font-medium text-sm md:table-cell",
+            "py-3 px-4 text-left font-medium text-xs md:text-sm whitespace-nowrap",
             Some("created_at"),
         ),
         HeaderColumn::new(
             "Updated",
             true,
-            "hidden py-3 px-4 text-left font-medium text-sm md:table-cell",
+            "py-3 px-4 text-left font-medium text-xs md:text-sm whitespace-nowrap",
             Some("updated_at"),
         ),
         HeaderColumn::new(
             "Status",
             false,
-            "py-3 px-4 text-left font-medium text-sm",
+            "py-3 px-4 text-left font-medium text-xs md:text-sm whitespace-nowrap",
             None,
         ),
         HeaderColumn::new("", false, "w-12 py-3 px-4", None),
@@ -201,11 +201,11 @@ pub fn TagsListScreen() -> Element {
                             // Selection checkbox placeholder
                             SkeletonCellConfig::custom(crate::components::UICellType::Default, "w-12 py-3 px-4"),
                             SkeletonCellConfig::default(false),
-                            SkeletonCellConfig::default(true),
-                            SkeletonCellConfig::default(true),
-                            SkeletonCellConfig::default(true),
-                            SkeletonCellConfig::default(true),
-                            SkeletonCellConfig::default(true),
+                            SkeletonCellConfig::default(false),
+                            SkeletonCellConfig::custom(crate::components::UICellType::Default, "py-3 px-4"),
+                            SkeletonCellConfig::default(false),
+                            SkeletonCellConfig::default(false),
+                            SkeletonCellConfig::default(false),
                             SkeletonCellConfig::badge(),
                             SkeletonCellConfig::action(),
                         ],
@@ -230,7 +230,7 @@ pub fn TagsListScreen() -> Element {
                     rsx! {
                         tr { class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-muted/30 transition-colors",
                             // Selection checkbox cell
-                            td { class: "py-3 px-4 w-12",
+                            td { class: "py-3 px-4 w-12 text-xs md:text-sm",
                                 Checkbox {
                                     checked: selected_ids.read().contains(&tag_id),
                                     onchange: Some(EventHandler::new({
@@ -249,26 +249,26 @@ pub fn TagsListScreen() -> Element {
                                     })),
                                 }
                             }
-                            td { class: "py-3 px-4",
+                            td { class: "py-3 px-4 text-xs md:text-sm whitespace-nowrap",
                                 span { class: "font-medium leading-none truncate", "{tag.name}" }
                             }
-                            td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell",
-                                span { class: "truncate font-mono text-xs md:text-sm", "{tag.slug}" }
+                            td { class: "py-3 px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap",
+                                span { class: "truncate font-mono", "{tag.slug}" }
                             }
-                            td { class: "hidden max-w-xs py-3 px-4 text-muted-foreground md:table-cell",
+                            td { class: "max-w-xs py-3 px-4 text-xs md:text-sm text-muted-foreground",
                                 span { class: "truncate", {tag.description.clone().unwrap_or("—".to_string())} }
                             }
-                            td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "0" }
-                            td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{format_short_date_dt(&tag.created_at)}" }
-                            td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{format_short_date_dt(&tag.updated_at)}" }
-                            td { class: "py-3 px-4",
+                            td { class: "py-3 px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap", "0" }
+                            td { class: "py-3 px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap", "{format_short_date_dt(&tag.created_at)}" }
+                            td { class: "py-3 px-4 text-xs md:text-sm text-muted-foreground whitespace-nowrap", "{format_short_date_dt(&tag.updated_at)}" }
+                            td { class: "py-3 px-4 text-xs md:text-sm",
                                 if tag.is_active {
                                     Badge { class: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400", "Active" }
                                 } else {
                                     Badge { variant: BadgeVariant::Secondary, class: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400", "Inactive" }
                                 }
                             }
-                            td { class: "py-3 px-4",
+                            td { class: "py-3 px-4 text-xs md:text-sm",
                                 DropdownMenu {
                                     DropdownMenuTrigger {
                                         Button { variant: ButtonVariant::Ghost, class: "h-8 w-8 p-0 bg-transparent hover:bg-muted/50", div { class: "w-4 h-4", Icon { icon: LdEllipsis {} } } }

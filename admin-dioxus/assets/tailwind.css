@@ -810,6 +810,9 @@
   .min-w-\[180px\] {
     min-width: 180px;
   }
+  .min-w-\[720px\] {
+    min-width: 720px;
+  }
   .min-w-full {
     min-width: 100%;
   }

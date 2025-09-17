@@ -123,49 +123,51 @@ pub fn DataTableScreen<T: Clone + PartialEq + 'static>(props: DataTableScreenPro
 
                 div { class: "bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-lg mt-10 md:mt-12",
                     div { class: "relative",
-                        table { class: "w-full",
-                            // Auto-generated thead if headers provided
-                            if let Some(headers) = &props.headers {
-                                thead { class: "bg-transparent",
-                                    tr { class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-transparent",
-                                        {headers.iter().map(|header| {
-                                            let is_current_sort = props.current_sort_field.as_ref()
-                                                .and_then(|field| header.field.as_ref().map(|f| f == field))
-                                                .unwrap_or(false);
+                        div { class: "overflow-x-auto",
+                            table { class: "w-full min-w-[720px] text-xs md:text-sm",
+                                // Auto-generated thead if headers provided
+                                if let Some(headers) = &props.headers {
+                                    thead { class: "bg-transparent",
+                                        tr { class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-transparent",
+                                            {headers.iter().map(|header| {
+                                                let is_current_sort = props.current_sort_field.as_ref()
+                                                    .and_then(|field| header.field.as_ref().map(|f| f == field))
+                                                    .unwrap_or(false);
 
-                                            rsx! {
-                                                th { class: "{header.class}",
-                                                    if header.sortable {
+                                                rsx! {
+                                                    th { class: "{header.class}",
+                                                        if header.sortable {
                                                         Button {
                                                             variant: ButtonVariant::Ghost,
-                                                            class: "h-8 bg-transparent hover:bg-muted/50 -ml-3 text-left justify-start font-medium p-2",
-                                                            onclick: {
-                                                                let field = header.field.clone().unwrap_or_default();
-                                                                let on_sort = props.on_sort.clone();
-                                                                move |_| {
-                                                                    if let Some(handler) = &on_sort {
-                                                                        handler.call(field.clone());
+                                                            class: "h-8 bg-transparent hover:bg-muted/50 -ml-3 text-left justify-start font-medium p-2 text-xs md:text-sm",
+                                                                onclick: {
+                                                                    let field = header.field.clone().unwrap_or_default();
+                                                                    let on_sort = props.on_sort.clone();
+                                                                    move |_| {
+                                                                        if let Some(handler) = &on_sort {
+                                                                            handler.call(field.clone());
+                                                                        }
                                                                     }
+                                                                },
+                                                                "{header.label}"
+                                                                if is_current_sort {
+                                                                    div { class: "ml-2 h-4 w-4", Icon { icon: LdArrowUpDown {} } }
                                                                 }
-                                                            },
-                                                            "{header.label}"
-                                                            if is_current_sort {
-                                                                div { class: "ml-2 h-4 w-4", Icon { icon: LdArrowUpDown {} } }
                                                             }
+                                                        } else {
+                                                            "{header.label}"
                                                         }
-                                                    } else {
-                                                        "{header.label}"
                                                     }
                                                 }
-                                            }
-                                        })}
+                                            })}
+                                        }
                                     }
                                 }
-                            }
 
-                            // Caller-provided tbody content
-                            tbody {
-                                { props.children }
+                                // Caller-provided tbody content
+                                tbody {
+                                    { props.children }
+                                }
                             }
                         }
 
