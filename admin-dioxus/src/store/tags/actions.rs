@@ -1,3 +1,5 @@
+use dioxus::signals::ReadableExt;
+
 use super::{Tag, TagsAddPayload, TagsEditPayload, TagsListQuery, TagsState};
 use crate::services::http_client;
 use crate::store::{
@@ -42,20 +44,23 @@ impl TagsState {
                                 .entry(id)
                                 .or_insert_with(StateFrame::new)
                                 .set_success(None, None);
-                            // Update list cache
-                            let mut list = self.list.write();
-                            let mut tmp_list = list.data.clone().unwrap();
-                            if let Some(item) = tmp_list.data.iter_mut().find(|t| t.id == id) {
-                                *item = tag.clone();
+
+                            if let Some(check_list_item) = &self.list.peek().data {
+                                if !check_list_item.data.iter().any(|t| t.id == id) {
+                                    // update the item in the list
+                                    let mut list_frame = self.list.write();
+                                    if let Some(list) = &mut list_frame.data {
+                                        if let Some(item) = list.data.iter_mut().find(|t| t.id == id)
+                                        {
+                                            *item = tag.clone();
+                                        }
+                                    }
+                                    return;
+                                }
                             }
-                            list.set_success(Some(tmp_list), None);
-                            drop(list);
-                            // Update view cache to keep detail in sync
-                            let mut view_map = self.view.write();
-                            view_map
-                                .entry(id)
-                                .or_insert_with(StateFrame::new)
-                                .set_success(Some(tag.clone()), None);
+                            if let Some(view_frame) = self.view.write().get_mut(&id) {
+                                view_frame.set_success(Some(tag), None);
+                            }
                         }
                         Err(e) => {
                             edit_map
