@@ -1,4 +1,4 @@
-use dioxus::{logger::tracing, prelude::*};
+use dioxus::{prelude::*};
 use std::time::Duration;
 
 #[derive(Props, PartialEq, Clone)]
@@ -16,26 +16,15 @@ pub fn LoadingOverlay(props: LoadingOverlayProps) -> Element {
 
     use_effect(move || {
         let is_visible = visible_sig();
-        // tracing::info!("use effect value check: {} - {}", is_visible, should_render());
         if is_visible && !should_render() {
-            // tracing::info!("is visible check");
             should_render.set(true);
         } else if !is_visible && should_render() {
-            // tracing::info!("Pre spawn");
             spawn(async move {
-                // tracing::info!("Pre sleep");
                 dioxus_time::sleep(Duration::from_millis(FADE_MS)).await;
-                // tracing::info!("Post spawn delay");
                 should_render.set(false);
             });
         }
     });
-
-    tracing::info!(
-        "LoadingOverlay: {} {}",
-        visible_for_render(),
-        should_render()
-    );
 
     if !should_render() {
         return rsx! { Fragment {} };
