@@ -31,7 +31,7 @@ impl TagsState {
         edit_map
             .entry(id)
             .or_insert_with(StateFrame::new)
-            .set_loading(None);
+            .set_loading_meta(Some(payload.clone()), None);
         let result = http_client::post(&format!("/tag/v1/update/{}", id), &payload)
             .send()
             .await;

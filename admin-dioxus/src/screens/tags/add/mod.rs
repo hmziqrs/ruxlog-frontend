@@ -17,6 +17,12 @@ pub fn TagsAddScreen() -> Element {
     let cfg = StateFrameToastConfig {
         loading_title: "Creating tag...".into(),
         success_title: Some("Tag created successfully".into()),
+        success_options: ToastOptions::default().with_action(Some(Action::with_on_click(
+            "View Tags".into(),
+            Callback::new(move |_| {
+                nav.push(Route::TagsListScreen {});
+            }),
+        ))),
         error_title: Some("Failed to create tag".into()),
         error_options: ToastOptions::default().with_action(Some(Action::with_on_click(
             "Retry".into(),

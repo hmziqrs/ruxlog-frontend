@@ -1,6 +1,8 @@
 use crate::components::sonner::{use_sonner, ToastOptions};
 use crate::store::StateFrame;
 use dioxus::prelude::*;
+use std::collections::HashMap;
+use std::hash::Hash;
 
 #[derive(Clone)]
 pub struct StateFrameToastConfig {
@@ -67,6 +69,75 @@ pub fn use_state_frame_toast<D: Clone + 'static, M: Clone + 'static>(
             }
 
             // Leaving loading: settle
+            if prev && !loading {
+                if let Some(id) = toast_id() {
+                    if success {
+                        let title = cfg
+                            .success_title
+                            .clone()
+                            .or_else(|| message.clone())
+                            .unwrap_or_else(|| "Operation completed".to_string());
+                        sonner.update_success(id, title, cfg.success_options.clone());
+                    } else if failed {
+                        let title = cfg
+                            .error_title
+                            .clone()
+                            .or_else(|| message.clone())
+                            .unwrap_or_else(|| "Operation failed".to_string());
+                        sonner.update_error(id, title, cfg.error_options.clone());
+                    }
+                }
+            }
+        }
+    }));
+}
+
+/// Wire a keyed `StateFrame` (found in a `HashMap`) to Sonner toasts.
+/// Allows reuse of the toast side-effects for edit/remove flows that track state per id.
+pub fn use_state_frame_map_toast<K, D, M>(
+    map: &GlobalSignal<HashMap<K, StateFrame<D, M>>>,
+    id: K,
+    cfg: StateFrameToastConfig,
+)
+where
+    K: Eq + Hash + Copy + 'static,
+    D: Clone + 'static,
+    M: Clone + 'static,
+{
+    let sonner = use_sonner();
+    let mut toast_id = use_signal::<Option<u64>>(|| None);
+
+    let frame = map
+        .read()
+        .get(&id)
+        .cloned()
+        .unwrap_or_else(StateFrame::new);
+    let loading = frame.is_loading();
+    let success = frame.is_success();
+    let failed = frame.is_failed();
+    let message = frame.message.clone();
+
+    let prev_loading = crate::hooks::use_previous(loading);
+
+    use_effect(use_reactive!(|(loading, success, failed)| {
+        if let Some(prev) = prev_loading {
+            if !prev && loading {
+                match toast_id() {
+                    Some(id) if sonner.exists(id) => {
+                        sonner.update_loading(
+                            id,
+                            cfg.loading_title.clone(),
+                            cfg.loading_options.clone(),
+                        );
+                    }
+                    _ => {
+                        let id =
+                            sonner.loading(cfg.loading_title.clone(), cfg.loading_options.clone());
+                        toast_id.set(Some(id));
+                    }
+                }
+            }
+
             if prev && !loading {
                 if let Some(id) = toast_id() {
                     if success {

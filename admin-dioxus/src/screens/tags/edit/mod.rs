@@ -1,8 +1,9 @@
 use dioxus::prelude::*;
 
+use crate::components::sonner::{Action, ToastOptions};
 use crate::components::{FormTwoColumnSkeleton, PageHeader};
 use crate::containers::{TagForm, TagFormContainer};
-use crate::hooks::use_tag_view;
+use crate::hooks::{use_state_frame_map_toast, use_tag_view, StateFrameToastConfig};
 use crate::router::Route;
 use crate::store::use_tag;
 use crate::ui::shadcn::{Button, ButtonVariant};
@@ -11,10 +12,44 @@ use crate::ui::shadcn::{Button, ButtonVariant};
 pub fn TagsEditScreen(id: i32) -> Element {
     let state = use_tag_view(id);
     let nav = use_navigator();
+    let tags = use_tag();
     let is_loading = state.is_loading;
     let is_failed = state.is_failed;
     let message = state.message.clone();
     let tag_opt = state.tag.clone();
+
+    let toast_cfg = StateFrameToastConfig {
+        loading_title: "Saving tag...".into(),
+        success_title: Some("Tag updated successfully".into()),
+        success_options: ToastOptions::default().with_action(Some(Action::with_on_click(
+            "View Tags".into(),
+            Callback::new(move |_| {
+                nav.push(Route::TagsListScreen {});
+            }),
+        ))),
+        error_title: Some("Failed to update tag".into()),
+        error_options: ToastOptions::default().with_action(Some(Action::with_on_click(
+            "Retry".into(),
+            {
+                let tags = tags;
+                Callback::new(move |_| {
+                    if let Some(payload) = tags
+                        .edit
+                        .peek()
+                        .get(&id)
+                        .and_then(|frame| frame.meta.clone())
+                    {
+                        let tags = tags;
+                        spawn(async move {
+                            tags.edit(id, payload).await;
+                        });
+                    }
+                })
+            },
+        ))),
+        ..Default::default()
+    };
+    use_state_frame_map_toast(&tags.edit, id, toast_cfg);
 
     // Compute initial form state from loaded tag
     let initial_form: Option<TagForm> = tag_opt.clone().map(|t| TagForm {
@@ -46,7 +81,16 @@ pub fn TagsEditScreen(id: i32) -> Element {
                     div { class: "rounded-md border border-red-200 bg-red-50 p-3 text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300",
                         span { class: "text-sm", "Failed to load tag." }
                         if let Some(msg) = message { span { class: "ml-1 text-sm opacity-80", "{msg}" } }
-                        Button { class: "ml-3", onclick: move |_| { spawn({ let tags = use_tag(); async move { tags.view(id).await; }}); }, "Retry" }
+                        Button {
+                            class: "ml-3",
+                            onclick: move |_| {
+                                let tags = tags;
+                                spawn(async move {
+                                    tags.view(id).await;
+                                });
+                            },
+                            "Retry"
+                        }
                     }
                 }
 
@@ -59,7 +103,7 @@ pub fn TagsEditScreen(id: i32) -> Element {
                         initial: Some(initial.clone()),
                         on_submit: move |val: TagForm| {
                             let payload = val.to_edit_payload();
-                            let tags = use_tag();
+                            let tags = tags;
                             spawn(async move {
                                 tags.edit(id, payload).await;
                             });
