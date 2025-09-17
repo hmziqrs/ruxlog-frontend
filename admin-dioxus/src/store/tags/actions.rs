@@ -126,7 +126,7 @@ impl TagsState {
     pub async fn list(&self) {
         let _ = list_state_abstraction::<PaginatedList<Tag>>(
             &self.list,
-            http_client::post("/tag/v1/list/query", &"{}"),
+            http_client::post("/tag/v1/list/query", &serde_json::json!({})),
             "tags",
         )
         .await;
