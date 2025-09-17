@@ -48,14 +48,14 @@ pub fn NavBarContainer() -> Element {
             div { class: "flex h-16 items-center justify-between px-4",
                 div { class: "flex items-center",
                     button {
-                        class: "rounded-md p-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 sm:hidden",
+                        class: "rounded-md p-2 text-muted-foreground transition-colors duration-200 hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:hidden",
                         onclick: move |_| sidebar_open.set(true),
                         div { class: "w-4 h-4",
                             Icon { icon: LdMenu }
                         }
                     }
                     button {
-                        class: "hidden rounded-md p-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 sm:flex",
+                        class: "hidden rounded-md p-2 text-muted-foreground transition-colors duration-200 hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:flex",
                         onclick: toggle_sidebar,
                         div { class: "w-4 h-4",
                             Icon { icon: LdMenu }
@@ -64,14 +64,14 @@ pub fn NavBarContainer() -> Element {
                 }
 
                 div { class: "flex items-center space-x-4",
-                    button { class: "rounded-full p-1 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-200 dark:focus:ring-offset-zinc-800",
+                    button { class: "rounded-full p-1 text-muted-foreground transition-colors duration-200 hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                         div { class: "w-4 h-4",
                             Icon { icon: LdBell }
                         }
                     }
                     button {
                         onclick: toggle_dark_mode,
-                        class: "rounded-full p-1 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-700 dark:hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-200 dark:focus:ring-offset-zinc-800",
+                        class: "rounded-full p-1 text-muted-foreground transition-colors duration-200 hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                         div { class: "w-4 h-4",
                             if (*dark_theme.read()).0 {
                                 Icon { icon: LdSun }
