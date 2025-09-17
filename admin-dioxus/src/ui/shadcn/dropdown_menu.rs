@@ -10,12 +10,6 @@ use crate::ui::custom::AppPortal;
 #[derive(PartialEq)]
 pub struct DropdownContext(pub bool);
 
-#[derive(PartialEq)]
-pub struct DropdownOffsetContext {
-    pub x: f32,
-    pub y: f32,
-}
-
 /// Properties for all dropdown menu components
 #[derive(Props, PartialEq, Clone)]
 pub struct DropdownMenuProps {
@@ -230,7 +224,7 @@ pub fn DropdownMenuSeparator(props: DropdownMenuProps) -> Element {
 /// DropdownMenuShortcut component
 #[component]
 pub fn DropdownMenuShortcut(props: DropdownMenuProps) -> Element {
-    let mut class = vec!["text-muted-foreground ml-auto text-xs tracking-widest".to_string()];
+    let mut class: Vec<String> = vec!["text-muted-foreground ml-auto text-xs tracking-widest".to_string()];
 
     if let Some(custom_class) = props.class {
         class.push(custom_class);
