@@ -194,6 +194,57 @@ where
     }
 }
 
+/// Generic helper for request/response cycles that update a single `StateFrame`.
+/// Returns `Some(Parsed)` on success so callers can chain follow-up actions.
+pub async fn state_request_abstraction<Data, Meta, Parsed, F, OnSuccess>(
+    state: &GlobalSignal<StateFrame<Data, Meta>>,
+    meta: Option<Meta>,
+    send_future: F,
+    parse_label: &str,
+    on_success: OnSuccess,
+) -> Option<Parsed>
+where
+    Data: Clone + 'static,
+    Meta: Clone + 'static,
+    Parsed: DeserializeOwned + Clone + 'static,
+    F: Future<Output = Result<HttpResponse, HttpError>>,
+    OnSuccess: Fn(&Parsed) -> (Option<Data>, Option<String>),
+{
+    {
+        let mut frame = state.write();
+        frame.set_loading_meta(meta, None);
+    }
+
+    match send_future.await {
+        Ok(response) => {
+            if (200..300).contains(&response.status()) {
+                match response.json::<Parsed>().await {
+                    Ok(parsed) => {
+                        let (data, message) = on_success(&parsed);
+                        state.write().set_success(data, message);
+                        Some(parsed)
+                    }
+                    Err(e) => {
+                        state
+                            .write()
+                            .set_failed(Some(format!("Failed to parse {}: {}", parse_label, e)));
+                        None
+                    }
+                }
+            } else {
+                state.write().set_api_error(&response).await;
+                None
+            }
+        }
+        Err(e) => {
+            state
+                .write()
+                .set_failed(Some(format!("Network error: {}", e)));
+            None
+        }
+    }
+}
+
 /// Shared helper to fetch a single record and hydrate a keyed `StateFrame` map.
 /// Returns `Some(Parsed)` on success so callers can optionally sync additional caches.
 pub async fn view_state_abstraction<K, StoreData, Parsed, F, MapFn>(

@@ -1,37 +1,26 @@
 use super::{Tag, TagsAddPayload, TagsEditPayload, TagsListQuery, TagsState};
 use crate::services::http_client;
-use crate::store::{list_state_abstraction, view_state_abstraction, PaginatedList, StateFrame};
+use crate::store::{
+    list_state_abstraction, state_request_abstraction, view_state_abstraction, PaginatedList,
+    StateFrame,
+};
 use std::collections::HashMap;
 
 impl TagsState {
     pub async fn add(&self, payload: TagsAddPayload) {
-        self.add
-            .write()
-            .set_loading_meta(Some(payload.clone()), None);
-        let result = http_client::post("/tag/v1/create", &payload).send().await;
-        match result {
-            Ok(response) => {
-                if (200..300).contains(&response.status()) {
-                    match response.json::<Tag>().await {
-                        Ok(_) => {
-                            self.add.write().set_success(None, None);
-                            self.list().await;
-                        }
-                        Err(e) => {
-                            self.add
-                                .write()
-                                .set_failed(Some(format!("Failed to parse tag: {}", e)));
-                        }
-                    }
-                } else {
-                    self.add.write().set_api_error(&response).await;
-                }
-            }
-            Err(e) => {
-                self.add
-                    .write()
-                    .set_failed(Some(format!("Network error: {}", e)));
-            }
+        let meta_payload = payload.clone();
+        let request = http_client::post("/tag/v1/create", &payload);
+        let created = state_request_abstraction(
+            &self.add,
+            Some(meta_payload),
+            request.send(),
+            "tag",
+            |_tag: &Tag| (None, None),
+        )
+        .await;
+
+        if created.is_some() {
+            self.list().await;
         }
     }
 

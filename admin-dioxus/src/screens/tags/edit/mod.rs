@@ -3,12 +3,14 @@ use dioxus::prelude::*;
 use crate::components::{FormTwoColumnSkeleton, PageHeader};
 use crate::containers::{TagForm, TagFormContainer};
 use crate::hooks::use_tag_view;
+use crate::router::Route;
 use crate::store::use_tag;
-use crate::ui::shadcn::Button;
+use crate::ui::shadcn::{Button, ButtonVariant};
 
 #[component]
 pub fn TagsEditScreen(id: i32) -> Element {
     let state = use_tag_view(id);
+    let nav = use_navigator();
     let is_loading = state.is_loading;
     let is_failed = state.is_failed;
     let message = state.message.clone();
@@ -26,10 +28,17 @@ pub fn TagsEditScreen(id: i32) -> Element {
     });
 
     rsx! {
-        div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
+        div { class: "min-h-screen bg-transparent text-foreground",
             PageHeader {
                 title: "Edit Tag".to_string(),
                 description: "Update tag details, colors, and visibility.".to_string(),
+                actions: Some(rsx! {
+                    Button {
+                        variant: ButtonVariant::Outline,
+                        onclick: move |_| { nav.push(Route::TagsListScreen {}); },
+                        "Back to Tags"
+                    }
+                }),
             }
 
             div { class: "container mx-auto px-4 py-10 md:py-12 space-y-4",
