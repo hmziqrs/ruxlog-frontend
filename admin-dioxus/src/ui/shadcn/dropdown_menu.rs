@@ -128,73 +128,55 @@ pub fn DropdownMenuTrigger(props: DropdownMenuProps) -> Element {
                     state.set(DropdownContext::default());
                     return;
                 }
-
                 let mouse_data: &MouseData = e.data.as_ref();
                 let web_event = mouse_data.as_web_event();
-                let target = web_event
-                    .target()
-                    .and_then(|t| t.dyn_into::<WebElement>().ok());
-
+                let target = web_event.target().and_then(|t| t.dyn_into::<WebElement>().ok());
                 let Some(target_element) = target else {
                     let mut context = DropdownContext::default();
                     context.open = true;
                     state.set(context);
                     return;
                 };
-
                 let trigger_dom_rect = target_element.get_bounding_client_rect();
                 let trigger_rect = DropdownRect::from_dom_rect(&trigger_dom_rect);
                 tracing::info!(
                     "dropdown_trigger_rect tag={} rect=({:.1},{:.1},{:.1},{:.1}) screen=({:.1},{:.1},{:.1},{:.1})",
-                    target_element.tag_name(),
-                    trigger_rect.x,
-                    trigger_rect.y,
-                    trigger_rect.width,
-                    trigger_rect.height,
-                    trigger_dom_rect.x(),
-                    trigger_dom_rect.y(),
-                    trigger_dom_rect.width(),
-                    trigger_dom_rect.height()
+                    target_element.tag_name(), trigger_rect.x, trigger_rect.y, trigger_rect
+                    .width, trigger_rect.height, trigger_dom_rect.x(), trigger_dom_rect.y(),
+                    trigger_dom_rect.width(), trigger_dom_rect.height()
                 );
-
                 let parent_element = find_dropdown_root(&target_element);
                 let parent_rect = parent_element
                     .as_ref()
                     .map(|el| DropdownRect::from_dom_rect(&el.get_bounding_client_rect()));
                 tracing::info!(
-                    "dropdown_parent_rect found={} rect={:?}",
-                    parent_element.is_some(),
+                    "dropdown_parent_rect found={} rect={:?}", parent_element.is_some(),
                     parent_rect
                 );
-
                 let overflow_element = parent_element
                     .as_ref()
                     .and_then(|el| find_overflow_parent(el))
                     .or_else(|| find_overflow_parent(&target_element));
                 tracing::info!(
-                    "dropdown_overflow_parent found={} tag={}",
-                    overflow_element.is_some(),
-                    overflow_element
-                        .as_ref()
-                        .map(|el| el.tag_name())
-                        .unwrap_or_default()
+                    "dropdown_overflow_parent found={} tag={}", overflow_element.is_some(),
+                    overflow_element.as_ref().map(| el | el.tag_name()).unwrap_or_default()
                 );
-
                 let overflow_rect = overflow_element
                     .as_ref()
                     .map(|el| DropdownRect::from_dom_rect(&el.get_bounding_client_rect()))
                     .or_else(viewport_rect);
                 tracing::info!("dropdown_overflow_rect={:?}", overflow_rect);
-
                 let mut next_state = DropdownContext::default();
                 next_state.open = true;
                 next_state.trigger_rect = Some(trigger_rect);
-                next_state.parent_rect = parent_rect.or_else(|| {
-                    tracing::debug!("Dropdown parent rect missing, falling back to trigger rect.");
-                    Some(trigger_rect)
-                });
+                next_state.parent_rect = parent_rect
+                    .or_else(|| {
+                        tracing::debug!(
+                            "Dropdown parent rect missing, falling back to trigger rect."
+                        );
+                        Some(trigger_rect)
+                    });
                 next_state.overflow_rect = overflow_rect;
-
                 state.set(next_state);
             },
             {props.children}
@@ -277,7 +259,7 @@ pub fn DropdownMenuContent(props: DropdownMenuProps) -> Element {
 
     let mut class = vec![
         "bg-white dark:bg-zinc-950".to_string(),
-        "dropdown-menu-content bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem]  rounded-md border p-1 absolute".to_string()
+        "dropdown-menu-content bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-10 min-w-[8rem]  rounded-md border p-1 absolute".to_string()
     ];
 
     if let Some(custom_class) = props.class {
@@ -479,7 +461,7 @@ pub fn DropdownMenuSubTrigger(props: DropdownMenuProps) -> Element {
 /// DropdownMenuSubContent component
 #[component]
 pub fn DropdownMenuSubContent(props: DropdownMenuProps) -> Element {
-    let mut class = vec!["bg-popover text-popover-foreground z-50 min-w-[8rem]  rounded-md border p-1 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2".to_string()];
+    let mut class = vec!["bg-popover text-popover-foreground z-10 min-w-[8rem]  rounded-md border p-1 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2".to_string()];
 
     if let Some(custom_class) = props.class {
         class.push(custom_class);
