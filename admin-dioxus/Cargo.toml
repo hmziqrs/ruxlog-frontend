@@ -43,6 +43,7 @@ web-sys = { version = "0.3.69", features = [
     "File",
     "Blob",
     "Url",
+    "CssStyleDeclaration",
 ] }
 lazy_static = "1.4.0"
 im = "15.1.0"
