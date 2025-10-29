@@ -1,337 +1,296 @@
 use dioxus::prelude::*;
 
 use crate::components::{
-    ListEmptyState, ListErrorBanner, ListToolbar, LoadingOverlay, PageHeader, Pagination,
+    DataTableScreen, HeaderColumn, ListEmptyState, ListErrorBannerProps, ListToolbarProps,
+    PageHeaderProps, SkeletonCellConfig, SkeletonTableRows,
 };
+use crate::hooks::{use_list_screen_with_handlers, ListScreenConfig};
 use crate::router::Route;
-use crate::store::{use_categories, CategoriesListQuery, Category};
-use crate::types::{Order, SortParam};
+use crate::store::{use_categories, CategoriesListQuery, Category, ListQuery, ListStore};
+use crate::types::Order;
 use crate::ui::shadcn::{
-    Badge, BadgeVariant, Button, ButtonVariant, Card, DropdownMenu, DropdownMenuContent,
+    Badge, BadgeVariant, Button, ButtonVariant, Checkbox, DropdownMenu, DropdownMenuContent,
     DropdownMenuItem, DropdownMenuTrigger,
 };
 use crate::utils::dates::format_short_date_dt;
-use gloo_timers::future::sleep;
-use hmziq_dioxus_free_icons::{
-    icons::ld_icons::{LdEllipsis, LdTag},
-    Icon,
-};
-use std::time::Duration;
+use hmziq_dioxus_free_icons::{icons::ld_icons::LdEllipsis, Icon};
 
 #[component]
 pub fn CategoriesListScreen() -> Element {
     let nav = use_navigator();
     let cats_state = use_categories();
-    let mut search_query = use_signal(|| String::new());
-    let mut status_filter = use_signal(|| "all".to_string()); // all | active | inactive
-    let mut page = use_signal(|| 1u64);
-    let sort_order = use_signal(|| "desc".to_string()); // asc | desc
 
-    // Fetch categories on mount
-    use_effect(move || {
-        spawn(async move {
-            let q = CategoriesListQuery {
-                page: page.read().clone(),
-                search: if search_query.read().is_empty() {
-                    None
-                } else {
-                    Some(search_query.read().clone())
-                },
-                sorts: Some(vec![SortParam {
-                    field: "created_at".to_string(),
-                    order: if sort_order.read().as_str() == "asc" {
-                        Order::Asc
-                    } else {
-                        Order::Desc
-                    },
-                }]),
-                parent_id: None,
-                is_active: None,
-                created_at_gt: None,
-                created_at_lt: None,
-                updated_at_gt: None,
-                updated_at_lt: None,
-            };
-            cats_state.list_with_query(q).await;
-        });
+    let filters = use_signal(|| CategoriesListQuery::new());
+    // Local selection state for the current page
+    let selected_ids = use_signal(|| Vec::<i32>::new());
+
+    // Use the enhanced hook that creates handlers for us
+    let (list_state, handlers) = use_list_screen_with_handlers(
+        Some(ListScreenConfig {
+            default_sort_field: "name".to_string(),
+            default_sort_order: Order::Asc,
+        }),
+        filters,
+    );
+
+    // Effect to load data when filters change - using the trait method
+    use_effect({
+        let list_state = list_state;
+        let mut selected_ids = selected_ids;
+        move || {
+            let q = filters();
+            let _tick = list_state.reload_tick();
+            let cats_state = cats_state;
+            // Clear any selection on query changes (page, search, filters, sorts)
+            selected_ids.set(Vec::new());
+            spawn(async move {
+                cats_state.fetch_list_with_query(q).await;
+            });
+        }
     });
 
     let list = cats_state.list.read();
     let list_loading = list.is_loading();
-    let list_failed = list.is_failed();
+    let _list_failed = list.is_failed();
 
-    // Snapshot data for rendering
-    let (categories, _total_items, current_page, _per_page) = if let Some(p) = list.data.clone() {
-        (p.data.clone(), p.total, p.page, p.per_page)
+    let (categories, current_page) = if let Some(p) = &list.data {
+        (p.data.clone(), p.page)
     } else {
-        (Vec::<Category>::new(), 0, 1, 10)
+        (Vec::<Category>::new(), 1)
     };
+
     let has_data = !categories.is_empty();
 
-    let total = categories.len();
-    let active = categories.iter().filter(|c| c.is_active).count();
-    let inactive = total.saturating_sub(active);
+    // Define header columns (prepend a blank cell for the selection checkbox column)
+    let headers = vec![
+        HeaderColumn::new("", false, "w-12 py-2 px-3", None),
+        HeaderColumn::new(
+            "Name",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("name"),
+        ),
+        HeaderColumn::new(
+            "Slug",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("slug"),
+        ),
+        HeaderColumn::new(
+            "Description",
+            false,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm",
+            None,
+        ),
+        HeaderColumn::new(
+            "Posts",
+            false,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            None,
+        ),
+        HeaderColumn::new(
+            "Created",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("created_at"),
+        ),
+        HeaderColumn::new(
+            "Updated",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("updated_at"),
+        ),
+        HeaderColumn::new(
+            "Status",
+            false,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            None,
+        ),
+        HeaderColumn::new("", false, "w-12 py-2 px-3", None),
+    ];
 
-    // Client-side filter by status to match the reference behavior
-    let status_val = status_filter.read().clone();
-    let filtered: Vec<Category> = categories
-        .iter()
-        .cloned()
-        .filter(|c| match status_val.as_str() {
-            "active" => c.is_active,
-            "inactive" => !c.is_active,
-            _ => true,
-        })
-        .collect();
+    // Custom status filter handler for categories - the rest is handled by the enhanced hook
+    let handle_status_select = {
+        let mut filters = filters;
+        move |value: String| {
+            let mut q = filters.peek().clone();
+            q.set_page(1);
+            q.is_active = match value.as_str() {
+                "Active" | "active" => Some(true),
+                "Inactive" | "inactive" => Some(false),
+                _ => None,
+            };
+            filters.set(q);
+        }
+    };
 
     rsx! {
-        // Page wrapper
-        div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
-            // Unified autonomous header
-            PageHeader {
+        DataTableScreen::<Category> {
+            frame: (cats_state.list)(),
+            header: Some(PageHeaderProps {
                 title: "Categories".to_string(),
                 description: "Create and organize your categories. Manage subcategories, status and more.".to_string(),
-                actions: Some(rsx!{ Button { onclick: move |_| { nav.push(Route::CategoriesAddScreen {}); }, "New Category" } })
-            }
-
-            // Optional error banner
-            if list_failed {
-                div { class: "container mx-auto px-4 pt-4",
-                    ListErrorBanner {
-                        message: "Failed to load categories. Please try again.".to_string(),
-                        retry_label: Some("Retry".to_string()),
-                        on_retry: Some(EventHandler::new(move |_| {
-                            let q = CategoriesListQuery {
-                                page: page.read().clone(),
-                                search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) },
-                                sorts: Some(vec![SortParam { field: "created_at".to_string(), order: if sort_order.read().as_str() == "asc" { Order::Asc } else { Order::Desc } }]),
-                                parent_id: None,
-                                is_active: None,
-                                created_at_gt: None,
-                                created_at_lt: None,
-                                updated_at_gt: None,
-                                updated_at_lt: None,
-                            };
-                            spawn(async move { cats_state.list_with_query(q).await; });
-                        })),
+                actions: Some(rsx!{
+                    Button {
+                        onclick: move |_| { nav.push(Route::CategoriesAddScreen {}); },
+                        "New Category"
                     }
-                }
-            }
-
-            // Stats
-            div { class: "container mx-auto px-4 py-6 md:py-8",
-                div { class: "grid grid-cols-1 gap-2 sm:grid-cols-3",
-                    Card { class: "border-muted shadow-none",
-                        div { class: "flex items-center justify-between p-4",
-                            div { class: "space-y-1",
-                                p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Total" }
-                                if list_loading && !has_data {
-                                    div { class: "h-6 w-16 rounded bg-muted animate-pulse" }
-                                } else {
-                                    p { class: "text-2xl font-semibold tabular-nums", "{total}" }
-                                }
+                }),
+                class: None,
+                embedded: false,
+            }),
+            headers: Some(headers),
+            current_sort_field: Some(list_state.sort_field()),
+            on_sort: Some(handlers.handle_sort.clone()),
+            error_banner: Some(ListErrorBannerProps {
+                message: "Failed to load categories. Please try again.".to_string(),
+                retry_label: Some("Retry".to_string()),
+                on_retry: Some(EventHandler::new(move |_| handlers.handle_retry.call(()))),
+            }),
+            toolbar: Some(ListToolbarProps {
+                search_value: list_state.search_input(),
+                search_placeholder: "Search categories by name, description, or slug".to_string(),
+                disabled: list_loading,
+                on_search_input: handlers.handle_search.clone(),
+                status_selected: match filters.read().is_active {
+                    Some(true) => "Active".to_string(),
+                    Some(false) => "Inactive".to_string(),
+                    None => "All".to_string(),
+                },
+                on_status_select: EventHandler::new(handle_status_select),
+            }),
+            on_prev: move |_| { handlers.handle_prev.call(current_page); },
+            on_next: move |_| { handlers.handle_next.call(current_page); },
+            // Render selection actions between toolbar and table (below_toolbar slot)
+            below_toolbar: if !selected_ids.read().is_empty() {
+                Some(rsx! {
+                    div { class: "w-full flex items-center justify-between bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-md px-4 py-3 shadow-sm",
+                        span { class: "text-sm text-muted-foreground", "{selected_ids.read().len()} selected" }
+                        div { class: "flex items-center gap-2",
+                            Button { variant: ButtonVariant::Outline, class: "h-8",
+                                onclick: {
+                                    let mut selected_ids = selected_ids;
+                                    move |_| { selected_ids.set(Vec::new()); }
+                                },
+                                "Activate"
                             }
-                            div { class: "w-5 h-5 text-zinc-500 dark:text-zinc-400", Icon { icon: LdTag {} } }
+                            Button { variant: ButtonVariant::Outline, class: "h-8",
+                                onclick: {
+                                    let mut selected_ids = selected_ids;
+                                    move |_| { selected_ids.set(Vec::new()); }
+                                },
+                                "Deactivate"
+                            }
+                            Button { variant: ButtonVariant::Outline, class: "h-8 text-red-600 border-red-200 dark:border-red-800 dark:hover:bg-red-950/20 hover:bg-red-50",
+                                onclick: {
+                                    let mut selected_ids = selected_ids;
+                                    move |_| { selected_ids.set(Vec::new()); }
+                                },
+                                "Delete"
+                            }
                         }
                     }
-                    Card { class: "border-muted shadow-none",
-                        div { class: "flex items-center justify-between p-4",
-                            div { class: "space-y-1",
-                                p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Active" }
-                                if list_loading && !has_data {
-                                    div { class: "h-6 w-16 rounded bg-muted animate-pulse" }
-                                } else {
-                                    p { class: "text-2xl font-semibold tabular-nums", "{active}" }
-                                }
-                            }
-                            div { class: "h-5 w-5 rounded-full bg-green-500/15 ring-4 ring-green-500/10" }
-                        }
+                })
+            } else { None },
+            // Table body content only - headers are now handled by DataTableScreen
+            if categories.is_empty() {
+                if list_loading && !has_data {
+                    SkeletonTableRows {
+                        row_count: 6,
+                        cells: vec![
+                            // Selection checkbox placeholder
+                            SkeletonCellConfig::custom(crate::components::UICellType::Default, "w-12 py-2 px-3"),
+                            SkeletonCellConfig::custom(crate::components::UICellType::Default, "py-2 px-3"),
+                            SkeletonCellConfig::custom(crate::components::UICellType::Default, "py-2 px-3"),
+                            SkeletonCellConfig::custom(crate::components::UICellType::Default, "py-2 px-3"),
+                            SkeletonCellConfig::custom(crate::components::UICellType::Default, "py-2 px-3"),
+                            SkeletonCellConfig::custom(crate::components::UICellType::Default, "py-2 px-3"),
+                            SkeletonCellConfig::custom(crate::components::UICellType::Default, "py-2 px-3"),
+                            SkeletonCellConfig::custom(crate::components::UICellType::Badge, "py-2 px-3"),
+                            SkeletonCellConfig::custom(crate::components::UICellType::Action, "py-2 px-3"),
+                        ],
                     }
-                    Card { class: "border-muted shadow-none",
-                        div { class: "flex items-center justify-between p-4",
-                            div { class: "space-y-1",
-                                p { class: "text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400", "Inactive" }
-                                if list_loading && !has_data {
-                                    div { class: "h-6 w-16 rounded bg-muted animate-pulse" }
-                                } else {
-                                    p { class: "text-2xl font-semibold tabular-nums", "{inactive}" }
-                                }
+                } else {
+                    tr { class: "border-b border-zinc-200 dark:border-zinc-800",
+                        td { colspan: "9", class: "py-12 px-4 text-center",
+                            ListEmptyState {
+                                title: "No categories found".to_string(),
+                                description: "Try adjusting your search or create a new category to get started.".to_string(),
+                                clear_label: "Clear search".to_string(),
+                                create_label: "Create your first category".to_string(),
+                                on_clear: move |_| { handlers.handle_clear.call(()); },
+                                on_create: move |_| { nav.push(Route::CategoriesAddScreen {}); },
                             }
-                            div { class: "h-5 w-5 rounded-full bg-zinc-500/15 ring-4 ring-zinc-500/10" }
                         }
                     }
                 }
-            }
-
-            // Content
-            div { class: "container mx-auto px-4 py-8 md:py-12",
-                // Toolbar
-                ListToolbar {
-                    search_value: search_query.read().clone(),
-                    search_placeholder: "Search categories by name, description, or slug".to_string(),
-                    disabled: list_loading,
-                    on_search_input: move |val: String| {
-                        // Debounce fetch by 500ms to avoid immediate loading disabling the input
-                        search_query.set(val.clone());
-                        page.set(1);
-                        let search_query = search_query.clone();
-                        let sort_order = sort_order.clone();
-                        let cats_state = cats_state;
-                        spawn(async move {
-                            sleep(Duration::from_millis(500)).await;
-                            if search_query.read().as_str() == val.as_str() {
-                                let q = CategoriesListQuery {
-                                    page: 1,
-                                    search: if val.is_empty() { None } else { Some(val) },
-                                    sorts: Some(vec![SortParam { field: "created_at".to_string(), order: if sort_order.read().as_str() == "asc" { Order::Asc } else { Order::Desc } }]),
-                                    parent_id: None,
-                                    is_active: None,
-                                    created_at_gt: None,
-                                    created_at_lt: None,
-                                    updated_at_gt: None,
-                                    updated_at_lt: None,
-                                };
-                                cats_state.list_with_query(q).await;
-                            }
-                        });
-                    },
-                    status_selected: status_filter.read().clone(),
-                    on_status_select: move |value| { status_filter.set(value); },
-                }
-
-                // Table
-                Card { class: "border-muted shadow-none overflow-hidden mt-4",
-                    div { class: "relative",
-                        div { class: "overflow-x-auto",
-                            table { class: "w-full border-collapse",
-                                thead { class: "sticky top-0 z-[1] bg-muted/60 backdrop-blur supports-[backdrop-filter]:bg-muted/40",
-                                    tr { class: "border-b border-border/60",
-                                        th { class: "py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground", "Name" }
-                                        th { class: "hidden py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground md:table-cell", "Description" }
-                                        th { class: "hidden py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground md:table-cell", "Slug" }
-                                        th { class: "hidden py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground md:table-cell", "Created" }
-                                        th { class: "py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground", "Status" }
-                                        th { class: "py-3.5 px-4 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground", "Actions" }
-                                    }
-                                }
-                                tbody {
-                                    if filtered.is_empty() {
-                                        if list_loading && !has_data {
-                                            { (0..6).map(|_| rsx!{
-                                                tr { class: "border-b border-border/60",
-                                                    td { colspan: "6", class: "py-3 px-4",
-                                                        div { class: "flex items-center gap-3",
-                                                            div { class: "h-3.5 w-3.5 rounded-full bg-muted animate-pulse" }
-                                                            div { class: "flex-1 space-y-2",
-                                                                div { class: "h-4 w-1/3 rounded bg-muted animate-pulse" }
-                                                                div { class: "h-3 w-2/3 rounded bg-muted animate-pulse" }
-                                                            }
-                                                        }
-                                                    }
+            } else {
+                {categories.iter().cloned().map(|category| {
+                    let category_id = category.id;
+                    rsx! {
+                        tr { class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-muted/30 transition-colors",
+                            // Selection checkbox cell
+                            td { class: "py-2 px-3 w-12 text-xs md:text-sm",
+                                Checkbox {
+                                    checked: selected_ids.read().contains(&category_id),
+                                    onchange: Some(EventHandler::new({
+                                        let mut selected_ids = selected_ids;
+                                        move |checked: bool| {
+                                            let mut current = selected_ids.peek().clone();
+                                            if checked {
+                                                if !current.contains(&category_id) {
+                                                    current.push(category_id);
                                                 }
-                                            }) }
-                                        } else {
-                                            tr { class: "border-b border-border/60",
-                                                td { colspan: "6", class: "py-16 px-4",
-                                                    ListEmptyState {
-                                                        title: "No categories found".to_string(),
-                                                        description: "Try adjusting your search or create a new category to get started.".to_string(),
-                                                        clear_label: "Clear search".to_string(),
-                                                        create_label: "Create your first category".to_string(),
-                                                        on_clear: move |_| {
-                                                            search_query.set(String::new());
-                                                            page.set(1);
-                                                            let q = CategoriesListQuery { page: 1, search: None, sorts: Some(vec![SortParam { field: "created_at".to_string(), order: if sort_order.read().as_str() == "asc" { Order::Asc } else { Order::Desc } }]), parent_id: None, is_active: None, created_at_gt: None, created_at_lt: None, updated_at_gt: None, updated_at_lt: None };
-                                                            spawn(async move { cats_state.list_with_query(q).await; });
-                                                        },
-                                                        on_create: move |_| { nav.push(Route::CategoriesAddScreen {}); },
-                                                    }
-                                                }
+                                            } else {
+                                                current.retain(|&id| id != category_id);
                                             }
+                                            selected_ids.set(current);
                                         }
-                                    } else {
-                                        {filtered.iter().map(|c| {
-                                            let category_id = c.id;
-                                            rsx! {
-                                            tr { class: "border-b border-border/60 hover:bg-muted/40 transition-colors",
-                                                td { class: "py-3 px-4",
-                                                    div { class: "flex items-center gap-3",
-                                                        div { class: "h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-black/5 dark:ring-white/10", style: format!("background-color: {}", if c.color.is_empty() { "#94a3b8" } else { &c.color }) }
-                                                        div { class: "min-w-0",
-                                                            div { class: "font-medium leading-none", "{c.name}" }
-                                                            div { class: "mt-1 text-xs text-muted-foreground md:hidden", span { class: "truncate", "{c.slug}" } }
-                                                        }
-                                                    }
-                                                }
-                                                td { class: "hidden max-w-[28rem] py-3 px-4 text-muted-foreground md:table-cell", span { class: "line-clamp-1", {c.description.clone().unwrap_or("—".to_string())} } }
-                                                td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{c.slug}" }
-                                                td { class: "hidden py-3 px-4 text-muted-foreground md:table-cell", "{format_short_date_dt(&c.created_at)}" }
-                                                td { class: "py-3 px-4",
-                                                    if c.is_active {
-                                                        Badge { class: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/30", "Active" }
-                                                    } else {
-                                                        Badge { variant: BadgeVariant::Secondary, class: "bg-muted text-foreground/70 hover:bg-muted", "Inactive" }
-                                                    }
-                                                }
-                                                td { class: "py-3 px-4",
-                                                    div { class: "flex items-center justify-end gap-1.5",
-                                                        DropdownMenu {
-                                                            DropdownMenuTrigger {
-                                                                Button { variant: ButtonVariant::Ghost, class: "h-8 w-8", div { class: "w-4 h-4", Icon { icon: LdEllipsis {} } } }
-                                                            }
-                                                            DropdownMenuContent { class: "w-44 border-border bg-popover",
-                                                                DropdownMenuItem { onclick: move |_| { nav.push(Route::CategoriesEditScreen { id: category_id }); }, "Edit" }
-                                                                DropdownMenuItem { onclick: move |_| { nav.push(Route::PostsListScreen {}); }, "View Posts" }
-                                                                DropdownMenuItem { class: "text-red-600 dark:text-red-400", onclick: move |_| {
-                                                                        let id = category_id;
-                                                                        let q = CategoriesListQuery {
-                                                                            page: page.read().clone(),
-                                                                            search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) },
-                                                                            sorts: Some(vec![SortParam { field: "created_at".to_string(), order: if sort_order.read().as_str() == "asc" { Order::Asc } else { Order::Desc } }]),
-                                                                            parent_id: None,
-                                                                            is_active: None,
-                                                                            created_at_gt: None,
-                                                                            created_at_lt: None,
-                                                                            updated_at_gt: None,
-                                                                            updated_at_lt: None,
-                                                                        };
-                                                                        spawn(async move {
-                                                                            cats_state.remove(id).await;
-                                                                            cats_state.list_with_query(q).await;
-                                                                        });
-                                                                    }, "Delete" }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            }
-                                        })}
+                                    })),
+                                }
+                            }
+                            td { class: "py-2 px-3 text-xs md:text-sm whitespace-nowrap",
+                                div { class: "flex items-center gap-2",
+                                    div { class: "h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-black/5 dark:ring-white/10", style: format!("background-color: {}", if category.color.is_empty() { "#94a3b8" } else { &category.color }) }
+                                    span { class: "font-medium leading-none truncate", "{category.name}" }
+                                }
+                            }
+                            td { class: "py-2 px-3 text-xs md:text-sm text-muted-foreground whitespace-nowrap",
+                                span { class: "truncate font-mono", "{category.slug}" }
+                            }
+                            td { class: "max-w-xs py-2 px-3 text-xs md:text-sm text-muted-foreground",
+                                span { class: "truncate", {category.description.clone().unwrap_or("—".to_string())} }
+                            }
+                            td { class: "py-2 px-3 text-xs md:text-sm text-muted-foreground whitespace-nowrap", "0" }
+                            td { class: "py-2 px-3 text-xs md:text-sm text-muted-foreground whitespace-nowrap", "{format_short_date_dt(&category.created_at)}" }
+                            td { class: "py-2 px-3 text-xs md:text-sm text-muted-foreground whitespace-nowrap", "{format_short_date_dt(&category.updated_at)}" }
+                            td { class: "py-2 px-3 text-xs md:text-sm",
+                                if category.is_active {
+                                    Badge { class: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400", "Active" }
+                                } else {
+                                    Badge { variant: BadgeVariant::Secondary, class: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400", "Inactive" }
+                                }
+                            }
+                            td { class: "py-2 px-3 text-xs md:text-sm",
+                                DropdownMenu {
+                                    DropdownMenuTrigger {
+                                        Button { variant: ButtonVariant::Ghost, class: "h-8 w-8 p-0 bg-transparent hover:bg-muted/50", div { class: "w-4 h-4", Icon { icon: LdEllipsis {} } } }
+                                    }
+                                    DropdownMenuContent { class: "bg-background border-zinc-200 dark:border-zinc-800",
+                                        DropdownMenuItem { onclick: move |_| { nav.push(Route::CategoriesEditScreen { id: category_id }); }, "Edit" }
+                                        DropdownMenuItem { onclick: move |_| { nav.push(Route::PostsListScreen {}); }, "View Posts" }
+                                        DropdownMenuItem { class: "text-red-600", onclick: move |_| {
+                                                let id = category_id;
+                                                spawn({  async move {
+                                                    cats_state.remove(id).await;
+                                                }});
+                                            }, "Delete" }
                                     }
                                 }
                             }
-                            // Pagination
-                            Pagination::<Category> {
-                                page: list.data.clone(),
-                                disabled: list_loading,
-                                on_prev: move |_| {
-                                    let new_page = current_page.saturating_sub(1).max(1);
-                                    page.set(new_page);
-                                    let q = CategoriesListQuery { page: new_page, search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sorts: Some(vec![SortParam { field: "created_at".to_string(), order: if sort_order.read().as_str() == "asc" { Order::Asc } else { Order::Desc } }]), parent_id: None, is_active: None, created_at_gt: None, created_at_lt: None, updated_at_gt: None, updated_at_lt: None };
-                                    spawn(async move { cats_state.list_with_query(q).await; });
-                                },
-                                on_next: move |_| {
-                                    let new_page = current_page + 1;
-                                    page.set(new_page);
-                                    let q = CategoriesListQuery { page: new_page, search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sorts: Some(vec![SortParam { field: "created_at".to_string(), order: if sort_order.read().as_str() == "asc" { Order::Asc } else { Order::Desc } }]), parent_id: None, is_active: None, created_at_gt: None, created_at_lt: None, updated_at_gt: None, updated_at_lt: None };
-                                    spawn(async move { cats_state.list_with_query(q).await; });
-                                },
-                            }
                         }
-                        // Loading overlay when we have data
-                        if list_loading && has_data { LoadingOverlay { visible: true } }
                     }
-                }
+                })}
             }
         }
     }
