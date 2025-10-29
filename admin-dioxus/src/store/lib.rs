@@ -306,3 +306,96 @@ where
         }
     }
 }
+
+
+/// Specialized version for updating items in a PaginatedList cache
+pub async fn edit_state_abstraction<K, T, Payload, F, GetId, OnSuccess>(
+    state: &GlobalSignal<HashMap<K, StateFrame<(), Payload>>>,
+    id: K,
+    payload: Payload,
+    send_future: F,
+    parse_label: &str,
+    sync_list_cache: Option<&GlobalSignal<StateFrame<PaginatedList<T>>>>,
+    sync_view_cache: Option<&GlobalSignal<HashMap<K, StateFrame<T>>>>,
+    get_id: GetId,
+    on_success: Option<OnSuccess>,
+) -> Option<T>
+where
+    K: Eq + Hash + Copy + 'static,
+    T: DeserializeOwned + Clone + PartialEq + 'static,
+    Payload: Clone + 'static,
+    F: Future<Output = Result<HttpResponse, HttpError>>,
+    GetId: Fn(&T) -> K,
+    OnSuccess: FnOnce(&T),
+{
+    {
+        let mut map = state.write();
+        map.entry(id)
+            .or_insert_with(StateFrame::new)
+            .set_loading_meta(Some(payload), None);
+    }
+
+    match send_future.await {
+        Ok(response) => {
+            if (200..300).contains(&response.status()) {
+                match response.json::<T>().await {
+                    Ok(parsed) => {
+                        {
+                            let mut map = state.write();
+                            map.entry(id)
+                                .or_insert_with(StateFrame::new)
+                                .set_success(None, None);
+                        }
+
+                        // Sync list cache if provided
+                        if let Some(list_cache) = sync_list_cache {
+                            let mut list_frame = list_cache.write();
+                            if let Some(list) = &mut list_frame.data {
+                                if let Some(item) = list.data.iter_mut().find(|i| get_id(i) == id) {
+                                    *item = parsed.clone();
+                                }
+                            }
+                        }
+
+                        // Sync view cache if provided
+                        if let Some(view_cache) = sync_view_cache {
+                            let mut view_map = view_cache.write();
+                            view_map
+                                .entry(id)
+                                .or_insert_with(StateFrame::new)
+                                .set_success(Some(parsed.clone()), None);
+                        }
+
+                        // Call optional success callback for custom logic
+                        if let Some(callback) = on_success {
+                            callback(&parsed);
+                        }
+
+                        Some(parsed)
+                    }
+                    Err(e) => {
+                        let mut map = state.write();
+                        map.entry(id)
+                            .or_insert_with(StateFrame::new)
+                            .set_failed(Some(format!("Failed to parse {}: {}", parse_label, e)));
+                        None
+                    }
+                }
+            } else {
+                let mut map = state.write();
+                map.entry(id)
+                    .or_insert_with(StateFrame::new)
+                    .set_api_error(&response)
+                    .await;
+                None
+            }
+        }
+        Err(e) => {
+            let mut map = state.write();
+            map.entry(id)
+                .or_insert_with(StateFrame::new)
+                .set_failed(Some(format!("Network error: {}", e)));
+            None
+        }
+    }
+}

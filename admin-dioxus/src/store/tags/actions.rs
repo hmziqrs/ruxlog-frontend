@@ -3,8 +3,8 @@ use dioxus::signals::ReadableExt;
 use super::{Tag, TagsAddPayload, TagsEditPayload, TagsListQuery, TagsState};
 use crate::services::http_client;
 use crate::store::{
-    list_state_abstraction, state_request_abstraction, view_state_abstraction, PaginatedList,
-    StateFrame,
+    edit_state_abstraction, list_state_abstraction, state_request_abstraction,
+    view_state_abstraction, PaginatedList, StateFrame,
 };
 use std::collections::HashMap;
 
@@ -27,75 +27,18 @@ impl TagsState {
     }
 
     pub async fn edit(&self, id: i32, payload: TagsEditPayload) {
-        {
-            let mut edit_map = self.edit.write();
-            edit_map
-                .entry(id)
-                .or_insert_with(StateFrame::new)
-                .set_loading_meta(Some(payload.clone()), None);
-        }
-
-        let result = http_client::post(&format!("/tag/v1/update/{}", id), &payload)
-            .send()
-            .await;
-        match result {
-            Ok(response) => {
-                if (200..300).contains(&response.status()) {
-                    match response.json::<Tag>().await {
-                        Ok(tag) => {
-                            {
-                                let mut edit_map = self.edit.write();
-                                edit_map
-                                    .entry(id)
-                                    .or_insert_with(StateFrame::new)
-                                    .set_success(None, None);
-                            }
-
-                            if let Some(check_list_item) = &self.list.peek().data {
-                                if !check_list_item.data.iter().any(|t| t.id == id) {
-                                    let mut list_frame = self.list.write();
-                                    if let Some(list) = &mut list_frame.data {
-                                        if let Some(item) =
-                                            list.data.iter_mut().find(|t| t.id == id)
-                                        {
-                                            *item = tag.clone();
-                                        }
-                                    }
-                                    return;
-                                }
-                            }
-                            {
-                                let mut view_map = self.view.write();
-                                if let Some(view_frame) = view_map.get_mut(&id) {
-                                    view_frame.set_success(Some(tag), None);
-                                }
-                            }
-                        }
-                        Err(e) => {
-                            let mut edit_map = self.edit.write();
-                            edit_map
-                                .entry(id)
-                                .or_insert_with(StateFrame::new)
-                                .set_failed(Some(format!("Failed to parse tag: {}", e)));
-                        }
-                    }
-                } else {
-                    let mut edit_map = self.edit.write();
-                    edit_map
-                        .entry(id)
-                        .or_insert_with(StateFrame::new)
-                        .set_api_error(&response)
-                        .await;
-                }
-            }
-            Err(e) => {
-                let mut edit_map = self.edit.write();
-                edit_map
-                    .entry(id)
-                    .or_insert_with(StateFrame::new)
-                    .set_failed(Some(format!("Network error: {}", e)));
-            }
-        }
+        let _tag = edit_state_abstraction(
+            &self.edit,
+            id,
+            payload.clone(),
+            http_client::post(&format!("/tag/v1/update/{}", id), &payload).send(),
+            "tag",
+            Some(&self.list),
+            Some(&self.view),
+            |tag: &Tag| tag.id,
+            None::<fn(&Tag)>,
+        )
+        .await;
     }
 
     pub async fn remove(&self, id: i32) {
