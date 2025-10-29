@@ -139,7 +139,22 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
     pub async fn set_api_error(&mut self, response: &HttpResponse) {
         match response.json::<ApiError>().await {
             Ok(api_error) => {
-                self.set_failed(Some(api_error.message));
+                let msg = api_error
+                    .message
+                    .clone()
+                    .or_else(|| {
+                        // Fallback to a generic message when server omits message in production
+                        Some(format!(
+                            "Request failed{} (status {})",
+                            api_error
+                                .code
+                                .as_ref()
+                                .map(|c| format!(" with code {}", c))
+                                .unwrap_or_default(),
+                            api_error.status
+                        ))
+                    });
+                self.set_failed(msg);
             }
             Err(_) => {
                 self.set_failed(Some("API error".to_string()));
@@ -149,9 +164,27 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ApiError {
-    pub message: String,
-    pub status: Option<u16>,
+    /// Error type code string coming from server under the JSON key "type" (e.g., "AUTH_001")
+    #[serde(rename = "type")]
+    pub code: Option<String>,
+    /// Human-readable message (may be omitted in production builds of the server)
+    pub message: Option<String>,
+    /// HTTP status code echoed by the backend
+    pub status: u16,
+    /// Optional detailed description (present only in development on the server)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub details: Option<String>,
+    /// Optional additional structured context for the error
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context: Option<serde_json::Value>,
+    /// Optional Retry-After seconds if the request is rate-limited
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub retry_after: Option<u64>,
+    /// Optional request id for tracing/correlation
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub request_id: Option<String>,
 }
 
 /// Send a request, parse JSON into `T`, and update the provided `StateFrame<T>`.
