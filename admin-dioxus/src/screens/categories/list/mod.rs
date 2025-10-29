@@ -4,7 +4,8 @@ use crate::components::{
     ListEmptyState, ListErrorBanner, ListToolbar, LoadingOverlay, PageHeader, Pagination,
 };
 use crate::router::Route;
-use crate::store::{use_category, Category, CategoryListQuery};
+use crate::store::{use_categories, CategoriesListQuery, Category};
+use crate::types::{Order, SortParam};
 use crate::ui::shadcn::{
     Badge, BadgeVariant, Button, ButtonVariant, Card, DropdownMenu, DropdownMenuContent,
     DropdownMenuItem, DropdownMenuTrigger,
@@ -20,7 +21,7 @@ use std::time::Duration;
 #[component]
 pub fn CategoriesListScreen() -> Element {
     let nav = use_navigator();
-    let cats_state = use_category();
+    let cats_state = use_categories();
     let mut search_query = use_signal(|| String::new());
     let mut status_filter = use_signal(|| "all".to_string()); // all | active | inactive
     let mut page = use_signal(|| 1u64);
@@ -29,21 +30,33 @@ pub fn CategoriesListScreen() -> Element {
     // Fetch categories on mount
     use_effect(move || {
         spawn(async move {
-            let q = CategoryListQuery {
-                page: Some(page.read().clone()),
+            let q = CategoriesListQuery {
+                page: page.read().clone(),
                 search: if search_query.read().is_empty() {
                     None
                 } else {
                     Some(search_query.read().clone())
                 },
-                sort_order: Some(sort_order.read().clone()),
+                sorts: Some(vec![SortParam {
+                    field: "created_at".to_string(),
+                    order: if sort_order.read().as_str() == "asc" {
+                        Order::Asc
+                    } else {
+                        Order::Desc
+                    },
+                }]),
                 parent_id: None,
+                is_active: None,
+                created_at_gt: None,
+                created_at_lt: None,
+                updated_at_gt: None,
+                updated_at_lt: None,
             };
             cats_state.list_with_query(q).await;
         });
     });
 
-    let list = cats_state.list_with_query.read();
+    let list = cats_state.list.read();
     let list_loading = list.is_loading();
     let list_failed = list.is_failed();
 
@@ -88,11 +101,16 @@ pub fn CategoriesListScreen() -> Element {
                         message: "Failed to load categories. Please try again.".to_string(),
                         retry_label: Some("Retry".to_string()),
                         on_retry: Some(EventHandler::new(move |_| {
-                            let q = CategoryListQuery {
-                                page: Some(page.read().clone()),
+                            let q = CategoriesListQuery {
+                                page: page.read().clone(),
                                 search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) },
-                                sort_order: Some(sort_order.read().clone()),
+                                sorts: Some(vec![SortParam { field: "created_at".to_string(), order: if sort_order.read().as_str() == "asc" { Order::Asc } else { Order::Desc } }]),
                                 parent_id: None,
+                                is_active: None,
+                                created_at_gt: None,
+                                created_at_lt: None,
+                                updated_at_gt: None,
+                                updated_at_lt: None,
                             };
                             spawn(async move { cats_state.list_with_query(q).await; });
                         })),
@@ -162,11 +180,16 @@ pub fn CategoriesListScreen() -> Element {
                         spawn(async move {
                             sleep(Duration::from_millis(500)).await;
                             if search_query.read().as_str() == val.as_str() {
-                                let q = CategoryListQuery {
-                                    page: Some(1),
+                                let q = CategoriesListQuery {
+                                    page: 1,
                                     search: if val.is_empty() { None } else { Some(val) },
-                                    sort_order: Some(sort_order.read().clone()),
+                                    sorts: Some(vec![SortParam { field: "created_at".to_string(), order: if sort_order.read().as_str() == "asc" { Order::Asc } else { Order::Desc } }]),
                                     parent_id: None,
+                                    is_active: None,
+                                    created_at_gt: None,
+                                    created_at_lt: None,
+                                    updated_at_gt: None,
+                                    updated_at_lt: None,
                                 };
                                 cats_state.list_with_query(q).await;
                             }
@@ -218,7 +241,7 @@ pub fn CategoriesListScreen() -> Element {
                                                         on_clear: move |_| {
                                                             search_query.set(String::new());
                                                             page.set(1);
-                                                            let q = CategoryListQuery { page: Some(1), search: None, sort_order: Some(sort_order.read().clone()), parent_id: None };
+                                                            let q = CategoriesListQuery { page: 1, search: None, sorts: Some(vec![SortParam { field: "created_at".to_string(), order: if sort_order.read().as_str() == "asc" { Order::Asc } else { Order::Desc } }]), parent_id: None, is_active: None, created_at_gt: None, created_at_lt: None, updated_at_gt: None, updated_at_lt: None };
                                                             spawn(async move { cats_state.list_with_query(q).await; });
                                                         },
                                                         on_create: move |_| { nav.push(Route::CategoriesAddScreen {}); },
@@ -261,11 +284,16 @@ pub fn CategoriesListScreen() -> Element {
                                                                 DropdownMenuItem { onclick: move |_| { nav.push(Route::PostsListScreen {}); }, "View Posts" }
                                                                 DropdownMenuItem { class: "text-red-600 dark:text-red-400", onclick: move |_| {
                                                                         let id = category_id;
-                                                                        let q = CategoryListQuery {
-                                                                            page: Some(page.read().clone()),
+                                                                        let q = CategoriesListQuery {
+                                                                            page: page.read().clone(),
                                                                             search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) },
-                                                                            sort_order: Some(sort_order.read().clone()),
+                                                                            sorts: Some(vec![SortParam { field: "created_at".to_string(), order: if sort_order.read().as_str() == "asc" { Order::Asc } else { Order::Desc } }]),
                                                                             parent_id: None,
+                                                                            is_active: None,
+                                                                            created_at_gt: None,
+                                                                            created_at_lt: None,
+                                                                            updated_at_gt: None,
+                                                                            updated_at_lt: None,
                                                                         };
                                                                         spawn(async move {
                                                                             cats_state.remove(id).await;
@@ -289,13 +317,13 @@ pub fn CategoriesListScreen() -> Element {
                                 on_prev: move |_| {
                                     let new_page = current_page.saturating_sub(1).max(1);
                                     page.set(new_page);
-                                    let q = CategoryListQuery { page: Some(new_page), search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sort_order: Some(sort_order.read().clone()), parent_id: None };
+                                    let q = CategoriesListQuery { page: new_page, search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sorts: Some(vec![SortParam { field: "created_at".to_string(), order: if sort_order.read().as_str() == "asc" { Order::Asc } else { Order::Desc } }]), parent_id: None, is_active: None, created_at_gt: None, created_at_lt: None, updated_at_gt: None, updated_at_lt: None };
                                     spawn(async move { cats_state.list_with_query(q).await; });
                                 },
                                 on_next: move |_| {
                                     let new_page = current_page + 1;
                                     page.set(new_page);
-                                    let q = CategoryListQuery { page: Some(new_page), search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sort_order: Some(sort_order.read().clone()), parent_id: None };
+                                    let q = CategoriesListQuery { page: new_page, search: if search_query.read().is_empty() { None } else { Some(search_query.read().clone()) }, sorts: Some(vec![SortParam { field: "created_at".to_string(), order: if sort_order.read().as_str() == "asc" { Order::Asc } else { Order::Desc } }]), parent_id: None, is_active: None, created_at_gt: None, created_at_lt: None, updated_at_gt: None, updated_at_lt: None };
                                     spawn(async move { cats_state.list_with_query(q).await; });
                                 },
                             }

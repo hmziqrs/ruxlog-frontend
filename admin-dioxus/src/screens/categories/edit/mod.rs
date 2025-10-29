@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use crate::components::{FormTwoColumnSkeleton, PageHeader};
 use crate::containers::{CategoryForm, CategoryFormContainer};
 use crate::hooks::use_category_view;
-use crate::store::use_category;
+use crate::store::use_categories;
 use crate::ui::shadcn::Button;
 
 #[component]
@@ -40,7 +40,7 @@ pub fn CategoriesEditScreen(id: i32) -> Element {
                     div { class: "rounded-md border border-red-200 bg-red-50 p-3 text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300",
                         span { class: "text-sm", "Failed to load category." }
                         if let Some(msg) = message { span { class: "ml-1 text-sm opacity-80", "{msg}" } }
-                        Button { class: "ml-3", onclick: move |_| { spawn({ let cats = use_category(); async move { cats.view(id).await; }}); }, "Retry" }
+                        Button { class: "ml-3", onclick: move |_| { spawn({ let cats = use_categories(); async move { cats.view(id).await; }}); }, "Retry" }
                     }
                 }
 
@@ -53,7 +53,7 @@ pub fn CategoriesEditScreen(id: i32) -> Element {
                         initial: Some(initial.clone()),
                         on_submit: move |val: CategoryForm| {
                             let payload = val.to_edit_payload();
-                            let cats = use_category();
+                            let cats = use_categories();
                             spawn(async move {
                                 cats.edit(id, payload).await;
                             });

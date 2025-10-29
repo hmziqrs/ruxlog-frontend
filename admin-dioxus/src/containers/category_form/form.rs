@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use validator::{Validate, ValidationError};
 
 use crate::hooks::{OxForm, OxFormModel};
-use crate::store::{CategoryAddPayload, CategoryEditPayload};
+use crate::store::{CategoriesAddPayload, CategoriesEditPayload};
 use crate::utils::colors::get_contrast_yiq;
 
 #[derive(Debug, Validate, Clone, PartialEq)]
@@ -91,7 +91,7 @@ impl CategoryForm {
     }
 
     // Convert the form to the backend add payload contract
-    pub fn to_add_payload(&self) -> CategoryAddPayload {
+    pub fn to_add_payload(&self) -> CategoriesAddPayload {
         let description = if self.description.trim().is_empty() {
             None
         } else {
@@ -115,7 +115,7 @@ impl CategoryForm {
             self.parent_id.trim().parse::<i32>().ok()
         };
 
-        CategoryAddPayload {
+        CategoriesAddPayload {
             name: self.name.clone(),
             slug: self.slug.clone(),
             color: self.color.clone(),
@@ -129,7 +129,7 @@ impl CategoryForm {
     }
 
     // Convert the form to the backend edit payload contract
-    pub fn to_edit_payload(&self) -> CategoryEditPayload {
+    pub fn to_edit_payload(&self) -> CategoriesEditPayload {
         let description = if self.description.trim().is_empty() {
             Some(None)
         } else {
@@ -156,7 +156,7 @@ impl CategoryForm {
                 .or(Some(None))
         };
 
-        CategoryEditPayload {
+        CategoriesEditPayload {
             name: Some(self.name.clone()),
             slug: Some(self.slug.clone()),
             parent_id,
@@ -230,7 +230,7 @@ pub struct UseCategoryForm {
     pub auto_slug: Signal<bool>,
 }
 
-pub fn use_category_form(initial_state: CategoryForm) -> UseCategoryForm {
+pub fn use_categories_form(initial_state: CategoryForm) -> UseCategoryForm {
     let mut form_signal: Signal<OxForm<CategoryForm>> = use_signal(|| OxForm::new(initial_state));
     let auto_slug: Signal<bool> = use_signal(|| true);
     let form_data = form_signal.read();

@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
 
-use super::form::{use_category_form, CategoryForm};
+use super::form::{use_categories_form, CategoryForm};
 use crate::components::{AppInput, ColorPicker, ImageUpload};
-use crate::store::use_category;
+use crate::store::use_categories;
 use crate::ui::shadcn::{
     Button, ButtonSize, ButtonVariant, Checkbox, Combobox, ComboboxItem, Skeleton,
 };
@@ -22,9 +22,9 @@ pub struct CategoryFormContainerProps {
 #[component]
 pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
     let initial_category_form = props.initial.clone().unwrap_or_else(CategoryForm::new);
-    let category_form_hook = use_category_form(initial_category_form);
+    let category_form_hook = use_categories_form(initial_category_form);
     let mut form = category_form_hook.form;
-    let cats_state = use_category();
+    let cats_state = use_categories();
 
     // Fetch categories for parent selection on mount
     use_effect(move || {
@@ -218,6 +218,7 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                 let items: Vec<ComboboxItem> = list
                                     .data
                                     .clone()
+                                    .map(|paginated| paginated.data)
                                     .unwrap_or_default()
                                     .into_iter()
                                     .map(|c| ComboboxItem { value: c.id.to_string(), label: c.name })

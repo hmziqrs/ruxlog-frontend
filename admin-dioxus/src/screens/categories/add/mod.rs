@@ -2,11 +2,11 @@ use dioxus::prelude::*;
 
 use crate::components::PageHeader;
 use crate::containers::{CategoryForm, CategoryFormContainer};
-use crate::store::use_category;
+use crate::store::use_categories;
 
 #[component]
 pub fn CategoriesAddScreen() -> Element {
-    let categories = use_category();
+    let categories = use_categories();
 
     rsx! {
         // Page wrapper
