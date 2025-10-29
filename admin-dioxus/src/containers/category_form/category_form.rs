@@ -2,7 +2,10 @@ use dioxus::prelude::*;
 
 use super::form::{use_categories_form, CategoryForm};
 use crate::components::{AppInput, ColorPicker, ImageUpload};
+use crate::hooks::OxForm;
+use crate::router::Route;
 use crate::store::use_categories;
+use crate::ui::custom::AppPortal;
 use crate::ui::shadcn::{
     Button, ButtonSize, ButtonVariant, Checkbox, Combobox, ComboboxItem, Skeleton,
 };
@@ -21,9 +24,13 @@ pub struct CategoryFormContainerProps {
 
 #[component]
 pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
+    let nav = use_navigator();
     let initial_category_form = props.initial.clone().unwrap_or_else(CategoryForm::new);
+    let reset_template = initial_category_form.clone();
     let category_form_hook = use_categories_form(initial_category_form);
     let mut form = category_form_hook.form;
+    let mut reset_dialog_open = use_signal(|| false);
+    let is_form_dirty = form.read().is_dirty();
     let cats_state = use_categories();
 
     // Fetch categories for parent selection on mount
@@ -41,21 +48,21 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                 // Main column
                 div { class: "lg:col-span-2 space-y-8",
                     // Details card
-                    div { class: "rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm",
+                    div { class: "rounded-xl border border-border/70 bg-transparent",
                         div { class: "px-6 py-6",
                             h2 { class: "text-lg font-semibold", "Category details" }
-                            p { class: "text-sm text-zinc-600 dark:text-zinc-400", "Basic information and metadata for your category." }
+                            p { class: "text-sm text-muted-foreground", "Basic information and metadata for your category." }
                         }
                         div { class: "px-6 py-6 space-y-6",
                             // Name
                             AppInput { name: "name", form, label: "Name", placeholder: "e.g. Tutorials" }
 
-                            div { class: "h-px bg-zinc-200 dark:bg-zinc-800" }
+                            div { class: "h-px bg-border/60" }
 
                             // Slug with generate
                             div { class: "space-y-3",
                                 div { class: "flex items-center justify-between",
-                                    label { class: "block text-sm font-medium", "Slug" }
+                                    label { class: "block text-sm font-medium text-foreground", "Slug" }
                                     Button { variant: ButtonVariant::Outline, size: ButtonSize::Sm,
                                         onclick: move |_| {
                                             let name_value = form.peek().get_field("name").unwrap().value.clone();
@@ -69,8 +76,8 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                 }
                                 AppInput { form, name: "slug", r#type: "text", placeholder: "tutorials" }
                                 div { class: "flex items-center gap-2",
-                                    span { class: "text-xs text-zinc-500 dark:text-zinc-400", "URL preview:" }
-                                    code { class: "rounded bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800",
+                                    span { class: "text-xs text-muted-foreground", "URL preview:" }
+                                    code { class: "rounded border border-border/60 bg-transparent px-1.5 py-0.5 text-xs text-muted-foreground",
                                         {
                                             let slug = form.read().data.slug.clone();
                                             let safe = if slug.trim().is_empty() { "your-slug".to_string() } else { slug };
@@ -80,32 +87,31 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                 }
                             }
 
-                            div { class: "h-px bg-zinc-200 dark:bg-zinc-800" }
+                            div { class: "h-px bg-border/60" }
 
                             // Description
                             div { class: "space-y-3",
-                                label { class: "block text-sm font-medium", "Description" }
+                                label { class: "block text-sm font-medium text-foreground", "Description" }
                                 textarea {
-                                    class: "w-full px-4 py-3 h-32 resize-none rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm",
-                                    placeholder: "Brief description of the category",
+                                    class: "w-full h-32 resize-none rounded-md border border-border/70 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:border-ring focus:ring-2 focus:ring-ring/40",
+                                    placeholder: "Briefly describe what posts belong in this category.",
                                     value: form.read().data.description.clone(),
-                                    onchange: move |event| { form.write().update_field("description", event.value()); }
+                                    oninput: move |event| { form.write().update_field("description", event.value()); }
                                 }
-                                p { class: "text-xs text-zinc-500 dark:text-zinc-400", "Optional. Shown on the category page." }
                             }
                         }
                     }
 
                     // Branding card
-                    div { class: "rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm",
+                    div { class: "rounded-xl border border-border/70 bg-transparent",
                         div { class: "px-6 py-6",
                             h2 { class: "text-lg font-semibold", "Images" }
-                            p { class: "text-sm text-zinc-600 dark:text-zinc-400", "Logo and cover images for the category." }
+                            p { class: "text-sm text-muted-foreground", "Logo and cover images for the category." }
                         }
                         div { class: "px-6 py-6 space-y-6",
                             // Logo image upload
                             div { class: "space-y-2",
-                                label { class: "block text-sm font-medium", "Logo image" }
+                                label { class: "block text-sm font-medium text-foreground", "Logo image" }
                                 ImageUpload {
                                     value: {
                                         let v = form.read().data.logo_image.clone();
@@ -122,7 +128,7 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
 
                             // Cover image upload
                             div { class: "space-y-2",
-                                label { class: "block text-sm font-medium", "Cover image" }
+                                label { class: "block text-sm font-medium text-foreground", "Cover image" }
                                 ImageUpload {
                                     value: {
                                         let v = form.read().data.cover_image.clone();
@@ -141,18 +147,18 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                 }
 
                 // Sidebar column
-                div { class: "space-y-8",
+                div { class: "space-y-8 lg:sticky lg:top-28 h-fit",
                     // Visibility card
-                    div { class: "rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm",
+                    div { class: "rounded-xl border border-border/70 bg-transparent",
                         div { class: "px-6 pt-6",
                             h2 { class: "text-lg font-semibold", "Visibility" }
-                            p { class: "text-sm text-zinc-600 dark:text-zinc-400", "Control whether this category is available publicly." }
+                            p { class: "text-sm text-muted-foreground", "Control whether this category is available publicly." }
                         }
                         div { class: "px-6 py-6 space-y-6",
                             div { class: "flex items-center justify-between",
                                 div { class: "space-y-0.5",
-                                    label { class: "block text-sm font-medium", "Active" }
-                                    p { class: "text-xs text-zinc-500 dark:text-zinc-400",
+                                    label { class: "block text-sm font-medium text-foreground", "Active" }
+                                    p { class: "text-xs text-muted-foreground",
                                         if form.read().data.active { "This category will be visible across your site." } else { "This category will be hidden and unavailable for selection." }
                                     }
                                 }
@@ -162,35 +168,34 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                     }
 
                     // Branding
-                    div { class: "rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm",
+                    div { class: "rounded-xl border border-border/70 bg-transparent",
                         div { class: "px-6 pt-6",
                             h2 { class: "text-lg font-semibold", "Branding" }
-                            p { class: "text-sm text-zinc-600 dark:text-zinc-400", "Pick a color and optionally override the text color." }
+                            p { class: "text-sm text-muted-foreground", "Pick a color and optionally override the text color." }
                         }
                         div { class: "px-6 py-6 space-y-6",
                             // Color picker + preview
                             div { class: "space-y-3",
-                                label { class: "block text-sm font-medium", "Category color" }
+                                label { class: "block text-sm font-medium text-foreground", "Category color" }
                                 ColorPicker { value: form.read().data.color.clone(), onchange: move |val| { form.write().update_field("color", val); } }
                                 {
                                     let data = form.read().data.clone();
                                     let color = data.color.clone();
                                     rsx! {
-                                        div { class: "inline-flex items-center gap-2 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-1.5 text-sm",
-                                            span { class: "h-2.5 w-2.5 rounded-full ring-1 ring-zinc-200 dark:ring-zinc-800", style: format!("background-color: {}", color) }
-                                            code { class: "text-xs border rounded px-1.5 py-0.5 border-zinc-200 dark:border-zinc-800", {color.clone()} }
-                                            span { class: "text-xs opacity-70", if data.custom_text_color { "Using custom text color." } else { "Text color auto-adjusts for readability." } }
+                                        div { class: "flex items-center gap-3",
+                                            code { class: "text-xs rounded border border-border/60 bg-transparent px-1.5 py-0.5 text-muted-foreground", {color} }
                                         }
+                                        p { class: "text-xs text-muted-foreground", if data.custom_text_color { "Using custom text color." } else { "Text color auto-adjusts for readability." } }
                                     }
                                 }
                             }
 
                             // Optional custom text color toggle
-                            div { class: "space-y-2",
+                            div { class: "space-y-3",
                                 div { class: "flex items-center justify-between",
                                     div { class: "space-y-0.5",
-                                        label { class: "block text-sm font-medium", "Use custom text color" }
-                                        p { class: "text-xs text-zinc-500 dark:text-zinc-400", "Override automatic contrast with your own text color." }
+                                        label { class: "block text-sm font-medium text-foreground", "Text color" }
+                                        p { class: "text-xs text-muted-foreground", "Enable to choose a custom text color. Otherwise it auto-adjusts for readability." }
                                     }
                                     Checkbox { class: None, checked: form.read().data.custom_text_color, onchange: move |checked: bool| { form.write().update_field("custom_text_color", checked.to_string()); } }
                                 }
@@ -202,10 +207,10 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                     }
 
                     // Parent category selector
-                    div { class: "rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm",
+                    div { class: "rounded-xl border border-border/70 bg-transparent",
                         div { class: "px-6 pt-6",
                             h2 { class: "text-lg font-semibold", "Parent Category" }
-                            p { class: "text-sm text-zinc-600 dark:text-zinc-400", "Optional. Select a parent to create a hierarchy." }
+                            p { class: "text-sm text-muted-foreground", "Optional. Select a parent to create a hierarchy." }
                         }
                         div { class: "px-6 py-6",
                             {
@@ -231,14 +236,11 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                     if is_loading && items.is_empty() {
                                         Skeleton { class: Some("h-10 w-full".to_string()) }
                                     } else if is_failed {
-                                        div { class: "rounded-md border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 p-4",
+                                        div { class: "rounded-md border border-red-200 bg-red-50 p-3 text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300",
                                             div { class: "flex flex-col items-center text-center gap-3",
-                                                div { class: "h-10 w-10 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center",
-                                                    div { class: "h-5 w-5", Icon { icon: LdX {} } }
-                                                }
                                                 div { class: "space-y-1",
                                                     p { class: "text-sm font-semibold", "Failed to fetch categories list" }
-                                                    p { class: "text-xs text-red-600/90 dark:text-red-400/90", { sub_text } }
+                                                    p { class: "text-xs opacity-80", { sub_text } }
                                                 }
                                                 Button { variant: ButtonVariant::Outline, size: ButtonSize::Sm,
                                                     onclick: move |_| {
@@ -267,14 +269,49 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                     }
 
                     // Actions
-                    div { class: "flex gap-3",
-                        Button { class: "flex-1 w-auto", variant: ButtonVariant::Outline, "Cancel" }
+                    div { class: "flex gap-3 pt-4",
+                        Button { class: "flex-1 w-auto", variant: ButtonVariant::Outline,
+                            onclick: move |_| {
+                                if form.peek().is_dirty() {
+                                    reset_dialog_open.set(true);
+                                } else {
+                                    nav.push(Route::CategoriesListScreen {});
+                                }
+                            },
+                            {if is_form_dirty { "Reset" } else { "Cancel" }}
+                        }
                         Button { class: "flex-1 w-auto",
                             onclick: move |_| {
                                 let submit = props.on_submit.clone();
                                 form.write().on_submit(move |val| { submit.call(val); });
                             },
                             {props.submit_label.clone().unwrap_or_else(|| "Save Category".to_string())}
+                        }
+                    }
+                }
+            }
+        }
+        if reset_dialog_open() {
+            AppPortal {
+                class: "bg-black/20 backdrop-blur-sm flex items-center justify-center px-4",
+                div { class: "w-full max-w-md rounded-lg border border-border/60 bg-background p-6 shadow-lg",
+                    div { class: "space-y-2",
+                        h2 { class: "text-lg font-semibold", "Reset form?" }
+                        p { class: "text-sm text-muted-foreground", "All changes will be cleared and the form will return to its default state." }
+                    }
+                    div { class: "mt-6 flex justify-end gap-2",
+                        Button { variant: ButtonVariant::Outline,
+                            onclick: move |_| {
+                                reset_dialog_open.set(false);
+                            },
+                            "Cancel"
+                        }
+                        Button { variant: ButtonVariant::Destructive,
+                            onclick: move |_| {
+                                form.set(OxForm::new(reset_template.clone()));
+                                reset_dialog_open.set(false);
+                            },
+                            "Reset form"
                         }
                     }
                 }
