@@ -399,3 +399,158 @@ where
         }
     }
 }
+
+/// Specialized version for removing items and syncing caches
+/// Use this when sync_view_cache stores `StateFrame<T>` (not wrapped in Option)
+pub async fn remove_state_abstraction<K, T, F, GetId, OnSuccess>(
+    state: &GlobalSignal<HashMap<K, StateFrame>>,
+    id: K,
+    send_future: F,
+    _parse_label: &str,
+    sync_list_cache: Option<&GlobalSignal<StateFrame<PaginatedList<T>>>>,
+    sync_view_cache: Option<&GlobalSignal<HashMap<K, StateFrame<T>>>>,
+    get_id: GetId,
+    on_success: Option<OnSuccess>,
+) -> bool
+where
+    K: Eq + Hash + Copy + 'static,
+    T: Clone + PartialEq + 'static,
+    F: Future<Output = Result<HttpResponse, HttpError>>,
+    GetId: Fn(&T) -> K,
+    OnSuccess: FnOnce(),
+{
+    {
+        let mut map = state.write();
+        map.entry(id)
+            .or_insert_with(StateFrame::new)
+            .set_loading(None);
+    }
+
+    match send_future.await {
+        Ok(response) => {
+            if (200..300).contains(&response.status()) {
+                {
+                    let mut map = state.write();
+                    map.entry(id)
+                        .or_insert_with(StateFrame::new)
+                        .set_success(None, None);
+                }
+
+                // Sync list cache if provided - remove the item
+                if let Some(list_cache) = sync_list_cache {
+                    let mut list_frame = list_cache.write();
+                    if let Some(list) = &mut list_frame.data {
+                        list.data.retain(|item| get_id(item) != id);
+                        // Update total count
+                        if list.total > 0 {
+                            list.total -= 1;
+                        }
+                    }
+                }
+
+                // Sync view cache if provided - remove the entry
+                if let Some(view_cache) = sync_view_cache {
+                    let mut view_map = view_cache.write();
+                    view_map.remove(&id);
+                }
+
+                // Call optional success callback for custom logic
+                if let Some(callback) = on_success {
+                    callback();
+                }
+
+                true
+            } else {
+                let mut map = state.write();
+                map.entry(id)
+                    .or_insert_with(StateFrame::new)
+                    .set_api_error(&response)
+                    .await;
+                false
+            }
+        }
+        Err(e) => {
+            let mut map = state.write();
+            map.entry(id)
+                .or_insert_with(StateFrame::new)
+                .set_failed(Some(format!("Network error: {}", e)));
+            false
+        }
+    }
+}
+
+/// Variant for Vec-based lists instead of PaginatedList
+/// Use this when sync_view_cache stores `StateFrame<Option<T>>`
+pub async fn remove_state_abstraction_vec<K, T, F, GetId, OnSuccess>(
+    state: &GlobalSignal<HashMap<K, StateFrame>>,
+    id: K,
+    send_future: F,
+    _parse_label: &str,
+    sync_list_cache: Option<&GlobalSignal<StateFrame<Vec<T>>>>,
+    sync_view_cache: Option<&GlobalSignal<HashMap<K, StateFrame<Option<T>>>>>,
+    get_id: GetId,
+    on_success: Option<OnSuccess>,
+) -> bool
+where
+    K: Eq + Hash + Copy + 'static,
+    T: Clone + PartialEq + 'static,
+    F: Future<Output = Result<HttpResponse, HttpError>>,
+    GetId: Fn(&T) -> K,
+    OnSuccess: FnOnce(),
+{
+    {
+        let mut map = state.write();
+        map.entry(id)
+            .or_insert_with(StateFrame::new)
+            .set_loading(None);
+    }
+
+    match send_future.await {
+        Ok(response) => {
+            if (200..300).contains(&response.status()) {
+                {
+                    let mut map = state.write();
+                    map.entry(id)
+                        .or_insert_with(StateFrame::new)
+                        .set_success(None, None);
+                }
+
+                // Sync list cache if provided - remove the item
+                if let Some(list_cache) = sync_list_cache {
+                    let mut list_frame = list_cache.write();
+                    if let Some(list) = &mut list_frame.data {
+                        list.retain(|item| get_id(item) != id);
+                    }
+                }
+
+                // Sync view cache if provided - remove the entry
+                if let Some(view_cache) = sync_view_cache {
+                    let mut view_map = view_cache.write();
+                    view_map.remove(&id);
+                }
+
+                // Call optional success callback for custom logic
+                if let Some(callback) = on_success {
+                    callback();
+                }
+
+                true
+            } else {
+                let mut map = state.write();
+                map.entry(id)
+                    .or_insert_with(StateFrame::new)
+                    .set_api_error(&response)
+                    .await;
+                false
+            }
+        }
+        Err(e) => {
+            let mut map = state.write();
+            map.entry(id)
+                .or_insert_with(StateFrame::new)
+                .set_failed(Some(format!("Network error: {}", e)));
+            false
+        }
+    }
+}
+

@@ -1,10 +1,8 @@
-use dioxus::signals::ReadableExt;
-
 use super::{Tag, TagsAddPayload, TagsEditPayload, TagsListQuery, TagsState};
 use crate::services::http_client;
 use crate::store::{
-    edit_state_abstraction, list_state_abstraction, state_request_abstraction,
-    view_state_abstraction, PaginatedList, StateFrame,
+    edit_state_abstraction, list_state_abstraction, remove_state_abstraction,
+    state_request_abstraction, view_state_abstraction, PaginatedList, StateFrame,
 };
 use std::collections::HashMap;
 
@@ -42,40 +40,17 @@ impl TagsState {
     }
 
     pub async fn remove(&self, id: i32) {
-        let mut remove_map = self.remove.write();
-        remove_map
-            .entry(id)
-            .or_insert_with(StateFrame::new)
-            .set_loading(None);
-        let result = http_client::post(&format!("/tag/v1/delete/{}", id), &())
-            .send()
-            .await;
-        match result {
-            Ok(response) => {
-                if (200..300).contains(&response.status()) {
-                    remove_map
-                        .entry(id)
-                        .or_insert_with(StateFrame::new)
-                        .set_success(None, None);
-                    // Release the write guard before awaiting to refresh the list
-                    drop(remove_map);
-                    // Keep list in sync after deletion (parity with add())
-                    self.list().await;
-                } else {
-                    remove_map
-                        .entry(id)
-                        .or_insert_with(StateFrame::new)
-                        .set_api_error(&response)
-                        .await;
-                }
-            }
-            Err(e) => {
-                remove_map
-                    .entry(id)
-                    .or_insert_with(StateFrame::new)
-                    .set_failed(Some(format!("Network error: {}", e)));
-            }
-        }
+        let _ = remove_state_abstraction(
+            &self.remove,
+            id,
+            http_client::post(&format!("/tag/v1/delete/{}", id), &()).send(),
+            "tag",
+            Some(&self.list),
+            Some(&self.view),
+            |tag: &Tag| tag.id,
+            None::<fn()>,
+        )
+        .await;
     }
 
     pub async fn list(&self) {
