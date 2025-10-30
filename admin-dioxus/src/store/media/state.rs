@@ -8,7 +8,7 @@ use std::fmt;
 use web_sys::File;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "PascalCase")]
+#[serde(rename_all = "snake_case")]
 pub enum MediaReference {
     Post,
     Category,
@@ -34,6 +34,7 @@ pub enum UploadStatus {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
 pub struct Media {
     pub id: i32,
     pub object_key: String,
@@ -130,6 +131,12 @@ pub struct MediaUploadPayload {
     pub height: Option<i32>,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct FileInfo {
+    pub filename: String,
+    pub size: i64,
+}
+
 pub struct MediaState {
     pub upload: GlobalSignal<StateFrame<(), MediaUploadPayload>>,
     pub remove: GlobalSignal<HashMap<i32, StateFrame>>,
@@ -139,6 +146,7 @@ pub struct MediaState {
     pub upload_progress: GlobalSignal<HashMap<String, f64>>, // blob URL -> progress %
     pub upload_status: GlobalSignal<HashMap<String, UploadStatus>>, // blob URL -> status
     pub blob_to_media: GlobalSignal<HashMap<String, Option<Media>>>, // blob URL -> uploaded Media
+    pub blob_file_info: GlobalSignal<HashMap<String, FileInfo>>, // blob URL -> file info
 }
 
 impl MediaState {
@@ -151,6 +159,7 @@ impl MediaState {
             upload_progress: GlobalSignal::new(|| HashMap::new()),
             upload_status: GlobalSignal::new(|| HashMap::new()),
             blob_to_media: GlobalSignal::new(|| HashMap::new()),
+            blob_file_info: GlobalSignal::new(|| HashMap::new()),
         }
     }
 }

@@ -34,7 +34,13 @@ pub fn MediaUploadScreen() -> Element {
             PageHeader {
                 title: "Upload Media".to_string(),
                 description: "Upload images, videos, and other media files".to_string(),
-                actions: None,
+                actions: Some(rsx! {
+                    Button {
+                        variant: ButtonVariant::Outline,
+                        onclick: move |_| { nav.push(Route::MediaListScreen {}); },
+                        "Back to Media"
+                    }
+                }),
                 class: None,
                 embedded: false,
             }

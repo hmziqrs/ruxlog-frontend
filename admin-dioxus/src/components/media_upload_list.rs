@@ -74,17 +74,17 @@ pub fn MediaUploadList(props: MediaUploadListProps) -> Element {
                 for blob_url in &props.blob_urls {
                     {
                         let blob_url_str = blob_url.clone();
-                        let media = media_state.get_uploaded_media(&blob_url_str);
 
-                        // Get file info
-                        let filename = if let Some(ref m) = media {
-                            // Extract filename from object_key or use a default
-                            m.object_key.split('/').last().unwrap_or("Unknown").to_string()
+                        // Get file info from stored metadata or uploaded media
+                        let (filename, file_size) = if let Some(file_info) = media_state.get_file_info(&blob_url_str) {
+                            (file_info.filename, file_info.size)
+                        } else if let Some(media) = media_state.get_uploaded_media(&blob_url_str) {
+                            // Fallback to media object if file info not available
+                            let name = media.object_key.split('/').last().unwrap_or("Unknown").to_string();
+                            (name, media.size)
                         } else {
-                            "Uploading...".to_string()
+                            ("Uploading...".to_string(), 0)
                         };
-
-                        let file_size = media.as_ref().map(|m| m.size).unwrap_or(0);
 
                         rsx! {
                             MediaUploadItem {
