@@ -1,15 +1,18 @@
 use dioxus::prelude::*;
 
 use super::form::{use_categories_form, CategoryForm};
-use crate::components::{AppInput, ColorPicker, ImageUpload};
+use crate::components::{AppInput, ColorPicker, MediaUploadItem, MediaUploadZone};
 use crate::hooks::OxForm;
 use crate::router::Route;
-use crate::store::use_categories;
+use crate::store::{use_categories, use_media, MediaReference, UploadStatus};
 use crate::ui::custom::AppPortal;
 use crate::ui::shadcn::{
     Button, ButtonSize, ButtonVariant, Checkbox, Combobox, ComboboxItem, Skeleton,
 };
-use hmziq_dioxus_free_icons::{icons::ld_icons::LdX, Icon};
+use hmziq_dioxus_free_icons::{
+    icons::ld_icons::{LdLoader, LdX},
+    Icon,
+};
 
 #[derive(Props, PartialEq, Clone)]
 pub struct CategoryFormContainerProps {
@@ -32,12 +35,42 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
     let mut reset_dialog_open = use_signal(|| false);
     let is_form_dirty = form.read().is_dirty();
     let cats_state = use_categories();
+    let media_state = use_media();
 
     // Fetch categories for parent selection on mount
     use_effect(move || {
         spawn(async move {
             cats_state.list().await;
         });
+    });
+
+    // Track upload status and resolve media IDs
+    use_effect(move || {
+        let form_data = form.read().data.clone();
+
+        // Check logo blob URL
+        if let Some(logo_blob) = &form_data.logo_blob_url {
+            if form_data.logo_media_id.is_none() {
+                // Check if upload completed
+                if let Some(media) = media_state.get_uploaded_media(logo_blob) {
+                    gloo_console::log!("[CategoryForm] Logo upload complete, media ID:", media.id.to_string());
+                    let mut form_mut = form.write();
+                    form_mut.data.logo_media_id = Some(media.id);
+                }
+            }
+        }
+
+        // Check cover blob URL
+        if let Some(cover_blob) = &form_data.cover_blob_url {
+            if form_data.cover_media_id.is_none() {
+                // Check if upload completed
+                if let Some(media) = media_state.get_uploaded_media(cover_blob) {
+                    gloo_console::log!("[CategoryForm] Cover upload complete, media ID:", media.id.to_string());
+                    let mut form_mut = form.write();
+                    form_mut.data.cover_media_id = Some(media.id);
+                }
+            }
+        }
     });
 
     rsx! {
@@ -110,35 +143,119 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                         }
                         div { class: "px-6 py-6 space-y-6",
                             // Logo image upload
-                            div { class: "space-y-2",
-                                label { class: "block text-sm font-medium text-foreground", "Logo image" }
-                                ImageUpload {
-                                    value: {
-                                        let v = form.read().data.logo_image.clone();
-                                        if v.trim().is_empty() { None } else { Some(v) }
-                                    },
-                                    title: "Upload logo".to_string(),
-                                    description: "Square logo works best.".to_string(),
-                                    aspect_ratio: "aspect-square".to_string(),
-                                    onchange: move |url: String| {
-                                        form.write().update_field("logo_image", url);
+                            div { class: "space-y-3",
+                                div { class: "flex items-center justify-between",
+                                    label { class: "block text-sm font-medium text-foreground", "Logo image" }
+                                    p { class: "text-xs text-muted-foreground", "Square logo works best" }
+                                }
+
+                                {
+                                    let form_data = form.read().data.clone();
+                                    let has_logo_blob = form_data.logo_blob_url.is_some();
+                                    let logo_blob_url = form_data.logo_blob_url.clone();
+
+                                    rsx! {
+                                        if has_logo_blob {
+                                            // Show uploaded image with status
+                                            {
+                                                let blob = logo_blob_url.as_ref().unwrap();
+                                                let status = media_state.get_upload_status(blob);
+                                                let file_info = media_state.get_file_info(blob);
+                                                let (filename, file_size) = if let Some(info) = file_info {
+                                                    (info.filename, info.size)
+                                                } else {
+                                                    ("Logo".to_string(), 0)
+                                                };
+
+                                                rsx! {
+                                                    MediaUploadItem {
+                                                        blob_url: blob.clone(),
+                                                        filename,
+                                                        file_size,
+                                                        on_remove: move |_url: String| {
+                                                            let mut form_mut = form.write();
+                                                            form_mut.data.logo_blob_url = None;
+                                                            form_mut.data.logo_media_id = None;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            MediaUploadZone {
+                                                on_upload: move |blob_urls: Vec<String>| {
+                                                    if let Some(blob_url) = blob_urls.first() {
+                                                        let mut form_mut = form.write();
+                                                        form_mut.data.logo_blob_url = Some(blob_url.clone());
+                                                        gloo_console::log!("[CategoryForm] Logo upload initiated:", blob_url);
+                                                    }
+                                                },
+                                                reference_type: Some(MediaReference::Category),
+                                                max_files: 1,
+                                                allowed_types: vec!["image/".to_string()],
+                                                title: "Upload logo".to_string(),
+                                                description: "Click to select an image file".to_string(),
+                                                multiple: false,
+                                            }
+                                        }
                                     }
                                 }
                             }
 
                             // Cover image upload
-                            div { class: "space-y-2",
-                                label { class: "block text-sm font-medium text-foreground", "Cover image" }
-                                ImageUpload {
-                                    value: {
-                                        let v = form.read().data.cover_image.clone();
-                                        if v.trim().is_empty() { None } else { Some(v) }
-                                    },
-                                    title: "Upload cover".to_string(),
-                                    description: "Recommended 1200×600.".to_string(),
-                                    aspect_ratio: "aspect-video".to_string(),
-                                    onchange: move |url: String| {
-                                        form.write().update_field("cover_image", url);
+                            div { class: "space-y-3",
+                                div { class: "flex items-center justify-between",
+                                    label { class: "block text-sm font-medium text-foreground", "Cover image" }
+                                    p { class: "text-xs text-muted-foreground", "Recommended 1200×600" }
+                                }
+
+                                {
+                                    let form_data = form.read().data.clone();
+                                    let has_cover_blob = form_data.cover_blob_url.is_some();
+                                    let cover_blob_url = form_data.cover_blob_url.clone();
+
+                                    rsx! {
+                                        if has_cover_blob {
+                                            // Show uploaded image with status
+                                            {
+                                                let blob = cover_blob_url.as_ref().unwrap();
+                                                let status = media_state.get_upload_status(blob);
+                                                let file_info = media_state.get_file_info(blob);
+                                                let (filename, file_size) = if let Some(info) = file_info {
+                                                    (info.filename, info.size)
+                                                } else {
+                                                    ("Cover".to_string(), 0)
+                                                };
+
+                                                rsx! {
+                                                    MediaUploadItem {
+                                                        blob_url: blob.clone(),
+                                                        filename,
+                                                        file_size,
+                                                        on_remove: move |_url: String| {
+                                                            let mut form_mut = form.write();
+                                                            form_mut.data.cover_blob_url = None;
+                                                            form_mut.data.cover_media_id = None;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            MediaUploadZone {
+                                                on_upload: move |blob_urls: Vec<String>| {
+                                                    if let Some(blob_url) = blob_urls.first() {
+                                                        let mut form_mut = form.write();
+                                                        form_mut.data.cover_blob_url = Some(blob_url.clone());
+                                                        gloo_console::log!("[CategoryForm] Cover upload initiated:", blob_url);
+                                                    }
+                                                },
+                                                reference_type: Some(MediaReference::Category),
+                                                max_files: 1,
+                                                allowed_types: vec!["image/".to_string()],
+                                                title: "Upload cover".to_string(),
+                                                description: "Click to select an image file".to_string(),
+                                                multiple: false,
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -269,23 +386,44 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                     }
 
                     // Actions
-                    div { class: "flex gap-3 pt-4",
-                        Button { class: "flex-1 w-auto", variant: ButtonVariant::Outline,
-                            onclick: move |_| {
-                                if form.peek().is_dirty() {
-                                    reset_dialog_open.set(true);
-                                } else {
-                                    nav.push(Route::CategoriesListScreen {});
+                    {
+                        let form_data = form.read().data.clone();
+                        let is_uploading = form_data.is_uploading();
+
+                        rsx! {
+                            if is_uploading {
+                                // Show upload in progress message
+                                div { class: "flex items-center justify-center gap-2 py-3 px-4 rounded-md bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800",
+                                    Icon { icon: LdLoader, class: "h-4 w-4 text-blue-600 dark:text-blue-400 animate-spin" }
+                                    span { class: "text-sm text-blue-600 dark:text-blue-400",
+                                        "Uploading images..."
+                                    }
                                 }
-                            },
-                            {if is_form_dirty { "Reset" } else { "Cancel" }}
-                        }
-                        Button { class: "flex-1 w-auto",
-                            onclick: move |_| {
-                                let submit = props.on_submit.clone();
-                                form.write().on_submit(move |val| { submit.call(val); });
-                            },
-                            {props.submit_label.clone().unwrap_or_else(|| "Save Category".to_string())}
+                            }
+
+                            div { class: "flex gap-3 pt-4",
+                                Button { class: "flex-1 w-auto", variant: ButtonVariant::Outline,
+                                    onclick: move |_| {
+                                        if form.peek().is_dirty() {
+                                            reset_dialog_open.set(true);
+                                        } else {
+                                            nav.push(Route::CategoriesListScreen {});
+                                        }
+                                    },
+                                    {if is_form_dirty { "Reset" } else { "Cancel" }}
+                                }
+                                Button {
+                                    class: "flex-1 w-auto",
+                                    disabled: is_uploading,
+                                    onclick: move |_| {
+                                        if !is_uploading {
+                                            let submit = props.on_submit.clone();
+                                            form.write().on_submit(move |val| { submit.call(val); });
+                                        }
+                                    },
+                                    {props.submit_label.clone().unwrap_or_else(|| "Save Category".to_string())}
+                                }
+                            }
                         }
                     }
                 }

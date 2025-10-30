@@ -25,9 +25,13 @@ pub struct CategoryForm {
     // Visibility: whether the category is publicly visible
     pub active: bool,
 
-    pub cover_image: String,
+    // Logo image tracking
+    pub logo_blob_url: Option<String>,  // For preview while uploading
+    pub logo_media_id: Option<i32>,     // For backend submission
 
-    pub logo_image: String,
+    // Cover image tracking
+    pub cover_blob_url: Option<String>, // For preview while uploading
+    pub cover_media_id: Option<i32>,    // For backend submission
 
     // keep as string for input, will parse into i32 for payloads
     pub parent_id: String,
@@ -54,10 +58,19 @@ impl CategoryForm {
             text_color: get_contrast_yiq("#3b82f6").to_string(),
             custom_text_color: false,
             active: true,
-            cover_image: String::new(),
-            logo_image: String::new(),
+            logo_blob_url: None,
+            logo_media_id: None,
+            cover_blob_url: None,
+            cover_media_id: None,
             parent_id: String::new(),
         }
+    }
+
+    // Check if any images are still uploading
+    pub fn is_uploading(&self) -> bool {
+        // If we have a blob URL but no media ID yet, upload is in progress
+        (self.logo_blob_url.is_some() && self.logo_media_id.is_none())
+            || (self.cover_blob_url.is_some() && self.cover_media_id.is_none())
     }
 
     pub fn sanitize_slug(text: &str) -> String {
@@ -99,16 +112,6 @@ impl CategoryForm {
         };
         let text_color = Some(self.effective_text_color());
         let is_active = Some(self.active);
-        let cover_image = if self.cover_image.trim().is_empty() {
-            None
-        } else {
-            Some(self.cover_image.clone())
-        };
-        let logo_image = if self.logo_image.trim().is_empty() {
-            None
-        } else {
-            Some(self.logo_image.clone())
-        };
         let parent_id = if self.parent_id.trim().is_empty() {
             None
         } else {
@@ -121,9 +124,9 @@ impl CategoryForm {
             color: self.color.clone(),
             text_color,
             is_active,
-            cover_image,
+            cover_image_id: self.cover_media_id,
             description,
-            logo_image,
+            logo_image_id: self.logo_media_id,
             parent_id,
         }
     }
@@ -134,16 +137,6 @@ impl CategoryForm {
             Some(None)
         } else {
             Some(Some(self.description.clone()))
-        };
-        let cover_image = if self.cover_image.trim().is_empty() {
-            Some(None)
-        } else {
-            Some(Some(self.cover_image.clone()))
-        };
-        let logo_image = if self.logo_image.trim().is_empty() {
-            Some(None)
-        } else {
-            Some(Some(self.logo_image.clone()))
         };
         let parent_id = if self.parent_id.trim().is_empty() {
             Some(None)
@@ -161,8 +154,8 @@ impl CategoryForm {
             slug: Some(self.slug.clone()),
             parent_id,
             description,
-            cover_image,
-            logo_image,
+            cover_image_id: Some(self.cover_media_id),
+            logo_image_id: Some(self.logo_media_id),
             color: Some(self.color.clone()),
             text_color: Some(self.effective_text_color()),
             is_active: Some(self.active),
@@ -194,8 +187,6 @@ impl OxFormModel for CategoryForm {
                 "false".to_string()
             },
         );
-        map.insert("cover_image".to_string(), self.cover_image.clone());
-        map.insert("logo_image".to_string(), self.logo_image.clone());
         map.insert("parent_id".to_string(), self.parent_id.to_string());
 
         map
@@ -216,8 +207,6 @@ impl OxFormModel for CategoryForm {
                 let v = value.trim().to_lowercase();
                 self.active = matches!(v.as_str(), "true" | "1" | "yes" | "on");
             }
-            "cover_image" => self.cover_image = value.to_string(),
-            "logo_image" => self.logo_image = value.to_string(),
             "parent_id" => self.parent_id = value.to_string(),
             _ => {}
         }

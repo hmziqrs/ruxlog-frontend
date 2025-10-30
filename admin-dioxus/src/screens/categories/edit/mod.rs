@@ -60,8 +60,10 @@ pub fn CategoriesEditScreen(id: i32) -> Element {
         custom_text_color: true, // respect existing text color; container computes contrast when not custom
         text_color: c.text_color.clone(),
         active: c.is_active,
-        cover_image: c.cover_image.unwrap_or_default(),
-        logo_image: c.logo_image.unwrap_or_default(),
+        logo_blob_url: None,           // No blob URL when editing existing
+        logo_media_id: c.logo_image_id, // Use existing media ID
+        cover_blob_url: None,           // No blob URL when editing existing
+        cover_media_id: c.cover_image_id, // Use existing media ID
         parent_id: c.parent_id.map(|v| v.to_string()).unwrap_or_default(),
     });
 
