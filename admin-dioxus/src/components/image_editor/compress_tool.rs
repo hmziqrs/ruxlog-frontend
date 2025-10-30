@@ -1,12 +1,11 @@
 use crate::store::use_image_editor;
-use crate::ui::shadcn::Button;
+use crate::ui::shadcn::{Button, ButtonSize, ButtonVariant};
 use dioxus::prelude::*;
 
 /// Compress tool controls
 #[component]
 pub fn CompressTool() -> Element {
     let editor = use_image_editor();
-    let mut compress_params = editor.compress_params;
     let is_processing = *editor.is_processing.read();
 
     let handle_apply = move |_| {
@@ -25,17 +24,17 @@ pub fn CompressTool() -> Element {
                 // Quality slider
                 div {
                     label { class: "block text-xs text-gray-600 dark:text-gray-400 mb-1",
-                        "Quality: {compress_params().quality}%"
+                        "Quality: {editor.compress_params.read().quality}%"
                     }
                     input {
                         r#type: "range",
                         class: "w-full",
-                        value: "{compress_params().quality}",
+                        value: "{editor.compress_params.read().quality}",
                         min: 1,
                         max: 100,
                         oninput: move |e| {
                             if let Ok(val) = e.value().parse::<u8>() {
-                                compress_params.write().quality = val;
+                                editor.compress_params.write().quality = val;
                             }
                         }
                     }
@@ -46,19 +45,19 @@ pub fn CompressTool() -> Element {
                     Button {
                         variant: ButtonVariant::Outline,
                         size: ButtonSize::Sm,
-                        onclick: move |_| compress_params.write().quality = 60,
+                        onclick: move |_| editor.compress_params.write().quality = 60,
                         "Low (60%)"
                     }
                     Button {
                         variant: ButtonVariant::Outline,
                         size: ButtonSize::Sm,
-                        onclick: move |_| compress_params.write().quality = 85,
+                        onclick: move |_| editor.compress_params.write().quality = 85,
                         "Medium (85%)"
                     }
                     Button {
                         variant: ButtonVariant::Outline,
                         size: ButtonSize::Sm,
-                        onclick: move |_| compress_params.write().quality = 95,
+                        onclick: move |_| editor.compress_params.write().quality = 95,
                         "High (95%)"
                     }
                 }

@@ -54,10 +54,10 @@ struct ToastCtx {
 
 #[derive(Props, Clone, PartialEq)]
 pub struct ToastProviderProps {
-    #[props(default = ReadOnlySignal::new(Signal::new(Some(Duration::from_secs(3)))))]
-    pub default_duration: ReadOnlySignal<Option<Duration>>,
-    #[props(default = ReadOnlySignal::new(Signal::new(10)))]
-    pub max_toasts: ReadOnlySignal<usize>,
+    #[props(default = ReadSignal::new(Signal::new(Some(Duration::from_secs(3)))))]
+    pub default_duration: ReadSignal<Option<Duration>>,
+    #[props(default = ReadSignal::new(Signal::new(10)))]
+    pub max_toasts: ReadSignal<usize>,
     #[props(default = Callback::new(|props: ToastPropsWithOwner| rsx! { {DynamicNode::Component(props.into_vcomponent(Toast))} }))]
     pub render_toast: Callback<ToastPropsWithOwner, Element>,
     children: Element,

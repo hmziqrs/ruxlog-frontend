@@ -6,7 +6,6 @@ use dioxus::prelude::*;
 #[component]
 pub fn CropTool() -> Element {
     let editor = use_image_editor();
-    let mut crop_region = editor.crop_region;
     let is_processing = *editor.is_processing.read();
 
     let handle_apply = move |_| {
@@ -28,11 +27,11 @@ pub fn CropTool() -> Element {
                     input {
                         r#type: "number",
                         class: "w-full px-2 py-1 text-sm border rounded",
-                        value: "{crop_region().x}",
+                        value: "{editor.crop_region.read().x}",
                         min: 0,
                         oninput: move |e| {
                             if let Ok(val) = e.value().parse::<u32>() {
-                                crop_region.write().x = val;
+                                editor.crop_region.write().x = val;
                             }
                         }
                     }
@@ -44,11 +43,11 @@ pub fn CropTool() -> Element {
                     input {
                         r#type: "number",
                         class: "w-full px-2 py-1 text-sm border rounded",
-                        value: "{crop_region().y}",
+                        value: "{editor.crop_region.read().y}",
                         min: 0,
                         oninput: move |e| {
                             if let Ok(val) = e.value().parse::<u32>() {
-                                crop_region.write().y = val;
+                                editor.crop_region.write().y = val;
                             }
                         }
                     }
@@ -60,11 +59,11 @@ pub fn CropTool() -> Element {
                     input {
                         r#type: "number",
                         class: "w-full px-2 py-1 text-sm border rounded",
-                        value: "{crop_region().width}",
+                        value: "{editor.crop_region.read().width}",
                         min: 1,
                         oninput: move |e| {
                             if let Ok(val) = e.value().parse::<u32>() {
-                                crop_region.write().width = val;
+                                editor.crop_region.write().width = val;
                             }
                         }
                     }
@@ -76,11 +75,11 @@ pub fn CropTool() -> Element {
                     input {
                         r#type: "number",
                         class: "w-full px-2 py-1 text-sm border rounded",
-                        value: "{crop_region().height}",
+                        value: "{editor.crop_region.read().height}",
                         min: 1,
                         oninput: move |e| {
                             if let Ok(val) = e.value().parse::<u32>() {
-                                crop_region.write().height = val;
+                                editor.crop_region.write().height = val;
                             }
                         }
                     }

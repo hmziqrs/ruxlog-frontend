@@ -6,7 +6,6 @@ use dioxus::prelude::*;
 #[component]
 pub fn ResizeTool() -> Element {
     let editor = use_image_editor();
-    let mut resize_params = editor.resize_params.read();
     let is_processing = *editor.is_processing.read();
 
     let handle_apply = move |_| {
@@ -16,7 +15,7 @@ pub fn ResizeTool() -> Element {
     };
 
     let handle_maintain_aspect = move |_| {
-        let mut params = resize_params.write();
+        let mut params = editor.resize_params.write();
         params.maintain_aspect_ratio = !params.maintain_aspect_ratio;
     };
 
@@ -33,12 +32,11 @@ pub fn ResizeTool() -> Element {
                     input {
                         r#type: "number",
                         class: "w-full px-2 py-1 text-sm border rounded",
-                        value: "{resize_params().width}",
+                        value: "{editor.resize_params.read().width}",
                         min: 1,
                         oninput: move |e| {
                             if let Ok(val) = e.value().parse::<u32>() {
-                                let mut params = resize_params.write();
-                                params.width = val;
+                                editor.resize_params.write().width = val;
                             }
                         }
                     }
@@ -50,12 +48,11 @@ pub fn ResizeTool() -> Element {
                     input {
                         r#type: "number",
                         class: "w-full px-2 py-1 text-sm border rounded",
-                        value: "{resize_params().height}",
+                        value: "{editor.resize_params.read().height}",
                         min: 1,
                         oninput: move |e| {
                             if let Ok(val) = e.value().parse::<u32>() {
-                                let mut params = resize_params.write();
-                                params.height = val;
+                                editor.resize_params.write().height = val;
                             }
                         }
                     }
@@ -66,7 +63,7 @@ pub fn ResizeTool() -> Element {
                     input {
                         r#type: "checkbox",
                         id: "maintain-aspect",
-                        checked: resize_params().maintain_aspect_ratio,
+                        checked: editor.resize_params.read().maintain_aspect_ratio,
                         onchange: handle_maintain_aspect,
                     }
                     label {

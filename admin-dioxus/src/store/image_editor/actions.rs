@@ -1,11 +1,8 @@
-use super::{
-    CompressParams, CropRegion, EditSession, EditorTool, ImageEditorState, ResizeParams,
-    RotateParams,
-};
+use super::{EditSession, EditorTool, ImageEditorState};
 use gloo_console;
-use photon_rs::native::{open_image_from_bytes, save_image};
+use photon_rs::native::open_image_from_bytes;
 use photon_rs::transform::{resize, rotate};
-use photon_rs::{PhotonImage, Rgb};
+use photon_rs::PhotonImage;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Blob, File, HtmlCanvasElement, HtmlImageElement, Url};
@@ -13,7 +10,10 @@ use web_sys::{Blob, File, HtmlCanvasElement, HtmlImageElement, Url};
 impl ImageEditorState {
     /// Open the editor with a File or blob URL
     pub async fn open_editor(&self, file: Option<File>, blob_url: String) -> Result<(), String> {
-        gloo_console::log!("[ImageEditor::open_editor] Opening editor with blob:", &blob_url);
+        gloo_console::log!(
+            "[ImageEditor::open_editor] Opening editor with blob:",
+            &blob_url
+        );
 
         // Load the image to get dimensions
         let (width, height) = self.get_image_dimensions(&blob_url).await?;
@@ -202,7 +202,7 @@ impl ImageEditorState {
                 );
 
                 // Use photon_rs rotate
-                img = rotate(&img, rotate_params.angle);
+                img = rotate(&img, rotate_params.angle as f32);
 
                 Ok(img)
             })
@@ -279,7 +279,10 @@ impl ImageEditorState {
 
     /// Export the edited image as a File
     pub async fn export_as_file(&self, filename: String) -> Result<File, String> {
-        gloo_console::log!("[ImageEditor::export_as_file] Exporting as file:", &filename);
+        gloo_console::log!(
+            "[ImageEditor::export_as_file] Exporting as file:",
+            &filename
+        );
 
         let session = (*self.current_session.write())
             .clone()
@@ -344,17 +347,19 @@ impl ImageEditorState {
         let bytes = self.fetch_bytes(blob_url).await?;
 
         // Convert to PhotonImage
-        let mut img = open_image_from_bytes(&bytes)
-            .map_err(|e| format!("Failed to open image: {:?}", e))?;
+        let mut img =
+            open_image_from_bytes(&bytes).map_err(|e| format!("Failed to open image: {:?}", e))?;
 
         // Apply transformation
         img = transform(img)?;
 
         // Convert back to blob URL
-        let output_bytes = save_image(img, "jpeg")
-            .map_err(|e| format!("Failed to save image: {:?}", e))?;
+        // Use get_bytes() to get raw RGBA bytes, then convert via canvas
+        let raw_bytes = img.get_raw_pixels();
+        let width = img.get_width();
+        let height = img.get_height();
 
-        self.bytes_to_blob_url(&output_bytes, "image/jpeg").await
+        self.photon_to_blob_url(raw_bytes, width, height).await
     }
 
     /// Process image with quality compression
@@ -412,19 +417,33 @@ impl ImageEditorState {
             .draw_image_with_html_image_element(&img, 0.0, 0.0)
             .map_err(|e| format!("Failed to draw image: {:?}", e))?;
 
-        // Convert to blob with quality
+        // Convert to blob with quality using callback-based API
         let quality_f64 = (quality as f64) / 100.0;
-        let blob_promise = canvas
-            .to_blob_with_type_and_quality("image/jpeg", quality_f64)
+
+        let (sender, receiver) = futures_channel::oneshot::channel();
+        let mut sender = Some(sender);
+
+        let callback = wasm_bindgen::closure::Closure::wrap(Box::new(move |blob: Option<Blob>| {
+            if let Some(sender) = sender.take() {
+                let _ = sender.send(blob);
+            }
+        })
+            as Box<dyn FnMut(Option<Blob>)>);
+
+        canvas
+            .to_blob_with_type_and_encoder_options(
+                callback.as_ref().unchecked_ref(),
+                "image/jpeg",
+                &wasm_bindgen::JsValue::from_f64(quality_f64),
+            )
             .map_err(|e| format!("Failed to create blob: {:?}", e))?;
 
-        let blob_jsvalue = JsFuture::from(blob_promise)
-            .await
-            .map_err(|e| format!("Failed to convert to blob: {:?}", e))?;
+        callback.forget();
 
-        let blob: Blob = blob_jsvalue
-            .dyn_into()
-            .map_err(|e| format!("Failed to cast to Blob: {:?}", e))?;
+        let blob = receiver
+            .await
+            .map_err(|_| "Failed to receive blob".to_string())?
+            .ok_or("No blob returned")?;
 
         Url::create_object_url_with_blob(&blob)
             .map_err(|e| format!("Failed to create blob URL: {:?}", e))
@@ -497,6 +516,71 @@ impl ImageEditorState {
 
         let blob = Blob::new_with_u8_array_sequence_and_options(&blob_parts, &blob_options)
             .map_err(|e| format!("Failed to create blob: {:?}", e))?;
+
+        Url::create_object_url_with_blob(&blob)
+            .map_err(|e| format!("Failed to create blob URL: {:?}", e))
+    }
+
+    /// Convert PhotonImage raw pixels to blob URL via canvas
+    async fn photon_to_blob_url(
+        &self,
+        raw_pixels: Vec<u8>,
+        width: u32,
+        height: u32,
+    ) -> Result<String, String> {
+        let window = web_sys::window().ok_or("No window available")?;
+        let document = window.document().ok_or("No document available")?;
+
+        // Create canvas
+        let canvas = document
+            .create_element("canvas")
+            .map_err(|e| format!("Failed to create canvas: {:?}", e))?
+            .dyn_into::<HtmlCanvasElement>()
+            .map_err(|e| format!("Failed to cast to canvas: {:?}", e))?;
+
+        canvas.set_width(width);
+        canvas.set_height(height);
+
+        let context = canvas
+            .get_context("2d")
+            .map_err(|e| format!("Failed to get context: {:?}", e))?
+            .ok_or("No context")?
+            .dyn_into::<web_sys::CanvasRenderingContext2d>()
+            .map_err(|e| format!("Failed to cast context: {:?}", e))?;
+
+        // Create ImageData from raw pixels
+        let image_data = web_sys::ImageData::new_with_u8_clamped_array_and_sh(
+            wasm_bindgen::Clamped(&raw_pixels),
+            width,
+            height,
+        )
+        .map_err(|e| format!("Failed to create ImageData: {:?}", e))?;
+
+        context
+            .put_image_data(&image_data, 0.0, 0.0)
+            .map_err(|e| format!("Failed to put image data: {:?}", e))?;
+
+        // Convert to blob using callback-based API
+        let (sender, receiver) = futures_channel::oneshot::channel();
+        let mut sender = Some(sender);
+
+        let callback = wasm_bindgen::closure::Closure::wrap(Box::new(move |blob: Option<Blob>| {
+            if let Some(sender) = sender.take() {
+                let _ = sender.send(blob);
+            }
+        })
+            as Box<dyn FnMut(Option<Blob>)>);
+
+        canvas
+            .to_blob_with_type(callback.as_ref().unchecked_ref(), "image/jpeg")
+            .map_err(|e| format!("Failed to create blob: {:?}", e))?;
+
+        callback.forget();
+
+        let blob = receiver
+            .await
+            .map_err(|_| "Failed to receive blob".to_string())?
+            .ok_or("No blob returned")?;
 
         Url::create_object_url_with_blob(&blob)
             .map_err(|e| format!("Failed to create blob URL: {:?}", e))

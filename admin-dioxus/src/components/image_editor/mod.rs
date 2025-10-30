@@ -36,7 +36,7 @@ pub fn ImageEditorModal(props: ImageEditorModalProps) -> Element {
         return rsx! {};
     }
 
-    let Some(ref session_data) = *session else {
+    let Some(ref session_data) = session else {
         return rsx! {};
     };
 
@@ -90,7 +90,7 @@ pub fn ImageEditorModal(props: ImageEditorModalProps) -> Element {
                     }
 
                     // Error message
-                    if let Some(ref error) = *error_message {
+                    if let Some(ref error) = error_message {
                         div { class: "mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-300 text-sm",
                             "{error}"
                         }

@@ -6,7 +6,6 @@ use dioxus::prelude::*;
 #[component]
 pub fn RotateTool() -> Element {
     let editor = use_image_editor();
-    let rotate_params = editor.rotate_params.read();
     let is_processing = *editor.is_processing.read();
 
     let handle_apply = move |_| {
@@ -17,7 +16,7 @@ pub fn RotateTool() -> Element {
 
     let quick_rotate = move |angle: i32| {
         move |_| {
-            rotate_params.write().angle = angle;
+            editor.rotate_params.write().angle = angle;
         }
     };
 
@@ -55,12 +54,12 @@ pub fn RotateTool() -> Element {
                 input {
                     r#type: "number",
                     class: "w-full px-2 py-1 text-sm border rounded",
-                    value: "{rotate_params.angle}",
+                    value: "{editor.rotate_params.read().angle}",
                     min: -360,
                     max: 360,
                     oninput: move |e| {
                         if let Ok(val) = e.value().parse::<i32>() {
-                            rotate_params.write().angle = val;
+                            editor.rotate_params.write().angle = val;
                         }
                     }
                 }

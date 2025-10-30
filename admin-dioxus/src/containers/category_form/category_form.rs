@@ -6,15 +6,14 @@ use crate::components::{
 };
 use crate::hooks::OxForm;
 use crate::router::Route;
-use crate::store::{use_categories, use_image_editor, use_media, MediaReference, MediaUploadPayload, UploadStatus};
+use crate::store::{
+    use_categories, use_image_editor, use_media, MediaReference, MediaUploadPayload,
+};
 use crate::ui::custom::AppPortal;
 use crate::ui::shadcn::{
     Button, ButtonSize, ButtonVariant, Checkbox, Combobox, ComboboxItem, Skeleton,
 };
-use hmziq_dioxus_free_icons::{
-    icons::ld_icons::{LdLoader, LdX},
-    Icon,
-};
+use hmziq_dioxus_free_icons::{icons::ld_icons::LdLoader, Icon};
 use web_sys::{Blob, Url};
 
 #[derive(Props, PartialEq, Clone)]
@@ -62,7 +61,10 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
             if form_data.logo_media_id.is_none() {
                 // Check if upload completed
                 if let Some(media) = media_state.get_uploaded_media(logo_blob) {
-                    gloo_console::log!("[CategoryForm] Logo upload complete, media ID:", media.id.to_string());
+                    gloo_console::log!(
+                        "[CategoryForm] Logo upload complete, media ID:",
+                        media.id.to_string()
+                    );
                     let mut form_mut = form.write();
                     form_mut.data.logo_media_id = Some(media.id);
                 }
@@ -74,7 +76,10 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
             if form_data.cover_media_id.is_none() {
                 // Check if upload completed
                 if let Some(media) = media_state.get_uploaded_media(cover_blob) {
-                    gloo_console::log!("[CategoryForm] Cover upload complete, media ID:", media.id.to_string());
+                    gloo_console::log!(
+                        "[CategoryForm] Cover upload complete, media ID:",
+                        media.id.to_string()
+                    );
                     let mut form_mut = form.write();
                     form_mut.data.cover_media_id = Some(media.id);
                 }
@@ -115,7 +120,10 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
         let field = pending_field();
 
         if let (Some(f), Some(field_name)) = (file, field) {
-            gloo_console::log!("[CategoryForm] Skipping edit, uploading directly:", f.name());
+            gloo_console::log!(
+                "[CategoryForm] Skipping edit, uploading directly:",
+                f.name()
+            );
 
             // Upload the file
             spawn(async move {
@@ -149,7 +157,10 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
         let field = pending_field();
 
         if let Some(field_name) = field {
-            gloo_console::log!("[CategoryForm] Editor saved, uploading edited file:", edited_file.name());
+            gloo_console::log!(
+                "[CategoryForm] Editor saved, uploading edited file:",
+                edited_file.name()
+            );
 
             // Upload the edited file
             spawn(async move {
@@ -181,7 +192,12 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
     // Handle re-edit of already uploaded image
     let handle_edit_uploaded = move |field: String| {
         move |blob_url: String| {
-            gloo_console::log!("[CategoryForm] Re-editing uploaded image for", &field, ":", &blob_url);
+            gloo_console::log!(
+                "[CategoryForm] Re-editing uploaded image for",
+                &field,
+                ":",
+                &blob_url
+            );
             pending_field.set(Some(field.clone()));
             // Open editor directly with the blob URL
             spawn(async move {

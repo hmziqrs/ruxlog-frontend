@@ -4,7 +4,7 @@ use std::time::Duration;
 #[derive(Props, PartialEq, Clone)]
 pub struct LoadingOverlayProps {
     #[props(default = false)]
-    pub visible: ReadOnlySignal<bool>,
+    pub visible: ReadSignal<bool>,
 }
 const FADE_MS: u64 = 400;
 
