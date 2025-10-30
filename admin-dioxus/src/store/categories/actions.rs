@@ -77,7 +77,7 @@ impl CategoriesState {
         let _ = view_state_abstraction(
             &self.view,
             id,
-            http_client::post(&format!("/category/v1/view/{}", id), &()).send(),
+            http_client::get(&format!("/category/v1/view/{}", id)).send(),
             "category",
             |category: &Category| category.clone(),
         )
