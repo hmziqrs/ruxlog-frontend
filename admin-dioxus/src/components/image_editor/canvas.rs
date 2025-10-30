@@ -32,7 +32,7 @@ pub fn EditorCanvas(props: EditorCanvasProps) -> Element {
 
     rsx! {
         div {
-            class: "relative flex items-center justify-center bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden",
+            class: "relative flex items-center justify-center rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-800",
             style: "min-height: 400px;",
 
             // Image display

@@ -119,16 +119,16 @@ pub fn ImageEditorModal(props: ImageEditorModalProps) -> Element {
                                 EditorTool::Rotate => rsx! { RotateTool {} },
                                 EditorTool::Compress => rsx! { CompressTool {} },
                                 EditorTool::None => rsx! {
-                                    div { class: "p-4 bg-gray-50 dark:bg-gray-800 rounded-lg text-center text-gray-500",
+                                    div { class: "p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 text-center text-muted-foreground",
                                         "Select a tool from the toolbar to start editing"
                                     }
                                 },
                             }
 
                             // Image info
-                            div { class: "p-4 bg-gray-50 dark:bg-gray-800 rounded-lg",
+                            div { class: "p-4 rounded-lg border border-zinc-200 dark:border-zinc-800",
                                 h4 { class: "text-sm font-semibold mb-2", "Image Info" }
-                                div { class: "text-xs text-gray-600 dark:text-gray-400 space-y-1",
+                                div { class: "text-xs text-muted-foreground space-y-1",
                                     div { "Size: {session_data.width} × {session_data.height}px" }
                                 }
                             }

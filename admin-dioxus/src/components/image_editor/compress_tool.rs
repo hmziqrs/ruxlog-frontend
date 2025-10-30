@@ -31,7 +31,7 @@ pub fn CompressTool() -> Element {
 
     rsx! {
         div {
-            class: "space-y-4 p-4 bg-muted/30 rounded-lg border border-zinc-200 dark:border-zinc-800",
+            class: "space-y-4 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800",
 
             h3 { class: "text-sm font-semibold mb-2", "Compression Settings" }
 
@@ -79,7 +79,7 @@ pub fn CompressTool() -> Element {
 
                 // Size savings display
                 if let Some((original, current)) = compression_savings {
-                    div { class: "p-3 bg-background rounded border border-zinc-200 dark:border-zinc-800",
+                    div { class: "p-3 rounded border border-zinc-200 dark:border-zinc-800",
                         div { class: "space-y-1.5",
                             div { class: "flex items-center justify-between text-xs",
                                 span { class: "text-muted-foreground", "Original:" }

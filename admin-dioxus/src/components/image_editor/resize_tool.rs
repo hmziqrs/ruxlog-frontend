@@ -21,7 +21,7 @@ pub fn ResizeTool() -> Element {
 
     rsx! {
         div {
-            class: "space-y-4 p-4 bg-muted/30 rounded-lg border border-zinc-200 dark:border-zinc-800",
+            class: "space-y-4 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800",
 
             h3 { class: "text-sm font-semibold mb-2", "Resize Settings" }
 
@@ -31,7 +31,7 @@ pub fn ResizeTool() -> Element {
                     label { class: "block text-xs text-muted-foreground mb-1", "Width (px)" }
                     input {
                         r#type: "number",
-                        class: "w-full px-2 py-1 text-sm border border-zinc-200 dark:border-zinc-800 rounded bg-background",
+                        class: "w-full px-2 py-1 text-sm border border-zinc-200 dark:border-zinc-800 rounded",
                         value: "{editor.resize_params.read().width}",
                         min: 1,
                         oninput: move |e| {
@@ -47,7 +47,7 @@ pub fn ResizeTool() -> Element {
                     label { class: "block text-xs text-muted-foreground mb-1", "Height (px)" }
                     input {
                         r#type: "number",
-                        class: "w-full px-2 py-1 text-sm border border-zinc-200 dark:border-zinc-800 rounded bg-background",
+                        class: "w-full px-2 py-1 text-sm border border-zinc-200 dark:border-zinc-800 rounded",
                         value: "{editor.resize_params.read().height}",
                         min: 1,
                         oninput: move |e| {
@@ -68,7 +68,7 @@ pub fn ResizeTool() -> Element {
                     }
                     label {
                         r#for: "maintain-aspect",
-                        class: "text-sm text-gray-700 dark:text-gray-300",
+                        class: "text-sm text-muted-foreground",
                         "Maintain aspect ratio"
                     }
                 }

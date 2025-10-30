@@ -14,7 +14,7 @@ pub fn EditorToolbar() -> Element {
 
     rsx! {
         div {
-            class: "flex items-center gap-2 p-2 bg-muted/30 rounded-lg border border-zinc-200 dark:border-zinc-800",
+            class: "flex items-center gap-2 p-2 rounded-lg border border-zinc-200 dark:border-zinc-800",
 
             // Crop button
             Button {
