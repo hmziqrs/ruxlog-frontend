@@ -77,14 +77,14 @@ pub fn ImageEditorModal(props: ImageEditorModalProps) -> Element {
                 onclick: move |e| e.stop_propagation(), // Prevent closing when clicking inside
 
                 div {
-                    class: "bg-white dark:bg-gray-900 rounded-lg shadow-2xl max-w-6xl w-full max-h-full overflow-auto p-6",
+                    class: "bg-background rounded-lg shadow-2xl max-w-6xl w-full max-h-full overflow-auto p-6 border border-zinc-200 dark:border-zinc-800",
 
                     // Header
-                    div { class: "flex items-center justify-between mb-4 pb-4 border-b",
+                    div { class: "flex items-center justify-between mb-4 pb-4 border-b border-zinc-200 dark:border-zinc-800",
                         h2 { class: "text-2xl font-bold", "Image Editor" }
                         button {
                             onclick: handle_close,
-                            class: "p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded",
+                            class: "p-2 hover:bg-muted/50 rounded",
                             Icon { icon: LdX {}, width: 20, height: 20 }
                         }
                     }
@@ -136,13 +136,12 @@ pub fn ImageEditorModal(props: ImageEditorModalProps) -> Element {
                     }
 
                     // Footer actions
-                    div { class: "flex items-center justify-between mt-6 pt-4 border-t",
+                    div { class: "flex items-center justify-between pt-4 mt-4 border-t border-zinc-200 dark:border-zinc-800",
                         Button {
                             variant: ButtonVariant::Outline,
                             onclick: handle_reset,
                             "Reset to Original"
                         }
-
                         div { class: "flex gap-2",
                             Button {
                                 variant: ButtonVariant::Outline,
@@ -151,7 +150,7 @@ pub fn ImageEditorModal(props: ImageEditorModalProps) -> Element {
                             }
                             Button {
                                 onclick: handle_save,
-                                "Save & Apply"
+                                "Save"
                             }
                         }
                     }

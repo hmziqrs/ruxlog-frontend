@@ -76,6 +76,8 @@ pub struct EditSession {
     pub original_file: Option<File>,
     pub width: u32,
     pub height: u32,
+    pub original_size: Option<usize>,
+    pub current_size: Option<usize>,
 }
 
 pub struct ImageEditorState {
@@ -97,6 +99,9 @@ pub struct ImageEditorState {
     // Processing state
     pub is_processing: GlobalSignal<bool>,
     pub error_message: GlobalSignal<Option<String>>,
+
+    // Compression stats
+    pub compression_savings: GlobalSignal<Option<(usize, usize)>>, // (original, current) in bytes
 }
 
 impl ImageEditorState {
@@ -111,6 +116,7 @@ impl ImageEditorState {
             compress_params: GlobalSignal::new(|| CompressParams::default()),
             is_processing: GlobalSignal::new(|| false),
             error_message: GlobalSignal::new(|| None),
+            compression_savings: GlobalSignal::new(|| None),
         }
     }
 }

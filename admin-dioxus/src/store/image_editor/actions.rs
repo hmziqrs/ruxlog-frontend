@@ -25,6 +25,22 @@ impl ImageEditorState {
             height.to_string()
         );
 
+        // Get original file size
+        let original_size = match self.get_blob_size(&blob_url).await {
+            Ok(size) => {
+                gloo_console::log!(
+                    "[ImageEditor::open_editor] Original size:",
+                    size.to_string(),
+                    "bytes"
+                );
+                Some(size)
+            }
+            Err(e) => {
+                gloo_console::warn!("[ImageEditor::open_editor] Failed to get size:", &e);
+                None
+            }
+        };
+
         // Create edit session
         let session = EditSession {
             original_blob_url: blob_url.clone(),
@@ -32,6 +48,8 @@ impl ImageEditorState {
             original_file: file,
             width,
             height,
+            original_size,
+            current_size: original_size,
         };
 
         // Update state
@@ -39,6 +57,7 @@ impl ImageEditorState {
         *self.is_open.write() = true;
         *self.active_tool.write() = EditorTool::None;
         *self.error_message.write() = None;
+        *self.compression_savings.write() = None;
 
         // Initialize resize params with current dimensions
         let mut resize = self.resize_params.write();
@@ -64,6 +83,7 @@ impl ImageEditorState {
         *self.current_session.write() = None;
         *self.active_tool.write() = EditorTool::None;
         *self.error_message.write() = None;
+        *self.compression_savings.write() = None;
 
         gloo_console::log!("[ImageEditor::close_editor] Editor closed");
     }
@@ -253,10 +273,31 @@ impl ImageEditorState {
         match result {
             Ok(new_blob_url) => {
                 gloo_console::log!("[ImageEditor::apply_compress] Compress applied successfully");
-                let mut session_mut = self.current_session.write();
-                if let Some(ref mut session) = *session_mut {
-                    session.current_blob_url = new_blob_url.clone();
+
+                // Get the new size and calculate savings
+                if let Ok(new_size) = self.get_blob_size(&new_blob_url).await {
+                    let mut session_mut = self.current_session.write();
+                    if let Some(ref mut session) = *session_mut {
+                        session.current_blob_url = new_blob_url.clone();
+                        session.current_size = Some(new_size);
+
+                        // Update compression savings if we have original size
+                        if let Some(orig_size) = session.original_size {
+                            *self.compression_savings.write() = Some((orig_size, new_size));
+                            gloo_console::log!(
+                                "[ImageEditor::apply_compress] Size savings:",
+                                (orig_size as i64 - new_size as i64).to_string(),
+                                "bytes"
+                            );
+                        }
+                    }
+                } else {
+                    let mut session_mut = self.current_session.write();
+                    if let Some(ref mut session) = *session_mut {
+                        session.current_blob_url = new_blob_url.clone();
+                    }
                 }
+
                 Ok(new_blob_url)
             }
             Err(e) => {
@@ -584,5 +625,11 @@ impl ImageEditorState {
 
         Url::create_object_url_with_blob(&blob)
             .map_err(|e| format!("Failed to create blob URL: {:?}", e))
+    }
+
+    /// Get size of blob from blob URL
+    async fn get_blob_size(&self, blob_url: &str) -> Result<usize, String> {
+        let blob = self.fetch_blob(blob_url).await?;
+        Ok(blob.size() as usize)
     }
 }

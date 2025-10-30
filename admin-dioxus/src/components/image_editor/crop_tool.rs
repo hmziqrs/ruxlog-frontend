@@ -16,17 +16,17 @@ pub fn CropTool() -> Element {
 
     rsx! {
         div {
-            class: "space-y-4 p-4 bg-white dark:bg-gray-800 rounded-lg border",
+            class: "space-y-4 p-4 bg-muted/30 rounded-lg border border-zinc-200 dark:border-zinc-800",
 
             h3 { class: "text-sm font-semibold mb-2", "Crop Settings" }
 
             div { class: "grid grid-cols-2 gap-3",
                 // X position
                 div {
-                    label { class: "block text-xs text-gray-600 dark:text-gray-400 mb-1", "X Position" }
+                    label { class: "block text-xs text-muted-foreground mb-1", "X Position" }
                     input {
                         r#type: "number",
-                        class: "w-full px-2 py-1 text-sm border rounded",
+                        class: "w-full px-2 py-1 text-sm border border-zinc-200 dark:border-zinc-800 rounded bg-background",
                         value: "{editor.crop_region.read().x}",
                         min: 0,
                         oninput: move |e| {
@@ -39,10 +39,10 @@ pub fn CropTool() -> Element {
 
                 // Y position
                 div {
-                    label { class: "block text-xs text-gray-600 dark:text-gray-400 mb-1", "Y Position" }
+                    label { class: "block text-xs text-muted-foreground mb-1", "Y Position" }
                     input {
                         r#type: "number",
-                        class: "w-full px-2 py-1 text-sm border rounded",
+                        class: "w-full px-2 py-1 text-sm border border-zinc-200 dark:border-zinc-800 rounded bg-background",
                         value: "{editor.crop_region.read().y}",
                         min: 0,
                         oninput: move |e| {
@@ -55,10 +55,10 @@ pub fn CropTool() -> Element {
 
                 // Width
                 div {
-                    label { class: "block text-xs text-gray-600 dark:text-gray-400 mb-1", "Width" }
+                    label { class: "block text-xs text-muted-foreground mb-1", "Width" }
                     input {
                         r#type: "number",
-                        class: "w-full px-2 py-1 text-sm border rounded",
+                        class: "w-full px-2 py-1 text-sm border border-zinc-200 dark:border-zinc-800 rounded bg-background",
                         value: "{editor.crop_region.read().width}",
                         min: 1,
                         oninput: move |e| {
@@ -71,10 +71,10 @@ pub fn CropTool() -> Element {
 
                 // Height
                 div {
-                    label { class: "block text-xs text-gray-600 dark:text-gray-400 mb-1", "Height" }
+                    label { class: "block text-xs text-muted-foreground mb-1", "Height" }
                     input {
                         r#type: "number",
-                        class: "w-full px-2 py-1 text-sm border rounded",
+                        class: "w-full px-2 py-1 text-sm border border-zinc-200 dark:border-zinc-800 rounded bg-background",
                         value: "{editor.crop_region.read().height}",
                         min: 1,
                         oninput: move |e| {

@@ -22,7 +22,7 @@ pub fn RotateTool() -> Element {
 
     rsx! {
         div {
-            class: "space-y-4 p-4 bg-white dark:bg-gray-800 rounded-lg border",
+            class: "space-y-4 p-4 bg-muted/30 rounded-lg border border-zinc-200 dark:border-zinc-800",
 
             h3 { class: "text-sm font-semibold mb-2", "Rotate Settings" }
 
@@ -50,10 +50,10 @@ pub fn RotateTool() -> Element {
 
             // Custom angle input
             div {
-                label { class: "block text-xs text-gray-600 dark:text-gray-400 mb-1", "Custom Angle (degrees)" }
+                label { class: "block text-xs text-muted-foreground mb-1", "Custom Angle (degrees)" }
                 input {
                     r#type: "number",
-                    class: "w-full px-2 py-1 text-sm border rounded",
+                    class: "w-full px-2 py-1 text-sm border border-zinc-200 dark:border-zinc-800 rounded bg-background",
                     value: "{editor.rotate_params.read().angle}",
                     min: -360,
                     max: 360,
