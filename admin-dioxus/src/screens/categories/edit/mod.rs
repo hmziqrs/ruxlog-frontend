@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use crate::components::sonner::{Action, ToastOptions};
 use crate::components::{FormTwoColumnSkeleton, PageHeader};
 use crate::containers::{CategoryForm, CategoryFormContainer};
-use crate::hooks::{use_state_frame_map_toast, use_category_view, StateFrameToastConfig};
+use crate::hooks::{use_category_view, use_state_frame_map_toast, StateFrameToastConfig};
 use crate::router::Route;
 use crate::store::use_categories;
 use crate::ui::shadcn::{Button, ButtonVariant};
@@ -60,10 +60,10 @@ pub fn CategoriesEditScreen(id: i32) -> Element {
         custom_text_color: true, // respect existing text color; container computes contrast when not custom
         text_color: c.text_color.clone(),
         active: c.is_active,
-        logo_blob_url: None,           // No blob URL when editing existing
-        logo_media_id: c.logo_image_id, // Use existing media ID
-        cover_blob_url: None,           // No blob URL when editing existing
-        cover_media_id: c.cover_image_id, // Use existing media ID
+        logo_blob_url: None,        // No blob URL when editing existing
+        logo_media_id: c.logo_id,   // Use existing media ID
+        cover_blob_url: None,       // No blob URL when editing existing
+        cover_media_id: c.cover_id, // Use existing media ID
         parent_id: c.parent_id.map(|v| v.to_string()).unwrap_or_default(),
     });
 

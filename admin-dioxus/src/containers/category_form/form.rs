@@ -26,8 +26,8 @@ pub struct CategoryForm {
     pub active: bool,
 
     // Logo image tracking
-    pub logo_blob_url: Option<String>,  // For preview while uploading
-    pub logo_media_id: Option<i32>,     // For backend submission
+    pub logo_blob_url: Option<String>, // For preview while uploading
+    pub logo_media_id: Option<i32>,    // For backend submission
 
     // Cover image tracking
     pub cover_blob_url: Option<String>, // For preview while uploading
@@ -124,9 +124,9 @@ impl CategoryForm {
             color: self.color.clone(),
             text_color,
             is_active,
-            cover_image_id: self.cover_media_id,
+            cover_id: self.cover_media_id,
             description,
-            logo_image_id: self.logo_media_id,
+            logo_id: self.logo_media_id,
             parent_id,
         }
     }
@@ -154,8 +154,8 @@ impl CategoryForm {
             slug: Some(self.slug.clone()),
             parent_id,
             description,
-            cover_image_id: Some(self.cover_media_id),
-            logo_image_id: Some(self.logo_media_id),
+            cover_id: Some(self.cover_media_id),
+            logo_id: Some(self.logo_media_id),
             color: Some(self.color.clone()),
             text_color: Some(self.effective_text_color()),
             is_active: Some(self.active),

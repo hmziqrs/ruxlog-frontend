@@ -15,9 +15,9 @@ pub struct Category {
     pub color: String,
     pub text_color: String,
     pub is_active: bool,
-    pub cover_image_id: Option<i32>,
+    pub cover_id: Option<i32>,
     pub description: Option<String>,
-    pub logo_image_id: Option<i32>,
+    pub logo_id: Option<i32>,
     pub parent_id: Option<i32>,
 }
 
@@ -32,9 +32,9 @@ impl Default for Category {
             color: "#3b82f6".to_string(),
             text_color: "#ffffff".to_string(),
             is_active: true,
-            cover_image_id: None,
+            cover_id: None,
             description: None,
-            logo_image_id: None,
+            logo_id: None,
             parent_id: None,
         }
     }
@@ -99,9 +99,9 @@ pub struct CategoriesAddPayload {
     pub color: String,
     pub text_color: Option<String>,
     pub is_active: Option<bool>,
-    pub cover_image_id: Option<i32>,
+    pub cover_id: Option<i32>,
     pub description: Option<String>,
-    pub logo_image_id: Option<i32>,
+    pub logo_id: Option<i32>,
     pub parent_id: Option<i32>,
 }
 
@@ -111,8 +111,8 @@ pub struct CategoriesEditPayload {
     pub slug: Option<String>,
     pub parent_id: Option<Option<i32>>,
     pub description: Option<Option<String>>,
-    pub cover_image_id: Option<Option<i32>>,
-    pub logo_image_id: Option<Option<i32>>,
+    pub cover_id: Option<Option<i32>>,
+    pub logo_id: Option<Option<i32>>,
     pub color: Option<String>,
     pub text_color: Option<String>,
     pub is_active: Option<bool>,
