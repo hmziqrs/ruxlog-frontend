@@ -65,29 +65,20 @@ pub fn ImageEditorModal(props: ImageEditorModalProps) -> Element {
 
     rsx! {
         AppPortal {
+            class: "z-20",
             // Backdrop
             div {
-                class: "fixed inset-0 z-50 bg-black/50",
+                class: "fixed inset-0 bg-black/50",
                 onclick: handle_close,
             }
 
             // Modal content
             div {
-                class: "fixed inset-4 z-50 flex items-center justify-center",
+                class: "fixed inset-4 flex items-center justify-center",
                 onclick: move |e| e.stop_propagation(), // Prevent closing when clicking inside
 
                 div {
-                    class: "bg-background rounded-lg shadow-2xl max-w-6xl w-full max-h-full overflow-auto p-6 border border-zinc-200 dark:border-zinc-800",
-
-                    // Header
-                    div { class: "flex items-center justify-between mb-4 pb-4 border-b border-zinc-200 dark:border-zinc-800",
-                        h2 { class: "text-2xl font-bold", "Image Editor" }
-                        button {
-                            onclick: handle_close,
-                            class: "p-2 hover:bg-muted/50 rounded",
-                            Icon { icon: LdX {}, width: 20, height: 20 }
-                        }
-                    }
+                    class: "bg-background rounded-lg shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-auto p-6 border border-zinc-200 dark:border-zinc-800",
 
                     // Error message
                     if let Some(ref error) = error_message {

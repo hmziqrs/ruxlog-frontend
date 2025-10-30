@@ -36,8 +36,7 @@ pub fn AppPortal(props: AppPortalProps) -> Element {
                     handler.call(e);
                 }
             },
-            class: format!("fixed top-0 left-0 w-full h-full {}", props.class),
-            style: format!("z-index: {}", 10),
+            class: format!("fixed z-10 top-0 left-0 w-full h-full {}", props.class),
             {props.children}
         }
     }
