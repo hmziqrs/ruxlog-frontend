@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::icons::ld_icons::{
-    LdAreaChart, LdFileText, LdFolder, LdHome, LdLogOut, LdPlus, LdTag, LdUser,
+    LdAreaChart, LdFileText, LdFolder, LdHome, LdImage, LdLogOut, LdPlus, LdTag, LdUser,
 };
 use hmziq_dioxus_free_icons::Icon;
 
@@ -131,6 +131,15 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                         },
                         label: "Tags",
                         is_active: is_active(Route::TagsListScreen {}),
+                    }
+                    SidebarModuleLink {
+                        main_route: Route::MediaListScreen {},
+                        add_route: Some(Route::MediaUploadScreen {}),
+                        icon: rsx! {
+                            Icon { icon: LdImage }
+                        },
+                        label: "Media",
+                        is_active: is_active(Route::MediaListScreen {}),
                     }
                     SidebarModuleLink {
                         main_route: Route::UsersListScreen {},

@@ -15,6 +15,8 @@ use crate::screens::SonnerDemoScreen;
 use crate::screens::TagsAddScreen;
 use crate::screens::TagsEditScreen;
 use crate::screens::TagsListScreen;
+use crate::screens::MediaListScreen;
+use crate::screens::MediaUploadScreen;
 use crate::screens::UsersAddScreen;
 use crate::screens::UsersListScreen;
 
@@ -47,6 +49,11 @@ pub enum Route {
     TagsEditScreen { id: i32 },
     #[route("/tags/list")]
     TagsListScreen {},
+
+    #[route("/media/upload")]
+    MediaUploadScreen {},
+    #[route("/media/list")]
+    MediaListScreen {},
 
     #[route("/users/new")]
     UsersAddScreen {},

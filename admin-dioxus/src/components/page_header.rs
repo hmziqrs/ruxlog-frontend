@@ -33,6 +33,8 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
         Route::TagsAddScreen {} => ("Tags", Some("New")),
         Route::TagsEditScreen { .. } => ("Tags", Some("Edit")),
         Route::TagsListScreen {} => ("Tags", None),
+        Route::MediaUploadScreen {} => ("Media", Some("Upload")),
+        Route::MediaListScreen {} => ("Media", None),
         Route::UsersAddScreen {} => ("Users", Some("New")),
         Route::UsersListScreen {} => ("Users", None),
         // HEADER_ROUTES_END
@@ -49,6 +51,7 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
             "Posts" => Some(Route::PostsListScreen {}),
             "Categories" => Some(Route::CategoriesListScreen {}),
             "Tags" => Some(Route::TagsListScreen {}),
+            "Media" => Some(Route::MediaListScreen {}),
             "Users" => Some(Route::UsersListScreen {}),
             // LIST_ROUTES_END
             _ => None,

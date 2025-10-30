@@ -10,6 +10,9 @@ pub use use_tag_view::{use_tag_view, TagViewState};
 mod use_category_view;
 pub use use_category_view::{use_category_view, CategoryViewState as CategoryDetailViewState};
 
+mod use_media_view;
+pub use use_media_view::{use_media_view, MediaViewState};
+
 mod use_state_frame_toast;
 pub use use_state_frame_toast::{
     use_state_frame_map_toast, use_state_frame_toast, StateFrameToastConfig,
