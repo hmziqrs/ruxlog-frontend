@@ -1,4 +1,4 @@
-use crate::store::{ListQuery, ListStore, PaginatedList, StateFrame};
+use crate::store::{ListQuery, ListStore, Media, PaginatedList, StateFrame};
 use crate::types::SortParam;
 use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
@@ -15,6 +15,8 @@ pub struct Category {
     pub color: String,
     pub text_color: String,
     pub is_active: bool,
+    pub cover: Option<Media>,
+    pub logo: Option<Media>,
     pub cover_id: Option<i32>,
     pub description: Option<String>,
     pub logo_id: Option<i32>,
@@ -32,6 +34,8 @@ impl Default for Category {
             color: "#3b82f6".to_string(),
             text_color: "#ffffff".to_string(),
             is_active: true,
+            cover: None,
+            logo: None,
             cover_id: None,
             description: None,
             logo_id: None,
