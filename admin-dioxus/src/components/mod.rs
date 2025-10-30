@@ -52,3 +52,9 @@ pub use media_upload_zone::*;
 
 mod media_upload_list;
 pub use media_upload_list::*;
+
+mod confirm_dialog;
+pub use confirm_dialog::*;
+
+pub mod image_editor;
+pub use image_editor::*;

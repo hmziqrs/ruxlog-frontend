@@ -1,10 +1,12 @@
 use dioxus::prelude::*;
 
 use super::form::{use_categories_form, CategoryForm};
-use crate::components::{AppInput, ColorPicker, MediaUploadItem, MediaUploadZone};
+use crate::components::{
+    AppInput, ColorPicker, ConfirmDialog, ImageEditorModal, MediaUploadItem, MediaUploadZone,
+};
 use crate::hooks::OxForm;
 use crate::router::Route;
-use crate::store::{use_categories, use_media, MediaReference, UploadStatus};
+use crate::store::{use_categories, use_image_editor, use_media, MediaReference, MediaUploadPayload, UploadStatus};
 use crate::ui::custom::AppPortal;
 use crate::ui::shadcn::{
     Button, ButtonSize, ButtonVariant, Checkbox, Combobox, ComboboxItem, Skeleton,
@@ -13,6 +15,7 @@ use hmziq_dioxus_free_icons::{
     icons::ld_icons::{LdLoader, LdX},
     Icon,
 };
+use web_sys::{Blob, Url};
 
 #[derive(Props, PartialEq, Clone)]
 pub struct CategoryFormContainerProps {
@@ -36,6 +39,12 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
     let is_form_dirty = form.read().is_dirty();
     let cats_state = use_categories();
     let media_state = use_media();
+    let editor_state = use_image_editor();
+
+    // Image editing state
+    let mut pending_file = use_signal(|| None::<web_sys::File>);
+    let mut pending_field = use_signal(|| None::<String>); // "logo" or "cover"
+    let mut edit_confirm_open = use_signal(|| false);
 
     // Fetch categories for parent selection on mount
     use_effect(move || {
@@ -72,6 +81,114 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
             }
         }
     });
+
+    // Handle file selection - show edit confirmation dialog
+    let handle_file_selected = move |field: String| {
+        move |files: Vec<web_sys::File>| {
+            if let Some(file) = files.first() {
+                gloo_console::log!("[CategoryForm] File selected for", &field, ":", file.name());
+                pending_file.set(Some(file.clone()));
+                pending_field.set(Some(field.clone()));
+                edit_confirm_open.set(true);
+            }
+        }
+    };
+
+    // Handle edit confirmation - open image editor
+    let handle_edit_confirm = move |_| {
+        let file = pending_file();
+        if let Some(f) = file {
+            gloo_console::log!("[CategoryForm] Opening editor for file:", f.name());
+            // Create blob URL for the file
+            let blob: &Blob = f.as_ref();
+            if let Ok(blob_url) = Url::create_object_url_with_blob(blob) {
+                spawn(async move {
+                    let _ = editor_state.open_editor(Some(f.clone()), blob_url).await;
+                });
+            }
+        }
+    };
+
+    // Handle edit skip - upload directly
+    let handle_edit_skip = move |_| {
+        let file = pending_file();
+        let field = pending_field();
+
+        if let (Some(f), Some(field_name)) = (file, field) {
+            gloo_console::log!("[CategoryForm] Skipping edit, uploading directly:", f.name());
+
+            // Upload the file
+            spawn(async move {
+                let payload = MediaUploadPayload {
+                    file: f.clone(),
+                    reference_type: Some(MediaReference::Category),
+                    width: None,
+                    height: None,
+                };
+
+                match media_state.upload(payload).await {
+                    Ok(blob_url) => {
+                        gloo_console::log!("[CategoryForm] Upload successful:", &blob_url);
+                        let mut form_mut = form.write();
+                        if field_name == "logo" {
+                            form_mut.data.logo_blob_url = Some(blob_url);
+                        } else if field_name == "cover" {
+                            form_mut.data.cover_blob_url = Some(blob_url);
+                        }
+                    }
+                    Err(e) => {
+                        gloo_console::error!("[CategoryForm] Upload failed:", e);
+                    }
+                }
+            });
+        }
+    };
+
+    // Handle image editor save - upload edited file
+    let handle_editor_save = move |edited_file: web_sys::File| {
+        let field = pending_field();
+
+        if let Some(field_name) = field {
+            gloo_console::log!("[CategoryForm] Editor saved, uploading edited file:", edited_file.name());
+
+            // Upload the edited file
+            spawn(async move {
+                let payload = MediaUploadPayload {
+                    file: edited_file,
+                    reference_type: Some(MediaReference::Category),
+                    width: None,
+                    height: None,
+                };
+
+                match media_state.upload(payload).await {
+                    Ok(blob_url) => {
+                        gloo_console::log!("[CategoryForm] Edited upload successful:", &blob_url);
+                        let mut form_mut = form.write();
+                        if field_name == "logo" {
+                            form_mut.data.logo_blob_url = Some(blob_url);
+                        } else if field_name == "cover" {
+                            form_mut.data.cover_blob_url = Some(blob_url);
+                        }
+                    }
+                    Err(e) => {
+                        gloo_console::error!("[CategoryForm] Edited upload failed:", e);
+                    }
+                }
+            });
+        }
+    };
+
+    // Handle re-edit of already uploaded image
+    let handle_edit_uploaded = move |field: String| {
+        move |blob_url: String| {
+            gloo_console::log!("[CategoryForm] Re-editing uploaded image for", &field, ":", &blob_url);
+            pending_field.set(Some(field.clone()));
+            // Open editor directly with the blob URL
+            spawn(async move {
+                let _ = editor_state.open_editor(None, blob_url).await;
+            });
+        }
+    };
 
     rsx! {
         div {
@@ -176,19 +293,17 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                                             let mut form_mut = form.write();
                                                             form_mut.data.logo_blob_url = None;
                                                             form_mut.data.logo_media_id = None;
-                                                        }
+                                                        },
+                                                        on_edit: Some(EventHandler::new(handle_edit_uploaded("logo".to_string()))),
                                                     }
                                                 }
                                             }
                                         } else {
                                             MediaUploadZone {
-                                                on_upload: move |blob_urls: Vec<String>| {
-                                                    if let Some(blob_url) = blob_urls.first() {
-                                                        let mut form_mut = form.write();
-                                                        form_mut.data.logo_blob_url = Some(blob_url.clone());
-                                                        gloo_console::log!("[CategoryForm] Logo upload initiated:", blob_url);
-                                                    }
+                                                on_upload: move |_blob_urls: Vec<String>| {
+                                                    // Not used - we use on_file_selected instead
                                                 },
+                                                on_file_selected: Some(EventHandler::new(handle_file_selected("logo".to_string()))),
                                                 reference_type: Some(MediaReference::Category),
                                                 max_files: 1,
                                                 allowed_types: vec!["image/".to_string()],
@@ -235,19 +350,17 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                                             let mut form_mut = form.write();
                                                             form_mut.data.cover_blob_url = None;
                                                             form_mut.data.cover_media_id = None;
-                                                        }
+                                                        },
+                                                        on_edit: Some(EventHandler::new(handle_edit_uploaded("cover".to_string()))),
                                                     }
                                                 }
                                             }
                                         } else {
                                             MediaUploadZone {
-                                                on_upload: move |blob_urls: Vec<String>| {
-                                                    if let Some(blob_url) = blob_urls.first() {
-                                                        let mut form_mut = form.write();
-                                                        form_mut.data.cover_blob_url = Some(blob_url.clone());
-                                                        gloo_console::log!("[CategoryForm] Cover upload initiated:", blob_url);
-                                                    }
+                                                on_upload: move |_blob_urls: Vec<String>| {
+                                                    // Not used - we use on_file_selected instead
                                                 },
+                                                on_file_selected: Some(EventHandler::new(handle_file_selected("cover".to_string()))),
                                                 reference_type: Some(MediaReference::Category),
                                                 max_files: 1,
                                                 allowed_types: vec!["image/".to_string()],
@@ -429,6 +542,23 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                 }
             }
         }
+
+        // Edit confirmation dialog
+        ConfirmDialog {
+            is_open: edit_confirm_open,
+            title: "Edit image before uploading?".to_string(),
+            description: "You can crop, resize, rotate, or compress the image before uploading.".to_string(),
+            confirm_label: "Edit Image".to_string(),
+            cancel_label: "Skip & Upload".to_string(),
+            on_confirm: handle_edit_confirm,
+            on_cancel: handle_edit_skip,
+        }
+
+        // Image editor modal
+        ImageEditorModal {
+            on_save: handle_editor_save,
+        }
+
         if reset_dialog_open() {
             AppPortal {
                 class: "bg-black/20 backdrop-blur-sm flex items-center justify-center px-4",

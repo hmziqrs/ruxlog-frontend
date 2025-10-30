@@ -14,6 +14,11 @@ pub struct MediaUploadZoneProps {
     /// Called when files are selected and upload initiated
     /// Returns Vec of blob URLs
     pub on_upload: EventHandler<Vec<String>>,
+    /// Optional: Called when files are selected, BEFORE upload
+    /// If provided, automatic upload is skipped and Files are passed to this callback
+    /// The callback should handle upload manually
+    #[props(default)]
+    pub on_file_selected: Option<EventHandler<Vec<web_sys::File>>>,
     /// Reference type for uploaded media
     #[props(default)]
     pub reference_type: Option<MediaReference>,
@@ -76,6 +81,7 @@ pub fn MediaUploadZone(props: MediaUploadZoneProps) -> Element {
         let reference_type_clone = reference_type.clone();
         let allowed_types_clone = allowed_types.clone();
         let on_upload_clone = on_upload_handler.clone();
+        let on_file_selected_clone = props.on_file_selected.clone();
 
         spawn(async move {
             // Get the input element by ID
@@ -100,21 +106,51 @@ pub fn MediaUploadZone(props: MediaUploadZoneProps) -> Element {
                                         max_files.to_string()
                                     );
 
-                                    let blob_urls = process_files_async(
-                                        files,
-                                        max_files,
-                                        &allowed_refs,
-                                        reference_type_clone,
-                                    )
-                                    .await;
+                                    // If on_file_selected is provided, extract Files and pass them
+                                    if let Some(on_file_selected) = on_file_selected_clone {
+                                        gloo_console::log!("[MediaUploadZone] Using on_file_selected callback");
+                                        let mut file_vec = Vec::new();
+                                        let limit = if max_files > 0 {
+                                            max_files.min(files.length() as usize)
+                                        } else {
+                                            files.length() as usize
+                                        };
 
-                                    gloo_console::log!(
-                                        "[MediaUploadZone] Processing complete, blob URLs: ",
-                                        blob_urls.len().to_string()
-                                    );
+                                        for i in 0..limit {
+                                            if let Some(file) = files.get(i as u32) {
+                                                // Validate file type
+                                                if validate_file_type(&file, &allowed_refs) {
+                                                    file_vec.push(file);
+                                                } else {
+                                                    gloo_console::warn!(
+                                                        "[MediaUploadZone] File type not allowed:",
+                                                        file.type_()
+                                                    );
+                                                }
+                                            }
+                                        }
 
-                                    if !blob_urls.is_empty() {
-                                        on_upload_clone.call(blob_urls);
+                                        if !file_vec.is_empty() {
+                                            on_file_selected.call(file_vec);
+                                        }
+                                    } else {
+                                        // Original behavior: automatic upload
+                                        let blob_urls = process_files_async(
+                                            files,
+                                            max_files,
+                                            &allowed_refs,
+                                            reference_type_clone,
+                                        )
+                                        .await;
+
+                                        gloo_console::log!(
+                                            "[MediaUploadZone] Processing complete, blob URLs: ",
+                                            blob_urls.len().to_string()
+                                        );
+
+                                        if !blob_urls.is_empty() {
+                                            on_upload_clone.call(blob_urls);
+                                        }
                                     }
 
                                     // Reset input

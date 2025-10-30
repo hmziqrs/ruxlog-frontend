@@ -3,7 +3,7 @@ use crate::ui::shadcn::{Button, ButtonSize, ButtonVariant, Progress};
 use crate::utils::file_helpers::format_file_size;
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::{
-    icons::ld_icons::{LdCheck, LdCircle, LdLoader, LdX},
+    icons::ld_icons::{LdCheck, LdCircle, LdLoader, LdPencil, LdX},
     Icon,
 };
 
@@ -18,6 +18,9 @@ pub struct MediaUploadItemProps {
     /// Optional callback when user clicks remove/cancel
     #[props(default)]
     pub on_remove: Option<EventHandler<String>>,
+    /// Optional callback when user clicks edit
+    #[props(default)]
+    pub on_edit: Option<EventHandler<String>>,
 }
 
 /// Component that displays a single file upload with progress and status
@@ -68,6 +71,16 @@ pub fn MediaUploadItem(props: MediaUploadItemProps) -> Element {
         }
     };
 
+    let handle_edit = {
+        let blob_url = blob_url.clone();
+        let on_edit = props.on_edit.clone();
+        move |_| {
+            if let Some(handler) = &on_edit {
+                handler.call(blob_url.clone());
+            }
+        }
+    };
+
     rsx! {
         div { class: "border rounded-lg p-3 space-y-2 {status_class} transition-colors",
             // Top row: thumbnail + info + actions
@@ -97,16 +110,32 @@ pub fn MediaUploadItem(props: MediaUploadItemProps) -> Element {
                     }
                 }
 
-                // Remove/Cancel button
-                if props.on_remove.is_some() {
-                    Button {
-                        r#type: "button".to_string(),
-                        variant: ButtonVariant::Ghost,
-                        size: ButtonSize::Icon,
-                        onclick: handle_remove,
-                        class: "h-8 w-8 flex-shrink-0".to_string(),
-                        Icon { icon: LdX, class: "h-4 w-4" }
-                        span { class: "sr-only", "Remove" }
+                // Action buttons
+                div { class: "flex items-center gap-1",
+                    // Edit button (only show when upload is successful and on_edit is provided)
+                    if is_success && props.on_edit.is_some() {
+                        Button {
+                            r#type: "button".to_string(),
+                            variant: ButtonVariant::Ghost,
+                            size: ButtonSize::Icon,
+                            onclick: handle_edit,
+                            class: "h-8 w-8 flex-shrink-0".to_string(),
+                            Icon { icon: LdPencil, class: "h-4 w-4" }
+                            span { class: "sr-only", "Edit" }
+                        }
+                    }
+
+                    // Remove/Cancel button
+                    if props.on_remove.is_some() {
+                        Button {
+                            r#type: "button".to_string(),
+                            variant: ButtonVariant::Ghost,
+                            size: ButtonSize::Icon,
+                            onclick: handle_remove,
+                            class: "h-8 w-8 flex-shrink-0".to_string(),
+                            Icon { icon: LdX, class: "h-4 w-4" }
+                            span { class: "sr-only", "Remove" }
+                        }
                     }
                 }
             }
