@@ -324,8 +324,14 @@ The editor currently uses a simplified, browser-native approach that prioritizes
 
 **Recent Improvements:**
 - ✅ **Custom Block Formatting:** Replaced deprecated `execCommand('formatBlock')` with direct DOM manipulation in `format_block_custom()` for reliable H1-H6, P, Quote, and Code formatting
+  - Handles both existing block replacement and wrapping new selections
+  - Uses `surround_contents()` for wrapping text without existing block elements
 - ✅ **HTML→AST Parser:** Full bidirectional conversion between HTML and AST using `parse_html()` for structured persistence
 - ✅ **WASM Build Fix:** Added `getrandom` dependency with `wasm_js` feature to fix WebAssembly compilation errors
+- ✅ **Editor Styling:** Added comprehensive CSS for headings (H1-H6 with proper sizing), lists (bullets/numbers), blockquotes, and code blocks
+  - Lists now display with proper disc/decimal markers
+  - Headings have correct font sizes and weights
+  - All block elements have proper spacing and styling
 
 **Why This Approach:**
 - ✅ Preserves cursor position (no DOM re-renders during editing)

@@ -173,6 +173,19 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                 .dark .editor-content:focus {{
                     outline-color: #60a5fa;
                 }}
+                .editor-content ul {{
+                    list-style-type: disc;
+                    padding-left: 2rem;
+                    margin: 1rem 0;
+                }}
+                .editor-content ol {{
+                    list-style-type: decimal;
+                    padding-left: 2rem;
+                    margin: 1rem 0;
+                }}
+                .editor-content li {{
+                    margin: 0.5rem 0;
+                }}
                 .editor-content .task-list {{
                     list-style: none;
                     padding-left: 0;
@@ -191,6 +204,48 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                 }}
                 .dark .editor-content .task-checkbox {{
                     accent-color: #60a5fa;
+                }}
+                .editor-content h1,
+                .editor-content h2,
+                .editor-content h3,
+                .editor-content h4,
+                .editor-content h5,
+                .editor-content h6 {{
+                    font-weight: bold;
+                    margin: 1rem 0;
+                }}
+                .editor-content h1 {{ font-size: 2rem; }}
+                .editor-content h2 {{ font-size: 1.5rem; }}
+                .editor-content h3 {{ font-size: 1.25rem; }}
+                .editor-content h4 {{ font-size: 1.1rem; }}
+                .editor-content h5 {{ font-size: 1rem; }}
+                .editor-content h6 {{ font-size: 0.9rem; }}
+                .editor-content p {{
+                    margin: 0.5rem 0;
+                }}
+                .editor-content blockquote {{
+                    border-left: 4px solid #d1d5db;
+                    padding-left: 1rem;
+                    margin: 1rem 0;
+                    font-style: italic;
+                    color: #6b7280;
+                }}
+                .dark .editor-content blockquote {{
+                    border-left-color: #4b5563;
+                    color: #9ca3af;
+                }}
+                .editor-content pre {{
+                    background-color: #f3f4f6;
+                    padding: 1rem;
+                    border-radius: 0.375rem;
+                    overflow-x: auto;
+                    margin: 1rem 0;
+                }}
+                .dark .editor-content pre {{
+                    background-color: #1f2937;
+                }}
+                .editor-content code {{
+                    font-family: monospace;
                 }}
                 "
             }
@@ -380,6 +435,27 @@ fn format_block_custom(document: &web_sys::Document, tag_name: &str) {
                         let _ = html_elem.focus();
                     }
                 }
+            }
+        }
+    } else {
+        // No block element found - wrap the selection in a new block
+        let Ok(new_element) = document.create_element(tag_name) else {
+            return;
+        };
+
+        // Try to surround the contents with the new element
+        if range.surround_contents(&new_element).is_ok() {
+            if let Some(html_new) = new_element.dyn_ref::<HtmlElement>() {
+                // Select the content inside the new element
+                let _ = selection.remove_all_ranges();
+                if let Ok(new_range) = document.create_range() {
+                    let _ = new_range.select_node_contents(&new_element);
+                    let _ = new_range.collapse_with_to_start(false);
+                    let _ = selection.add_range(&new_range);
+                }
+
+                // Focus the new element
+                let _ = html_new.focus();
             }
         }
     }
