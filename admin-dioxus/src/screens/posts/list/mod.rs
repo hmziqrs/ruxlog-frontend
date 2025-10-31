@@ -7,6 +7,7 @@ use crate::ui::shadcn::{
     PopoverTrigger,
 };
 
+use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::icons::ld_icons::{
     LdCalendar, LdEllipsis, LdEye, LdGrid3x3, LdHeart, LdLayoutList, LdMessageSquare, LdSearch,
@@ -31,24 +32,16 @@ fn format_short_date(date: &chrono::DateTime<chrono::Utc>) -> String {
 #[component]
 pub fn PostsListScreen() -> Element {
     let posts_state = use_post();
-    let posts_list = posts_state.list.read();
-    // Keep fetching posts, but the UI controls remain non-interactive
-    // let _nav = use_navigator();
 
     // Fetch posts on mount
     use_effect(move || {
+        tracing::info!("PostsListScreen: Fetching posts on mount");
         spawn(async move {
+            tracing::info!("PostsListScreen: Starting async fetch");
             posts_state.list().await;
+            tracing::info!("PostsListScreen: Fetch completed");
         });
     });
-
-    if posts_list.is_loading() || posts_list.is_failed() {
-        return rsx! {
-            div { class: "flex items-center justify-center h-full",
-                h1 {"Loading"}
-            }
-        };
-    }
 
     rsx! {
         div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
@@ -242,13 +235,55 @@ fn ActiveFilters() -> Element {
 #[component]
 fn Body() -> Element {
     let posts_state = use_post();
-    let posts_list = posts_state.list.read();
 
     rsx! {
-        match &posts_list.data {
-            Some(posts) => {
-                if posts.is_empty() {
-                    rsx! {
+        {
+            let posts_list = posts_state.list.read();
+            tracing::info!("PostsListScreen Body: status={:?}, has_data={}", posts_list.status, posts_list.data.is_some());
+
+            if posts_list.is_init() || posts_list.is_loading() {
+                rsx! {
+                    div { class: "flex items-center justify-center py-12",
+                        div { class: "text-center",
+                            div { class: "loading loading-spinner loading-lg" }
+                            p { class: "mt-4", "Loading posts..." }
+                        }
+                    }
+                }
+            } else if posts_list.is_failed() {
+                rsx! {
+                    div { class: "flex items-center justify-center py-12",
+                        div { class: "alert alert-error max-w-md",
+                            span { {posts_list.message.clone().unwrap_or_else(|| "Failed to load posts".to_string())} }
+                        }
+                    }
+                }
+            } else {
+                match &posts_list.data {
+                    Some(posts) => {
+                        if posts.is_empty() {
+                            rsx! {
+                                div { class: "flex flex-col items-center justify-center py-12 text-center",
+                                    div { class: "h-12 w-12 text-zinc-300 dark:text-zinc-700 mb-4",
+                                        Icon { icon: LdMessageSquare {} }
+                                    }
+                                    h3 { class: "text-lg font-medium", "No posts found" }
+                                    p { class: "text-zinc-500 dark:text-zinc-400 mt-1 max-w-md",
+                                        "No posts match your current filters. Try adjusting your search or filter criteria."
+                                    }
+                                    Button { variant: ButtonVariant::Outline, class: "mt-4", "Clear all filters" }
+                                }
+                            }
+                        } else {
+                            rsx! {
+                                div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
+                                    {posts.iter().map(|post| rsx! { PostGridCard { post: post.clone() } })}
+                                }
+                            }
+                        }
+                    }
+                    None => rsx! {
+                        // Fallback empty state when no data
                         div { class: "flex flex-col items-center justify-center py-12 text-center",
                             div { class: "h-12 w-12 text-zinc-300 dark:text-zinc-700 mb-4",
                                 Icon { icon: LdMessageSquare {} }
@@ -260,25 +295,6 @@ fn Body() -> Element {
                             Button { variant: ButtonVariant::Outline, class: "mt-4", "Clear all filters" }
                         }
                     }
-                } else {
-                    rsx! {
-                        div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
-                            {posts.iter().map(|post| rsx! { PostGridCard { post: post.clone() } })}
-                        }
-                    }
-                }
-            }
-            None => rsx! {
-                // Fallback empty state when no data
-                div { class: "flex flex-col items-center justify-center py-12 text-center",
-                    div { class: "h-12 w-12 text-zinc-300 dark:text-zinc-700 mb-4",
-                        Icon { icon: LdMessageSquare {} }
-                    }
-                    h3 { class: "text-lg font-medium", "No posts found" }
-                    p { class: "text-zinc-500 dark:text-zinc-400 mt-1 max-w-md",
-                        "No posts match your current filters. Try adjusting your search or filter criteria."
-                    }
-                    Button { variant: ButtonVariant::Outline, class: "mt-4", "Clear all filters" }
                 }
             }
         }
@@ -332,11 +348,24 @@ fn PostGridCard(post: Post) -> Element {
                             }
                         }
                         DropdownMenuContent {
-                            DropdownMenuItem { "Edit" }
+                            DropdownMenuItem {
+                                onclick: move |_| {
+                                    let nav = navigator();
+                                    nav.push(Route::PostsEditScreen { id: post.id });
+                                },
+                                "Edit"
+                            }
                             DropdownMenuItem { "Duplicate" }
                             DropdownMenuItem {
                                 variant: String::from("destructive"),
                                 class: "text-red-500 dark:text-red-400",
+                                onclick: move |_| {
+                                    let posts = use_post();
+                                    spawn(async move {
+                                        posts.remove(post.id).await;
+                                        posts.list().await;
+                                    });
+                                },
                                 "Delete"
                             }
                         }
@@ -450,9 +479,25 @@ fn PostListItem(post: Post) -> Element {
                                 }
                             }
                             DropdownMenuContent {
-                                DropdownMenuItem { "Edit" }
+                                DropdownMenuItem {
+                                    onclick: move |_| {
+                                        let nav = navigator();
+                                        nav.push(Route::PostsEditScreen { id: post.id });
+                                    },
+                                    "Edit"
+                                }
                                 DropdownMenuItem { "Duplicate" }
-                                DropdownMenuItem { class: "text-red-500 dark:text-red-400", "Delete" }
+                                DropdownMenuItem {
+                                    class: "text-red-500 dark:text-red-400",
+                                    onclick: move |_| {
+                                        let posts = use_post();
+                                        spawn(async move {
+                                            posts.remove(post.id).await;
+                                            posts.list().await;
+                                        });
+                                    },
+                                    "Delete"
+                                }
                             }
                         }
                     }

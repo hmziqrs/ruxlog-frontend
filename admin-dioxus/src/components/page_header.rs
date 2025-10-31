@@ -24,24 +24,22 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
 
     // Derive module name and whether this is an "add/new" screen
     let (module, add_suffix): (&str, Option<&str>) = match current_route {
-        // HEADER_ROUTES_START (auto-generated)
-        Route::PostsAddScreen {} => ("Posts", Some("New")),
-        Route::PostsListScreen {} => ("Posts", None),
-        Route::CategoriesAddScreen {} => ("Categories", Some("New")),
-        Route::CategoriesListScreen {} => ("Categories", None),
+        Route::PostsAddScreen {} => ("Posts", Some("Add")),
+        Route::PostsEditScreen { .. } => ("Posts", Some("Edit")),
+        Route::PostsListScreen {} => ("Posts", Some("List")),
+        Route::CategoriesAddScreen {} => ("Categories", Some("Add")),
+        Route::CategoriesListScreen {} => ("Categories", Some("List")),
         Route::CategoriesEditScreen { .. } => ("Categories", Some("Edit")),
-        Route::TagsAddScreen {} => ("Tags", Some("New")),
+        Route::TagsAddScreen {} => ("Tags", Some("Add")),
         Route::TagsEditScreen { .. } => ("Tags", Some("Edit")),
-        Route::TagsListScreen {} => ("Tags", None),
+        Route::TagsListScreen {} => ("Tags", Some("List")),
         Route::MediaUploadScreen {} => ("Media", Some("Upload")),
-        Route::MediaListScreen {} => ("Media", None),
-        Route::UsersAddScreen {} => ("Users", Some("New")),
+        Route::MediaListScreen {} => ("Media", Some("List")),
+        Route::UsersAddScreen {} => ("Users", Some("Add")),
         Route::UsersEditScreen { .. } => ("Users", Some("Edit")),
-        Route::UsersListScreen {} => ("Users", None),
-        // HEADER_ROUTES_END
+        Route::UsersListScreen {} => ("Users", Some("List")),
         Route::AnalyticsScreen {} => ("Analytics", None),
-        Route::SonnerDemoScreen {} => ("Sonner", None),
-        // Default/fallback
+        Route::SonnerDemoScreen {} => ("Sonner Demo", None),
         Route::HomeScreen {} | Route::LoginScreen {} => ("Dashboard", None),
     };
 
