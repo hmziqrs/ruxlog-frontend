@@ -1,9 +1,15 @@
 use dioxus::prelude::*;
+use gloo_console;
+
+use web_sys::{Blob, Url};
 
 use super::form::{use_user_form, UserForm};
-use crate::components::{AppInput, PasswordInput};
+use crate::components::{
+    AppInput, ConfirmDialog, ImageEditorModal, MediaUploadItem, MediaUploadZone, PasswordInput,
+};
 use crate::hooks::OxForm;
 use crate::router::Route;
+use crate::store::{use_image_editor, use_media, MediaReference, MediaUploadPayload};
 use crate::ui::custom::AppPortal;
 use crate::ui::shadcn::{Button, ButtonVariant, Checkbox};
 
@@ -28,6 +34,98 @@ pub fn UserFormContainer(props: UserFormContainerProps) -> Element {
     let mut reset_dialog_open = use_signal(|| false);
     let is_form_dirty = form.read().is_dirty();
     let is_update = form.read().data.is_update;
+
+    // Media upload state
+    let media_state = use_media();
+    let editor_state = use_image_editor();
+    let mut pending_file = use_signal(|| None::<web_sys::File>);
+    let mut confirm_dialog_open = use_signal(|| false);
+    let _is_uploading = media_state.upload.read().is_loading();
+
+    // Handle file selected from MediaUploadZone
+    let handle_file_selected = move |files: Vec<web_sys::File>| {
+        if let Some(file) = files.first() {
+            gloo_console::log!("[UserForm] File selected:", file.name());
+            pending_file.set(Some(file.clone()));
+            confirm_dialog_open.set(true);
+        }
+    };
+
+    // Handle edit confirmation - open image editor
+    let handle_edit_confirm = move |_| {
+        let file = pending_file();
+        if let Some(f) = file {
+            gloo_console::log!("[UserForm] Opening editor for file:", f.name());
+            let blob: &Blob = f.as_ref();
+            if let Ok(blob_url) = Url::create_object_url_with_blob(blob) {
+                spawn(async move {
+                    let _ = editor_state.open_editor(Some(f.clone()), blob_url).await;
+                });
+            }
+        }
+    };
+
+    // Handle edit skip - upload directly
+    let handle_edit_skip = move |_| {
+        let file = pending_file();
+        if let Some(f) = file {
+            gloo_console::log!("[UserForm] Skipping edit, uploading directly:", f.name());
+
+            spawn(async move {
+                let payload = MediaUploadPayload {
+                    file: f.clone(),
+                    reference_type: Some(MediaReference::User),
+                    width: None,
+                    height: None,
+                };
+
+                match media_state.upload(payload).await {
+                    Ok(blob_url) => {
+                        gloo_console::log!("[UserForm] Upload successful:", &blob_url);
+                        form.write().data.avatar_blob_url = Some(blob_url);
+                    }
+                    Err(e) => {
+                        gloo_console::error!("[UserForm] Upload failed:", e);
+                    }
+                }
+            });
+        }
+    };
+
+    // Handle image editor save - upload edited file
+    let handle_editor_save = move |edited_file: web_sys::File| {
+        gloo_console::log!(
+            "[UserForm] Editor saved, uploading edited file:",
+            edited_file.name()
+        );
+
+        spawn(async move {
+            let payload = MediaUploadPayload {
+                file: edited_file,
+                reference_type: Some(MediaReference::User),
+                width: None,
+                height: None,
+            };
+
+            match media_state.upload(payload).await {
+                Ok(blob_url) => {
+                    gloo_console::log!("[UserForm] Edited upload successful:", &blob_url);
+                    form.write().data.avatar_blob_url = Some(blob_url);
+                }
+                Err(e) => {
+                    gloo_console::error!("[UserForm] Edited upload failed:", e);
+                }
+            }
+        });
+    };
+
+    // Handle edit uploaded avatar
+    let handle_edit_uploaded = move |blob_url: String| {
+        gloo_console::log!("[UserForm] Editing uploaded avatar");
+        spawn(async move {
+            let _ = editor_state.open_editor(None, blob_url).await;
+        });
+    };
 
     rsx! {
         div {
@@ -138,6 +236,7 @@ pub fn UserFormContainer(props: UserFormContainerProps) -> Element {
                                             }
                                         }
                                     }
+
                                 }
                             }
                             if !is_update {
@@ -156,6 +255,56 @@ pub fn UserFormContainer(props: UserFormContainerProps) -> Element {
                 }
 
                 div { class: "space-y-8 lg:sticky lg:top-28 h-fit",
+                    div { class: "rounded-xl border border-border/70 bg-transparent",
+                        div { class: "px-6 pt-6",
+                            h2 { class: "text-lg font-semibold", "Avatar" }
+                            p { class: "text-sm text-muted-foreground", "Upload a profile picture for this user." }
+                        }
+                        div { class: "px-6 py-6 space-y-6",
+                            div { class: "space-y-3",
+                                label { class: "block text-sm font-medium text-foreground", "Profile Picture" }
+                                {
+                                    if let Some(blob) = form.read().data.avatar_blob_url.clone() {
+                                        let file_info = media_state.get_file_info(&blob);
+                                        let (filename, file_size) = if let Some(info) = file_info {
+                                            (info.filename, info.size)
+                                        } else {
+                                            ("Avatar".to_string(), 0)
+                                        };
+                                        rsx! {
+                                            MediaUploadItem {
+                                                blob_url: blob.clone(),
+                                                filename,
+                                                file_size,
+                                                on_remove: move |_url: String| {
+                                                    let mut form_mut = form.write();
+                                                    form_mut.data.avatar_blob_url = None;
+                                                    form_mut.data.avatar_id = None;
+                                                },
+                                                on_edit: Some(EventHandler::new(handle_edit_uploaded)),
+                                            }
+                                        }
+                                    } else {
+                                        rsx! {
+                                            MediaUploadZone {
+                                                on_upload: move |_blob_urls: Vec<String>| {
+                                                    // Not used - we use on_file_selected instead
+                                                },
+                                                on_file_selected: Some(EventHandler::new(handle_file_selected)),
+                                                reference_type: Some(MediaReference::User),
+                                                max_files: 1,
+                                                allowed_types: vec!["image/".to_string()],
+                                                title: "Upload avatar".to_string(),
+                                                description: "Click to select an image file".to_string(),
+                                                multiple: false,
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     div { class: "rounded-xl border border-border/70 bg-transparent",
                         div { class: "px-6 pt-6",
                             h2 { class: "text-lg font-semibold", "Role & Permissions" }
@@ -284,6 +433,19 @@ pub fn UserFormContainer(props: UserFormContainerProps) -> Element {
                     }
                 }
             }
+        }
+        ConfirmDialog {
+            is_open: confirm_dialog_open,
+            title: "Edit image before uploading?".to_string(),
+            description: "You can crop, resize, rotate, or compress the image before uploading.".to_string(),
+            confirm_label: "Edit Image".to_string(),
+            cancel_label: "Skip & Upload".to_string(),
+            on_confirm: handle_edit_confirm,
+            on_cancel: handle_edit_skip,
+        }
+
+        ImageEditorModal {
+            on_save: handle_editor_save,
         }
     }
 }

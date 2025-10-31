@@ -24,6 +24,8 @@ pub struct UserForm {
 
     pub avatar_id: Option<i32>,
 
+    pub avatar_blob_url: Option<String>,
+
     pub is_update: bool,
 }
 
@@ -37,6 +39,7 @@ impl UserForm {
             password: Some(String::new()),
             confirm_password: Some(String::new()),
             avatar_id: None,
+            avatar_blob_url: None,
             is_update: false,
         }
     }
@@ -88,6 +91,10 @@ impl OxFormModel for UserForm {
             map.insert("avatar_id".to_string(), avatar_id.to_string());
         }
 
+        if let Some(avatar_blob_url) = &self.avatar_blob_url {
+            map.insert("avatar_blob_url".to_string(), avatar_blob_url.clone());
+        }
+
         map
     }
 
@@ -116,6 +123,13 @@ impl OxFormModel for UserForm {
             }
             "avatar_id" => {
                 self.avatar_id = value.parse::<i32>().ok();
+            }
+            "avatar_blob_url" => {
+                self.avatar_blob_url = if value.is_empty() {
+                    None
+                } else {
+                    Some(value.to_string())
+                };
             }
             _ => {}
         }

@@ -232,6 +232,8 @@ pub fn UsersListScreen() -> Element {
             } else {
                 {users.iter().cloned().map(|user| {
                     let user_id = user.id;
+                    let user_name = user.name.clone();
+                    let user_is_verified = user.is_verified;
 
                     rsx! {
                         tr { class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-muted/30 transition-colors",
@@ -324,23 +326,38 @@ pub fn UsersListScreen() -> Element {
                                         }
                                         DropdownMenuItem {
                                             onclick: move |_| {
-                                                // TODO: View user details
+                                                nav.push(Route::UsersEditScreen { id: user_id });
                                             },
                                             "View Details"
                                         }
                                         DropdownMenuItem {
-                                            onclick: move |_| {
-                                                // TODO: Reset password
+                                            onclick: {
+                                                let user_name = user_name.clone();
+                                                move |_| {
+                                                    let id = user_id;
+                                                    let name = user_name.clone();
+                                                    let toasts = toasts;
+                                                    spawn(async move {
+                                                        // TODO: Implement actual reset password API endpoint
+                                                        // For now, just show a toast
+                                                        toasts.info(
+                                                            format!("Password reset email would be sent to {}", name),
+                                                            ToastOptions::default()
+                                                        );
+                                                    });
+                                                }
                                             },
                                             "Reset Password"
                                         }
-                                        if !user.is_verified {
+                                        if !user_is_verified {
                                             DropdownMenuItem {
-                                                onclick: move |_| {
-                                                    let id = user_id;
-                                                    let user_name = user.name.clone();
-                                                    let toasts = toasts;
-                                                    spawn(async move {
+                                                onclick: {
+                                                    let user_name = user_name.clone();
+                                                    move |_| {
+                                                        let id = user_id;
+                                                        let name = user_name.clone();
+                                                        let toasts = toasts;
+                                                        spawn(async move {
                                                         let users = use_user();
                                                         let payload = UsersEditPayload {
                                                             name: None,
@@ -358,13 +375,14 @@ pub fn UsersListScreen() -> Element {
                                                         let edit_frame = users.edit.read().get(&id).cloned();
                                                         if let Some(frame) = edit_frame {
                                                             if frame.is_success() {
-                                                                toasts.update_success(toast_id, format!("{} has been verified successfully", user_name), ToastOptions::default());
+                                                                toasts.update_success(toast_id, format!("{} has been verified successfully", name), ToastOptions::default());
                                                             } else if frame.is_failed() {
                                                                 let msg = frame.message.unwrap_or("Failed to verify user".to_string());
                                                                 toasts.update_error(toast_id, msg, ToastOptions::default());
                                                             }
                                                         }
                                                     });
+                                                }
                                                 },
                                                 "Verify User"
                                             }
