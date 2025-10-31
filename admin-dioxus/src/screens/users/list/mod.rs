@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 use crate::components::{
     DataTableScreen, HeaderColumn, ListEmptyState, ListErrorBannerProps, ListToolbarProps,
-    PageHeaderProps, SkeletonCellConfig, SkeletonTableRows,
+    PageHeaderProps, SkeletonCellConfig, SkeletonTableRows, UserAvatar,
 };
 use crate::hooks::{use_list_screen_with_handlers, ListScreenConfig};
 use crate::router::Route;
@@ -15,16 +15,6 @@ use crate::ui::shadcn::{
 use crate::utils::dates::format_short_date_dt;
 
 use hmziq_dioxus_free_icons::{icons::ld_icons::LdEllipsis, Icon};
-
-fn generate_avatar_fallback(name: &str) -> String {
-    let initials: String = name
-        .split_whitespace()
-        .take(2)
-        .filter_map(|word| word.chars().next())
-        .collect::<String>()
-        .to_uppercase();
-    initials
-}
 
 #[component]
 pub fn UsersListScreen() -> Element {
@@ -238,7 +228,6 @@ pub fn UsersListScreen() -> Element {
             } else {
                 {users.iter().cloned().map(|user| {
                     let user_id = user.id;
-                    let initials = generate_avatar_fallback(&user.name);
 
                     rsx! {
                         tr { class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-muted/30 transition-colors",
@@ -265,17 +254,9 @@ pub fn UsersListScreen() -> Element {
                             // User name and avatar
                             td { class: "py-2 px-3 text-xs md:text-sm whitespace-nowrap",
                                 div { class: "flex items-center gap-3",
-                                    if let Some(avatar) = &user.avatar {
-                                        img {
-                                            src: "{avatar.file_url}",
-                                            alt: "{user.name}",
-                                            class: "h-8 w-8 rounded-full object-cover ring-2 ring-black/5 dark:ring-white/10"
-                                        }
-                                    } else {
-                                        div {
-                                            class: "h-8 w-8 rounded-full bg-transparent border-1 border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300 text-xs font-semibold",
-                                            "{initials}"
-                                        }
+                                    UserAvatar {
+                                        name: user.name.clone(),
+                                        avatar: user.avatar.clone(),
                                     }
                                     span { class: "font-medium leading-none truncate", "{user.name}" }
                                 }
