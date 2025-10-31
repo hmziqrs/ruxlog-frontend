@@ -46,7 +46,6 @@ pub fn MediaUploadScreen() -> Element {
             }
 
             div { class: "container mx-auto px-4 py-10 md:py-12 space-y-8",
-                // Upload zone
                 div { class: "max-w-3xl mx-auto",
                     MediaUploadZone {
                         on_upload: handle_upload,
@@ -61,11 +60,8 @@ pub fn MediaUploadScreen() -> Element {
                         multiple: true,
                     }
                 }
-
-                // Upload list
                 if has_uploads {
                     div { class: "max-w-5xl mx-auto space-y-4",
-                        // Header
                         div { class: "flex items-center justify-between",
                             h2 { class: "text-lg font-semibold", "Upload Progress" }
                             div { class: "flex items-center gap-2",
@@ -78,8 +74,6 @@ pub fn MediaUploadScreen() -> Element {
                                 }
                             }
                         }
-
-                        // List of uploads
                         MediaUploadList {
                             blob_urls: uploaded_blob_urls(),
                             on_remove: handle_remove,
