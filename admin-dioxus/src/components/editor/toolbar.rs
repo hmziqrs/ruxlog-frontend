@@ -31,7 +31,7 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
     // Update active states when selection changes
     use_effect(move || {
         if let Some(window) = web_sys::window() {
-            if let Some(document) = window.document() {
+            if let Some(_document) = window.document() {
                 // Check which formatting commands are active
                 if let Ok(bold) = js_sys::eval("document.queryCommandState('bold')") {
                     is_bold.set(bold.as_bool().unwrap_or(false));

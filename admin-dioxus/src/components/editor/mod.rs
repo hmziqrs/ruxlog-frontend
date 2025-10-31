@@ -13,9 +13,10 @@ pub use commands::{Command, CommandError, MarkType, Position, Selection, ToggleM
 pub use renderer::render_doc;
 pub use sanitizer::sanitize_html;
 
+use commands::{InsertBlock, InsertLink, SetBlockType};
 use dioxus::prelude::*;
 use toolbar::Toolbar;
-use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
 
 /// Props for the RichTextEditor component.
 #[derive(Props, Clone, PartialEq)]
@@ -56,34 +57,33 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
         }
     };
 
-    let mut selection = use_signal(|| Selection::collapsed(Position::start()));
+    let selection = use_signal(|| Selection::collapsed(Position::start()));
     let mut is_focused = use_signal(|| false);
 
     // Execute a command using browser's native execCommand
-    let mut execute_command = move |cmd: Box<dyn Command>| {
-        // Determine the execCommand based on command type
-        let command_name = if let Some(toggle_mark) = cmd.as_any().downcast_ref::<ToggleMark>() {
-            match toggle_mark.mark_type {
-                MarkType::Bold => Some("bold"),
-                MarkType::Italic => Some("italic"),
-                MarkType::Underline => Some("underline"),
-                MarkType::Strike => Some("strikeThrough"),
-                MarkType::Code => {
-                    // For code, we'll use a different approach
-                    // execCommand doesn't support inline code well
-                    None
-                }
-            }
-        } else {
-            None
+    let execute_command = move |cmd: Box<dyn Command>| {
+        let Some(document) = current_document() else {
+            return;
         };
 
-        if let Some(cmd_name) = command_name {
-            // Call execCommand via JavaScript
-            let _ = js_sys::eval(&format!(
-                r#"document.execCommand('{}', false, null)"#,
-                cmd_name
-            ));
+        if let Some(toggle_mark) = cmd.as_any().downcast_ref::<ToggleMark>() {
+            if handle_toggle_mark(&document, toggle_mark.mark_type) {
+                return;
+            }
+        }
+
+        if let Some(set_block) = cmd.as_any().downcast_ref::<SetBlockType>() {
+            handle_set_block_type(&document, &set_block.block_type);
+            return;
+        }
+
+        if let Some(insert_block) = cmd.as_any().downcast_ref::<InsertBlock>() {
+            handle_insert_block(&document, &insert_block.block_type);
+            return;
+        }
+
+        if let Some(insert_link) = cmd.as_any().downcast_ref::<InsertLink>() {
+            handle_insert_link(&document, insert_link);
         }
     };
 
@@ -198,6 +198,305 @@ pub fn SimpleEditor(
     }
 }
 
+fn current_document() -> Option<web_sys::Document> {
+    web_sys::window().and_then(|window| window.document())
+}
+
+fn exec_command(document: &web_sys::Document, command: &str) {
+    if let Some(html_document) = document.dyn_ref::<web_sys::HtmlDocument>() {
+        let _ = html_document.exec_command(command);
+    }
+}
+
+fn exec_command_with_value(document: &web_sys::Document, command: &str, value: &str) {
+    if let Some(html_document) = document.dyn_ref::<web_sys::HtmlDocument>() {
+        let _ = html_document.exec_command_with_show_ui_and_value(command, false, value);
+    }
+}
+
+fn handle_toggle_mark(document: &web_sys::Document, mark: MarkType) -> bool {
+    match mark {
+        MarkType::Bold => {
+            exec_command(document, "bold");
+            true
+        }
+        MarkType::Italic => {
+            exec_command(document, "italic");
+            true
+        }
+        MarkType::Underline => {
+            exec_command(document, "underline");
+            true
+        }
+        MarkType::Strike => {
+            exec_command(document, "strikeThrough");
+            true
+        }
+        MarkType::Code => {
+            apply_inline_code(document);
+            true
+        }
+    }
+}
+
+fn handle_set_block_type(document: &web_sys::Document, block_kind: &BlockKind) {
+    match block_kind {
+        BlockKind::Paragraph => {
+            exec_command_with_value(document, "formatBlock", "<p>");
+        }
+        BlockKind::Heading { level } => {
+            let level = (*level).clamp(1, 6);
+            let tag = format!("<h{}>", level);
+            exec_command_with_value(document, "formatBlock", &tag);
+        }
+        BlockKind::Quote => {
+            exec_command_with_value(document, "formatBlock", "<blockquote>");
+        }
+        BlockKind::CodeBlock { .. } => {
+            exec_command_with_value(document, "formatBlock", "<pre>");
+            ensure_pre_has_code(document);
+        }
+        BlockKind::BulletList { .. } => {
+            exec_command(document, "insertUnorderedList");
+        }
+        BlockKind::OrderedList { .. } => {
+            exec_command(document, "insertOrderedList");
+        }
+        BlockKind::TaskList { .. } => {
+            exec_command(document, "insertUnorderedList");
+        }
+        BlockKind::ListItem
+        | BlockKind::TaskItem { .. }
+        | BlockKind::Image { .. }
+        | BlockKind::Embed { .. }
+        | BlockKind::Rule => {}
+    }
+}
+
+fn handle_insert_block(document: &web_sys::Document, block_kind: &BlockKind) {
+    match block_kind {
+        BlockKind::Rule => {
+            exec_command(document, "insertHorizontalRule");
+        }
+        BlockKind::Image {
+            src,
+            alt,
+            title,
+            width,
+            height,
+            caption,
+        } => {
+            let html = build_image_html(
+                src,
+                alt.as_deref(),
+                title.as_deref(),
+                *width,
+                *height,
+                caption.as_deref(),
+            );
+            insert_html(document, &html);
+        }
+        BlockKind::Embed {
+            provider,
+            url,
+            title,
+            width,
+            height,
+        } => {
+            let html = build_embed_html(provider, url, title.as_deref(), *width, *height);
+            insert_html(document, &html);
+        }
+        BlockKind::Paragraph
+        | BlockKind::Heading { .. }
+        | BlockKind::BulletList { .. }
+        | BlockKind::OrderedList { .. }
+        | BlockKind::TaskList { .. }
+        | BlockKind::ListItem
+        | BlockKind::TaskItem { .. }
+        | BlockKind::Quote
+        | BlockKind::CodeBlock { .. } => {}
+    }
+}
+
+fn handle_insert_link(document: &web_sys::Document, command: &InsertLink) {
+    let href = command.href.trim();
+    if href.is_empty() {
+        return;
+    }
+
+    exec_command_with_value(document, "createLink", href);
+
+    if let Ok(Some(selection)) = document.get_selection() {
+        if let Some(anchor_node) = selection.anchor_node() {
+            if let Some(link_element) = find_ancestor_element(&anchor_node, "a") {
+                let _ = link_element.set_attribute("href", href);
+
+                if let Some(title) = command
+                    .title
+                    .as_ref()
+                    .map(|value| value.trim())
+                    .filter(|value| !value.is_empty())
+                {
+                    let _ = link_element.set_attribute("title", title);
+                } else {
+                    let _ = link_element.remove_attribute("title");
+                }
+
+                if command.target_blank {
+                    let _ = link_element.set_attribute("target", "_blank");
+                    let _ = link_element.set_attribute("rel", "noopener noreferrer");
+                } else {
+                    let _ = link_element.remove_attribute("target");
+                    let _ = link_element.remove_attribute("rel");
+                }
+            }
+        }
+    }
+}
+
+fn insert_html(document: &web_sys::Document, html: &str) {
+    exec_command_with_value(document, "insertHTML", html);
+}
+
+fn apply_inline_code(document: &web_sys::Document) {
+    if let Ok(Some(selection)) = document.get_selection() {
+        let selected_text = selection.to_string().as_string().unwrap_or_default();
+        let use_placeholder = selected_text.trim().is_empty();
+        let content = if use_placeholder {
+            "code".to_string()
+        } else {
+            selected_text
+        };
+        let html = format!("<code>{}</code>", escape_html(&content));
+        exec_command_with_value(document, "insertHTML", &html);
+    }
+}
+
+fn ensure_pre_has_code(document: &web_sys::Document) {
+    if let Ok(Some(selection)) = document.get_selection() {
+        if let Some(anchor) = selection.anchor_node() {
+            if let Some(pre_element) = find_ancestor_element(&anchor, "pre") {
+                if pre_element.query_selector("code").ok().flatten().is_none() {
+                    if let Ok(code_element) = document.create_element("code") {
+                        while let Some(child) = pre_element.first_child() {
+                            let _ = code_element.append_child(&child);
+                        }
+                        let _ = pre_element.append_child(&code_element);
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn find_ancestor_element(node: &web_sys::Node, tag: &str) -> Option<web_sys::Element> {
+    let mut current: Option<web_sys::Node> = Some(node.clone());
+
+    while let Some(node) = current {
+        if let Some(element) = node.dyn_ref::<web_sys::Element>() {
+            if element.tag_name().eq_ignore_ascii_case(tag) {
+                return Some(element.clone());
+            }
+        }
+        current = node.parent_node();
+    }
+
+    None
+}
+
+fn build_image_html(
+    src: &str,
+    alt: Option<&str>,
+    title: Option<&str>,
+    width: Option<u32>,
+    height: Option<u32>,
+    caption: Option<&str>,
+) -> String {
+    let src_attr = escape_attribute(src);
+    let alt_attr = escape_attribute(alt.unwrap_or(""));
+    let title_attr = title
+        .map(|value| format!(" title=\"{}\"", escape_attribute(value)))
+        .unwrap_or_default();
+    let width_attr = width
+        .map(|value| format!(" width=\"{}\"", value))
+        .unwrap_or_default();
+    let height_attr = height
+        .map(|value| format!(" height=\"{}\"", value))
+        .unwrap_or_default();
+
+    let img_tag = format!(
+        "<img src=\"{}\" alt=\"{}\"{}{}{} class=\"editor-image max-w-full rounded-md\" loading=\"lazy\" />",
+        src_attr, alt_attr, title_attr, width_attr, height_attr
+    );
+
+    if let Some(caption_text) = caption.and_then(|value| {
+        let trimmed = value.trim();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(escape_html(trimmed))
+        }
+    }) {
+        format!(
+            "<figure class=\"editor-figure text-center\">{}<figcaption class=\"mt-2 text-sm text-gray-500 dark:text-gray-400\">{}</figcaption></figure>",
+            img_tag, caption_text
+        )
+    } else {
+        img_tag
+    }
+}
+
+fn build_embed_html(
+    provider: &EmbedProvider,
+    url: &str,
+    title: Option<&str>,
+    width: Option<u32>,
+    height: Option<u32>,
+) -> String {
+    let src_attr = escape_attribute(url);
+    let title_attr = escape_attribute(title.unwrap_or(match provider {
+        EmbedProvider::Youtube => "YouTube embed",
+        EmbedProvider::X => "X embed",
+        EmbedProvider::Generic => "Embedded content",
+    }));
+    let width_attr = width
+        .map(|value| format!(" width=\"{}\"", value))
+        .unwrap_or_default();
+    let height_attr = height
+        .map(|value| format!(" height=\"{}\"", value))
+        .unwrap_or_default();
+
+    let allow_attr = match provider {
+        EmbedProvider::Youtube => "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+        EmbedProvider::X => "clipboard-write",
+        EmbedProvider::Generic => "accelerometer; autoplay; encrypted-media",
+    };
+
+    format!(
+        "<div class=\"editor-embed aspect-video\"><iframe src=\"{}\" title=\"{}\" frameborder=\"0\" allow=\"{}\" allowfullscreen{}{}></iframe></div>",
+        src_attr, title_attr, allow_attr, width_attr, height_attr
+    )
+}
+
+fn escape_attribute(value: &str) -> String {
+    escape_html(value)
+}
+
+fn escape_html(value: &str) -> String {
+    let mut escaped = String::with_capacity(value.len());
+    for ch in value.chars() {
+        match ch {
+            '&' => escaped.push_str("&amp;"),
+            '<' => escaped.push_str("&lt;"),
+            '>' => escaped.push_str("&gt;"),
+            '"' => escaped.push_str("&quot;"),
+            '\'' => escaped.push_str("&#39;"),
+            _ => escaped.push(ch),
+        }
+    }
+    escaped
+}
+
 /// Read-only viewer for rendered content.
 #[component]
 pub fn ContentViewer(value: String, #[props(default = String::new())] class: String) -> Element {
@@ -214,6 +513,7 @@ pub fn ContentViewer(value: String, #[props(default = String::new())] class: Str
 }
 
 /// Strip HTML tags for character counting.
+#[allow(dead_code)]
 fn strip_html_tags(html: &str) -> String {
     let re = regex::Regex::new(r"<[^>]*>").unwrap();
     re.replace_all(html, "").to_string()
