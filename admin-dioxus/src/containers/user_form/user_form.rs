@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use super::form::{use_user_form, UserForm};
-use crate::components::AppInput;
+use crate::components::{AppInput, PasswordInput};
 use crate::hooks::OxForm;
 use crate::router::Route;
 use crate::ui::custom::AppPortal;
@@ -60,19 +60,28 @@ pub fn UserFormContainer(props: UserFormContainerProps) -> Element {
 
                             div { class: "h-px bg-border/60" }
 
-                            div { class: "space-y-3",
-                                label { class: "block text-sm font-medium text-foreground",
-                                    {if is_update { "Password (optional)" } else { "Password" }}
-                                }
-                                AppInput {
-                                    name: "password",
-                                    form,
-                                    r#type: "password",
-                                    placeholder: if is_update { "Leave blank to keep current password" } else { "Enter password" }
-                                }
-                                if is_update {
-                                    p { class: "text-xs text-muted-foreground", "Leave blank to keep the current password unchanged." }
-                                }
+                            PasswordInput {
+                                name: "password",
+                                form,
+                                label: if is_update { "Password (optional)" } else { "Password" },
+                                placeholder: if is_update { "Leave blank to keep current password" } else { "Enter password (min 8 characters)" }
+                            }
+                            if is_update {
+                                p { class: "text-xs text-muted-foreground", "Leave blank to keep the current password unchanged." }
+                            } else {
+                                p { class: "text-xs text-muted-foreground", "Password must be at least 8 characters long." }
+                            }
+
+                            div { class: "h-px bg-border/60" }
+
+                            PasswordInput {
+                                name: "confirm_password",
+                                form,
+                                label: if is_update { "Confirm Password (optional)" } else { "Confirm Password" },
+                                placeholder: if is_update { "Re-enter new password" } else { "Re-enter password" }
+                            }
+                            if !is_update {
+                                p { class: "text-xs text-muted-foreground", "Both passwords must match." }
                             }
                         }
                     }
@@ -148,6 +157,40 @@ pub fn UserFormContainer(props: UserFormContainerProps) -> Element {
                         Button { class: "flex-1 w-auto",
                             onclick: move |_| {
                                 let submit = props.on_submit.clone();
+
+                                // Check if passwords match before submitting
+                                let form_data = form.peek().data.clone();
+                                let password = form_data.password.as_deref().unwrap_or("");
+                                let confirm = form_data.confirm_password.as_deref().unwrap_or("");
+
+                                // For new users or when changing password, validate matching
+                                if !form_data.is_update || !password.is_empty() {
+                                    if password != confirm {
+                                        // Set error on confirm_password field and trigger validation
+                                        form.write().submit_count += 1;
+                                        if let Some(field) = form.write().fields.get_mut("confirm_password") {
+                                            field.set_error(Some("Passwords do not match".to_string()));
+                                        }
+                                        form.write().has_errors = true;
+                                        return;
+                                    }
+
+                                    // For new users, password is required
+                                    if !form_data.is_update && password.is_empty() {
+                                        form.write().submit_count += 1;
+                                        if let Some(field) = form.write().fields.get_mut("password") {
+                                            field.set_error(Some("Password is required".to_string()));
+                                        }
+                                        form.write().has_errors = true;
+                                        return;
+                                    }
+                                }
+
+                                // Clear confirm_password error if validation passes
+                                if let Some(field) = form.write().fields.get_mut("confirm_password") {
+                                    field.set_error(None);
+                                }
+
                                 form.write().on_submit(move |val| { submit.call(val); });
                             },
                             {props.submit_label.clone().unwrap_or_else(|| "Save User".to_string())}

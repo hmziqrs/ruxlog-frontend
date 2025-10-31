@@ -17,7 +17,10 @@ pub struct UserForm {
 
     pub is_verified: bool,
 
+    #[validate(length(min = 8, message = "Password must be at least 8 characters"))]
     pub password: Option<String>,
+
+    pub confirm_password: Option<String>,
 
     pub avatar_id: Option<i32>,
 
@@ -32,6 +35,7 @@ impl UserForm {
             role: UserRole::User.to_string(),
             is_verified: false,
             password: Some(String::new()),
+            confirm_password: Some(String::new()),
             avatar_id: None,
             is_update: false,
         }
@@ -74,6 +78,12 @@ impl OxFormModel for UserForm {
             map.insert("password".to_string(), String::new());
         }
 
+        if let Some(confirm_password) = &self.confirm_password {
+            map.insert("confirm_password".to_string(), confirm_password.clone());
+        } else {
+            map.insert("confirm_password".to_string(), String::new());
+        }
+
         if let Some(avatar_id) = self.avatar_id {
             map.insert("avatar_id".to_string(), avatar_id.to_string());
         }
@@ -95,6 +105,13 @@ impl OxFormModel for UserForm {
                     self.password = None;
                 } else {
                     self.password = Some(value.to_string());
+                }
+            }
+            "confirm_password" => {
+                if self.is_update && value.is_empty() {
+                    self.confirm_password = None;
+                } else {
+                    self.confirm_password = Some(value.to_string());
                 }
             }
             "avatar_id" => {

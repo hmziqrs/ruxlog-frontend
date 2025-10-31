@@ -57,7 +57,8 @@ pub fn UsersEditScreen(id: i32) -> Element {
         email: u.email.clone(),
         role: u.role.to_string(),
         is_verified: u.is_verified,
-        password: None, // Don't prefill password for edit
+        password: None,         // Don't prefill password for edit
+        confirm_password: None, // Don't prefill confirm password for edit
         avatar_id: u.avatar.as_ref().map(|a| a.id),
         is_update: true,
     });
