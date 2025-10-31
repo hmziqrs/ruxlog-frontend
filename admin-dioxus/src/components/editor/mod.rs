@@ -3,22 +3,29 @@
 //! This module provides a full-featured WYSIWYG editor with an AST-first architecture.
 
 pub mod ast;
+pub mod bubble_menu;
 pub mod commands;
 pub mod parser;
 pub mod renderer;
 pub mod sanitizer;
+pub mod slash_commands;
 pub mod toolbar;
 
 pub use ast::{Block, BlockAlign, BlockKind, Doc, EmbedProvider, Inline, Link, MarkSet, TextSize};
+pub use bubble_menu::BubbleMenu;
 pub use commands::{Command, CommandError, MarkType, Position, Selection, ToggleMark};
 pub use parser::parse_html;
 pub use renderer::render_doc;
 pub use sanitizer::sanitize_html;
+pub use slash_commands::{SlashCommand, SlashCommands};
 
 use commands::{InsertBlock, InsertLink, SetBlockType};
 use dioxus::prelude::*;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use toolbar::Toolbar;
 use wasm_bindgen::JsCast;
+
+static EDITOR_ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 /// Props for the RichTextEditor component.
 #[derive(Props, Clone, PartialEq)]
@@ -46,6 +53,14 @@ pub struct RichTextEditorProps {
 /// Main rich text editor component.
 #[component]
 pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
+    // Unique ID for this editor instance
+    let editor_id = use_signal(|| {
+        format!(
+            "rich-text-editor-{}",
+            EDITOR_ID_COUNTER.fetch_add(1, Ordering::Relaxed)
+        )
+    });
+
     // Initial HTML content from props (computed once)
     let initial_html = {
         if let Some(s) = &props.initial_value {
@@ -59,8 +74,11 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
         }
     };
 
-    let selection = use_signal(|| Selection::collapsed(Position::start()));
+    let mut selection = use_signal(|| Selection::collapsed(Position::start()));
     let mut is_focused = use_signal(|| false);
+    let mut show_bubble_menu = use_signal(|| false);
+    let mut show_slash_menu = use_signal(|| false);
+    let mut slash_query = use_signal(|| String::new());
 
     // Execute a command using browser's native execCommand
     let execute_command = move |cmd: Box<dyn Command>| {
@@ -91,16 +109,175 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
 
     // Set initial content on mount
     use_effect(move || {
+        let id = editor_id();
         if !initial_html.is_empty() {
             if let Some(window) = web_sys::window() {
                 if let Some(document) = window.document() {
-                    if let Ok(Some(element)) = document.query_selector(".editor-content") {
+                    if let Some(element) = document.get_element_by_id(&id) {
                         let _ = element.set_inner_html(&initial_html);
                     }
                 }
             }
         }
     });
+
+    // Track selection changes for bubble menu
+    let update_selection_mouse = move |_evt: Event<MouseData>| {
+        if let Some(window) = web_sys::window() {
+            if let Ok(Some(sel)) = window.get_selection() {
+                let has_selection = sel
+                    .to_string()
+                    .as_string()
+                    .map_or(false, |s| !s.trim().is_empty());
+
+                // Update selection state (using collapsed or simple representation)
+                if has_selection {
+                    selection.set(Selection::new(Position::start(), Position::new(0, 1)));
+                } else {
+                    selection.set(Selection::collapsed(Position::start()));
+                }
+                show_bubble_menu.set(has_selection && is_focused());
+            }
+        }
+    };
+
+    let update_selection_keyboard = move |evt: Event<KeyboardData>| {
+        if let Some(window) = web_sys::window() {
+            if let Ok(Some(sel)) = window.get_selection() {
+                let has_selection = sel
+                    .to_string()
+                    .as_string()
+                    .map_or(false, |s| !s.trim().is_empty());
+
+                // Update selection state (using collapsed or simple representation)
+                if has_selection {
+                    selection.set(Selection::new(Position::start(), Position::new(0, 1)));
+                } else {
+                    selection.set(Selection::collapsed(Position::start()));
+                }
+                show_bubble_menu.set(has_selection && is_focused());
+
+                // Check for slash command trigger
+                let key = evt.key();
+
+                // Detect slash key
+                if key == Key::Character("/".to_string()) && !has_selection {
+                    show_slash_menu.set(true);
+                    slash_query.set(String::new());
+                } else if show_slash_menu() {
+                    // Update query as user types after '/'
+                    if key == Key::Escape || key == Key::Enter {
+                        show_slash_menu.set(false);
+                        slash_query.set(String::new());
+                    } else if key == Key::Backspace {
+                        let current = slash_query();
+                        if current.is_empty() {
+                            show_slash_menu.set(false);
+                        } else {
+                            let mut chars: Vec<char> = current.chars().collect();
+                            chars.pop();
+                            slash_query.set(chars.into_iter().collect());
+                        }
+                    } else if let Key::Character(ch) = key {
+                        // Add typed character to query
+                        slash_query.set(format!("{}{}", slash_query(), ch));
+                    }
+                }
+            }
+        }
+    };
+
+    // Handle slash command selection
+    let handle_slash_select = move |cmd: SlashCommand| {
+        show_slash_menu.set(false);
+        slash_query.set(String::new());
+
+        // Remove the '/' and query text
+        if let Some(document) = current_document() {
+            if let Ok(Some(sel)) = document.get_selection() {
+                if sel.range_count() > 0 {
+                    if let Ok(range) = sel.get_range_at(0) {
+                        // Delete backwards to remove '/' and query
+                        let delete_count = 1 + slash_query().len();
+                        for _ in 0..delete_count {
+                            let _ = js_sys::eval("document.execCommand('delete', false, null)");
+                        }
+                    }
+                }
+            }
+        }
+
+        // Execute appropriate command based on selection
+        match cmd {
+            SlashCommand::Paragraph => {
+                if let Some(document) = current_document() {
+                    handle_set_block_type(&document, &BlockKind::Paragraph);
+                }
+            }
+            SlashCommand::Heading1 => {
+                if let Some(document) = current_document() {
+                    handle_set_block_type(&document, &BlockKind::Heading { level: 1 });
+                }
+            }
+            SlashCommand::Heading2 => {
+                if let Some(document) = current_document() {
+                    handle_set_block_type(&document, &BlockKind::Heading { level: 2 });
+                }
+            }
+            SlashCommand::Heading3 => {
+                if let Some(document) = current_document() {
+                    handle_set_block_type(&document, &BlockKind::Heading { level: 3 });
+                }
+            }
+            SlashCommand::BulletList => {
+                let _ = js_sys::eval("document.execCommand('insertUnorderedList', false, null)");
+            }
+            SlashCommand::OrderedList => {
+                let _ = js_sys::eval("document.execCommand('insertOrderedList', false, null)");
+            }
+            SlashCommand::TaskList => {
+                if let Some(document) = current_document() {
+                    handle_insert_block(&document, &BlockKind::TaskItem { checked: false });
+                }
+            }
+            SlashCommand::Quote => {
+                if let Some(document) = current_document() {
+                    handle_set_block_type(&document, &BlockKind::Quote);
+                }
+            }
+            SlashCommand::CodeBlock => {
+                if let Some(document) = current_document() {
+                    handle_set_block_type(
+                        &document,
+                        &BlockKind::CodeBlock {
+                            language: None,
+                            code: String::new(),
+                        },
+                    );
+                }
+            }
+            SlashCommand::Divider => {
+                if let Some(document) = current_document() {
+                    handle_insert_block(&document, &BlockKind::Rule);
+                }
+            }
+            SlashCommand::Image => {
+                if let Some(document) = current_document() {
+                    handle_insert_block(
+                        &document,
+                        &BlockKind::Image {
+                            src: String::from(""),
+                            alt: None,
+                            title: None,
+                            width: None,
+                            height: None,
+                            caption: None,
+                        },
+                    );
+                }
+            }
+        }
+    };
 
     rsx! {
         div {
@@ -116,6 +293,7 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
 
             // Editor content area - simple contenteditable without dangerous_inner_html
             div {
+                id: "{editor_id}",
                 class: "editor-content min-h-[300px] focus:outline-none",
                 contenteditable: if props.readonly { "false" } else { "true" },
                 tabindex: "0",
@@ -135,7 +313,11 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
 
                 onblur: move |_| {
                     is_focused.set(false);
+                    show_bubble_menu.set(false);
                 },
+
+                onmouseup: update_selection_mouse,
+                onkeyup: update_selection_keyboard,
 
                 oninput: move |evt| {
                     if props.readonly {
@@ -153,6 +335,30 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                     let clean = sanitize_html(&html_value);
                     props.on_change.call(clean);
                 },
+            }
+
+            // Bubble menu for quick formatting
+            if !props.readonly {
+                BubbleMenu {
+                    show: *show_bubble_menu.read(),
+                    selection: selection.read().clone(),
+                    on_command: move |cmd| execute_command(cmd),
+                    editor_id: editor_id(),
+                }
+            }
+
+            // Slash commands menu
+            if !props.readonly {
+                SlashCommands {
+                    show: *show_slash_menu.read(),
+                    on_select: handle_slash_select,
+                    on_close: move |_| {
+                        show_slash_menu.set(false);
+                        slash_query.set(String::new());
+                    },
+                    editor_id: editor_id(),
+                    query: slash_query(),
+                }
             }
 
             // Inline styles for placeholder

@@ -389,8 +389,8 @@ Manual testing checklist:
 8. ✅ Integrate RichTextEditor into BlogForm container
 9. ✅ Implement autosave with debouncing (server autosave for edits; localStorage draft for new posts)
 10. ✅ Add media picker dialog integration
-11. ⏳ Implement bubble menu for quick formatting
-12. ⏳ Add slash commands for block insertion
+11. ✅ Implement bubble menu for quick formatting
+12. ✅ Add slash commands for block insertion
 
 **Medium-term (polish):**
 13. ⏳ Custom keyboard shortcut system
