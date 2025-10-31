@@ -22,31 +22,48 @@ pub struct User {
     pub updated_at: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct UsersAddPayload {
-    pub avatar: Option<String>,
-    pub email: String,
-    pub is_verified: bool,
     pub name: String,
-    pub role: UserRole,
+    pub email: String,
+    pub password: String,
+    pub role: String,
+    pub avatar_id: Option<i32>,
+    #[serde(default)]
+    pub is_verified: bool,
+}
+
+impl Default for UsersAddPayload {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            email: String::new(),
+            password: String::new(),
+            role: "user".to_string(),
+            avatar_id: None,
+            is_verified: false,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct UsersEditPayload {
-    pub avatar: Option<String>,
-    pub email: Option<String>,
-    pub is_verified: Option<bool>,
     pub name: Option<String>,
-    pub role: Option<UserRole>,
+    pub email: Option<String>,
+    pub avatar_id: Option<i32>,
+    pub password: Option<String>,
+    pub is_verified: Option<bool>,
+    pub role: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct UsersListQuery {
-    pub page: u64,
-    pub search: Option<String>,
+    pub page: Option<u64>,
+    pub email: Option<String>,
+    pub name: Option<String>,
+    pub role: Option<String>,
+    pub status: Option<bool>,
     pub sorts: Option<Vec<SortParam>>,
-    pub role: Option<UserRole>,
-    pub is_verified: Option<bool>,
     pub created_at_gt: Option<DateTime<Utc>>,
     pub created_at_lt: Option<DateTime<Utc>>,
     pub updated_at_gt: Option<DateTime<Utc>>,
@@ -56,11 +73,12 @@ pub struct UsersListQuery {
 impl Default for UsersListQuery {
     fn default() -> Self {
         Self {
-            page: 1,
-            search: None,
-            sorts: None,
+            page: Some(1),
+            email: None,
+            name: None,
             role: None,
-            is_verified: None,
+            status: None,
+            sorts: None,
             created_at_gt: None,
             created_at_lt: None,
             updated_at_gt: None,
@@ -81,19 +99,30 @@ impl ListQuery for UsersListQuery {
     }
 
     fn page(&self) -> u64 {
-        self.page
+        self.page.unwrap_or(1)
     }
 
     fn set_page(&mut self, page: u64) {
-        self.page = page;
+        self.page = Some(page);
     }
 
     fn search(&self) -> Option<String> {
-        self.search.clone()
+        // Combine email and name for search
+        if self.email.is_some() || self.name.is_some() {
+            Some(format!(
+                "{}{}",
+                self.email.as_deref().unwrap_or(""),
+                self.name.as_deref().unwrap_or("")
+            ))
+        } else {
+            None
+        }
     }
 
     fn set_search(&mut self, search: Option<String>) {
-        self.search = search;
+        // Set both email and name to the search term
+        self.email = search.clone();
+        self.name = search;
     }
 
     fn sorts(&self) -> Option<Vec<SortParam>> {

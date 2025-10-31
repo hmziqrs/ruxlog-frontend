@@ -125,7 +125,7 @@ pub fn UsersListScreen() -> Element {
         move |value: String| {
             let mut q = filters.peek().clone();
             q.set_page(1);
-            q.is_verified = match value.as_str() {
+            q.status = match value.as_str() {
                 "verified" | "Verified" => Some(true),
                 "unverified" | "Unverified" => Some(false),
                 _ => None,
@@ -162,7 +162,7 @@ pub fn UsersListScreen() -> Element {
                 search_placeholder: "Search users by name or email".to_string(),
                 disabled: list_loading,
                 on_search_input: handlers.handle_search.clone(),
-                status_selected: match filters.read().is_verified {
+                status_selected: match filters.read().status {
                     Some(true) => "Verified".to_string(),
                     Some(false) => "Unverified".to_string(),
                     None => "All".to_string(),
