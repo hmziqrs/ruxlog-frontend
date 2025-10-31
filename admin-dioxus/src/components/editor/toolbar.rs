@@ -179,7 +179,7 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
                 }
 
                 ToolbarButton {
-                    icon: "{{}}",
+                    icon: "Code",
                     title: "Code Block",
                     on_click: move |_| {
                         props.on_command.call(Box::new(SetBlockType {

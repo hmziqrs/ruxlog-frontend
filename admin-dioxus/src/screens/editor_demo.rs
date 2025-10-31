@@ -175,7 +175,7 @@ pub fn EditorDemo() -> Element {
                     FeatureCard {
                         title: "AST-First",
                         description: "Clean JSON representation for storage and API integration.",
-                        icon: "{ }",
+                        icon: "📋",
                     }
                 }
             }
@@ -193,23 +193,23 @@ pub fn EditorDemo() -> Element {
                     pre {
                         class: "text-sm text-gray-100",
                         code {
-r#"use crate::components::editor::RichTextEditor;
+                            r#"use crate::components::editor::RichTextEditor;
 
 #[component]
-fn MyComponent() -> Element {
+fn MyComponent() -> Element {{
     let mut content = use_signal(|| String::new());
 
-    rsx! {
-        RichTextEditor {
+    rsx! {{
+        RichTextEditor {{
             initial_value: None,
-            on_change: move |new_content| {
+            on_change: move |new_content| {{
                 // Save to database, update state, etc.
                 content.set(new_content);
-            },
+            }},
             placeholder: "Start writing...".to_string(),
-        }
-    }
-}"#
+        }}
+    }}
+}}"#
                         }
                     }
                 }

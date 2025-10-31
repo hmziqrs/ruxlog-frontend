@@ -1,5 +1,6 @@
 mod analytics;
 mod categories;
+mod editor_demo;
 mod home;
 mod login;
 mod media;
@@ -10,6 +11,7 @@ mod users;
 
 pub use analytics::*;
 pub use categories::*;
+pub use editor_demo::*;
 pub use home::*;
 pub use login::*;
 pub use media::*;
