@@ -1,10 +1,10 @@
-use super::{AuthState, LoginPayload, User, UserRole};
+use super::{AuthState, AuthUser, LoginPayload, UserRole};
 use crate::{services::http_client, store::StateFrame};
 use dioxus::{logger::tracing, prelude::*};
 
-impl User {
+impl AuthUser {
     pub fn new(id: i32, name: String, email: String, role: UserRole, is_verified: bool) -> Self {
-        User {
+        AuthUser {
             id,
             name,
             email,
@@ -15,7 +15,7 @@ impl User {
     }
 
     pub fn dev() -> Self {
-        User::new(
+        AuthUser::new(
             1,
             "Dev User".to_string(),
             "dev@example.com".to_string(),
@@ -66,7 +66,7 @@ impl AuthState {
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
-                    match response.json::<User>().await {
+                    match response.json::<AuthUser>().await {
                         Ok(user) => {
                             if !user.is_verified || !user.is_admin() {
                                 self.init_status.write().set_failed(Some(
@@ -105,7 +105,7 @@ impl AuthState {
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
-                    match response.json::<User>().await {
+                    match response.json::<AuthUser>().await {
                         Ok(user) => {
                             if !user.is_verified || !user.is_admin() {
                                 self.login_status.write().set_failed(Some(

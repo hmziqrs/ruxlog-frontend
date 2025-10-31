@@ -4,44 +4,32 @@ use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// Generic trait for list query parameters
 pub trait ListQuery: Clone + Default + Serialize + for<'de> Deserialize<'de> + PartialEq {
-    /// Create a new instance with default values (typically page = 1)
     fn new() -> Self;
 
-    /// Get the current page number
     fn page(&self) -> u64;
 
-    /// Set the page number
     fn set_page(&mut self, page: u64);
 
-    /// Get the search query
     fn search(&self) -> Option<String>;
 
-    /// Set the search query
     fn set_search(&mut self, search: Option<String>);
 
-    /// Get the sort parameters
     fn sorts(&self) -> Option<Vec<SortParam>>;
 
-    /// Set the sort parameters
     fn set_sorts(&mut self, sorts: Option<Vec<SortParam>>);
 }
 
-/// Generic trait for store list operations
 pub trait ListStore<T, Q>
 where
     T: Clone + PartialEq + 'static,
     Q: ListQuery,
 {
-    /// Get the list state frame
     fn list_frame(&self) -> &GlobalSignal<StateFrame<PaginatedList<T>>>;
 
-    /// Load the list with default query
-    async fn fetch_list(&self);
+    fn fetch_list(&self) -> impl std::future::Future<Output = ()>;
 
-    /// Load the list with a specific query
-    async fn fetch_list_with_query(&self, query: Q);
+    fn fetch_list_with_query(&self, query: Q) -> impl std::future::Future<Output = ()>;
 }
 
 /// Base structure for common list query fields

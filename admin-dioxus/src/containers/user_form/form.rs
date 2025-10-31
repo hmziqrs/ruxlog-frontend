@@ -2,39 +2,10 @@ use dioxus::prelude::*;
 use std::collections::HashMap;
 use validator::{Validate, ValidationError};
 
-use crate::hooks::{OxForm, OxFormModel};
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum UserRole {
-    SuperAdmin,
-    Admin,
-    Moderator,
-    Author,
-    User,
-}
-
-impl UserRole {
-    pub fn to_string(&self) -> String {
-        match self {
-            UserRole::SuperAdmin => "super-admin".to_string(),
-            UserRole::Admin => "admin".to_string(),
-            UserRole::Moderator => "moderator".to_string(),
-            UserRole::Author => "author".to_string(),
-            UserRole::User => "user".to_string(),
-        }
-    }
-
-    pub fn from_string(value: &str) -> Result<Self, ValidationError> {
-        match value {
-            "super-admin" => Ok(UserRole::SuperAdmin),
-            "admin" => Ok(UserRole::Admin),
-            "moderator" => Ok(UserRole::Moderator),
-            "author" => Ok(UserRole::Author),
-            "user" => Ok(UserRole::User),
-            _ => Err(ValidationError::new("Invalid role")),
-        }
-    }
-}
+use crate::{
+    hooks::{OxForm, OxFormModel},
+    store::UserRole,
+};
 
 #[derive(Debug, Validate, Clone, PartialEq)]
 pub struct UserForm {

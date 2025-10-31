@@ -7,7 +7,7 @@ use crate::ui::shadcn::{Button, ButtonVariant};
 #[component]
 pub fn MediaUploadScreen() -> Element {
     let nav = use_navigator();
-    let mut uploaded_blob_urls = use_signal(|| Vec::<String>::new());
+    let uploaded_blob_urls = use_signal(|| Vec::<String>::new());
 
     let handle_upload = {
         let mut uploaded_blob_urls = uploaded_blob_urls;

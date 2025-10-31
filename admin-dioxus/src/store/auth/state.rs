@@ -6,7 +6,7 @@ use std::sync::OnceLock;
 use crate::store::StateFrame;
 
 pub struct AuthState {
-    pub user: GlobalSignal<Option<User>>,
+    pub user: GlobalSignal<Option<AuthUser>>,
 
     pub login_status: GlobalSignal<StateFrame>,
     pub logout_status: GlobalSignal<StateFrame>,
@@ -84,7 +84,7 @@ impl From<UserRole> for i32 {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct User {
+pub struct AuthUser {
     pub id: i32,
     pub name: String,
     pub email: String,
@@ -93,7 +93,7 @@ pub struct User {
     pub role: UserRole,
 }
 
-impl User {
+impl AuthUser {
     pub fn get_role(&self) -> UserRole {
         self.role
     }
