@@ -48,11 +48,11 @@ pub struct RichTextEditorProps {
 pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
     // Initial HTML content from props (computed once)
     let initial_html = {
-        if let Some(json) = &props.initial_value {
-            if let Ok(doc) = serde_json::from_str::<Doc>(json) {
-                render_doc(&doc)
-            } else {
-                String::new()
+        if let Some(s) = &props.initial_value {
+            // Try AST JSON first; fall back to raw HTML
+            match serde_json::from_str::<Doc>(s) {
+                Ok(doc) => render_doc(&doc),
+                Err(_) => sanitize_html(s),
             }
         } else {
             String::new()

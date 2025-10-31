@@ -1,11 +1,16 @@
 use dioxus::{logger::tracing, prelude::*};
 
 use super::form::{use_blog_form, BlogForm};
+use crate::components::editor::RichTextEditor;
 use crate::components::AppInput;
 use crate::router::Route;
 use crate::store::{
-    use_categories, use_post, use_tag, PostCreatePayload, PostEditPayload, PostStatus,
+    use_categories, use_post, use_tag, PostAutosavePayload, PostCreatePayload, PostEditPayload,
+    PostStatus,
 };
+use chrono::Utc;
+use dioxus_time::sleep;
+use std::time::Duration;
 
 #[component]
 pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
@@ -59,7 +64,16 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                 }
             }
         } else {
-            initial_form.set(Some(BlogForm::new()));
+            // New post: prefill content from localStorage draft if present
+            let mut form = BlogForm::new();
+            if let Some(window) = web_sys::window() {
+                if let Ok(Some(storage)) = window.local_storage() {
+                    if let Ok(Some(draft)) = storage.get_item("blog_form_draft_content") {
+                        form.content = draft;
+                    }
+                }
+            }
+            initial_form.set(Some(form));
         }
     });
 
@@ -79,6 +93,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
     let blog_form_hook = use_blog_form(form_data.clone().unwrap());
     let mut form = blog_form_hook.form;
     let mut auto_slug = blog_form_hook.auto_slug;
+    let autosave_gen = use_signal(|| 0u64);
 
     // Handle successful submission
     use_effect(move || {
@@ -91,6 +106,11 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
 
         if add_state.is_success() || edit_state.as_ref().map_or(false, |s| s.is_success()) {
             spawn(async move {
+                if let Some(window) = web_sys::window() {
+                    if let Ok(Some(storage)) = window.local_storage() {
+                        let _ = storage.remove_item("blog_form_draft_content");
+                    }
+                }
                 nav.push(Route::PostsListScreen {});
             });
         }
@@ -303,22 +323,50 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                     }
 
                     // Content field
-                    div { class: "space-y-2",
-                        label { class: "block text-sm font-medium text-primary",
-                            "Content "
-                            span { class: "text-error", "*" }
-                        }
-                        textarea {
-                            class: "w-full px-4 py-2 textarea textarea-bordered min-h-[300px]",
-                            placeholder: "Your blog post content (Markdown supported)",
-                            rows: "10",
+                                        div { class: "space-y-2",
+                                            label { class: "block text-sm font-medium text-primary",
+                                                "Content "
+                                                span { class: "text-error", "*" }
+                                            }
+                                            RichTextEditor {
+                                                initial_value: {
+                                                    let v = form.read().data.content.clone();
+                                                    if v.is_empty() { None } else { Some(v) }
+                                                },
+                                                on_change: move |new_html: String| {
+                                                    let mut autosave_gen = autosave_gen;
+                                                    form.write().update_field("content", new_html.clone());
+                                                    if let Some(window) = web_sys::window() {
+                                                        if let Ok(Some(storage)) = window.local_storage() {
+                                                            let _ = storage.set_item("blog_form_draft_content", &new_html);
+                                                        }
+                                                    }
 
-                            value: form.read().data.content.clone(),
-                            oninput: move |event| {
-                                form.write().update_field("content", event.value());
-                            },
-                        }
-                    }
+                                                    if is_edit_mode {
+                                                        if let Some(id) = post_id {
+                                                            let this_tick = autosave_gen() + 1;
+                                                            autosave_gen.set(this_tick);
+                                                            let posts_local = posts;
+                                                            let html_for_save = new_html.clone();
+                                                            let debounce_gen = autosave_gen;
+                                                            spawn(async move {
+                                                                sleep(Duration::from_millis(1500)).await;
+                                                                if debounce_gen() != this_tick {
+                                                                    return;
+                                                                }
+                                                                posts_local.autosave(PostAutosavePayload {
+                                                                    post_id: id,
+                                                                    content: html_for_save,
+                                                                    updated_at: Utc::now(),
+                                                                }).await;
+                                                            });
+                                                        }
+                                                    }
+                                                },
+                                                placeholder: "Write your post...".to_string(),
+                                                class: "min-h-[300px]".to_string(),
+                                            }
+                                        }
 
                     // Form actions
                     div { class: "flex justify-end gap-4 pt-4",
