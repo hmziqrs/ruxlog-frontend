@@ -1,12 +1,15 @@
 use dioxus::prelude::*;
 
+use crate::components::sonner::{use_sonner, ToastOptions};
 use crate::components::{
     DataTableScreen, HeaderColumn, ListEmptyState, ListErrorBannerProps, ListToolbarProps,
     PageHeaderProps, SkeletonCellConfig, SkeletonTableRows, UserAvatar,
 };
 use crate::hooks::{use_list_screen_with_handlers, ListScreenConfig};
 use crate::router::Route;
-use crate::store::{use_user, ListQuery, ListStore, User, UserRole, UsersListQuery};
+use crate::store::{
+    use_user, ListQuery, ListStore, User, UserRole, UsersEditPayload, UsersListQuery,
+};
 use crate::types::Order;
 use crate::ui::shadcn::{
     Badge, BadgeVariant, Button, ButtonVariant, Checkbox, DropdownMenu, DropdownMenuContent,
@@ -20,6 +23,7 @@ use hmziq_dioxus_free_icons::{icons::ld_icons::LdEllipsis, Icon};
 pub fn UsersListScreen() -> Element {
     let nav = use_navigator();
     let users_state = use_user();
+    let toasts = use_sonner();
 
     let filters = use_signal(|| UsersListQuery::new());
     // Local selection state for the current page
@@ -333,7 +337,34 @@ pub fn UsersListScreen() -> Element {
                                         if !user.is_verified {
                                             DropdownMenuItem {
                                                 onclick: move |_| {
-                                                    // TODO: Verify user
+                                                    let id = user_id;
+                                                    let user_name = user.name.clone();
+                                                    let toasts = toasts;
+                                                    spawn(async move {
+                                                        let users = use_user();
+                                                        let payload = UsersEditPayload {
+                                                            name: None,
+                                                            email: None,
+                                                            avatar_id: None,
+                                                            password: None,
+                                                            is_verified: Some(true),
+                                                            role: None,
+                                                        };
+
+                                                        let toast_id = toasts.loading("Verifying user...".to_string(), ToastOptions::default());
+                                                        users.edit(id, payload).await;
+
+                                                        // Check if the edit was successful
+                                                        let edit_frame = users.edit.read().get(&id).cloned();
+                                                        if let Some(frame) = edit_frame {
+                                                            if frame.is_success() {
+                                                                toasts.update_success(toast_id, format!("{} has been verified successfully", user_name), ToastOptions::default());
+                                                            } else if frame.is_failed() {
+                                                                let msg = frame.message.unwrap_or("Failed to verify user".to_string());
+                                                                toasts.update_error(toast_id, msg, ToastOptions::default());
+                                                            }
+                                                        }
+                                                    });
                                                 },
                                                 "Verify User"
                                             }
