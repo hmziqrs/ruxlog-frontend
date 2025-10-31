@@ -3,16 +3,10 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn UserAvatar(
-    /// User's name for generating fallback initials
     name: String,
-    /// Optional avatar media object
     avatar: Option<Media>,
-    /// Optional custom size class (default: "h-8 w-8")
-    #[props(default = "h-8 w-8".to_string())]
-    size: String,
-    /// Optional custom text size class (default: "text-xs")
-    #[props(default = "text-xs".to_string())]
-    text_size: String,
+    #[props(default = "h-8 w-8".to_string())] size: String,
+    #[props(default = "text-xs".to_string())] text_size: String,
 ) -> Element {
     let initials = generate_avatar_fallback(&name);
 
@@ -25,7 +19,7 @@ pub fn UserAvatar(
             }
         } else {
             div {
-                class: "{size} rounded-full bg-transparent border-2 border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300 {text_size} font-semibold",
+                class: "{size} rounded-full bg-transparent border-1 border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300 {text_size} font-semibold",
                 "{initials}"
             }
         }

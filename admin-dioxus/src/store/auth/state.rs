@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use std::sync::OnceLock;
 
+use crate::store::media::Media;
 use crate::store::StateFrame;
 
 pub struct AuthState {
@@ -88,7 +89,7 @@ pub struct AuthUser {
     pub id: i32,
     pub name: String,
     pub email: String,
-    pub avatar: Option<String>,
+    pub avatar: Option<Media>,
     pub is_verified: bool,
     pub role: UserRole,
 }
