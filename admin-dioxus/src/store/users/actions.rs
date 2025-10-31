@@ -75,7 +75,7 @@ impl UsersState {
         let _ = view_state_abstraction(
             &self.view,
             id,
-            http_client::get(&format!("/user/v1/admin/view/{}", id)).send(),
+            http_client::post(&format!("/user/v1/admin/view/{}", id), &()).send(),
             "user",
             |user: &User| user.clone(),
         )
