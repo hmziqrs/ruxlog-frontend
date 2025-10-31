@@ -309,7 +309,7 @@ fn PostGridCard(post: Post) -> Element {
             if let Some(featured_image) = &post.featured_image {
                 div { class: " aspect-video w-full overflow-hidden",
                     img {
-                        src: "{featured_image}",
+                        src: "{featured_image.file_url}",
                         alt: "{post.title}",
                         class: "h-full w-full object-cover transition-transform hover:scale-105",
                     }
@@ -394,7 +394,7 @@ fn PostGridCard(post: Post) -> Element {
                 div { class: "flex items-center gap-2",
                     Avatar { class: "w-8 h-8",
                         AvatarImage {
-                            src: post.author.avatar.clone().unwrap_or_default(),
+                            src: post.author.avatar.as_ref().map(|a| a.file_url.clone()).unwrap_or_default(),
                             alt: post.author.name.clone(),
                         }
                         AvatarFallback {
@@ -446,7 +446,7 @@ fn PostListItem(post: Post) -> Element {
                 if let Some(featured_image) = &post.featured_image {
                     div { class: "md:w-48 lg:w-60 aspect-video md:aspect-square overflow-hidden",
                         img {
-                            src: "{featured_image}",
+                            src: "{featured_image.file_url}",
                             alt: "{post.title}",
                             class: "h-full w-full object-cover",
                         }
@@ -521,7 +521,7 @@ fn PostListItem(post: Post) -> Element {
                         div { class: "flex items-center gap-2",
                             Avatar { class: "w-8 h-8",
                                 AvatarImage {
-                                    src: post.author.avatar.clone().unwrap_or_default(),
+                                    src: post.author.avatar.as_ref().map(|a| a.file_url.clone()).unwrap_or_default(),
                                     alt: post.author.name.clone(),
                                 }
                                 AvatarFallback {

@@ -46,7 +46,11 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                         content: post.content.clone(),
                         slug: post.slug.clone(),
                         excerpt: post.excerpt.clone().unwrap_or_default(),
-                        featured_image_url: post.featured_image.clone().unwrap_or_default(),
+                        featured_image_url: post
+                            .featured_image
+                            .as_ref()
+                            .map(|m| m.file_url.clone())
+                            .unwrap_or_default(),
                         is_published: post.status == PostStatus::Published,
                         category_id: Some(post.category.id),
                         tag_ids: post.tags.iter().map(|t| t.id).collect(),
@@ -375,7 +379,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                         featured_image: if form_data.data.featured_image_url.is_empty() {
                                             None
                                         } else {
-                                            Some(form_data.data.featured_image_url.clone())
+                                            form_data.data.featured_image_url.parse::<i32>().ok()
                                         },
                                         status: Some(if form_data.data.is_published {
                                             PostStatus::Published
@@ -404,7 +408,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                         featured_image: if form_data.data.featured_image_url.is_empty() {
                                             None
                                         } else {
-                                            Some(form_data.data.featured_image_url.clone())
+                                            form_data.data.featured_image_url.parse::<i32>().ok()
                                         },
                                         is_published: form_data.data.is_published,
                                         category_id: form_data.data.category_id.unwrap(),

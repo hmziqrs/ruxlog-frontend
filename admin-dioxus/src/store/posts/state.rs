@@ -1,4 +1,4 @@
-use crate::store::{ListQuery, PaginatedList, StateFrame};
+use crate::store::{ListQuery, Media, PaginatedList, StateFrame};
 use crate::types::SortParam;
 use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
@@ -15,7 +15,7 @@ pub struct PostAuthor {
     pub id: i32,
     pub name: String,
     pub email: String,
-    pub avatar: Option<String>,
+    pub avatar: Option<Media>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -23,6 +23,11 @@ pub struct PostCategory {
     pub id: i32,
     pub name: String,
     pub slug: String,
+    pub color: String,
+    #[serde(default)]
+    pub logo: Option<Media>,
+    #[serde(default)]
+    pub cover: Option<Media>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -30,6 +35,7 @@ pub struct PostTag {
     pub id: i32,
     pub name: String,
     pub slug: String,
+    pub color: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -64,12 +70,13 @@ pub struct Post {
     pub content: String,
     pub slug: String,
     pub excerpt: Option<String>,
-    pub featured_image: Option<String>,
+    pub featured_image: Option<Media>,
     pub published_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub author: PostAuthor,
     pub category: PostCategory,
+    #[serde(default)]
     pub tags: Vec<PostTag>,
     pub likes_count: i32,
     pub view_count: i32,
@@ -104,7 +111,7 @@ pub struct PostCreatePayload {
     pub is_published: bool,
     pub slug: String,
     pub excerpt: Option<String>,
-    pub featured_image: Option<String>,
+    pub featured_image: Option<i32>,
     pub category_id: i32,
     #[serde(default)]
     pub tag_ids: Vec<i32>,
@@ -118,7 +125,7 @@ pub struct PostEditPayload {
     pub status: Option<PostStatus>,
     pub slug: Option<String>,
     pub excerpt: Option<String>,
-    pub featured_image: Option<String>,
+    pub featured_image: Option<i32>,
     pub category_id: Option<i32>,
     pub tag_ids: Option<Vec<i32>>,
 }
