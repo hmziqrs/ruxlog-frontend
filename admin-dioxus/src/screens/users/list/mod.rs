@@ -12,6 +12,7 @@ use crate::ui::shadcn::{
     Badge, BadgeVariant, Button, ButtonVariant, Checkbox, DropdownMenu, DropdownMenuContent,
     DropdownMenuItem, DropdownMenuTrigger,
 };
+use crate::utils::dates::format_short_date_dt;
 
 use hmziq_dioxus_free_icons::{icons::ld_icons::LdEllipsis, Icon};
 
@@ -320,9 +321,9 @@ pub fn UsersListScreen() -> Element {
                                 }
                             }
                             // Created at
-                            td { class: "py-2 px-3 text-xs md:text-sm text-muted-foreground whitespace-nowrap", "{user.created_at}" }
+                            td { class: "py-2 px-3 text-xs md:text-sm text-muted-foreground whitespace-nowrap", "{format_short_date_dt(&user.created_at)}" }
                             // Updated at
-                            td { class: "py-2 px-3 text-xs md:text-sm text-muted-foreground whitespace-nowrap", "{user.updated_at}" }
+                            td { class: "py-2 px-3 text-xs md:text-sm text-muted-foreground whitespace-nowrap", "{format_short_date_dt(&user.updated_at)}" }
                             // Actions dropdown
                             td { class: "py-2 px-3 text-xs md:text-sm",
                                 DropdownMenu {

@@ -11,7 +11,7 @@ use std::collections::HashMap;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct User {
     pub avatar: Option<Media>,
-    pub created_at: String,
+    pub created_at: DateTime<Utc>,
     pub email: String,
     pub id: i32,
     pub is_verified: bool,
@@ -20,7 +20,7 @@ pub struct User {
     pub two_fa_backup_codes: Option<String>,
     pub two_fa_enabled: bool,
     pub two_fa_secret: Option<String>,
-    pub updated_at: String,
+    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
