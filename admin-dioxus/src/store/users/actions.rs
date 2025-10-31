@@ -1,24 +1,25 @@
-use super::{User, UsersAddPayload, UsersEditPayload, UsersState};
+use super::{User, UsersAddPayload, UsersEditPayload, UsersListQuery, UsersState};
 use crate::services::http_client;
-use crate::store::StateFrame;
+use crate::store::{PaginatedList, StateFrame};
 use std::collections::HashMap;
 
 impl UsersState {
     pub async fn add(&self, payload: UsersAddPayload) {
         self.add.write().set_loading(None);
-        let result = http_client::post("/admin/user/v1/create", &payload)
-            .send()
-            .await;
+        let result = http_client::post("/admin/create", &payload).send().await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
                     match response.json::<User>().await {
                         Ok(user) => {
                             self.add.write().set_success(None, None);
+                            // Update the list with the new user
                             let mut tmp = self.list.write();
-                            let mut existing = tmp.data.clone().unwrap_or_default();
-                            existing.insert(0, user);
-                            tmp.set_success(Some(existing), None);
+                            if let Some(mut paginated) = tmp.data.clone() {
+                                paginated.data.insert(0, user);
+                                paginated.total += 1;
+                                tmp.set_success(Some(paginated), None);
+                            }
                         }
                         Err(e) => {
                             self.add
@@ -44,7 +45,7 @@ impl UsersState {
             .entry(id)
             .or_insert_with(StateFrame::new)
             .set_loading(None);
-        let result = http_client::post(&format!("/admin/user/v1/update/{}", id), &payload)
+        let result = http_client::post(&format!("/admin/update/{}", id), &payload)
             .send()
             .await;
         match result {
@@ -56,12 +57,19 @@ impl UsersState {
                                 .entry(id)
                                 .or_insert_with(StateFrame::new)
                                 .set_success(None, None);
+                            // Update the user in the list
                             let mut list = self.list.write();
-                            let mut existing = list.data.clone().unwrap_or_default();
-                            if let Some(item) = existing.iter_mut().find(|u| u.id == id) {
-                                *item = user.clone();
+                            if let Some(mut paginated) = list.data.clone() {
+                                if let Some(item) = paginated.data.iter_mut().find(|u| u.id == id) {
+                                    *item = user.clone();
+                                }
+                                list.set_success(Some(paginated), None);
                             }
-                            list.set_success(Some(existing), None);
+                            // Update the view if it exists
+                            let mut view_map = self.view.write();
+                            if let Some(view_state) = view_map.get_mut(&id) {
+                                view_state.set_success(Some(Some(user)), None);
+                            }
                         }
                         Err(e) => {
                             edit_map
@@ -93,7 +101,7 @@ impl UsersState {
             .entry(id)
             .or_insert_with(StateFrame::new)
             .set_loading(None);
-        let result = http_client::post(&format!("/admin/user/v1/delete/{}", id), &())
+        let result = http_client::post(&format!("/admin/delete/{}", id), &())
             .send()
             .await;
         match result {
@@ -103,6 +111,13 @@ impl UsersState {
                         .entry(id)
                         .or_insert_with(StateFrame::new)
                         .set_success(None, None);
+                    // Remove from the list
+                    let mut list = self.list.write();
+                    if let Some(mut paginated) = list.data.clone() {
+                        paginated.data.retain(|u| u.id != id);
+                        paginated.total = paginated.total.saturating_sub(1);
+                        list.set_success(Some(paginated), None);
+                    }
                 } else {
                     remove_map
                         .entry(id)
@@ -121,14 +136,18 @@ impl UsersState {
     }
 
     pub async fn list(&self) {
+        self.list_with_query(UsersListQuery::default()).await;
+    }
+
+    pub async fn list_with_query(&self, query: UsersListQuery) {
         self.list.write().set_loading(None);
-        let result = http_client::post("/admin/user/v1/list", &()).send().await;
+        let result = http_client::post("/admin/list", &query).send().await;
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
-                    match response.json::<Vec<User>>().await {
+                    match response.json::<PaginatedList<User>>().await {
                         Ok(users) => {
-                            self.list.write().set_success(Some(users.clone()), None);
+                            self.list.write().set_success(Some(users), None);
                         }
                         Err(e) => {
                             self.list
@@ -154,7 +173,7 @@ impl UsersState {
             .entry(id)
             .or_insert_with(StateFrame::new)
             .set_loading(None);
-        let result = http_client::get(&format!("/admin/user/v1/view/{}", id))
+        let result = http_client::get(&format!("/admin/view/{}", id))
             .send()
             .await;
         match result {
@@ -165,7 +184,7 @@ impl UsersState {
                             view_map
                                 .entry(id)
                                 .or_insert_with(StateFrame::new)
-                                .set_success(Some(Some(user.clone())), None);
+                                .set_success(Some(Some(user)), None);
                         }
                         Err(e) => {
                             view_map
