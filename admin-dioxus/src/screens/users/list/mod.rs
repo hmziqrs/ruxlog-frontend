@@ -273,7 +273,7 @@ pub fn UsersListScreen() -> Element {
                                         }
                                     } else {
                                         div {
-                                            class: "h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-semibold ring-2 ring-black/5 dark:ring-white/10",
+                                            class: "h-8 w-8 rounded-full bg-transparent border-1 border-zinc-300 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300 text-xs font-semibold",
                                             "{initials}"
                                         }
                                     }
