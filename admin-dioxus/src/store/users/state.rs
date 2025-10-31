@@ -1,4 +1,5 @@
 use crate::store::auth::UserRole;
+use crate::store::media::Media;
 use crate::store::traits::{ListQuery, ListStore};
 use crate::store::{PaginatedList, StateFrame};
 use crate::types::SortParam;
@@ -9,7 +10,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct User {
-    pub avatar: Option<String>,
+    pub avatar: Option<Media>,
     pub created_at: String,
     pub email: String,
     pub id: i32,
