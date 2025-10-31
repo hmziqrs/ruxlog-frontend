@@ -500,7 +500,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
                                     if i >= visible_start {
                                         let bottom_px = offsets.get(i).cloned().unwrap_or(0);
                                         let z = 1000 + (count - i) as i32;
-                                        let h_i = heights_px.get(i).cloned().unwrap_or(fallback_h);
+                                        // let h_i = heights_px.get(i).cloned().unwrap_or(fallback_h);
                                         // tracing::info!(
                                         //     "Sonner bottom render: id={}, i={}, z-index={}, height_px={}, bottom={}px, pos={:?}",
                                         //     toast.id, i, z, h_i, bottom_px, props.defaults.position

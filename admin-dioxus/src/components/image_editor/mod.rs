@@ -16,7 +16,6 @@ use crate::store::{use_image_editor, EditorTool};
 use crate::ui::custom::AppPortal;
 use crate::ui::shadcn::{Button, ButtonVariant};
 use dioxus::prelude::*;
-use hmziq_dioxus_free_icons::{icons::ld_icons::LdX, Icon};
 
 #[derive(Props, PartialEq, Clone)]
 pub struct ImageEditorModalProps {
