@@ -24,11 +24,11 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
 
     rsx! {
         div {
-            class: "toolbar border-b bg-gray-50 p-2 flex items-center gap-1 flex-wrap",
+            class: "toolbar border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2 flex items-center gap-1 flex-wrap",
 
             // Text formatting group
             div {
-                class: "toolbar-group flex items-center gap-1 border-r pr-2 mr-2",
+                class: "toolbar-group flex items-center gap-1 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2",
 
                 ToolbarButton {
                     icon: "B",
@@ -86,7 +86,7 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
 
             // Block type group
             div {
-                class: "toolbar-group flex items-center gap-1 border-r pr-2 mr-2",
+                class: "toolbar-group flex items-center gap-1 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2",
 
                 ToolbarButton {
                     icon: "P",
@@ -131,7 +131,7 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
 
             // List group
             div {
-                class: "toolbar-group flex items-center gap-1 border-r pr-2 mr-2",
+                class: "toolbar-group flex items-center gap-1 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2",
 
                 ToolbarButton {
                     icon: "•",
@@ -166,7 +166,7 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
 
             // Insert group
             div {
-                class: "toolbar-group flex items-center gap-1 border-r pr-2 mr-2",
+                class: "toolbar-group flex items-center gap-1 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2",
 
                 ToolbarButton {
                     icon: "\"",
@@ -296,7 +296,7 @@ fn ToolbarButton(
 ) -> Element {
     rsx! {
         button {
-            class: "toolbar-button px-3 py-1.5 rounded hover:bg-gray-200 active:bg-gray-300 transition-colors text-sm font-medium {class}",
+            class: "toolbar-button px-3 py-1.5 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition-colors text-sm font-medium {class}",
             title: "{title}",
             r#type: "button",
             onclick: move |evt| on_click.call(evt),
@@ -316,23 +316,23 @@ fn LinkDialog(
 
     rsx! {
         div {
-            class: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50",
+            class: "fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50",
             onclick: move |evt| {
                 evt.stop_propagation();
                 on_close.call(evt);
             },
 
             div {
-                class: "bg-white rounded-lg p-6 shadow-xl max-w-md w-full",
+                class: "bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl max-w-md w-full",
                 onclick: move |evt| evt.stop_propagation(),
 
-                h3 { class: "text-lg font-semibold mb-4", "Insert Link" }
+                h3 { class: "text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100", "Insert Link" }
 
                 div { class: "space-y-4",
                     div {
-                        label { class: "block text-sm font-medium text-gray-700 mb-1", "URL" }
+                        label { class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1", "URL" }
                         input {
-                            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
                             r#type: "url",
                             placeholder: "https://example.com",
                             value: "{href}",
@@ -341,9 +341,9 @@ fn LinkDialog(
                     }
 
                     div {
-                        label { class: "block text-sm font-medium text-gray-700 mb-1", "Title (optional)" }
+                        label { class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1", "Title (optional)" }
                         input {
-                            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
                             r#type: "text",
                             placeholder: "Link title",
                             value: "{title}",
@@ -353,13 +353,13 @@ fn LinkDialog(
 
                     div { class: "flex justify-end gap-2 pt-2",
                         button {
-                            class: "px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md",
+                            class: "px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md",
                             r#type: "button",
                             onclick: move |evt| on_close.call(evt),
                             "Cancel"
                         }
                         button {
-                            class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700",
+                            class: "px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600",
                             r#type: "button",
                             onclick: move |_| {
                                 let title_val = if title.read().is_empty() {
@@ -390,23 +390,23 @@ fn ImageDialog(
 
     rsx! {
         div {
-            class: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50",
+            class: "fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50",
             onclick: move |evt| {
                 evt.stop_propagation();
                 on_close.call(evt);
             },
 
             div {
-                class: "bg-white rounded-lg p-6 shadow-xl max-w-md w-full",
+                class: "bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl max-w-md w-full",
                 onclick: move |evt| evt.stop_propagation(),
 
-                h3 { class: "text-lg font-semibold mb-4", "Insert Image" }
+                h3 { class: "text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100", "Insert Image" }
 
                 div { class: "space-y-4",
                     div {
-                        label { class: "block text-sm font-medium text-gray-700 mb-1", "Image URL" }
+                        label { class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1", "Image URL" }
                         input {
-                            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
                             r#type: "url",
                             placeholder: "https://example.com/image.jpg",
                             value: "{src}",
@@ -415,9 +415,9 @@ fn ImageDialog(
                     }
 
                     div {
-                        label { class: "block text-sm font-medium text-gray-700 mb-1", "Alt Text" }
+                        label { class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1", "Alt Text" }
                         input {
-                            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
                             r#type: "text",
                             placeholder: "Description of the image",
                             value: "{alt}",
@@ -426,9 +426,9 @@ fn ImageDialog(
                     }
 
                     div {
-                        label { class: "block text-sm font-medium text-gray-700 mb-1", "Caption (optional)" }
+                        label { class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1", "Caption (optional)" }
                         input {
-                            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
                             r#type: "text",
                             placeholder: "Image caption",
                             value: "{caption}",
@@ -438,13 +438,13 @@ fn ImageDialog(
 
                     div { class: "flex justify-end gap-2 pt-2",
                         button {
-                            class: "px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md",
+                            class: "px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md",
                             r#type: "button",
                             onclick: move |evt| on_close.call(evt),
                             "Cancel"
                         }
                         button {
-                            class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700",
+                            class: "px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600",
                             r#type: "button",
                             onclick: move |_| {
                                 let alt_val = if alt.read().is_empty() {
@@ -479,23 +479,23 @@ fn EmbedDialog(
 
     rsx! {
         div {
-            class: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50",
+            class: "fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50",
             onclick: move |evt| {
                 evt.stop_propagation();
                 on_close.call(evt);
             },
 
             div {
-                class: "bg-white rounded-lg p-6 shadow-xl max-w-md w-full",
+                class: "bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl max-w-md w-full",
                 onclick: move |evt| evt.stop_propagation(),
 
-                h3 { class: "text-lg font-semibold mb-4", "Embed Media" }
+                h3 { class: "text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100", "Embed Media" }
 
                 div { class: "space-y-4",
                     div {
-                        label { class: "block text-sm font-medium text-gray-700 mb-1", "Provider" }
+                        label { class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1", "Provider" }
                         select {
-                            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
                             onchange: move |evt| {
                                 let val = evt.value();
                                 provider.set(match val.as_str() {
@@ -511,9 +511,9 @@ fn EmbedDialog(
                     }
 
                     div {
-                        label { class: "block text-sm font-medium text-gray-700 mb-1", "URL" }
+                        label { class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1", "URL" }
                         input {
-                            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
                             r#type: "url",
                             placeholder: "https://youtube.com/watch?v=...",
                             value: "{url}",
@@ -523,13 +523,13 @@ fn EmbedDialog(
 
                     div { class: "flex justify-end gap-2 pt-2",
                         button {
-                            class: "px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md",
+                            class: "px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md",
                             r#type: "button",
                             onclick: move |evt| on_close.call(evt),
                             "Cancel"
                         }
                         button {
-                            class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700",
+                            class: "px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600",
                             r#type: "button",
                             onclick: move |_| {
                                 on_insert.call((provider.read().clone(), url.read().clone()));

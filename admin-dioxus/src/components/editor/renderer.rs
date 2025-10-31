@@ -27,7 +27,10 @@ pub fn render_block(block: &Block) -> String {
     match &block.kind {
         BlockKind::Paragraph => {
             let content = render_inlines(&block.children);
-            format!("<p class=\"mb-4{}\">{}</p>\n", align_class, content)
+            format!(
+                "<p class=\"mb-4 text-gray-900 dark:text-gray-100{}\">{}</p>\n",
+                align_class, content
+            )
         }
         BlockKind::Heading { level } => {
             let content = render_inlines(&block.children);
@@ -40,12 +43,15 @@ pub fn render_block(block: &Block) -> String {
                 _ => " text-base font-medium",
             };
             format!(
-                "<h{} class=\"mb-4{}{}\">{}</h{}>\n",
+                "<h{} class=\"mb-4 text-gray-900 dark:text-gray-100{}{}\">{}</h{}>\n",
                 level, size_class, align_class, content, level
             )
         }
         BlockKind::BulletList { items } => {
-            let mut html = format!("<ul class=\"list-disc list-inside mb-4{}\">\n", align_class);
+            let mut html = format!(
+                "<ul class=\"list-disc list-inside mb-4 text-gray-900 dark:text-gray-100{}\">\n",
+                align_class
+            );
             for item in items {
                 html.push_str(&render_block(item));
             }
@@ -54,7 +60,7 @@ pub fn render_block(block: &Block) -> String {
         }
         BlockKind::OrderedList { items } => {
             let mut html = format!(
-                "<ol class=\"list-decimal list-inside mb-4{}\">\n",
+                "<ol class=\"list-decimal list-inside mb-4 text-gray-900 dark:text-gray-100{}\">\n",
                 align_class
             );
             for item in items {
@@ -64,7 +70,10 @@ pub fn render_block(block: &Block) -> String {
             html
         }
         BlockKind::TaskList { items } => {
-            let mut html = format!("<ul class=\"space-y-2 mb-4{}\">\n", align_class);
+            let mut html = format!(
+                "<ul class=\"space-y-2 mb-4 text-gray-900 dark:text-gray-100{}\">\n",
+                align_class
+            );
             for item in items {
                 html.push_str(&render_block(item));
             }
@@ -90,7 +99,7 @@ pub fn render_block(block: &Block) -> String {
         BlockKind::Quote => {
             let content = render_inlines(&block.children);
             format!(
-                "<blockquote class=\"border-l-4 border-gray-300 pl-4 italic mb-4{}\">{}</blockquote>\n",
+                "<blockquote class=\"border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic mb-4 text-gray-700 dark:text-gray-300{}\">{}</blockquote>\n",
                 align_class, content
             )
         }
@@ -100,7 +109,7 @@ pub fn render_block(block: &Block) -> String {
                 .map(|l| format!(" language-{}", html_escape(l)))
                 .unwrap_or_default();
             format!(
-                "<pre class=\"bg-gray-100 rounded p-4 mb-4 overflow-x-auto{}\"><code class=\"{}\">{}</code></pre>\n",
+                "<pre class=\"bg-gray-100 dark:bg-gray-800 rounded p-4 mb-4 overflow-x-auto border border-gray-200 dark:border-gray-700{}\"><code class=\"text-gray-900 dark:text-gray-100{}\">{}</code></pre>\n",
                 align_class,
                 lang_class,
                 html_escape(code)
@@ -137,7 +146,7 @@ pub fn render_block(block: &Block) -> String {
             ));
             if let Some(cap) = caption {
                 html.push_str(&format!(
-                    "  <figcaption class=\"text-sm text-gray-600 mt-2\">{}</figcaption>\n",
+                    "  <figcaption class=\"text-sm text-gray-600 dark:text-gray-400 mt-2\">{}</figcaption>\n",
                     html_escape(cap)
                 ));
             }
@@ -187,7 +196,7 @@ pub fn render_block(block: &Block) -> String {
             html.push_str(&format!("  {}\n", embed_html));
             if let Some(t) = title {
                 html.push_str(&format!(
-                    "  <p class=\"text-sm text-gray-600 mt-2\">{}</p>\n",
+                    "  <p class=\"text-sm text-gray-600 dark:text-gray-400 mt-2\">{}</p>\n",
                     html_escape(t)
                 ));
             }
@@ -218,7 +227,7 @@ pub fn render_inline(inline: &Inline) -> String {
             // Apply marks from innermost to outermost
             if marks.code {
                 content = format!(
-                    "<code class=\"bg-gray-100 px-1 rounded\">{}</code>",
+                    "<code class=\"bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-1 rounded\">{}</code>",
                     content
                 );
             }

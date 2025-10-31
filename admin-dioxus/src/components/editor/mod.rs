@@ -75,7 +75,7 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
 
     rsx! {
         div {
-            class: "rich-text-editor border rounded-lg bg-white shadow-sm {props.class}",
+            class: "rich-text-editor border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm {props.class}",
 
             // Toolbar
             if !props.readonly {
@@ -87,7 +87,7 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
 
             // Editor content area
             div {
-                class: "editor-content p-4 min-h-[300px] focus:outline-none",
+                class: "editor-content p-4 min-h-[300px] focus:outline-none text-gray-900 dark:text-gray-100",
                 contenteditable: if props.readonly { "false" } else { "true" },
                 tabindex: "0",
 
@@ -122,7 +122,7 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                 if doc.read().blocks.is_empty() ||
                    (doc.read().blocks.len() == 1 && doc.read().blocks[0].children.is_empty()) {
                     div {
-                        class: "text-gray-400 pointer-events-none absolute",
+                        class: "text-gray-400 dark:text-gray-500 pointer-events-none absolute",
                         "{props.placeholder}"
                     }
                 }
@@ -131,7 +131,7 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
             // Character count (optional)
             if *is_focused.read() {
                 div {
-                    class: "px-4 py-2 text-xs text-gray-500 border-t",
+                    class: "px-4 py-2 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700",
                     {
                         let char_count = count_characters(&doc.read());
                         format!("{} characters", char_count)
@@ -168,7 +168,7 @@ pub fn ContentViewer(value: String, #[props(default = String::new())] class: Str
 
     rsx! {
         div {
-            class: "content-viewer prose prose-sm max-w-none {class}",
+            class: "content-viewer prose prose-sm dark:prose-invert max-w-none {class}",
             dangerous_inner_html: "{html_content}",
         }
     }

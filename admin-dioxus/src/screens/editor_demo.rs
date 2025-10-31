@@ -20,11 +20,11 @@ pub fn EditorDemo() -> Element {
             div {
                 class: "mb-8",
                 h1 {
-                    class: "text-3xl font-bold text-gray-900 mb-2",
+                    class: "text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2",
                     "Rich Text Editor Demo"
                 }
                 p {
-                    class: "text-gray-600",
+                    class: "text-gray-600 dark:text-gray-400",
                     "Full-featured WYSIWYG editor with AST-first architecture"
                 }
             }
@@ -33,16 +33,16 @@ pub fn EditorDemo() -> Element {
             section {
                 class: "mb-12",
                 h2 {
-                    class: "text-2xl font-semibold text-gray-900 mb-4",
+                    class: "text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4",
                     "Full Editor"
                 }
                 p {
-                    class: "text-gray-600 mb-4",
+                    class: "text-gray-600 dark:text-gray-400 mb-4",
                     "Complete editor with all formatting options, media embeds, and more."
                 }
 
                 div {
-                    class: "bg-white rounded-lg shadow-lg overflow-hidden",
+                    class: "bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700",
 
                     RichTextEditor {
                         initial_value: None,
@@ -59,7 +59,7 @@ pub fn EditorDemo() -> Element {
                 div {
                     class: "mt-4 flex items-center gap-4",
                     button {
-                        class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700",
+                        class: "px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600",
                         onclick: move |_| show_preview.set(!show_preview()),
                         if *show_preview.read() {
                             "Hide Preview"
@@ -70,7 +70,7 @@ pub fn EditorDemo() -> Element {
 
                     if !content.read().is_empty() {
                         span {
-                            class: "text-sm text-gray-500",
+                            class: "text-sm text-gray-500 dark:text-gray-400",
                             "Content length: {content.read().len()} characters"
                         }
                     }
@@ -79,25 +79,26 @@ pub fn EditorDemo() -> Element {
                 // Preview panel
                 if *show_preview.read() && !content.read().is_empty() {
                     div {
-                        class: "mt-6 p-6 bg-gray-50 rounded-lg border border-gray-200",
+                        class: "mt-6 p-6 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700",
                         h3 {
-                            class: "text-lg font-semibold text-gray-900 mb-4",
+                            class: "text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4",
                             "Preview"
                         }
                         ContentViewer {
                             value: content.read().clone(),
-                            class: "prose max-w-none".to_string(),
+                            class: "prose dark:prose-invert max-w-none".to_string(),
                         }
 
                         details {
                             class: "mt-4",
                             summary {
-                                class: "cursor-pointer text-sm text-gray-600 hover:text-gray-900",
+                                class: "cursor-pointer text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200",
                                 "View JSON"
                             }
                             pre {
-                                class: "mt-2 p-4 bg-white rounded border overflow-x-auto text-xs",
+                                class: "mt-2 p-4 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 overflow-x-auto text-xs",
                                 code {
+                                    class: "text-gray-900 dark:text-gray-100",
                                     "{content}"
                                 }
                             }
@@ -110,16 +111,16 @@ pub fn EditorDemo() -> Element {
             section {
                 class: "mb-12",
                 h2 {
-                    class: "text-2xl font-semibold text-gray-900 mb-4",
+                    class: "text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4",
                     "Simple Editor"
                 }
                 p {
-                    class: "text-gray-600 mb-4",
+                    class: "text-gray-600 dark:text-gray-400 mb-4",
                     "Minimal editor variant with basic formatting options."
                 }
 
                 div {
-                    class: "bg-white rounded-lg shadow-lg overflow-hidden",
+                    class: "bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700",
 
                     SimpleEditor {
                         initial_value: None,
@@ -135,7 +136,7 @@ pub fn EditorDemo() -> Element {
             section {
                 class: "mb-12",
                 h2 {
-                    class: "text-2xl font-semibold text-gray-900 mb-4",
+                    class: "text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4",
                     "Features"
                 }
 
@@ -184,14 +185,14 @@ pub fn EditorDemo() -> Element {
             section {
                 class: "mb-12",
                 h2 {
-                    class: "text-2xl font-semibold text-gray-900 mb-4",
+                    class: "text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4",
                     "Usage Example"
                 }
 
                 div {
-                    class: "bg-gray-900 rounded-lg p-6 overflow-x-auto",
+                    class: "bg-gray-900 dark:bg-gray-950 rounded-lg p-6 overflow-x-auto border border-gray-700",
                     pre {
-                        class: "text-sm text-gray-100",
+                        class: "text-sm text-gray-100 dark:text-gray-200",
                         code {
                             r#"use crate::components::editor::RichTextEditor;
 
@@ -219,29 +220,29 @@ fn MyComponent() -> Element {{
             section {
                 class: "mb-12",
                 h2 {
-                    class: "text-2xl font-semibold text-gray-900 mb-4",
+                    class: "text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4",
                     "Keyboard Shortcuts"
                 }
 
                 div {
-                    class: "bg-white rounded-lg shadow-lg overflow-hidden",
+                    class: "bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700",
                     table {
                         class: "w-full",
                         thead {
-                            class: "bg-gray-50 border-b",
+                            class: "bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700",
                             tr {
                                 th {
-                                    class: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
+                                    class: "px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider",
                                     "Shortcut"
                                 }
                                 th {
-                                    class: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
+                                    class: "px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider",
                                     "Action"
                                 }
                             }
                         }
                         tbody {
-                            class: "bg-white divide-y divide-gray-200",
+                            class: "bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700",
                             ShortcutRow { shortcut: "Ctrl+B", action: "Bold" }
                             ShortcutRow { shortcut: "Ctrl+I", action: "Italic" }
                             ShortcutRow { shortcut: "Ctrl+U", action: "Underline" }
@@ -262,17 +263,17 @@ fn MyComponent() -> Element {{
 fn FeatureCard(title: String, description: String, icon: String) -> Element {
     rsx! {
         div {
-            class: "bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow",
+            class: "bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700",
             div {
                 class: "text-3xl mb-3",
                 "{icon}"
             }
             h3 {
-                class: "text-lg font-semibold text-gray-900 mb-2",
+                class: "text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2",
                 "{title}"
             }
             p {
-                class: "text-gray-600 text-sm",
+                class: "text-gray-600 dark:text-gray-400 text-sm",
                 "{description}"
             }
         }
@@ -286,12 +287,12 @@ fn ShortcutRow(shortcut: String, action: String) -> Element {
             td {
                 class: "px-6 py-4 whitespace-nowrap",
                 code {
-                    class: "px-2 py-1 bg-gray-100 rounded text-sm font-mono text-gray-800",
+                    class: "px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono text-gray-800 dark:text-gray-200",
                     "{shortcut}"
                 }
             }
             td {
-                class: "px-6 py-4 whitespace-nowrap text-sm text-gray-900",
+                class: "px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100",
                 "{action}"
             }
         }
