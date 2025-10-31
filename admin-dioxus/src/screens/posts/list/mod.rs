@@ -6,7 +6,7 @@ use crate::ui::shadcn::{
     DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Popover, PopoverContent,
     PopoverTrigger,
 };
-use chrono::NaiveDateTime;
+
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::icons::ld_icons::{
     LdCalendar, LdEllipsis, LdEye, LdGrid3x3, LdHeart, LdLayoutList, LdMessageSquare, LdSearch,
@@ -22,12 +22,8 @@ fn generate_avatar_fallback(name: &str) -> String {
 }
 
 // Helper function for date formatting
-fn format_short_date(date_str: &str) -> String {
-    if let Ok(date) = NaiveDateTime::parse_from_str(date_str, "%Y-%m-%dT%H:%M:%S.%f") {
-        date.format("%y-%b-%d").to_string()
-    } else {
-        date_str.to_string()
-    }
+fn format_short_date(date: &chrono::DateTime<chrono::Utc>) -> String {
+    date.format("%y-%b-%d").to_string()
 }
 
 // Layout type enum removed as we render Grid-only (non-interactive) like the JS Body example
@@ -388,7 +384,7 @@ fn PostGridCard(post: Post) -> Element {
                         }
                         span {
                             if post.is_published() && post.published_at.is_some() {
-                                {format_short_date(&post.published_at.clone().unwrap_or_default())}
+                                {format_short_date(post.published_at.as_ref().unwrap())}
                             } else {
                                 {format_short_date(&post.created_at)}
                             }
@@ -506,7 +502,7 @@ fn PostListItem(post: Post) -> Element {
                                 }
                                 span {
                                     if post.is_published() && post.published_at.is_some() {
-                                        {format_short_date(&post.published_at.clone().unwrap_or_default())}
+                                        {format_short_date(post.published_at.as_ref().unwrap())}
                                     } else {
                                         {format_short_date(&post.created_at)}
                                     }

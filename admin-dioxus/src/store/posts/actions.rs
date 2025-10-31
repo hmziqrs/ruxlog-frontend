@@ -1,124 +1,535 @@
-use dioxus::logger::tracing;
-
-use super::{Post, PostCreatePayload, PostEditPayload, PostFilters, PostState};
+use super::{
+    Post, PostAutosavePayload, PostCreatePayload, PostEditPayload, PostListQuery, PostRevision,
+    PostSchedulePayload, PostState, Series, SeriesCreatePayload, SeriesEditPayload,
+    SeriesListQuery,
+};
 use crate::services::http_client;
-use crate::store::{PaginatedList, StateFrame};
+use crate::store::{
+    edit_state_abstraction, list_state_abstraction, remove_state_abstraction,
+    state_request_abstraction, view_state_abstraction, PaginatedList, StateFrame,
+};
 use std::collections::HashMap;
 
+// ============================================================================
+// Core Post CRUD Operations
+// ============================================================================
+
 impl PostState {
-    pub async fn list(&self) {
-        self.list.write().set_loading(None);
-        let result = http_client::post("/post/v1/query", &serde_json::json!({}))
-            .send()
-            .await;
-        match result {
-            Ok(response) => {
-                if (200..300).contains(&response.status()) {
-                    match response.json::<PaginatedList<Post>>().await {
-                        Ok(posts) => {
-                            self.list.write().set_success(Some(posts), None);
-                        }
-                        Err(e) => {
-                            tracing::error!("Failed to parse posts: {}", e);
-                            self.list
-                                .write()
-                                .set_failed(Some(format!("Failed to parse posts: {}", e)));
-                        }
-                    }
-                } else {
-                    self.list.write().set_api_error(&response).await;
-                }
-            }
-            Err(e) => {
-                self.list
-                    .write()
-                    .set_failed(Some(format!("Network error: {}", e)));
-            }
-        }
-    }
-
+    /// Create a new post
     pub async fn add(&self, payload: PostCreatePayload) {
-        self.add.write().set_loading(None);
-        let result = http_client::post("/post/v1/create", &payload).send().await;
-        match result {
-            Ok(response) => {
-                if (200..300).contains(&response.status()) {
-                    self.add.write().set_success(None, None);
-                } else {
-                    self.add.write().set_api_error(&response).await;
-                }
-            }
-            Err(e) => {
-                self.add
-                    .write()
-                    .set_failed(Some(format!("Network error: {}", e)));
-            }
+        let meta_payload = payload.clone();
+        let request = http_client::post("/post/v1/create", &payload);
+        let created = state_request_abstraction(
+            &self.add,
+            Some(meta_payload),
+            request.send(),
+            "post",
+            |_post: &Post| (None, None),
+        )
+        .await;
+
+        if created.is_some() {
+            self.list().await;
         }
     }
 
-    pub async fn edit(&self, id: i32, payload: PostEditPayload) {
-        let mut edit_map = self.edit.write();
-        edit_map
-            .entry(id)
-            .or_insert_with(StateFrame::new)
-            .set_loading(None);
-        let result = http_client::post(&format!("/post/v1/update/{}", id), &payload)
+    /// Update an existing post
+    pub async fn edit(&self, post_id: i32, payload: PostEditPayload) {
+        let _post = edit_state_abstraction(
+            &self.edit,
+            post_id,
+            payload.clone(),
+            http_client::post(&format!("/post/v1/update/{}", post_id), &payload).send(),
+            "post",
+            Some(&self.list),
+            Some(&self.view),
+            |post: &Post| post.id,
+            None::<fn(&Post)>,
+        )
+        .await;
+    }
+
+    /// Delete a post
+    pub async fn remove(&self, post_id: i32) {
+        let _ = remove_state_abstraction(
+            &self.remove,
+            post_id,
+            http_client::post(&format!("/post/v1/delete/{}", post_id), &()).send(),
+            "post",
+            Some(&self.list),
+            Some(&self.view),
+            |post: &Post| post.id,
+            None::<fn()>,
+        )
+        .await;
+    }
+
+    /// List posts with default query
+    pub async fn list(&self) {
+        let _ = list_state_abstraction::<PaginatedList<Post>>(
+            &self.list,
+            http_client::post("/post/v1/query", &serde_json::json!({})),
+            "posts",
+        )
+        .await;
+    }
+
+    /// List posts with custom query parameters
+    pub async fn list_with_query(&self, query: PostListQuery) {
+        let _ = list_state_abstraction::<PaginatedList<Post>>(
+            &self.list,
+            http_client::post("/post/v1/query", &query),
+            "posts",
+        )
+        .await;
+    }
+
+    /// View a single post by ID or slug
+    /// Note: This method fetches by id_or_slug but caches by post.id
+    pub async fn view(&self, id_or_slug: &str) {
+        // We need to handle this manually since the key might be a slug but we cache by id
+        let result = http_client::post(&format!("/post/v1/view/{}", id_or_slug), &())
             .send()
             .await;
+
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
                     match response.json::<Post>().await {
-                        Ok(_) => {
-                            edit_map
-                                .entry(id)
+                        Ok(post) => {
+                            let post_id = post.id;
+                            let mut view_map = self.view.write();
+                            view_map
+                                .entry(post_id)
                                 .or_insert_with(StateFrame::new)
-                                .set_success(None, None);
-                            // Optionally update list/view here if needed
+                                .set_success(Some(post), None);
                         }
                         Err(e) => {
-                            edit_map
-                                .entry(id)
-                                .or_insert_with(StateFrame::new)
-                                .set_failed(Some(format!("Failed to parse post: {}", e)));
+                            // Can't cache without knowing the ID, just log the error
+                            dioxus::logger::tracing::error!("Failed to parse post: {}", e);
                         }
                     }
                 } else {
-                    edit_map
-                        .entry(id)
+                    dioxus::logger::tracing::error!(
+                        "Failed to fetch post: status {}",
+                        response.status()
+                    );
+                }
+            }
+            Err(e) => {
+                dioxus::logger::tracing::error!("Network error fetching post: {}", e);
+            }
+        }
+    }
+
+    /// View a post by ID (preferred when ID is known)
+    pub async fn view_by_id(&self, post_id: i32) {
+        let _ = view_state_abstraction(
+            &self.view,
+            post_id,
+            http_client::post(&format!("/post/v1/view/{}", post_id), &()).send(),
+            "post",
+            |post: &Post| post.clone(),
+        )
+        .await;
+    }
+
+    /// List published posts (public endpoint)
+    pub async fn list_published(&self) {
+        let _ = list_state_abstraction::<PaginatedList<Post>>(
+            &self.list,
+            http_client::post("/post/v1/list/published", &serde_json::json!({})),
+            "published posts",
+        )
+        .await;
+    }
+
+    // ============================================================================
+    // Autosave Functionality
+    // ============================================================================
+
+    /// Autosave post content
+    pub async fn autosave(&self, payload: PostAutosavePayload) {
+        let post_id = payload.post_id;
+        let mut autosave_map = self.autosave.write();
+        autosave_map
+            .entry(post_id)
+            .or_insert_with(StateFrame::new)
+            .set_loading(None);
+        drop(autosave_map);
+
+        let result = http_client::post("/post/v1/autosave", &payload)
+            .send()
+            .await;
+
+        let mut autosave_map = self.autosave.write();
+        match result {
+            Ok(response) => {
+                if (200..300).contains(&response.status()) {
+                    autosave_map
+                        .entry(post_id)
+                        .or_insert_with(StateFrame::new)
+                        .set_success(None, Some("Autosaved successfully".to_string()));
+                } else {
+                    autosave_map
+                        .entry(post_id)
                         .or_insert_with(StateFrame::new)
                         .set_api_error(&response)
                         .await;
                 }
             }
             Err(e) => {
-                edit_map
-                    .entry(id)
+                autosave_map
+                    .entry(post_id)
                     .or_insert_with(StateFrame::new)
                     .set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }
 
-    pub async fn remove(&self, id: i32) {
-        let mut remove_map = self.remove.write();
-        remove_map
-            .entry(id)
+    // ============================================================================
+    // Post Scheduling
+    // ============================================================================
+
+    /// Schedule a post for future publication
+    pub async fn schedule(&self, payload: PostSchedulePayload) {
+        let post_id = payload.post_id;
+        let mut schedule_map = self.schedule.write();
+        schedule_map
+            .entry(post_id)
             .or_insert_with(StateFrame::new)
             .set_loading(None);
-        let result = http_client::post(&format!("/post/v1/delete/{}", id), &())
+        drop(schedule_map);
+
+        let result = http_client::post("/post/v1/schedule", &payload)
             .send()
             .await;
+
+        let mut schedule_map = self.schedule.write();
+        match result {
+            Ok(response) => {
+                if (200..300).contains(&response.status()) {
+                    schedule_map
+                        .entry(post_id)
+                        .or_insert_with(StateFrame::new)
+                        .set_success(None, Some("Post scheduled successfully".to_string()));
+
+                    // Refresh the post view and list
+                    drop(schedule_map);
+                    self.view_by_id(post_id).await;
+                    self.list().await;
+                } else {
+                    schedule_map
+                        .entry(post_id)
+                        .or_insert_with(StateFrame::new)
+                        .set_api_error(&response)
+                        .await;
+                }
+            }
+            Err(e) => {
+                schedule_map
+                    .entry(post_id)
+                    .or_insert_with(StateFrame::new)
+                    .set_failed(Some(format!("Network error: {}", e)));
+            }
+        }
+    }
+
+    // ============================================================================
+    // Post Revisions
+    // ============================================================================
+
+    /// List all revisions for a post
+    pub async fn revisions_list(&self, post_id: i32) {
+        let mut revisions_map = self.revisions_list.write();
+        revisions_map
+            .entry(post_id)
+            .or_insert_with(StateFrame::new)
+            .set_loading(None);
+        drop(revisions_map);
+
+        let result = http_client::post(
+            &format!("/post/v1/revisions/{}/list", post_id),
+            &serde_json::json!({}),
+        )
+        .send()
+        .await;
+
+        let mut revisions_map = self.revisions_list.write();
+        match result {
+            Ok(response) => {
+                if (200..300).contains(&response.status()) {
+                    match response.json::<Vec<PostRevision>>().await {
+                        Ok(revisions) => {
+                            revisions_map
+                                .entry(post_id)
+                                .or_insert_with(StateFrame::new)
+                                .set_success(Some(revisions), None);
+                        }
+                        Err(e) => {
+                            revisions_map
+                                .entry(post_id)
+                                .or_insert_with(StateFrame::new)
+                                .set_failed(Some(format!("Failed to parse revisions: {}", e)));
+                        }
+                    }
+                } else {
+                    revisions_map
+                        .entry(post_id)
+                        .or_insert_with(StateFrame::new)
+                        .set_api_error(&response)
+                        .await;
+                }
+            }
+            Err(e) => {
+                revisions_map
+                    .entry(post_id)
+                    .or_insert_with(StateFrame::new)
+                    .set_failed(Some(format!("Network error: {}", e)));
+            }
+        }
+    }
+
+    /// Restore a specific revision of a post
+    pub async fn revisions_restore(&self, post_id: i32, revision_id: i32) {
+        let key = (post_id, revision_id);
+        let mut restore_map = self.revisions_restore.write();
+        restore_map
+            .entry(key)
+            .or_insert_with(StateFrame::new)
+            .set_loading(None);
+        drop(restore_map);
+
+        let result = http_client::post(
+            &format!("/post/v1/revisions/{}/restore/{}", post_id, revision_id),
+            &serde_json::json!({}),
+        )
+        .send()
+        .await;
+
+        let mut restore_map = self.revisions_restore.write();
+        match result {
+            Ok(response) => {
+                if (200..300).contains(&response.status()) {
+                    restore_map
+                        .entry(key)
+                        .or_insert_with(StateFrame::new)
+                        .set_success(None, Some("Revision restored successfully".to_string()));
+
+                    // Refresh the post view
+                    drop(restore_map);
+                    self.view_by_id(post_id).await;
+                    self.list().await;
+                } else {
+                    restore_map
+                        .entry(key)
+                        .or_insert_with(StateFrame::new)
+                        .set_api_error(&response)
+                        .await;
+                }
+            }
+            Err(e) => {
+                restore_map
+                    .entry(key)
+                    .or_insert_with(StateFrame::new)
+                    .set_failed(Some(format!("Network error: {}", e)));
+            }
+        }
+    }
+
+    // ============================================================================
+    // View Tracking
+    // ============================================================================
+
+    /// Track a view for a post (public endpoint)
+    pub async fn track_view(&self, post_id: i32) {
+        let mut track_map = self.track_view.write();
+        track_map
+            .entry(post_id)
+            .or_insert_with(StateFrame::new)
+            .set_loading(None);
+        drop(track_map);
+
+        let result = http_client::post(&format!("/post/v1/track_view/{}", post_id), &())
+            .send()
+            .await;
+
+        let mut track_map = self.track_view.write();
+        match result {
+            Ok(response) => {
+                if (200..300).contains(&response.status()) {
+                    track_map
+                        .entry(post_id)
+                        .or_insert_with(StateFrame::new)
+                        .set_success(None, None);
+                } else {
+                    track_map
+                        .entry(post_id)
+                        .or_insert_with(StateFrame::new)
+                        .set_api_error(&response)
+                        .await;
+                }
+            }
+            Err(e) => {
+                track_map
+                    .entry(post_id)
+                    .or_insert_with(StateFrame::new)
+                    .set_failed(Some(format!("Network error: {}", e)));
+            }
+        }
+    }
+
+    // ============================================================================
+    // Series Management
+    // ============================================================================
+
+    /// Create a new series
+    pub async fn series_create(&self, payload: SeriesCreatePayload) {
+        let meta_payload = payload.clone();
+        let request = http_client::post("/post/v1/series/create", &payload);
+        let created = state_request_abstraction(
+            &self.series_add,
+            Some(meta_payload),
+            request.send(),
+            "series",
+            |_series: &Series| (None, None),
+        )
+        .await;
+
+        if created.is_some() {
+            self.series_list().await;
+        }
+    }
+
+    /// Update an existing series
+    pub async fn series_update(&self, series_id: i32, payload: SeriesEditPayload) {
+        let _series = edit_state_abstraction(
+            &self.series_edit,
+            series_id,
+            payload.clone(),
+            http_client::post(&format!("/post/v1/series/update/{}", series_id), &payload).send(),
+            "series",
+            Some(&self.series_list),
+            Some(&self.series_view),
+            |series: &Series| series.id,
+            None::<fn(&Series)>,
+        )
+        .await;
+    }
+
+    /// Delete a series
+    pub async fn series_delete(&self, series_id: i32) {
+        let _ = remove_state_abstraction(
+            &self.series_remove,
+            series_id,
+            http_client::post(&format!("/post/v1/series/delete/{}", series_id), &()).send(),
+            "series",
+            Some(&self.series_list),
+            Some(&self.series_view),
+            |series: &Series| series.id,
+            None::<fn()>,
+        )
+        .await;
+    }
+
+    /// List all series
+    pub async fn series_list(&self) {
+        let _ = list_state_abstraction::<PaginatedList<Series>>(
+            &self.series_list,
+            http_client::post("/post/v1/series/list", &serde_json::json!({})),
+            "series",
+        )
+        .await;
+    }
+
+    /// List series with query parameters
+    pub async fn series_list_with_query(&self, query: SeriesListQuery) {
+        let _ = list_state_abstraction::<PaginatedList<Series>>(
+            &self.series_list,
+            http_client::post("/post/v1/series/list", &query),
+            "series",
+        )
+        .await;
+    }
+
+    /// Add a post to a series
+    pub async fn series_add_post(&self, post_id: i32, series_id: i32) {
+        let key = (post_id, series_id);
+        let mut add_map = self.series_add_post.write();
+        add_map
+            .entry(key)
+            .or_insert_with(StateFrame::new)
+            .set_loading(None);
+        drop(add_map);
+
+        let result = http_client::post(
+            &format!("/post/v1/series/add/{}/{}", post_id, series_id),
+            &serde_json::json!({}),
+        )
+        .send()
+        .await;
+
+        let mut add_map = self.series_add_post.write();
+        match result {
+            Ok(response) => {
+                if (200..300).contains(&response.status()) {
+                    add_map
+                        .entry(key)
+                        .or_insert_with(StateFrame::new)
+                        .set_success(None, Some("Post added to series".to_string()));
+
+                    // Refresh the post view
+                    drop(add_map);
+                    self.view_by_id(post_id).await;
+                } else {
+                    add_map
+                        .entry(key)
+                        .or_insert_with(StateFrame::new)
+                        .set_api_error(&response)
+                        .await;
+                }
+            }
+            Err(e) => {
+                add_map
+                    .entry(key)
+                    .or_insert_with(StateFrame::new)
+                    .set_failed(Some(format!("Network error: {}", e)));
+            }
+        }
+    }
+
+    /// Remove a post from a series
+    pub async fn series_remove_post(&self, post_id: i32, series_id: i32) {
+        let key = (post_id, series_id);
+        let mut remove_map = self.series_remove_post.write();
+        remove_map
+            .entry(key)
+            .or_insert_with(StateFrame::new)
+            .set_loading(None);
+        drop(remove_map);
+
+        let result = http_client::post(
+            &format!("/post/v1/series/remove/{}/{}", post_id, series_id),
+            &serde_json::json!({}),
+        )
+        .send()
+        .await;
+
+        let mut remove_map = self.series_remove_post.write();
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
                     remove_map
-                        .entry(id)
+                        .entry(key)
                         .or_insert_with(StateFrame::new)
-                        .set_success(None, None);
+                        .set_success(None, Some("Post removed from series".to_string()));
+
+                    // Refresh the post view
+                    drop(remove_map);
+                    self.view_by_id(post_id).await;
                 } else {
                     remove_map
-                        .entry(id)
+                        .entry(key)
                         .or_insert_with(StateFrame::new)
                         .set_api_error(&response)
                         .await;
@@ -126,71 +537,78 @@ impl PostState {
             }
             Err(e) => {
                 remove_map
-                    .entry(id)
+                    .entry(key)
                     .or_insert_with(StateFrame::new)
                     .set_failed(Some(format!("Network error: {}", e)));
             }
         }
     }
 
-    pub async fn bulk_remove(&self) {
-        self.bulk_remove.write().set_loading(None);
-        // Implement your API call here
-        // let result = http_client::post("/post/v1/bulk_delete", &()).send().await;
-        // ...handle result...
-        self.bulk_remove.write().set_success(None, None);
-    }
+    // ============================================================================
+    // Sitemap (Public)
+    // ============================================================================
 
-    pub async fn view(&self, id: i32) {
-        let mut view_map = self.view.write();
-        view_map
-            .entry(id)
-            .or_insert_with(StateFrame::new)
-            .set_loading(None);
-        let result = http_client::post(&format!("/post/v1/view/{}", id), &())
+    /// Get sitemap data for published posts
+    pub async fn sitemap(&self) -> Option<Vec<Post>> {
+        let result = http_client::post("/post/v1/sitemap", &serde_json::json!({}))
             .send()
             .await;
+
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
-                    match response.json::<Post>().await {
-                        Ok(post) => {
-                            view_map
-                                .entry(id)
-                                .or_insert_with(StateFrame::new)
-                                .set_success(Some(Some(post)), None);
-                        }
-                        Err(e) => {
-                            view_map
-                                .entry(id)
-                                .or_insert_with(StateFrame::new)
-                                .set_failed(Some(format!("Failed to parse post: {}", e)));
-                        }
-                    }
+                    response.json::<Vec<Post>>().await.ok()
                 } else {
-                    view_map
-                        .entry(id)
-                        .or_insert_with(StateFrame::new)
-                        .set_api_error(&response)
-                        .await;
+                    None
                 }
             }
-            Err(e) => {
-                view_map
-                    .entry(id)
-                    .or_insert_with(StateFrame::new)
-                    .set_failed(Some(format!("Network error: {}", e)));
-            }
+            Err(_) => None,
         }
     }
 
+    // ============================================================================
+    // State Reset
+    // ============================================================================
+
+    /// Reset all post state to initial values
     pub fn reset(&self) {
         *self.view.write() = HashMap::new();
         *self.list.write() = StateFrame::new();
         *self.add.write() = StateFrame::new();
         *self.edit.write() = HashMap::new();
         *self.remove.write() = HashMap::new();
-        *self.bulk_remove.write() = StateFrame::new();
-        *self.filters.write() = PostFilters::default();
+        *self.autosave.write() = HashMap::new();
+        *self.schedule.write() = HashMap::new();
+        *self.revisions_list.write() = HashMap::new();
+        *self.revisions_restore.write() = HashMap::new();
+        *self.track_view.write() = HashMap::new();
+        *self.series_list.write() = StateFrame::new();
+        *self.series_view.write() = HashMap::new();
+        *self.series_add.write() = StateFrame::new();
+        *self.series_edit.write() = HashMap::new();
+        *self.series_remove.write() = HashMap::new();
+        *self.series_add_post.write() = HashMap::new();
+        *self.series_remove_post.write() = HashMap::new();
+    }
+}
+
+// ============================================================================
+// ListStore Trait Implementation
+// ============================================================================
+
+use crate::store::ListStore;
+use dioxus::prelude::GlobalSignal;
+
+impl ListStore<Post, PostListQuery> for PostState {
+    fn list_frame(&self) -> &GlobalSignal<StateFrame<PaginatedList<Post>>> {
+        &self.list
+    }
+
+    async fn fetch_list(&self) {
+        self.list().await;
+    }
+
+    async fn fetch_list_with_query(&self, query: PostListQuery) {
+        self.list_with_query(query).await;
     }
 }
