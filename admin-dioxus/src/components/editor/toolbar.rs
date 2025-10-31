@@ -2,7 +2,7 @@
 //!
 //! Provides formatting controls and block type selection.
 
-use super::commands::*;
+use super::{commands::*, selection_in_code};
 use dioxus::prelude::*;
 
 /// Props for the Toolbar component.
@@ -27,6 +27,7 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
     let mut is_italic = use_signal(|| false);
     let mut is_underline = use_signal(|| false);
     let mut is_strikethrough = use_signal(|| false);
+    let mut is_code = use_signal(|| false);
 
     // Update active states when selection changes
     use_effect(move || {
@@ -45,6 +46,8 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
                 if let Ok(strike) = js_sys::eval("document.queryCommandState('strikeThrough')") {
                     is_strikethrough.set(strike.as_bool().unwrap_or(false));
                 }
+
+                is_code.set(selection_in_code(&_document));
             }
         }
     });
@@ -107,6 +110,7 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
                 ToolbarButton {
                     icon: "</>",
                     title: "Inline Code",
+                    active: *is_code.read(),
                     on_click: move |_| {
                         props.on_command.call(Box::new(ToggleMark {
                             mark_type: MarkType::Code,

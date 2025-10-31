@@ -233,7 +233,7 @@ fn handle_toggle_mark(document: &web_sys::Document, mark: MarkType) -> bool {
             true
         }
         MarkType::Code => {
-            apply_inline_code(document);
+            toggle_inline_code(document);
             true
         }
     }
@@ -358,6 +358,14 @@ fn insert_html(document: &web_sys::Document, html: &str) {
     exec_command_with_value(document, "insertHTML", html);
 }
 
+fn toggle_inline_code(document: &web_sys::Document) {
+    if selection_in_code(document) {
+        remove_inline_code(document);
+    } else {
+        apply_inline_code(document);
+    }
+}
+
 fn apply_inline_code(document: &web_sys::Document) {
     if let Ok(Some(selection)) = document.get_selection() {
         let selected_text = selection.to_string().as_string().unwrap_or_default();
@@ -369,6 +377,21 @@ fn apply_inline_code(document: &web_sys::Document) {
         };
         let html = format!("<code>{}</code>", escape_html(&content));
         exec_command_with_value(document, "insertHTML", &html);
+    }
+}
+
+fn remove_inline_code(document: &web_sys::Document) {
+    if let Ok(Some(selection)) = document.get_selection() {
+        if let Some(anchor) = selection.anchor_node() {
+            if let Some(code_element) = find_ancestor_element(&anchor, "code") {
+                unwrap_element(code_element);
+            }
+        }
+        if let Some(focus) = selection.focus_node() {
+            if let Some(code_element) = find_ancestor_element(&focus, "code") {
+                unwrap_element(code_element);
+            }
+        }
     }
 }
 
@@ -402,6 +425,31 @@ fn find_ancestor_element(node: &web_sys::Node, tag: &str) -> Option<web_sys::Ele
     }
 
     None
+}
+
+fn unwrap_element(element: web_sys::Element) {
+    if let Some(parent) = element.parent_node() {
+        while let Some(child) = element.first_child() {
+            let _ = parent.insert_before(&child, Some(&element));
+        }
+        let _ = parent.remove_child(&element);
+    }
+}
+
+pub(crate) fn selection_in_code(document: &web_sys::Document) -> bool {
+    if let Ok(Some(selection)) = document.get_selection() {
+        if let Some(anchor) = selection.anchor_node() {
+            if find_ancestor_element(&anchor, "code").is_some() {
+                return true;
+            }
+        }
+        if let Some(focus) = selection.focus_node() {
+            if find_ancestor_element(&focus, "code").is_some() {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 fn build_image_html(
