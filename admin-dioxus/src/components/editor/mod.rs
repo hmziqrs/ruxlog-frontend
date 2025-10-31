@@ -322,18 +322,18 @@ fn handle_toggle_mark(document: &web_sys::Document, mark: MarkType) -> bool {
 fn handle_set_block_type(document: &web_sys::Document, block_kind: &BlockKind) {
     match block_kind {
         BlockKind::Paragraph => {
-            format_block_custom(document, "p");
+            format_block_custom(document, "p", false);
         }
         BlockKind::Heading { level } => {
             let level = (*level).clamp(1, 6);
             let tag = format!("h{}", level);
-            format_block_custom(document, &tag);
+            format_block_custom(document, &tag, false);
         }
         BlockKind::Quote => {
-            format_block_custom(document, "blockquote");
+            format_block_custom(document, "blockquote", true);
         }
         BlockKind::CodeBlock { .. } => {
-            format_block_custom(document, "pre");
+            format_block_custom(document, "pre", true);
             ensure_pre_has_code(document);
         }
         BlockKind::BulletList { .. } => {
@@ -355,7 +355,8 @@ fn handle_set_block_type(document: &web_sys::Document, block_kind: &BlockKind) {
 
 /// Custom implementation of formatBlock that works reliably in modern browsers.
 /// Replaces the deprecated execCommand('formatBlock') approach.
-fn format_block_custom(document: &web_sys::Document, tag_name: &str) {
+/// If allow_toggle is true, clicking the same block type again will convert to paragraph.
+fn format_block_custom(document: &web_sys::Document, tag_name: &str, allow_toggle: bool) {
     use wasm_bindgen::JsCast;
     use web_sys::HtmlElement;
 
@@ -389,8 +390,43 @@ fn format_block_custom(document: &web_sys::Document, tag_name: &str) {
     if let Some(old_block) = block_element {
         // Check if we're already the right type
         if let Some(element) = old_block.dyn_ref::<web_sys::Element>() {
-            if element.tag_name().to_lowercase() == tag_name.to_lowercase() {
-                return; // Already the right type
+            let current_tag = element.tag_name().to_lowercase();
+            if current_tag == tag_name.to_lowercase() {
+                // If toggle is allowed, convert to paragraph instead
+                if allow_toggle {
+                    // Change the tag to "p" to convert to paragraph
+                    let Ok(new_element) = document.create_element("p") else {
+                        return;
+                    };
+
+                    if let Some(html_old) = old_block.dyn_ref::<HtmlElement>() {
+                        if let Some(html_new) = new_element.dyn_ref::<HtmlElement>() {
+                            html_new.set_inner_html(&html_old.inner_html());
+
+                            if let Some(parent) = old_block.parent_node() {
+                                let _ = parent.replace_child(&new_element, &old_block);
+
+                                // Restore cursor
+                                let _ = selection.remove_all_ranges();
+                                if let Ok(new_range) = document.create_range() {
+                                    if let Some(first_child) = new_element.first_child() {
+                                        let _ = new_range.set_start(&first_child, start_offset);
+                                        let _ = new_range.set_end(&first_child, start_offset);
+                                    } else {
+                                        let _ = new_range.select_node_contents(&new_element);
+                                        let _ = new_range.collapse_with_to_start(false);
+                                    }
+                                    let _ = selection.add_range(&new_range);
+                                }
+
+                                if let Some(html_elem) = new_element.dyn_ref::<HtmlElement>() {
+                                    let _ = html_elem.focus();
+                                }
+                            }
+                        }
+                    }
+                }
+                return;
             }
         }
 
