@@ -45,12 +45,12 @@ pub fn PostsListScreen() -> Element {
     // Effect to load posts when filters change
     use_effect({
         let list_state = list_state;
-        let selected_ids = ctx.selected_ids;
+        let mut ctx_clone = ctx.clone();
         move || {
-            let q = ctx.filters.read().clone();
+            let q = ctx_clone.filters.read().clone();
             let _tick = list_state.reload_tick();
             let posts_state = posts_state;
-            selected_ids.write().clear();
+            ctx_clone.clear_selections();
             spawn(async move {
                 posts_state.fetch_list_with_query(q).await;
             });

@@ -76,8 +76,8 @@ pub fn Toolbar(
                 // View mode switcher
                 {
                     let current_mode = *ctx.view_mode.read();
-                    let ctx_clone1 = ctx.clone();
-                    let ctx_clone2 = ctx.clone();
+                    let mut ctx_clone1 = ctx.clone();
+                    let mut ctx_clone2 = ctx.clone();
                     rsx! {
                         div { class: "flex items-center gap-1 border border-zinc-200 dark:border-zinc-800 rounded-md p-1",
                             Button {

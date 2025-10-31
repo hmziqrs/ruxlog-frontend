@@ -12,7 +12,7 @@ use super::super::context::use_post_list_context;
 
 #[component]
 pub fn FilterPopover(active_filter_count: usize) -> Element {
-    let mut ctx = use_post_list_context();
+    let ctx = use_post_list_context();
     let categories_state = use_categories();
     let tags_state = use_tag();
     let users_state = use_user();
@@ -64,12 +64,17 @@ pub fn FilterPopover(active_filter_count: usize) -> Element {
                     div { class: "flex items-center justify-between",
                         h4 { class: "font-semibold text-sm", "Filters" }
                         if active_filter_count > 0 {
-                            Button {
-                                variant: ButtonVariant::Ghost,
-                                size: ButtonSize::Sm,
-                                class: "h-auto p-0 text-xs",
-                                onclick: move |_| { ctx.clear_all_filters(); },
-                                "Clear all"
+                            {
+                                let mut ctx_clone = ctx.clone();
+                                rsx! {
+                                    Button {
+                                        variant: ButtonVariant::Ghost,
+                                        size: ButtonSize::Sm,
+                                        class: "h-auto p-0 text-xs",
+                                        onclick: move |_| { ctx_clone.clear_all_filters(); },
+                                        "Clear all"
+                                    }
+                                }
                             }
                         }
                     }
@@ -82,6 +87,7 @@ pub fn FilterPopover(active_filter_count: usize) -> Element {
                                     {
                                         let cat_id = cat.id;
                                         let is_selected = ctx.selected_category_ids.read().contains(&cat_id);
+                                        let mut ctx_clone = ctx.clone();
                                         rsx! {
                                             div {
                                                 key: "{cat_id}",
@@ -89,7 +95,7 @@ pub fn FilterPopover(active_filter_count: usize) -> Element {
                                                 Checkbox {
                                                     checked: is_selected,
                                                     onchange: move |_| {
-                                                        ctx.toggle_category(cat_id);
+                                                        ctx_clone.toggle_category(cat_id);
                                                     },
                                                 }
                                                 label { class: "text-sm cursor-pointer", "{cat.name}" }
@@ -110,6 +116,7 @@ pub fn FilterPopover(active_filter_count: usize) -> Element {
                                     {
                                         let tag_id = tag.id;
                                         let is_selected = ctx.selected_tag_ids.read().contains(&tag_id);
+                                        let mut ctx_clone = ctx.clone();
                                         rsx! {
                                             div {
                                                 key: "{tag_id}",
@@ -117,7 +124,7 @@ pub fn FilterPopover(active_filter_count: usize) -> Element {
                                                 Checkbox {
                                                     checked: is_selected,
                                                     onchange: move |_| {
-                                                        ctx.toggle_tag(tag_id);
+                                                        ctx_clone.toggle_tag(tag_id);
                                                     },
                                                 }
                                                 label { class: "text-sm cursor-pointer", "{tag.name}" }
@@ -138,6 +145,7 @@ pub fn FilterPopover(active_filter_count: usize) -> Element {
                                     {
                                         let author_id = author.id;
                                         let is_selected = ctx.selected_author_ids.read().contains(&author_id);
+                                        let mut ctx_clone = ctx.clone();
                                         rsx! {
                                             div {
                                                 key: "{author_id}",
@@ -145,7 +153,7 @@ pub fn FilterPopover(active_filter_count: usize) -> Element {
                                                 Checkbox {
                                                     checked: is_selected,
                                                     onchange: move |_| {
-                                                        ctx.toggle_author(author_id);
+                                                        ctx_clone.toggle_author(author_id);
                                                     },
                                                 }
                                                 label { class: "text-sm cursor-pointer", "{author.name}" }
