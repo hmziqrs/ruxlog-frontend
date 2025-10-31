@@ -1,6 +1,6 @@
 use dioxus::{
     dioxus_core::{SpawnIfAsync, Task},
-    prelude::{spawn, use_hook, Callback, Writable},
+    prelude::{Callback, spawn, use_hook},
     signals::{Signal, WritableExt},
 };
 use std::time::Duration;
