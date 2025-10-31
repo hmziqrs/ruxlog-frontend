@@ -18,6 +18,7 @@ use crate::screens::TagsListScreen;
 use crate::screens::MediaListScreen;
 use crate::screens::MediaUploadScreen;
 use crate::screens::UsersAddScreen;
+use crate::screens::UsersEditScreen;
 use crate::screens::UsersListScreen;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
@@ -57,6 +58,8 @@ pub enum Route {
 
     #[route("/users/new")]
     UsersAddScreen {},
+    #[route("/users/:id/edit")]
+    UsersEditScreen { id: i32 },
     #[route("/users/list")]
     UsersListScreen {},
 

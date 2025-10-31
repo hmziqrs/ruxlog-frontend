@@ -36,6 +36,7 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
         Route::MediaUploadScreen {} => ("Media", Some("Upload")),
         Route::MediaListScreen {} => ("Media", None),
         Route::UsersAddScreen {} => ("Users", Some("New")),
+        Route::UsersEditScreen { .. } => ("Users", Some("Edit")),
         Route::UsersListScreen {} => ("Users", None),
         // HEADER_ROUTES_END
         Route::AnalyticsScreen {} => ("Analytics", None),

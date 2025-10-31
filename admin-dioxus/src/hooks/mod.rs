@@ -10,6 +10,9 @@ pub use use_tag_view::{use_tag_view, TagViewState};
 mod use_category_view;
 pub use use_category_view::{use_category_view, CategoryViewState as CategoryDetailViewState};
 
+mod use_user_view;
+pub use use_user_view::{use_user_view, UserViewState};
+
 mod use_media_view;
 pub use use_media_view::{use_media_view, MediaViewState};
 

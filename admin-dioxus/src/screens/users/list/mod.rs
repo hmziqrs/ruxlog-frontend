@@ -314,8 +314,7 @@ pub fn UsersListScreen() -> Element {
                                     DropdownMenuContent { class: "bg-background border-zinc-200 dark:border-zinc-800",
                                         DropdownMenuItem {
                                             onclick: move |_| {
-                                                // TODO: Navigate to user view/edit screen
-                                                // nav.push(Route::UsersEditScreen { id: user_id });
+                                                nav.push(Route::UsersEditScreen { id: user_id });
                                             },
                                             "Edit"
                                         }

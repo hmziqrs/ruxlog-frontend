@@ -1,11 +1,9 @@
 use dioxus::prelude::*;
 use std::collections::HashMap;
-use validator::{Validate, ValidationError};
+use validator::Validate;
 
-use crate::{
-    hooks::{OxForm, OxFormModel},
-    store::UserRole,
-};
+use crate::hooks::{OxForm, OxFormModel};
+use crate::store::{UserRole, UsersAddPayload, UsersEditPayload};
 
 #[derive(Debug, Validate, Clone, PartialEq)]
 pub struct UserForm {
@@ -19,18 +17,11 @@ pub struct UserForm {
 
     pub is_verified: bool,
 
-    #[validate(custom(function = "validate_password"))]
     pub password: Option<String>,
 
-    pub is_update: bool,
-}
+    pub avatar_id: Option<i32>,
 
-fn validate_password(password: &&String) -> Result<(), ValidationError> {
-    if password.is_empty() {
-        Err(ValidationError::new("Password cannot be empty"))
-    } else {
-        Ok(())
-    }
+    pub is_update: bool,
 }
 
 impl UserForm {
@@ -41,16 +32,31 @@ impl UserForm {
             role: UserRole::User.to_string(),
             is_verified: false,
             password: Some(String::new()),
+            avatar_id: None,
             is_update: false,
         }
     }
 
-    #[allow(dead_code)]
-    pub fn update(user: Self) -> Self {
-        let mut updated_user = user;
-        updated_user.is_update = true;
-        updated_user.password = None;
-        updated_user
+    pub fn to_add_payload(&self) -> UsersAddPayload {
+        UsersAddPayload {
+            name: self.name.clone(),
+            email: self.email.clone(),
+            password: self.password.clone().unwrap_or_default(),
+            role: self.role.clone(),
+            avatar_id: self.avatar_id,
+            is_verified: self.is_verified,
+        }
+    }
+
+    pub fn to_edit_payload(&self) -> UsersEditPayload {
+        UsersEditPayload {
+            name: Some(self.name.clone()),
+            email: Some(self.email.clone()),
+            avatar_id: self.avatar_id,
+            password: self.password.clone(),
+            is_verified: Some(self.is_verified),
+            role: Some(self.role.clone()),
+        }
     }
 }
 
@@ -68,6 +74,10 @@ impl OxFormModel for UserForm {
             map.insert("password".to_string(), String::new());
         }
 
+        if let Some(avatar_id) = self.avatar_id {
+            map.insert("avatar_id".to_string(), avatar_id.to_string());
+        }
+
         map
     }
 
@@ -76,7 +86,10 @@ impl OxFormModel for UserForm {
             "name" => self.name = value.to_string(),
             "email" => self.email = value.to_string(),
             "role" => self.role = value.to_string(),
-            "is_verified" => self.is_verified = value.parse().unwrap_or(false),
+            "is_verified" => {
+                let v = value.trim().to_lowercase();
+                self.is_verified = matches!(v.as_str(), "true" | "1" | "yes" | "on");
+            }
             "password" => {
                 if self.is_update && value.is_empty() {
                     self.password = None;
@@ -84,12 +97,21 @@ impl OxFormModel for UserForm {
                     self.password = Some(value.to_string());
                 }
             }
+            "avatar_id" => {
+                self.avatar_id = value.parse::<i32>().ok();
+            }
             _ => {}
         }
     }
 }
 
-pub fn use_user_form(initial_state: UserForm) -> Signal<OxForm<UserForm>> {
-    let form_signal: Signal<OxForm<UserForm>> = use_signal(|| OxForm::new(initial_state));
-    form_signal
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UseUserForm {
+    pub form: Signal<OxForm<UserForm>>,
+}
+
+pub fn use_user_form(initial_state: UserForm) -> UseUserForm {
+    let form_signal: Signal<OxForm<UserForm>> = use_signal(move || OxForm::new(initial_state));
+
+    UseUserForm { form: form_signal }
 }
