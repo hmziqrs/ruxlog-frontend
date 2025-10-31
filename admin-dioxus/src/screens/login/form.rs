@@ -16,6 +16,7 @@ pub struct LoginForm {
 }
 
 impl LoginForm {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         LoginForm {
             email: String::new(),

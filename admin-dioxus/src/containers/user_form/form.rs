@@ -45,6 +45,7 @@ impl UserForm {
         }
     }
 
+    #[allow(dead_code)]
     pub fn update(user: Self) -> Self {
         let mut updated_user = user;
         updated_user.is_update = true;
