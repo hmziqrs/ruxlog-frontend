@@ -64,7 +64,27 @@ pub fn UserFormContainer(props: UserFormContainerProps) -> Element {
                                 name: "password",
                                 form,
                                 label: if is_update { "Password (optional)" } else { "Password" },
-                                placeholder: if is_update { "Leave blank to keep current password" } else { "Enter password (min 8 characters)" }
+                                placeholder: if is_update { "Leave blank to keep current password" } else { "Enter password (min 8 characters)" },
+                                onchange: move |_| {
+                                    // Re-validate confirm password when password changes
+                                    if form.peek().submit_count > 0 {
+                                        let form_data = form.peek().data.clone();
+                                        let password = form_data.password.as_deref().unwrap_or("");
+                                        let confirm = form_data.confirm_password.as_deref().unwrap_or("");
+
+                                        if !form_data.is_update || !password.is_empty() {
+                                            if password != confirm && !confirm.is_empty() {
+                                                if let Some(field) = form.write().fields.get_mut("confirm_password") {
+                                                    field.set_error(Some("Passwords do not match".to_string()));
+                                                }
+                                            } else if password == confirm {
+                                                if let Some(field) = form.write().fields.get_mut("confirm_password") {
+                                                    field.set_error(None);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                             if is_update {
                                 p { class: "text-xs text-muted-foreground", "Leave blank to keep the current password unchanged." }
@@ -78,7 +98,47 @@ pub fn UserFormContainer(props: UserFormContainerProps) -> Element {
                                 name: "confirm_password",
                                 form,
                                 label: if is_update { "Confirm Password (optional)" } else { "Confirm Password" },
-                                placeholder: if is_update { "Re-enter new password" } else { "Re-enter password" }
+                                placeholder: if is_update { "Re-enter new password" } else { "Re-enter password" },
+                                onchange: move |_| {
+                                    // Validate password matching on change
+                                    if form.peek().submit_count > 0 {
+                                        let form_data = form.peek().data.clone();
+                                        let password = form_data.password.as_deref().unwrap_or("");
+                                        let confirm = form_data.confirm_password.as_deref().unwrap_or("");
+
+                                        if !form_data.is_update || !password.is_empty() {
+                                            if password != confirm && !confirm.is_empty() {
+                                                if let Some(field) = form.write().fields.get_mut("confirm_password") {
+                                                    field.set_error(Some("Passwords do not match".to_string()));
+                                                }
+                                            } else if password == confirm {
+                                                if let Some(field) = form.write().fields.get_mut("confirm_password") {
+                                                    field.set_error(None);
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                onblur: move |_| {
+                                    // Validate password matching on blur
+                                    if form.peek().submit_count > 0 {
+                                        let form_data = form.peek().data.clone();
+                                        let password = form_data.password.as_deref().unwrap_or("");
+                                        let confirm = form_data.confirm_password.as_deref().unwrap_or("");
+
+                                        if !form_data.is_update || !password.is_empty() {
+                                            if password != confirm {
+                                                if let Some(field) = form.write().fields.get_mut("confirm_password") {
+                                                    field.set_error(Some("Passwords do not match".to_string()));
+                                                }
+                                            } else {
+                                                if let Some(field) = form.write().fields.get_mut("confirm_password") {
+                                                    field.set_error(None);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                             if !is_update {
                                 p { class: "text-xs text-muted-foreground", "Both passwords must match." }
