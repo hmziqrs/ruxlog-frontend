@@ -14,7 +14,7 @@ pub struct AuthState {
     pub init_status: GlobalSignal<StateFrame>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub enum UserRole {
     // #[serde(rename = "super-admin")]
@@ -26,6 +26,7 @@ pub enum UserRole {
     // #[serde(rename = "author")]
     Author,
     // #[serde(rename = "user")]
+    #[default]
     User,
 }
 
