@@ -131,7 +131,7 @@ pub fn SonnerToaster(props: SonnerToasterProps) -> Element {
 
     let dismiss_toast = {
         let mut toasts = toasts.clone();
-        let mut heights_sig = heights.clone();
+        let heights_sig = heights.clone();
         use_callback(move |id: u64| {
             // mark toast as exiting and schedule removal after exit animation
             {

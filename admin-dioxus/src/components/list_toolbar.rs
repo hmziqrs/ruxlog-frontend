@@ -29,7 +29,6 @@ pub struct ListToolbarProps {
 pub fn ListToolbar(props: ListToolbarProps) -> Element {
     let on_search = props.on_search_input.clone();
     let placeholder = props.search_placeholder.clone();
-    let disabled = props.disabled;
 
     rsx! {
         div { class: "bg-transparent",
