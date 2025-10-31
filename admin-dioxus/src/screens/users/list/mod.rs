@@ -264,9 +264,9 @@ pub fn UsersListScreen() -> Element {
                             // User name and avatar
                             td { class: "py-2 px-3 text-xs md:text-sm whitespace-nowrap",
                                 div { class: "flex items-center gap-3",
-                                    if let Some(avatar_url) = &user.avatar {
+                                    if let Some(avatar) = &user.avatar {
                                         img {
-                                            src: "{avatar_url}",
+                                            src: "{avatar.file_url}",
                                             alt: "{user.name}",
                                             class: "h-8 w-8 rounded-full object-cover ring-2 ring-black/5 dark:ring-white/10"
                                         }
