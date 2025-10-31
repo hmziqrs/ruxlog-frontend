@@ -333,10 +333,13 @@ impl ImageEditorState {
         let blob = self.fetch_blob(&session.current_blob_url).await?;
 
         // Create a new File from the blob
+        let file_options = web_sys::FilePropertyBag::new();
+        file_options.set_type("image/jpeg");
+
         let file = File::new_with_blob_sequence_and_options(
             &js_sys::Array::of1(&blob),
             &filename,
-            web_sys::FilePropertyBag::new().type_("image/jpeg"),
+            &file_options,
         )
         .map_err(|e| format!("Failed to create file: {:?}", e))?;
 
