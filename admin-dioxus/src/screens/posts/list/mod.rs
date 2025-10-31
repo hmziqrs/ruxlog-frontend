@@ -2,16 +2,22 @@ mod components;
 mod context;
 mod utils;
 
-use components::{ActiveFilters, BulkActionsBar, GridView, TableView, Toolbar};
+use components::{GridView, TableView};
 use context::{PostListContext, ViewMode};
 
 use dioxus::prelude::*;
 
+use crate::components::{DataTableScreen, ListErrorBannerProps, ListToolbarProps, PageHeaderProps};
 use crate::hooks::{use_list_screen_with_handlers, ListScreenConfig};
 use crate::router::Route;
 use crate::store::{use_categories, use_post, use_tag, use_user, ListStore};
 use crate::types::Order;
-use crate::ui::shadcn::Button;
+use crate::ui::shadcn::{Button, ButtonSize, ButtonVariant};
+
+use hmziq_dioxus_free_icons::{
+    icons::ld_icons::{LdGrid3x3, LdLayoutList},
+    Icon,
+};
 
 #[component]
 pub fn PostsListScreen() -> Element {
@@ -69,36 +75,119 @@ pub fn PostsListScreen() -> Element {
     let has_data = !posts.is_empty();
     let active_filter_count = ctx.active_filter_count();
 
-    rsx! {
-        div { class: "flex flex-col gap-6 w-full",
-            // Header
-            header { class: "flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
-                div {
-                    h1 { class: "text-3xl font-bold tracking-tight", "Posts" }
-                    p { class: "text-zinc-500 dark:text-zinc-400 mt-1",
-                        "Manage and view your blog posts. Create, edit, and organize content."
-                    }
+    // Custom view mode switcher for the header actions
+    let view_mode_switcher = {
+        let current_mode = *ctx.view_mode.read();
+        let mut ctx_clone1 = ctx.clone();
+        let mut ctx_clone2 = ctx.clone();
+        rsx! {
+            div { class: "flex items-center gap-1 border border-zinc-200 dark:border-zinc-800 rounded-md p-1",
+                Button {
+                    variant: if current_mode == ViewMode::Grid {
+                        ButtonVariant::Default
+                    } else {
+                        ButtonVariant::Ghost
+                    },
+                    size: ButtonSize::Sm,
+                    class: "h-8 w-8 p-0",
+                    onclick: move |_| { ctx_clone1.view_mode.set(ViewMode::Grid); },
+                    Icon { icon: LdGrid3x3 {}, class: "w-4 h-4" }
                 }
                 Button {
-                    onclick: move |_| { nav.push(Route::PostsAddScreen {}); },
-                    "Create Post"
+                    variant: if current_mode == ViewMode::Table {
+                        ButtonVariant::Default
+                    } else {
+                        ButtonVariant::Ghost
+                    },
+                    size: ButtonSize::Sm,
+                    class: "h-8 w-8 p-0",
+                    onclick: move |_| { ctx_clone2.view_mode.set(ViewMode::Table); },
+                    Icon { icon: LdLayoutList {}, class: "w-4 h-4" }
                 }
             }
+        }
+    };
 
-            // Toolbar with search, filters, and view switcher
-            Toolbar {
-                list_loading,
-                search_input: list_state.search_input(),
-                on_search: handlers.handle_search
+    // Below toolbar content - filters and active filter badges
+    let below_toolbar_content = rsx! {
+        div { class: "flex flex-col gap-3",
+            // Filter controls row
+            div { class: "flex items-center gap-2",
+                components::FilterPopover { active_filter_count }
             }
-
             // Active filter badges
-            ActiveFilters { active_filter_count }
+            if active_filter_count > 0 {
+                components::ActiveFilters { active_filter_count }
+            }
+        }
+    };
 
-            // Bulk actions bar
-            BulkActionsBar {}
+    // Bulk actions if items selected
+    let bulk_actions = if !ctx.selected_ids.read().is_empty() {
+        Some(rsx! {
+            components::BulkActionsBar {}
+        })
+    } else {
+        None
+    };
 
-            // Content - switch between table and grid views
+    rsx! {
+        DataTableScreen {
+            frame: (posts_state.list)(),
+            header: Some(PageHeaderProps {
+                title: "Posts".to_string(),
+                description: "Manage and view your blog posts. Create, edit, and organize content.".to_string(),
+                actions: Some(rsx!{
+                    div { class: "flex items-center gap-2",
+                        {view_mode_switcher}
+                        Button {
+                            onclick: move |_| { nav.push(Route::PostsAddScreen {}); },
+                            "Create Post"
+                        }
+                    }
+                }),
+                class: None,
+                embedded: false,
+            }),
+            error_banner: Some(ListErrorBannerProps {
+                message: "Failed to load posts. Please try again.".to_string(),
+                retry_label: Some("Retry".to_string()),
+                on_retry: Some(EventHandler::new(move |_| handlers.handle_retry.call(()))),
+            }),
+            toolbar: Some(ListToolbarProps {
+                search_value: list_state.search_input(),
+                search_placeholder: "Search posts by title, content, or author".to_string(),
+                disabled: list_loading,
+                on_search_input: handlers.handle_search.clone(),
+                status_selected: match ctx.filters.read().status {
+                    Some(crate::store::PostStatus::Published) => "Published".to_string(),
+                    Some(crate::store::PostStatus::Draft) => "Draft".to_string(),
+                    Some(crate::store::PostStatus::Archived) => "Archived".to_string(),
+                    None => "All Status".to_string(),
+                },
+                on_status_select: EventHandler::new({
+                    let mut ctx_clone = ctx.clone();
+                    move |value: String| {
+                        let status = match value.as_str() {
+                            "Published" => Some(crate::store::PostStatus::Published),
+                            "Draft" => Some(crate::store::PostStatus::Draft),
+                            "Archived" => Some(crate::store::PostStatus::Archived),
+                            _ => None,
+                        };
+                        ctx_clone.set_status_filter(status);
+                    }
+                }),
+            }),
+            below_toolbar: Some(rsx!{
+                div { class: "space-y-3",
+                    {below_toolbar_content}
+                    {bulk_actions}
+                }
+            }),
+            on_prev: move |_| { handlers.handle_prev.call(current_page); },
+            on_next: move |_| { handlers.handle_next.call(current_page); },
+
+            // Render based on view mode
             if *ctx.view_mode.read() == ViewMode::Table {
                 TableView {
                     posts: posts.clone(),
@@ -113,31 +202,6 @@ pub fn PostsListScreen() -> Element {
                     posts: posts.clone(),
                     list_loading,
                     has_data
-                }
-            }
-
-            // Pagination
-            if let Some(paginated) = &list.data {
-                div { class: "flex items-center justify-between border-t border-zinc-200 dark:border-zinc-800 pt-4",
-                    div { class: "text-sm text-zinc-500 dark:text-zinc-400",
-                        "Page {paginated.page} of {paginated.total / paginated.per_page + 1} ({paginated.total} total)"
-                    }
-                    div { class: "flex items-center gap-2",
-                        Button {
-                            variant: crate::ui::shadcn::ButtonVariant::Outline,
-                            size: crate::ui::shadcn::ButtonSize::Sm,
-                            disabled: paginated.page <= 1,
-                            onclick: move |_| { handlers.handle_prev.call(current_page); },
-                            "Previous"
-                        }
-                        Button {
-                            variant: crate::ui::shadcn::ButtonVariant::Outline,
-                            size: crate::ui::shadcn::ButtonSize::Sm,
-                            disabled: paginated.page >= (paginated.total / paginated.per_page + 1),
-                            onclick: move |_| { handlers.handle_next.call(current_page); },
-                            "Next"
-                        }
-                    }
                 }
             }
         }

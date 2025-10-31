@@ -10,7 +10,7 @@ pub fn BulkActionsBar() -> Element {
     let selected_count = ctx.selected_ids.read().len();
 
     if selected_count == 0 {
-        return rsx! { div { class: "hidden" } };
+        return rsx! {};
     }
 
     rsx! {

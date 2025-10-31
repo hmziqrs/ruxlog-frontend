@@ -10,7 +10,7 @@ use super::super::context::use_post_list_context;
 #[component]
 pub fn ActiveFilters(active_filter_count: usize) -> Element {
     if active_filter_count == 0 {
-        return rsx! { div { class: "hidden" } };
+        return rsx! {};
     }
 
     let ctx = use_post_list_context();
