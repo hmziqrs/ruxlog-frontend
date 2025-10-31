@@ -1,0 +1,544 @@
+//! Toolbar component for the rich text editor.
+//!
+//! Provides formatting controls and block type selection.
+
+use super::commands::*;
+use dioxus::prelude::*;
+
+/// Props for the Toolbar component.
+#[derive(Props, Clone, PartialEq)]
+pub struct ToolbarProps {
+    /// Callback when a command is executed.
+    pub on_command: EventHandler<Box<dyn Command>>,
+
+    /// Current selection state.
+    pub selection: Selection,
+}
+
+/// Toolbar component with formatting controls.
+#[component]
+pub fn Toolbar(props: ToolbarProps) -> Element {
+    let mut show_link_dialog = use_signal(|| false);
+    let mut show_image_dialog = use_signal(|| false);
+    let mut show_embed_dialog = use_signal(|| false);
+
+    rsx! {
+        div {
+            class: "toolbar border-b bg-gray-50 p-2 flex items-center gap-1 flex-wrap",
+
+            // Text formatting group
+            div {
+                class: "toolbar-group flex items-center gap-1 border-r pr-2 mr-2",
+
+                ToolbarButton {
+                    icon: "B",
+                    title: "Bold (Ctrl+B)",
+                    on_click: move |_| {
+                        props.on_command.call(Box::new(ToggleMark {
+                            mark_type: MarkType::Bold,
+                        }));
+                    },
+                }
+
+                ToolbarButton {
+                    icon: "I",
+                    title: "Italic (Ctrl+I)",
+                    class: "italic",
+                    on_click: move |_| {
+                        props.on_command.call(Box::new(ToggleMark {
+                            mark_type: MarkType::Italic,
+                        }));
+                    },
+                }
+
+                ToolbarButton {
+                    icon: "U",
+                    title: "Underline (Ctrl+U)",
+                    class: "underline",
+                    on_click: move |_| {
+                        props.on_command.call(Box::new(ToggleMark {
+                            mark_type: MarkType::Underline,
+                        }));
+                    },
+                }
+
+                ToolbarButton {
+                    icon: "S",
+                    title: "Strikethrough",
+                    class: "line-through",
+                    on_click: move |_| {
+                        props.on_command.call(Box::new(ToggleMark {
+                            mark_type: MarkType::Strike,
+                        }));
+                    },
+                }
+
+                ToolbarButton {
+                    icon: "</>",
+                    title: "Inline Code",
+                    on_click: move |_| {
+                        props.on_command.call(Box::new(ToggleMark {
+                            mark_type: MarkType::Code,
+                        }));
+                    },
+                }
+            }
+
+            // Block type group
+            div {
+                class: "toolbar-group flex items-center gap-1 border-r pr-2 mr-2",
+
+                ToolbarButton {
+                    icon: "P",
+                    title: "Paragraph",
+                    on_click: move |_| {
+                        props.on_command.call(Box::new(SetBlockType {
+                            block_type: super::ast::BlockKind::Paragraph,
+                        }));
+                    },
+                }
+
+                ToolbarButton {
+                    icon: "H1",
+                    title: "Heading 1",
+                    on_click: move |_| {
+                        props.on_command.call(Box::new(SetBlockType {
+                            block_type: super::ast::BlockKind::Heading { level: 1 },
+                        }));
+                    },
+                }
+
+                ToolbarButton {
+                    icon: "H2",
+                    title: "Heading 2",
+                    on_click: move |_| {
+                        props.on_command.call(Box::new(SetBlockType {
+                            block_type: super::ast::BlockKind::Heading { level: 2 },
+                        }));
+                    },
+                }
+
+                ToolbarButton {
+                    icon: "H3",
+                    title: "Heading 3",
+                    on_click: move |_| {
+                        props.on_command.call(Box::new(SetBlockType {
+                            block_type: super::ast::BlockKind::Heading { level: 3 },
+                        }));
+                    },
+                }
+            }
+
+            // List group
+            div {
+                class: "toolbar-group flex items-center gap-1 border-r pr-2 mr-2",
+
+                ToolbarButton {
+                    icon: "•",
+                    title: "Bullet List",
+                    on_click: move |_| {
+                        props.on_command.call(Box::new(SetBlockType {
+                            block_type: super::ast::BlockKind::BulletList { items: vec![] },
+                        }));
+                    },
+                }
+
+                ToolbarButton {
+                    icon: "1.",
+                    title: "Numbered List",
+                    on_click: move |_| {
+                        props.on_command.call(Box::new(SetBlockType {
+                            block_type: super::ast::BlockKind::OrderedList { items: vec![] },
+                        }));
+                    },
+                }
+
+                ToolbarButton {
+                    icon: "☐",
+                    title: "Task List",
+                    on_click: move |_| {
+                        props.on_command.call(Box::new(SetBlockType {
+                            block_type: super::ast::BlockKind::TaskList { items: vec![] },
+                        }));
+                    },
+                }
+            }
+
+            // Insert group
+            div {
+                class: "toolbar-group flex items-center gap-1 border-r pr-2 mr-2",
+
+                ToolbarButton {
+                    icon: "\"",
+                    title: "Quote",
+                    on_click: move |_| {
+                        props.on_command.call(Box::new(SetBlockType {
+                            block_type: super::ast::BlockKind::Quote,
+                        }));
+                    },
+                }
+
+                ToolbarButton {
+                    icon: "{{}}",
+                    title: "Code Block",
+                    on_click: move |_| {
+                        props.on_command.call(Box::new(SetBlockType {
+                            block_type: super::ast::BlockKind::CodeBlock {
+                                language: None,
+                                code: String::new(),
+                            },
+                        }));
+                    },
+                }
+
+                ToolbarButton {
+                    icon: "—",
+                    title: "Horizontal Rule",
+                    on_click: move |_| {
+                        props.on_command.call(Box::new(InsertBlock {
+                            block_type: super::ast::BlockKind::Rule,
+                        }));
+                    },
+                }
+            }
+
+            // Media group
+            div {
+                class: "toolbar-group flex items-center gap-1",
+
+                ToolbarButton {
+                    icon: "🔗",
+                    title: "Insert Link",
+                    on_click: move |_| {
+                        show_link_dialog.set(true);
+                    },
+                }
+
+                ToolbarButton {
+                    icon: "📷",
+                    title: "Insert Image",
+                    on_click: move |_| {
+                        show_image_dialog.set(true);
+                    },
+                }
+
+                ToolbarButton {
+                    icon: "▶",
+                    title: "Embed Media",
+                    on_click: move |_| {
+                        show_embed_dialog.set(true);
+                    },
+                }
+            }
+
+            // Dialogs
+            if *show_link_dialog.read() {
+                LinkDialog {
+                    on_close: move |_| show_link_dialog.set(false),
+                    on_insert: move |(href, title)| {
+                        props.on_command.call(Box::new(InsertLink {
+                            href,
+                            title,
+                            target_blank: true,
+                        }));
+                        show_link_dialog.set(false);
+                    },
+                }
+            }
+
+            if *show_image_dialog.read() {
+                ImageDialog {
+                    on_close: move |_| show_image_dialog.set(false),
+                    on_insert: move |(src, alt, caption)| {
+                        props.on_command.call(Box::new(InsertBlock {
+                            block_type: super::ast::BlockKind::Image {
+                                src,
+                                alt,
+                                title: None,
+                                width: None,
+                                height: None,
+                                caption,
+                            },
+                        }));
+                        show_image_dialog.set(false);
+                    },
+                }
+            }
+
+            if *show_embed_dialog.read() {
+                EmbedDialog {
+                    on_close: move |_| show_embed_dialog.set(false),
+                    on_insert: move |(provider, url)| {
+                        props.on_command.call(Box::new(InsertBlock {
+                            block_type: super::ast::BlockKind::Embed {
+                                provider,
+                                url,
+                                title: None,
+                                width: None,
+                                height: None,
+                            },
+                        }));
+                        show_embed_dialog.set(false);
+                    },
+                }
+            }
+        }
+    }
+}
+
+/// Individual toolbar button component.
+#[component]
+fn ToolbarButton(
+    icon: String,
+    title: String,
+    #[props(default = String::new())] class: String,
+    on_click: EventHandler<MouseEvent>,
+) -> Element {
+    rsx! {
+        button {
+            class: "toolbar-button px-3 py-1.5 rounded hover:bg-gray-200 active:bg-gray-300 transition-colors text-sm font-medium {class}",
+            title: "{title}",
+            r#type: "button",
+            onclick: move |evt| on_click.call(evt),
+            "{icon}"
+        }
+    }
+}
+
+/// Link insertion dialog.
+#[component]
+fn LinkDialog(
+    on_close: EventHandler<MouseEvent>,
+    on_insert: EventHandler<(String, Option<String>)>,
+) -> Element {
+    let mut href = use_signal(|| String::new());
+    let mut title = use_signal(|| String::new());
+
+    rsx! {
+        div {
+            class: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50",
+            onclick: move |evt| {
+                evt.stop_propagation();
+                on_close.call(evt);
+            },
+
+            div {
+                class: "bg-white rounded-lg p-6 shadow-xl max-w-md w-full",
+                onclick: move |evt| evt.stop_propagation(),
+
+                h3 { class: "text-lg font-semibold mb-4", "Insert Link" }
+
+                div { class: "space-y-4",
+                    div {
+                        label { class: "block text-sm font-medium text-gray-700 mb-1", "URL" }
+                        input {
+                            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            r#type: "url",
+                            placeholder: "https://example.com",
+                            value: "{href}",
+                            oninput: move |evt| href.set(evt.value()),
+                        }
+                    }
+
+                    div {
+                        label { class: "block text-sm font-medium text-gray-700 mb-1", "Title (optional)" }
+                        input {
+                            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            r#type: "text",
+                            placeholder: "Link title",
+                            value: "{title}",
+                            oninput: move |evt| title.set(evt.value()),
+                        }
+                    }
+
+                    div { class: "flex justify-end gap-2 pt-2",
+                        button {
+                            class: "px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md",
+                            r#type: "button",
+                            onclick: move |evt| on_close.call(evt),
+                            "Cancel"
+                        }
+                        button {
+                            class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700",
+                            r#type: "button",
+                            onclick: move |_| {
+                                let title_val = if title.read().is_empty() {
+                                    None
+                                } else {
+                                    Some(title.read().clone())
+                                };
+                                on_insert.call((href.read().clone(), title_val));
+                            },
+                            "Insert"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Image insertion dialog.
+#[component]
+fn ImageDialog(
+    on_close: EventHandler<MouseEvent>,
+    on_insert: EventHandler<(String, Option<String>, Option<String>)>,
+) -> Element {
+    let mut src = use_signal(|| String::new());
+    let mut alt = use_signal(|| String::new());
+    let mut caption = use_signal(|| String::new());
+
+    rsx! {
+        div {
+            class: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50",
+            onclick: move |evt| {
+                evt.stop_propagation();
+                on_close.call(evt);
+            },
+
+            div {
+                class: "bg-white rounded-lg p-6 shadow-xl max-w-md w-full",
+                onclick: move |evt| evt.stop_propagation(),
+
+                h3 { class: "text-lg font-semibold mb-4", "Insert Image" }
+
+                div { class: "space-y-4",
+                    div {
+                        label { class: "block text-sm font-medium text-gray-700 mb-1", "Image URL" }
+                        input {
+                            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            r#type: "url",
+                            placeholder: "https://example.com/image.jpg",
+                            value: "{src}",
+                            oninput: move |evt| src.set(evt.value()),
+                        }
+                    }
+
+                    div {
+                        label { class: "block text-sm font-medium text-gray-700 mb-1", "Alt Text" }
+                        input {
+                            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            r#type: "text",
+                            placeholder: "Description of the image",
+                            value: "{alt}",
+                            oninput: move |evt| alt.set(evt.value()),
+                        }
+                    }
+
+                    div {
+                        label { class: "block text-sm font-medium text-gray-700 mb-1", "Caption (optional)" }
+                        input {
+                            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            r#type: "text",
+                            placeholder: "Image caption",
+                            value: "{caption}",
+                            oninput: move |evt| caption.set(evt.value()),
+                        }
+                    }
+
+                    div { class: "flex justify-end gap-2 pt-2",
+                        button {
+                            class: "px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md",
+                            r#type: "button",
+                            onclick: move |evt| on_close.call(evt),
+                            "Cancel"
+                        }
+                        button {
+                            class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700",
+                            r#type: "button",
+                            onclick: move |_| {
+                                let alt_val = if alt.read().is_empty() {
+                                    None
+                                } else {
+                                    Some(alt.read().clone())
+                                };
+                                let caption_val = if caption.read().is_empty() {
+                                    None
+                                } else {
+                                    Some(caption.read().clone())
+                                };
+                                on_insert.call((src.read().clone(), alt_val, caption_val));
+                            },
+                            "Insert"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Embed media dialog.
+#[component]
+fn EmbedDialog(
+    on_close: EventHandler<MouseEvent>,
+    on_insert: EventHandler<(super::ast::EmbedProvider, String)>,
+) -> Element {
+    let mut url = use_signal(|| String::new());
+    let mut provider = use_signal(|| super::ast::EmbedProvider::Youtube);
+
+    rsx! {
+        div {
+            class: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50",
+            onclick: move |evt| {
+                evt.stop_propagation();
+                on_close.call(evt);
+            },
+
+            div {
+                class: "bg-white rounded-lg p-6 shadow-xl max-w-md w-full",
+                onclick: move |evt| evt.stop_propagation(),
+
+                h3 { class: "text-lg font-semibold mb-4", "Embed Media" }
+
+                div { class: "space-y-4",
+                    div {
+                        label { class: "block text-sm font-medium text-gray-700 mb-1", "Provider" }
+                        select {
+                            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            onchange: move |evt| {
+                                let val = evt.value();
+                                provider.set(match val.as_str() {
+                                    "youtube" => super::ast::EmbedProvider::Youtube,
+                                    "x" => super::ast::EmbedProvider::X,
+                                    _ => super::ast::EmbedProvider::Generic,
+                                });
+                            },
+                            option { value: "youtube", "YouTube" }
+                            option { value: "x", "X (Twitter)" }
+                            option { value: "generic", "Generic" }
+                        }
+                    }
+
+                    div {
+                        label { class: "block text-sm font-medium text-gray-700 mb-1", "URL" }
+                        input {
+                            class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            r#type: "url",
+                            placeholder: "https://youtube.com/watch?v=...",
+                            value: "{url}",
+                            oninput: move |evt| url.set(evt.value()),
+                        }
+                    }
+
+                    div { class: "flex justify-end gap-2 pt-2",
+                        button {
+                            class: "px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md",
+                            r#type: "button",
+                            onclick: move |evt| on_close.call(evt),
+                            "Cancel"
+                        }
+                        button {
+                            class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700",
+                            r#type: "button",
+                            onclick: move |_| {
+                                on_insert.call((provider.read().clone(), url.read().clone()));
+                            },
+                            "Insert"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
