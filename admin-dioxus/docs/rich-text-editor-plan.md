@@ -1,37 +1,57 @@
 # Rich Text Editor for Dioxus — Full‑Featured Plan (AST‑First)
 
-**STATUS: ✅ INITIAL RELEASE COMPLETED**
+**STATUS: 🚧 CORE EDITING WORKING - INTEGRATION PENDING**
 
 This is a single, full‑feature implementation plan (no v1/v2 split). We will build an AST‑first, plugin‑extensible editor with a WYSIWYG surface, robust commands, and tight integration with our media store. The editor persists sanitized HTML for current APIs while owning a canonical JSON document model internally for correctness, history, and extensibility.
 
 Primary goals (initial release is "complete"):
-- ✅ Inline styles: bold, italic, underline, strikethrough, code, and text highlight.
-- ✅ Typography: headings (H1–H6), paragraph, blockquote, code block, horizontal rule.
-- ✅ Lists: bulleted, numbered, and task/checkbox lists.
-- ✅ Alignment: left, center, right, justify per block; text size and weight via curated classes.
-- ✅ Links: add/edit/remove on text; wrap images with links (open in new tab option).
-- ✅ Images: insert via URL; alt, caption, alignment, width presets.
-- ✅ Embeds: safe iframe support for YouTube and X; strict host allowlist.
+- ✅ Inline styles: bold, italic, underline, strikethrough via native browser execCommand.
+- ✅ Contenteditable cursor handling: proper cursor placement between words and Enter key behavior.
+- ✅ Active formatting state: toolbar buttons highlight when formatting is applied to selection.
+- 🚧 Code formatting: needs custom implementation (execCommand doesn't support inline code).
+- ✅ Typography: headings (H1–H6), paragraph, blockquote, code block, horizontal rule (AST defined).
+- 🚧 Lists: bulleted, numbered, and task/checkbox lists (AST defined, UI pending).
+- 🚧 Alignment: left, center, right, justify per block (AST defined, UI pending).
+- 🚧 Links: add/edit/remove on text (toolbar UI exists, needs execCommand integration).
+- 🚧 Images: insert via URL; alt, caption, alignment, width presets (AST defined, UI pending).
+- 🚧 Embeds: safe iframe support for YouTube and X (AST defined, renderer exists, UI pending).
 - ✅ HTML sanitization: XSS prevention, URL validation, tag/attribute whitelisting.
-- ✅ Toolbar with formatting controls and media insertion dialogs.
+- ✅ Toolbar with formatting controls and media insertion dialogs (structure complete).
 - ✅ Dark mode support throughout all components.
-- 🚧 Paste/clipboard: sanitize, normalize, auto‑link URLs (basic implementation).
-- 🚧 Keyboard shortcuts (partial - formatting shortcuts ready).
+- 🚧 Paste/clipboard: sanitize, normalize, auto‑link URLs (browser default works, custom handling pending).
+- 🚧 Keyboard shortcuts: browser defaults work (Ctrl+B/I/U), custom handling pending.
 - ⏳ Bubble menu, slash menu (planned).
-- ⏳ Undo/redo history (planned).
+- ⏳ Undo/redo history (browser default works, custom history pending).
 - ⏳ Autosave via store and local draft fallback (planned).
 - ⏳ Media picker integration (planned).
 - ⏳ Indent/outdent for lists (planned).
+- ⏳ HTML→AST parsing for saving formatted content (currently saves HTML directly).
+
+**Recent Fixes (Latest Session):**
+- ✅ Fixed cursor placement bug - can now click between words to position cursor
+- ✅ Fixed Enter key bug - new lines no longer overlap, proper line breaks work
+- ✅ Implemented toolbar formatting commands using browser's native execCommand
+- ✅ Added active state detection - toolbar buttons highlight when formatting is active
+- ✅ Refactored from dangerous_inner_html approach to contenteditable-first design
+- ✅ Removed AST→DOM blocking re-renders that destroyed cursor position
 
 Non‑goals: collaborative editing/OT, comments/track changes, themeable custom fonts beyond system + Tailwind classes, arbitrary script embeds.
 
 
-## Architecture Overview (AST‑first) ✅ IMPLEMENTED
+## Architecture Overview (AST‑first) 🚧 PARTIAL
 
-- Canonical document model in Rust (`Doc`, `Block`, `Inline`, `MarkSet`), stored in memory and serialized to JSON for history and draft.
+**Current Implementation:**
+- Canonical document model in Rust (`Doc`, `Block`, `Inline`, `MarkSet`), stored in memory and serialized to JSON.
+- **Simplified rendering:** Single contenteditable div with HTML content; browser handles all editing natively.
+- **Command execution:** Uses browser's `document.execCommand` for formatting (bold, italic, underline, strikethrough).
+- **Active state tracking:** Uses `document.queryCommandState` to detect active formatting on selection.
+- HTML IO: Initial content loaded from AST→HTML via `render_doc`; edited content saved as sanitized HTML.
+- **Cursor preservation:** Initial HTML set once via `use_effect` + DOM manipulation; subsequent edits handled entirely by browser.
+
+**Future Implementation:**
 - Renderer: Dioxus components map AST → DOM; selection state maps DOM ranges ↔ AST positions using stable `data-nodeid` and offset mapping.
 - Command engine: pure functions produce Transactions (ops) that mutate the model; renderer reconciles; history records transactions with coalescing.
-- HTML IO: `doc_to_html` and `html_to_doc` provide lossless or near‑lossless round‑trip within our supported node set; persisted `Post.content` is sanitized HTML.
+- HTML↔AST bidirectional sync: `html_to_doc` parser to convert edited HTML back to AST for proper persistence.
 - Plugin system: node/mark registries and command registration hooks to add features (images, embeds, tasks, tables later) without core changes.
 
 
@@ -40,20 +60,23 @@ Non‑goals: collaborative editing/OT, comments/track changes, themeable custom 
 Types (Rust):
 
 ```rust
-// src/types.rs or src/types/editor.rs
+// src/components/editor/ast.rs
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct Doc(pub Vec<Block>);
+pub struct Doc {
+    pub blocks: Vec<Block>,
+}
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Block {
     pub id: String,
     pub kind: BlockKind,
-    pub align: Option<BlockAlign>,
+    pub align: BlockAlign,
     pub attrs: serde_json::Value, // extensible: heading level, language, etc.
     pub children: Vec<Inline>,    // for paragraphs/headings/blockquote/list items
 }
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "type", rename_all = "lowercase")]
 pub enum BlockKind {
     Paragraph,
     Heading { level: u8 },
@@ -64,45 +87,76 @@ pub enum BlockKind {
     TaskItem { checked: bool },
     Quote,
     CodeBlock { language: Option<String>, code: String },
-    Image { src: String, alt: String, title: Option<String>, width: Option<u32>, height: Option<u32>, caption: Option<String> },
+    Image { src: String, alt: Option<String>, title: Option<String>, width: Option<u32>, height: Option<u32>, caption: Option<String> },
     Embed { provider: EmbedProvider, url: String, title: Option<String>, width: Option<u32>, height: Option<u32> },
     Rule,
 }
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum EmbedProvider { Youtube, X, Generic }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-pub enum BlockAlign { Left, Center, Right, Justify }
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum BlockAlign { 
+    #[default]
+    Left, 
+    Center, 
+    Right, 
+    Justify 
+}
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "type", rename_all = "lowercase")]
 pub enum Inline {
-    Text { text: String, marks: MarkSet, link: Option<Link> },
+    Text { 
+        text: String, 
+        #[serde(default)]
+        marks: MarkSet, 
+        #[serde(skip_serializing_if = "Option::is_none")]
+        link: Option<Link> 
+    },
     HardBreak,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct MarkSet {
+    #[serde(default, skip_serializing_if = "is_false")]
     pub bold: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
     pub italic: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
     pub underline: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
     pub strike: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
     pub code: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub size: Option<TextSize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub highlight: Option<String>, // e.g., bg-yellow-200 token key
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum TextSize { Small, Normal, Lead }
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct Link { pub href: String, pub title: Option<String>, pub target_blank: bool }
+pub struct Link { 
+    pub href: String, 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>, 
+    #[serde(default)]
+    pub target_blank: bool 
+}
 ```
 
 Storage plan:
-- Editor owns the AST as source of truth. DOM is a render target and selection source.
+- Editor owns the AST as source of truth for initial render and structured features.
+- **Current:** Browser contenteditable owns the DOM; HTML synced on `oninput` event and sanitized.
+- **Future:** Implement bidirectional HTML↔AST sync for proper structured editing.
 - Persist sanitized HTML to `Post.content` for API compatibility; also persist JSON draft to `localStorage` for resilience.
-- Utilities: `doc_to_html(Doc) -> String` and `html_to_doc(&str) -> Doc` for import/export.
+- Utilities: `render_doc(Doc) -> String` ✅ and `html_to_doc(&str) -> Doc` ⏳ for import/export.
 
 
 ## Security & Sanitization ✅ IMPLEMENTED
@@ -111,17 +165,30 @@ Storage plan:
 - Links: enforce `rel="noopener noreferrer"` when `target="_blank"`.
 - Images: allow only `src`, `alt`, `title`, `width`, `height`, `class`.
 - Embeds: allow `iframe` with a strict host whitelist and attribute allowlist. For YouTube use `https://www.youtube.com/embed/{id}`; for X use `https://twitframe.com/show?url={tweet_url}`; disallow arbitrary iframe `src` by default.
-- Paste filtering: strip styles and unknown tags; convert b/i/u/s to semantic tags; map inline styles to classes when reasonable.
+- Paste filtering: browser handles paste; HTML sanitized via `ammonia` on `oninput` event.
+
+**Implementation:**
+- `src/components/editor/sanitizer.rs` - Uses `ammonia` crate with strict whitelist
+- URL validation for links and iframe sources
+- XSS prevention via tag/attribute filtering
 
 
-## UI/UX Design ✅ PARTIALLY IMPLEMENTED
+## UI/UX Design ✅ CORE IMPLEMENTED, 🚧 ADVANCED FEATURES PENDING
 
-- Top toolbar (sticky above editor) for block and inline controls.
-- Bubble menu shown on text selection for quick formatting/linking.
-- Slash command (`/`) at paragraph start for inserting blocks: heading levels, list, quote, code, image, embed, rule.
-- Drag‑and‑drop images onto the surface (uses existing upload flow) with live progress placeholders.
-- Resize/align images via property popover (width presets and alignment in initial release); optional drag handles in a follow‑up.
-- Content area styled with Tailwind Typography (`prose prose-neutral`) for WYSIWYG feel.
+**Implemented:**
+- ✅ Top toolbar (sticky above editor) for inline formatting controls (bold, italic, underline, strikethrough).
+- ✅ Toolbar buttons with active state highlighting (blue background when formatting is active).
+- ✅ Single contenteditable div with proper cursor handling.
+- ✅ Placeholder text when editor is empty.
+- ✅ Dark mode support with Tailwind classes.
+- ✅ Focus outline styling.
+
+**Pending:**
+- ⏳ Bubble menu shown on text selection for quick formatting/linking.
+- ⏳ Slash command (`/`) at paragraph start for inserting blocks: heading levels, list, quote, code, image, embed, rule.
+- ⏳ Drag‑and‑drop images onto the surface (uses existing upload flow) with live progress placeholders.
+- ⏳ Resize/align images via property popover (width presets and alignment); optional drag handles.
+- ⏳ Content area styled with Tailwind Typography (`prose prose-neutral`) for WYSIWYG feel.
 
 
 ## Integration Points (project‑specific) ⏳ PLANNED
@@ -141,202 +208,226 @@ Storage plan:
 - Posts revisions: `src/store/posts/actions.rs` (`revisions_list`, `revisions_restore`) for an in‑editor history panel.
 
 
-## Commands & Features (initial release) ✅ CORE IMPLEMENTED
+## Commands & Features (initial release) 🚧 CORE WORKING, ADVANCED PENDING
 
-- Inline marks: Bold (Cmd/Ctrl+B), Italic (Cmd/Ctrl+I), Underline (Cmd/Ctrl+U), Strikethrough, Code (Cmd/Ctrl+E).
-- Text size: small/normal/lead via `text-sm`, `text-base`, `text-lg` on inline or block context; prefer block‑level size on paragraphs/headings.
-- Block types: Paragraph, H1–H4, Quote, Code Block, Horizontal Rule.
-- Lists: Bullet/Numbered/Task; `Tab` to indent, `Shift+Tab` outdent; `Enter` to create next item; toggle task checkbox.
-- Align: left/center/right/justify on block wrappers (`text-left|center|right|justify`).
-- Links: add/edit/unlink on selection; when an image is selected, wrap image node in `<a>…</a>`.
-- Internal linking: link popover includes a search combobox for posts/tags and inserts internal URLs.
-- Images: insert via picker, set alt text, optional caption (`<figure><img/><figcaption/></figure>`), alignment presets; invoke inline image editor (crop/resize/rotate/compress) on selected image to update `src`.
-- Clipboard and drag‑drop images: detect pasted/dropped files, call `use_media().upload(...)`, insert a placeholder node with progress, resolve to final URL on success.
-- Embeds: YouTube (accept normal or share URLs → normalize to embed URL), X (accept tweet URL → twitframe); generic iframe for a whitelisted set; wrap in responsive `aspect-video` container and show a metadata placeholder while resolving.
-- Clear formatting: remove marks from selection; convert to paragraph.
-- Clipboard: paste text/HTML → sanitize; auto‑link plain URLs.
-- Autosave: throttle + debounce; local draft fallback in `localStorage` with `draft:post:{id}`.
-- Block reordering: drag handles per block and keyboard reordering (Alt/Option + Arrow Up/Down).
+**Working (via browser execCommand):**
+- ✅ Bold (Ctrl+B) - works via toolbar and keyboard shortcut
+- ✅ Italic (Ctrl+I) - works via toolbar and keyboard shortcut
+- ✅ Underline (Ctrl+U) - works via toolbar and keyboard shortcut
+- ✅ Strikethrough - works via toolbar button
+- ✅ Active state detection - toolbar shows which formatting is applied
+- ✅ Cursor placement - click anywhere in text to position cursor
+- ✅ Enter key - creates proper line breaks without overlapping text
+- ✅ Native undo/redo (Ctrl+Z/Ctrl+Y) - browser default
+
+**Partially Implemented (AST/UI exists, needs integration):**
+- 🚧 Code (inline `<code>`) - toolbar button exists, needs custom implementation
+- 🚧 Headings (H1-H6) - toolbar buttons exist, needs formatBlock integration
+- 🚧 Paragraph - toolbar button exists, needs formatBlock integration
+- 🚧 Block types: Quote, Code Block, Horizontal Rule - toolbar exists, needs integration
+- 🚧 Lists: Bullet/Numbered/Task - toolbar exists, needs integration
+- 🚧 Links: add/edit/unlink - dialog exists, needs createLink/unlink integration
+- 🚧 Images: insert via URL - dialog exists, needs insertion logic
+- 🚧 Embeds: YouTube/X - dialog exists, needs insertion logic
+- 🚧 Text alignment - needs implementation
+- 🚧 Clear formatting - needs implementation
+
+**Planned:**
+- ⏳ Text size: small/normal/lead via `text-sm`, `text-base`, `text-lg`
+- ⏳ Lists with indent/outdent: `Tab` to indent, `Shift+Tab` outdent; `Enter` to create next item
+- ⏳ Task list checkbox toggle
+- ⏳ Internal linking: search combobox for posts/tags
+- ⏳ Image captions, alignment presets, inline image editor integration
+- ⏳ Clipboard and drag‑drop images: detect pasted/dropped files, upload, insert placeholder
+- ⏳ Autosave: throttle + debounce; local draft fallback
+- ⏳ Block reordering: drag handles and keyboard reordering (Alt + Arrow)
+- ⏳ Custom undo/redo with history coalescing
 
 
 ## Files & Modules ✅ IMPLEMENTED
 
-New module tree:
+Current module tree:
 
 ```
 src/components/editor/
   ✅ mod.rs                  // Main components (RichTextEditor, SimpleEditor, ContentViewer)
+                             // Uses contenteditable with browser execCommand
   ✅ ast.rs                  // AST data structures (Doc, Block, Inline, MarkSet, etc.)
-  ✅ commands.rs             // Command system (insert, delete, format, toggle marks)
+  ✅ commands.rs             // Command trait and system (insert, delete, format, toggle marks)
+                             // Has as_any() for downcasting support
   ✅ renderer.rs             // AST → HTML conversion with dark mode support
   ✅ sanitizer.rs            // HTML whitelist via ammonia, XSS prevention
-  ✅ toolbar.rs              // Top toolbar with all dialogs (link, image, embed)
+  ✅ toolbar.rs              // Top toolbar with formatting buttons and dialogs
+                             // Active state detection via queryCommandState
   ⏳ bubble_menu.rs          // Selection bubble (planned)
-  ⏳ keymap.rs               // Keyboard shortcuts (planned - partial in toolbar)
+  ⏳ keymap.rs               // Custom keyboard shortcuts (planned)
   ⏳ media_picker.rs         // Dialog using use_media() list + upload (planned)
+  ⏳ html_parser.rs          // HTML → AST parser (planned)
   ⏳ styles.css              // Editor‑specific overrides (planned)
 ```
 
-**Implemented Files:**
-- `src/components/editor/mod.rs` - Main editor components with dark mode
-- `src/components/editor/ast.rs` - Complete AST data model with JSON serialization
-- `src/components/editor/commands.rs` - Command trait and core editing operations
-- `src/components/editor/renderer.rs` - HTML renderer with YouTube embed support
-- `src/components/editor/sanitizer.rs` - Security-focused HTML sanitization
-- `src/components/editor/toolbar.rs` - Full toolbar with formatting and media dialogs
-- `src/components/editor/README.md` - Comprehensive documentation
-- `src/screens/editor_demo.rs` - Demo screen with examples and feature showcase
+**Demo & Integration:**
+```
+src/screens/
+  ✅ editor_demo.rs          // Demo screen at /demo/editor with examples
 ```
 
+**Implemented Files Details:**
+- `src/components/editor/mod.rs` 
+  - RichTextEditor component with contenteditable
+  - Uses `use_effect` to set initial HTML once without re-rendering
+  - `oninput` handler captures changes and sanitizes HTML
+  - Execute command function uses `js_sys::eval` with `document.execCommand`
+  
+- `src/components/editor/toolbar.rs`
+  - Formatting buttons (Bold, Italic, Underline, Strikethrough, Code)
+  - Block type buttons (Paragraph, H1-H6, Quote, Code Block, Rule)
+  - List buttons (Bullet, Numbered, Task)
+  - Link/Image/Embed dialogs
+  - Active state tracking via `use_effect` + `queryCommandState`
+  - Visual feedback with blue background for active buttons
+
+- `src/components/editor/commands.rs`
+  - Command trait with `execute()` and `as_any()` methods
+  - InsertText, ToggleMark, SetBlockType, InsertBlock, SplitBlock, DeleteSelection, InsertLink
+  - All commands implement `as_any()` for downcasting
+
 Wiring:
-- Export `pub mod editor;` in `src/components/mod.rs`.
-- Replace content field usage in `src/containers/blog_form/blog_form.rs` to mount `<Editor value=... on_change=... />`.
+- ✅ Export `pub mod editor;` in `src/components/mod.rs`.
+- ✅ Demo route added to `src/router.rs` as `/demo/editor`.
+- ✅ Demo link added to sidebar navigation.
+- ⏳ Replace content field usage in `src/containers/blog_form/blog_form.rs` to mount `<Editor value=... on_change=... />`.
+
+
+## Current Implementation Strategy
+
+**Contenteditable-First Approach:**
+The editor currently uses a simplified, browser-native approach that prioritizes working functionality:
+
+1. **Initial Render:** AST converted to HTML via `render_doc()`, set once using DOM manipulation in `use_effect`
+2. **Editing:** Browser's native contenteditable handles all text input, cursor movement, selection
+3. **Formatting:** `document.execCommand` applies formatting (bold, italic, underline, strikethrough)
+4. **State Detection:** `document.queryCommandState` checks active formatting for toolbar button highlighting
+5. **Change Sync:** `oninput` event captures HTML, sanitizes it, and notifies parent component
+6. **Persistence:** Sanitized HTML passed to parent; can be saved directly or converted to AST
+
+**Why This Approach:**
+- ✅ Preserves cursor position (no DOM re-renders during editing)
+- ✅ Leverages battle-tested browser editing behavior
+- ✅ Works with native undo/redo
+- ✅ Supports native clipboard operations
+- ✅ Minimal JavaScript/WASM overhead
+- ⚠️ Limited to features supported by execCommand
+- ⚠️ HTML-first (AST used for initial render and structured features)
+- ⚠️ Requires HTML→AST parser for full round-trip editing
+
+**Future Enhancement Path:**
+1. Implement HTML→AST parser for structured content persistence
+2. Add custom handlers for features not supported by execCommand (inline code, complex lists)
+3. Implement custom undo/redo with AST transaction history
+4. Add Selection API integration for precise cursor/range manipulation
+5. Gradually migrate to full AST-driven editing while preserving cursor handling
+
+
+## Testing ✅ BASIC TESTS PASSING
+
+Current test coverage:
+- ✅ AST serialization/deserialization (30 tests passing)
+- ✅ HTML sanitization tests
+- ✅ Renderer tests for block types
+- ✅ Command execution tests
+- ⏳ E2E browser tests (planned for paste, upload, embed flows)
+
+Manual testing checklist:
+- ✅ Type text in editor
+- ✅ Click to position cursor between words
+- ✅ Press Enter to create new lines
+- ✅ Select text and click Bold/Italic/Underline/Strikethrough
+- ✅ Verify toolbar buttons highlight when selection has formatting
+- ✅ Test in dark mode
+- ⏳ Test paste from Word/Google Docs
+- ⏳ Test image upload and insertion
+- ⏳ Test embed insertion
+
+
+## Next Steps Priority
+
+**Immediate (to reach MVP):**
+1. ⏳ Implement inline code formatting (custom implementation, not execCommand)
+2. ⏳ Integrate heading/paragraph formatBlock commands
+3. ⏳ Implement list insertion (insertUnorderedList, insertOrderedList)
+4. ⏳ Wire up link dialog to createLink/unlink commands
+5. ⏳ Implement image insertion from dialog
+6. ⏳ Implement embed insertion for YouTube/X
+
+**Short-term (core features):**
+7. ⏳ Add HTML→AST parser for structured content persistence
+8. ⏳ Integrate with BlogForm container
+9. ⏳ Implement autosave with debouncing
+10. ⏳ Add media picker dialog integration
+11. ⏳ Implement bubble menu for quick formatting
+12. ⏳ Add slash commands for block insertion
+
+**Medium-term (polish):**
+13. ⏳ Custom keyboard shortcut system
+14. ⏳ Undo/redo with transaction history
+15. ⏳ Block reordering (drag handles + keyboard)
+16. ⏳ Image editing integration (crop/resize/rotate)
+17. ⏳ Paste handling improvements (preserve formatting from Word/GDocs)
+18. ⏳ Full keyboard accessibility (roving tabindex, ARIA)
+
+**Long-term (advanced):**
+19. ⏳ Revisions panel with server restore
+20. ⏳ Drag-and-drop image upload
+21. ⏳ Internal link search/autocomplete
+22. ⏳ Table support
+23. ⏳ E2E browser test suite (Playwright)
 
 
 ## HTML Policy (sanitizer allowlist) ✅ IMPLEMENTED
 
-Allowed tags: `p, h1, h2, h3, h4, blockquote, ul, ol, li, pre, code, strong, em, u, s, a, img, figure, figcaption, hr, br, iframe`.
+Allowed tags: `p, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, li, pre, code, strong, em, u, s, a, img, figure, figcaption, hr, br, iframe, div, span`.
+
 Allowed attributes:
 - `a[href|title|target|rel]` protocols: `http, https, mailto`.
-- `img[src|alt|title|width|height|class]` protocols: `http, https, data:image/*` (optional, can disable).
-- `iframe[src|width|height|allow|allowfullscreen|loading|title]` with host whitelist.
-- global `class` for Tailwind utilities; no `style` attributes. Keep a narrow class allowlist for embeds/images (alignment, `aspect-video`, width presets) to reduce styling injection risk.
+- `img[src|alt|title|width|height|class]` protocols: `http, https, data`.
+- `iframe[src|width|height|frameborder|allow|allowfullscreen|class|title]` limited to YouTube/X domains.
+- Global: `class`, `id`, `data-*` (for node IDs and plugin metadata).
+
+Policies:
+- Strip all inline `style` attributes by default.
+- Normalize `<b>` → `<strong>`, `<i>` → `<em>`.
+- Remove unknown/script tags.
+- Validate URLs: no `javascript:`, `data:text/html`, etc. except allowed image data URIs.
 
 
-## Embeds ✅ IMPLEMENTED
+## Architecture Diagrams
 
-- YouTube: detect from `youtube.com/watch?v=...` or `youtu.be/...` → `https://www.youtube.com/embed/{id}`. Set `allow` to `accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share` and `allowfullscreen`. Wrap in a `div` with `aspect-video`.
-- X: accept `https://twitter.com/{user}/status/{id}` or `https://x.com/...` → iframe `https://twitframe.com/show?url={encoded_url}`.
-- Generic: consider `maps.google.com` and others in a later phase; otherwise block unknown hosts.
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    RichTextEditor Component                  │
+│                                                              │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │                      Toolbar                            │ │
+│  │  [B] [I] [U] [S] [</>] | [H1] [H2] | [•] [1.] | [Link] │ │
+│  │   ↓ execCommand          ↓ formatBlock  ↓ lists         │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                           ↓                                  │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │          Contenteditable Div (Browser Native)          │ │
+│  │                                                         │ │
+│  │  User types → oninput → sanitize HTML → on_change     │ │
+│  │  Toolbar click → execCommand → format applied          │ │
+│  │  Selection change → queryCommandState → update toolbar│ │
+│  └────────────────────────────────────────────────────────┘ │
+│                           ↓                                  │
+│                  Sanitized HTML Output                       │
+└─────────────────────────────────────────────────────────────┘
 
-
-## Keyboard Shortcuts & A11y 🚧 PARTIAL
-
-- Cmd/Ctrl+B/I/U/E; Cmd/Ctrl+K open link dialog; Cmd/Ctrl+Shift+7/8 toggle ordered/unordered list; Cmd/Ctrl+Alt+1..4 set heading levels; Esc to close popovers.
-- Focus management via roving tabindex in toolbar; ARIA labels for buttons; `aria-pressed` for toggle states.
-- Screen reader: ensure meaningful labels on embeds/images; expose captions; `role="textbox"` with `aria-multiline="true"` on editor surface.
-
-
-## Paste, Drag & Drop 🚧 PARTIAL
-
-- Paste: intercept `paste` event, read `text/plain` and `text/html`; prefer HTML sanitized; map inline styles → semantic where possible; auto‑link URLs.
-- Drop: accept image files; call `use_media().upload(...)` and insert a temporary placeholder that updates to final URL on success. For large images, prefer upload over `data:` URLs; optionally reject `data:` beyond a small threshold.
-
-
-## Undo/Redo & History ⏳ PLANNED
-
-- Canonical, model‑level history with bounded size and coalescing (group typing bursts, merge adjacent mark toggles). Native browser history is suppressed inside the editable surface to avoid divergence.
-
-## Revisions & Versioning (server‑side) ⏳ PLANNED
-
-- Show a “History” panel reading from `posts.revisions_list(post_id)` with timestamps and diff summaries.
-- “Restore this version” triggers `posts.revisions_restore(post_id, revision_id)` and reloads the editor content.
-- Optional: snapshot current editor content before restore for quick undo.
-
-
-## Performance ✅ OPTIMIZED
-
-- Debounce heavy DOM→AST conversion and autosave; throttle measuring.
-- Keep selection read/writes minimal; batch DOM mutations per command.
-- Avoid large inline styles; prefer Tailwind classes.
- - Virtualize long documents for block lists (measure viewport and only render nearby blocks) if needed in extremely long posts; otherwise keep to simple render for clarity.
-
-
-## Testing Strategy ✅ IMPLEMENTED
-
-- Unit tests (wasm-bindgen test or headless) for:
-  - sanitizer policy (`sanitize.rs`),
-  - YouTube/X URL parsing and normalization,
-  - html<->doc serialization helpers on small samples.
-- Manual QA checklist per feature (toolbar toggles, lists, link/image/embed flows, paste) in `docs`.
-- E2E (later): playwright‑style scripts if we introduce CI browser tests.
- - Link validation and normalization tests; internal link picker search and insertion.
- - Paste pipeline tests for image blobs and placeholder resolution.
-
-## Workstreams Status
-
-**✅ Completed:**
-- Core AST, schema, and JSON serialization
-- HTML renderer with sanitization
-- Commands for marks, blocks, lists, alignment, code
-- Toolbar with formatting controls
-- Link dialog, image dialog, embed dialog with URL normalization
-- YouTube and X embed support with URL parsing
-- HTML sanitization with ammonia (XSS prevention)
-- Comprehensive unit tests (30 tests passing)
-- Dark mode support throughout
-- Demo screen with examples and documentation
-- Router integration with sidebar navigation
-
-**🚧 Partial:**
-- Selection mapping (basic implementation)
-- Keyboard shortcuts (formatting shortcuts in toolbar)
-- Paste pipeline (basic HTML sanitization)
-
-**⏳ Planned:**
-- Bubble menu for quick formatting
-- Slash menu for block insertion
-- Full keyboard shortcuts with a11y
-- Media picker dialog integration
-- Autosave + draft recovery with Sonner feedback
-- Inline image editor integration (crop/resize/rotate/compress)
-- Revisions panel backed by `posts.revisions_list`/`revisions_restore`
-- Block reordering (drag handles + keyboard)
-- Internal link search
-- History engine with undo/redo
-
-
-## Open Questions ✅ RESOLVED
-
-- Do we want to store both HTML and JSON AST in the backend later? Currently we will store sanitized HTML only (for compatibility) and keep AST only in autosave/local drafts.
-- Heading scope: allow H1 inside post body or reserve H1 for page title? Default to H2–H4 if title becomes the H1.
-- Image CDN transforms (width/quality) — do we need size presets mapped to CDN parameters?
-- Additional embed providers: Vimeo, Loom, CodePen — prioritize via feedback.
-
-
-## Implementation Notes (project fit) ✅ FOLLOWED
-
-- Tailwind Typography plugin is already included; the editor surface will use `prose` plus utility overrides for selected states and placeholders.
-- Reuse `ui/shadcn` Dialog/Popover for picker and link/embed UIs; reuse `components/portal_v2.rs` for portals.
-- Media store (`src/store/media/*`) already supports upload and list; we’ll compose a `MediaPickerDialog` wrapper for editor use.
-- Autosave endpoint exists; we’ll debounce calls and show a subtle “Autosaved” indicator using our Sonner toasts if desired.
-
-
-## Acceptance Status
-
-**✅ Completed (Initial Release):**
-- Author can: type text; set headings (H1-H6) and alignment; style inline text (bold, italic, underline, strike, code); create bullet/numbered/task lists
-- Insert links with URL, title, and target options via dialog
-- Insert images via URL with alt text and captions
-- Insert YouTube/X embeds with URL normalization and responsive frames
-- HTML output is sanitized with only allowed tags/attrs; no XSS vulnerabilities
-- Dark mode support throughout all components
-- ContentViewer component for read-only display
-- Comprehensive test coverage (30 unit tests passing)
-- Demo screen accessible at `/demo/editor` with examples
-- All core AST operations tested and working
-
-**🚧 Partial Implementation:**
-- Paste handling (basic HTML sanitization implemented)
-- Keyboard shortcuts (formatting buttons work, full shortcuts pending)
-
-**⏳ Pending:**
-- Internal links via search
-- Media picker integration for image insertion
-- Inline image editing (crop/resize/rotate/compress)
-- Paste from Word/Google Docs with formatting preservation
-- Drag and drop images with upload placeholders
-- Undo/redo powered by model history
-- Full keyboard shortcut coverage with a11y
-- Block reordering via drag handles and keyboard
-- BlogForm integration (editor built, wiring pending)
-- Revisions panel with restore functionality
-- Autosave integration
-
-**Quality Metrics:**
-- ✅ 30/30 unit tests passing
-- ✅ Zero compilation errors
-- ✅ Security: ammonia-based XSS prevention
-- ✅ Performance: memoized rendering
-- ✅ Dark mode: full support
-- ✅ Documentation: comprehensive README and examples
+Data Flow:
+Initial: AST → render_doc() → HTML → set once in DOM
+Editing: User types → Browser updates DOM → oninput → HTML captured
+Formatting: Toolbar → execCommand → Browser applies format → oninput
+Saving: HTML → sanitize_html() → Parent component → API/LocalStorage
+Future: HTML → html_to_doc() → AST → JSON persistence
+```
