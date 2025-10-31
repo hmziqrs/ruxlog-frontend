@@ -550,20 +550,20 @@ impl ImageEditorState {
     }
 
     /// Convert bytes to blob URL
-    async fn bytes_to_blob_url(&self, bytes: &[u8], mime_type: &str) -> Result<String, String> {
-        let uint8_array = js_sys::Uint8Array::from(bytes);
-        let blob_parts = js_sys::Array::new();
-        blob_parts.push(&uint8_array);
+    // async fn bytes_to_blob_url(&self, bytes: &[u8], mime_type: &str) -> Result<String, String> {
+    //     let uint8_array = js_sys::Uint8Array::from(bytes);
+    //     let blob_parts = js_sys::Array::new();
+    //     blob_parts.push(&uint8_array);
 
-        let mut blob_options = web_sys::BlobPropertyBag::new();
-        blob_options.type_(mime_type);
+    //     let mut blob_options = web_sys::BlobPropertyBag::new();
+    //     blob_options.type_(mime_type);
 
-        let blob = Blob::new_with_u8_array_sequence_and_options(&blob_parts, &blob_options)
-            .map_err(|e| format!("Failed to create blob: {:?}", e))?;
+    //     let blob = Blob::new_with_u8_array_sequence_and_options(&blob_parts, &blob_options)
+    //         .map_err(|e| format!("Failed to create blob: {:?}", e))?;
 
-        Url::create_object_url_with_blob(&blob)
-            .map_err(|e| format!("Failed to create blob URL: {:?}", e))
-    }
+    //     Url::create_object_url_with_blob(&blob)
+    //         .map_err(|e| format!("Failed to create blob URL: {:?}", e))
+    // }
 
     /// Convert PhotonImage raw pixels to blob URL via canvas
     async fn photon_to_blob_url(

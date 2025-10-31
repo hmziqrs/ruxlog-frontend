@@ -292,7 +292,7 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                             // Show uploaded image with status
                                             {
                                                 let blob = logo_blob_url.as_ref().unwrap();
-                                                let status = media_state.get_upload_status(blob);
+                                                // let status = media_state.get_upload_status(blob);
                                                 let file_info = media_state.get_file_info(blob);
                                                 let (filename, file_size) = if let Some(info) = file_info {
                                                     (info.filename, info.size)
@@ -349,7 +349,7 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                             // Show uploaded image with status
                                             {
                                                 let blob = cover_blob_url.as_ref().unwrap();
-                                                let status = media_state.get_upload_status(blob);
+                                                // let status = media_state.get_upload_status(blob);
                                                 let file_info = media_state.get_file_info(blob);
                                                 let (filename, file_size) = if let Some(info) = file_info {
                                                     (info.filename, info.size)

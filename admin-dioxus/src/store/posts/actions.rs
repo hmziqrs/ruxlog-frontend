@@ -69,7 +69,7 @@ impl PostState {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
                     match response.json::<Post>().await {
-                        Ok(post) => {
+                        Ok(_) => {
                             edit_map
                                 .entry(id)
                                 .or_insert_with(StateFrame::new)
