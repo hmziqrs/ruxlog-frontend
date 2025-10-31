@@ -1,19 +1,23 @@
-use crate::router::Route;
-use crate::store::{use_post, Post};
-use crate::ui::shadcn::{
-    Avatar, AvatarFallback, AvatarImage, Badge, BadgeVariant, Button, ButtonSize, ButtonVariant,
-    Card, CardContent, CardFooter, CardHeader, Checkbox, DropdownMenu, DropdownMenuContent,
-    DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Popover, PopoverContent,
-    PopoverTrigger,
-};
-
-use dioxus::logger::tracing;
 use dioxus::prelude::*;
-use hmziq_dioxus_free_icons::icons::ld_icons::{
-    LdCalendar, LdEllipsis, LdEye, LdGrid3x3, LdHeart, LdLayoutList, LdMessageSquare, LdSearch,
-    LdTag,
+
+use crate::components::{
+    DataTableScreen, HeaderColumn, ListEmptyState, ListErrorBannerProps, ListToolbarProps,
+    PageHeaderProps, SkeletonCellConfig, SkeletonTableRows, UICellType,
 };
-use hmziq_dioxus_free_icons::Icon;
+use crate::hooks::{use_list_screen_with_handlers, ListScreenConfig};
+use crate::router::Route;
+use crate::store::{use_post, ListQuery, ListStore, Post, PostListQuery, PostStatus};
+use crate::types::Order;
+use crate::ui::shadcn::{
+    Avatar, AvatarFallback, AvatarImage, Badge, BadgeVariant, Button, ButtonVariant, Checkbox,
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+};
+use crate::utils::dates::format_short_date_dt;
+
+use hmziq_dioxus_free_icons::{
+    icons::ld_icons::{LdEllipsis, LdEye, LdHeart, LdMessageSquare, LdTag},
+    Icon,
+};
 
 // Helper function for avatar fallback
 fn generate_avatar_fallback(name: &str) -> String {
@@ -22,552 +26,431 @@ fn generate_avatar_fallback(name: &str) -> String {
         .collect::<String>()
 }
 
-// Helper function for date formatting
-fn format_short_date(date: &chrono::DateTime<chrono::Utc>) -> String {
-    date.format("%y-%b-%d").to_string()
-}
-
-// Layout type enum removed as we render Grid-only (non-interactive) like the JS Body example
-
 #[component]
 pub fn PostsListScreen() -> Element {
+    let nav = use_navigator();
     let posts_state = use_post();
 
-    // Fetch posts on mount
-    use_effect(move || {
-        tracing::info!("PostsListScreen: Fetching posts on mount");
-        spawn(async move {
-            tracing::info!("PostsListScreen: Starting async fetch");
-            posts_state.list().await;
-            tracing::info!("PostsListScreen: Fetch completed");
-        });
+    let filters = use_signal(|| PostListQuery::new());
+    // Local selection state for the current page
+    let selected_ids = use_signal(|| Vec::<i32>::new());
+
+    // Use the enhanced hook that creates handlers for us
+    let (list_state, handlers) = use_list_screen_with_handlers(
+        Some(ListScreenConfig {
+            default_sort_field: "created_at".to_string(),
+            default_sort_order: Order::Desc,
+        }),
+        filters,
+    );
+
+    // Effect to load data when filters change - using the trait method
+    use_effect({
+        let list_state = list_state;
+        let mut selected_ids = selected_ids;
+        move || {
+            let q = filters();
+            let _tick = list_state.reload_tick();
+            let posts_state = posts_state;
+            // Clear any selection on query changes (page, search, filters, sorts)
+            selected_ids.set(Vec::new());
+            spawn(async move {
+                posts_state.fetch_list_with_query(q).await;
+            });
+        }
     });
 
-    rsx! {
-        div { class: "min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50",
-            div { class: "container mx-auto py-8 px-4",
-                div { class: "flex flex-col gap-6",
-                    Header {}
-                    Filters {}
-                    ActiveFilters {}
-                    Body {}
-                }
-            }
+    let list = posts_state.list.read();
+    let list_loading = list.is_loading();
+    let _list_failed = list.is_failed();
+
+    let (posts, current_page) = if let Some(p) = &list.data {
+        (p.data.clone(), p.page)
+    } else {
+        (Vec::<Post>::new(), 1)
+    };
+
+    let has_data = !posts.is_empty();
+
+    // Define header columns (prepend a blank cell for the selection checkbox column)
+    let headers = vec![
+        HeaderColumn::new("", false, "w-12 py-2 px-3", None),
+        HeaderColumn::new(
+            "Title",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("title"),
+        ),
+        HeaderColumn::new(
+            "Author",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("author_id"),
+        ),
+        HeaderColumn::new(
+            "Category",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("category_id"),
+        ),
+        HeaderColumn::new(
+            "Status",
+            false,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            None,
+        ),
+        HeaderColumn::new(
+            "Stats",
+            false,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            None,
+        ),
+        HeaderColumn::new(
+            "Published",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("published_at"),
+        ),
+        HeaderColumn::new(
+            "Created",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("created_at"),
+        ),
+        HeaderColumn::new(
+            "Updated",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("updated_at"),
+        ),
+        HeaderColumn::new("", false, "w-12 py-2 px-3", None),
+    ];
+
+    // Custom status filter handler for posts
+    let handle_status_select = {
+        let mut filters = filters;
+        move |value: String| {
+            let mut q = filters.peek().clone();
+            q.set_page(1);
+            q.status = match value.as_str() {
+                "Published" | "published" => Some(PostStatus::Published),
+                "Draft" | "draft" => Some(PostStatus::Draft),
+                "Archived" | "archived" => Some(PostStatus::Archived),
+                _ => None,
+            };
+            filters.set(q);
         }
-    }
-}
-
-// Header Component
-#[component]
-fn Header() -> Element {
-    let nav = use_navigator();
-    rsx! {
-        header { class: "flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
-            div {
-                h1 { class: "text-3xl font-bold tracking-tight", "Posts" }
-                p { class: "text-zinc-500 dark:text-zinc-400 mt-1", "Manage and view your blog posts" }
-            }
-            div { class: "flex items-center gap-2",
-                Button {
-                    onclick: move |_| {nav.push(Route::PostsAddScreen {});},
-                    "Create Post"
-                }
-            }
-        }
-    }
-}
-
-// Filters Component (static UI, no interactivity)
-#[component]
-fn Filters() -> Element {
-    rsx! {
-        div { class: "flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
-            // Search
-            div { class: "relative w-full md:w-96",
-                div { class: "absolute left-2.5 top-2.5 h-4 w-4 text-zinc-500 dark:text-zinc-400",
-                    div { class: "w-4 h-4", Icon { icon: LdSearch {} } }
-                }
-                input {
-                    class: "w-full pl-8 bg-white dark:bg-zinc-900 rounded border border-zinc-200 dark:border-zinc-800 px-3 h-10 text-sm",
-                    r#type: "search",
-                    placeholder: "Search posts...",
-                    value: "",
-                    readonly: true,
-                }
-            }
-
-            // Sort, Filter, View buttons
-            div { class: "flex items-center gap-2",
-                // Sort Dropdown
-                DropdownMenu {
-                    DropdownMenuTrigger {
-                        Button { variant: ButtonVariant::Outline, class: "h-9 gap-1",
-                            // No sort icon available; using text only
-                            "Sort"
-                        }
-                    }
-                    DropdownMenuContent { class: "w-48",
-                        DropdownMenuItem { "Title" }
-                        DropdownMenuItem { "Publish Date" }
-                        DropdownMenuItem { "Views" }
-                        DropdownMenuItem { "Likes" }
-                        DropdownMenuSeparator {}
-                        DropdownMenuItem { "Descending" }
-                    }
-                }
-
-                // Filter Popover (exclude Authors section as requested)
-                Popover {
-                    PopoverTrigger {
-                        Button { variant: ButtonVariant::Outline, class: "h-9 gap-1",
-                            // No filter icon available; using text only
-                            "Filter"
-                        }
-                    }
-                    PopoverContent { class: "w-72 p-4",
-                        div { class: "space-y-4",
-                            div { class: "flex items-center justify-between",
-                                h4 { class: "font-medium", "Filters" }
-                                Button { variant: ButtonVariant::Ghost, class: "h-auto p-0 text-xs", "Clear all" }
-                            }
-
-                            // Status Filter
-                            div { class: "space-y-2",
-                                h5 { class: "text-sm font-medium", "Status" }
-                                div { class: "space-y-1",
-                                    div { class: "flex items-center gap-2",
-                                        Checkbox {}
-                                        span { class: "text-sm", "All" }
-                                    }
-                                    div { class: "flex items-center gap-2",
-                                        Checkbox {}
-                                        span { class: "text-sm", "Published" }
-                                    }
-                                    div { class: "flex items-center gap-2",
-                                        Checkbox {}
-                                        span { class: "text-sm", "Draft" }
-                                    }
-                                }
-                            }
-
-                            div { class: "-mx-4 my-2 h-px bg-border" }
-
-                            // Category Filter
-                            div { class: "space-y-2",
-                                h5 { class: "text-sm font-medium", "Categories" }
-                                div { class: "max-h-32 overflow-y-auto space-y-1 pr-2",
-                                    div { class: "flex items-center gap-2",
-                                        Checkbox {}
-                                        span { class: "text-sm", "Technology" }
-                                    }
-                                    div { class: "flex items-center gap-2",
-                                        Checkbox {}
-                                        span { class: "text-sm", "Design" }
-                                    }
-                                    div { class: "flex items-center gap-2",
-                                        Checkbox {}
-                                        span { class: "text-sm", "Business" }
-                                    }
-                                }
-                            }
-
-                            div { class: "-mx-4 my-2 h-px bg-border" }
-
-                            // Tags Filter
-                            div { class: "space-y-2",
-                                h5 { class: "text-sm font-medium", "Tags" }
-                                div { class: "max-h-32 overflow-y-auto space-y-1 pr-2",
-                                    div { class: "flex items-center gap-2",
-                                        Checkbox {}
-                                        span { class: "text-sm", "React" }
-                                    }
-                                    div { class: "flex items-center gap-2",
-                                        Checkbox {}
-                                        span { class: "text-sm", "JavaScript" }
-                                    }
-                                    div { class: "flex items-center gap-2",
-                                        Checkbox {}
-                                        span { class: "text-sm", "Tailwind" }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // View Mode Buttons (static)
-                Button { class: "h-9 w-9", variant: ButtonVariant::Default,
-                    div { class: "h-4 w-4", Icon { icon: LdGrid3x3 {} } }
-                    span { class: "sr-only", "Grid view" }
-                }
-                Button { class: "h-9 w-9", variant: ButtonVariant::Outline,
-                    div { class: "h-4 w-4", Icon { icon: LdLayoutList {} } }
-                    span { class: "sr-only", "List view" }
-                }
-            }
-        }
-    }
-}
-
-// ActiveFilters Component (static badges)
-#[component]
-fn ActiveFilters() -> Element {
-    rsx! {
-        div { class: "flex flex-wrap items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400",
-            span { "12 posts" }
-            Badge { variant: BadgeVariant::Outline, "Published" }
-            Badge { variant: BadgeVariant::Outline, class: "gap-1",
-                // No user icon available; showing just text
-                "John Doe"
-            }
-            Badge { variant: BadgeVariant::Outline, class: "gap-1",
-                div { class: "h-3.5 w-3.5", Icon { icon: LdTag {} } }
-                "React"
-            }
-            Button { variant: ButtonVariant::Ghost, class: "h-7 px-2 text-xs", size: ButtonSize::Sm,
-                "Clear all"
-            }
-        }
-    }
-}
-
-// Body Component (renders grid of posts; static layout)
-#[component]
-fn Body() -> Element {
-    let posts_state = use_post();
+    };
 
     rsx! {
-        {
-            let posts_list = posts_state.list.read();
-            tracing::info!("PostsListScreen Body: status={:?}, has_data={}", posts_list.status, posts_list.data.is_some());
-
-            if posts_list.is_init() || posts_list.is_loading() {
-                rsx! {
-                    div { class: "flex items-center justify-center py-12",
-                        div { class: "text-center",
-                            div { class: "loading loading-spinner loading-lg" }
-                            p { class: "mt-4", "Loading posts..." }
-                        }
+        DataTableScreen::<Post> {
+            frame: (posts_state.list)(),
+            header: Some(PageHeaderProps {
+                title: "Posts".to_string(),
+                description: "Manage and view your blog posts. Create, edit, and organize content.".to_string(),
+                actions: Some(rsx!{
+                    Button {
+                        onclick: move |_| { nav.push(Route::PostsAddScreen {}); },
+                        "Create Post"
                     }
-                }
-            } else if posts_list.is_failed() {
-                rsx! {
-                    div { class: "flex items-center justify-center py-12",
-                        div { class: "alert alert-error max-w-md",
-                            span { {posts_list.message.clone().unwrap_or_else(|| "Failed to load posts".to_string())} }
-                        }
-                    }
-                }
-            } else {
-                match &posts_list.data {
-                    Some(posts) => {
-                        if posts.is_empty() {
-                            rsx! {
-                                div { class: "flex flex-col items-center justify-center py-12 text-center",
-                                    div { class: "h-12 w-12 text-zinc-300 dark:text-zinc-700 mb-4",
-                                        Icon { icon: LdMessageSquare {} }
-                                    }
-                                    h3 { class: "text-lg font-medium", "No posts found" }
-                                    p { class: "text-zinc-500 dark:text-zinc-400 mt-1 max-w-md",
-                                        "No posts match your current filters. Try adjusting your search or filter criteria."
-                                    }
-                                    Button { variant: ButtonVariant::Outline, class: "mt-4", "Clear all filters" }
-                                }
-                            }
-                        } else {
-                            rsx! {
-                                div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
-                                    {posts.iter().map(|post| rsx! { PostGridCard { post: post.clone() } })}
-                                }
-                            }
-                        }
-                    }
-                    None => rsx! {
-                        // Fallback empty state when no data
-                        div { class: "flex flex-col items-center justify-center py-12 text-center",
-                            div { class: "h-12 w-12 text-zinc-300 dark:text-zinc-700 mb-4",
-                                Icon { icon: LdMessageSquare {} }
-                            }
-                            h3 { class: "text-lg font-medium", "No posts found" }
-                            p { class: "text-zinc-500 dark:text-zinc-400 mt-1 max-w-md",
-                                "No posts match your current filters. Try adjusting your search or filter criteria."
-                            }
-                            Button { variant: ButtonVariant::Outline, class: "mt-4", "Clear all filters" }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-#[component]
-fn PostGridCard(post: Post) -> Element {
-    rsx! {
-        Card { class: "pt-0 pb-0 overflow-hidden transition-all hover:shadow-md dark:bg-zinc-900",
-            // Featured image
-            if let Some(featured_image) = &post.featured_image {
-                div { class: " aspect-video w-full overflow-hidden",
-                    img {
-                        src: "{featured_image.file_url}",
-                        alt: "{post.title}",
-                        class: "h-full w-full object-cover transition-transform hover:scale-105",
-                    }
-                }
-            } else {
-                div { class: "aspect-video w-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center",
-                    div { class: "w-10 h-10 text-zinc-400 dark:text-zinc-600",
-                        Icon { icon: LdMessageSquare {} }
-                    }
-                }
-            }
-
-            CardHeader { class: "",
-                div { class: "flex items-start justify-between",
-                    div { class: "space-y-1.5",
+                }),
+                class: None,
+                embedded: false,
+            }),
+            headers: Some(headers),
+            current_sort_field: Some(list_state.sort_field()),
+            on_sort: Some(handlers.handle_sort.clone()),
+            error_banner: Some(ListErrorBannerProps {
+                message: "Failed to load posts. Please try again.".to_string(),
+                retry_label: Some("Retry".to_string()),
+                on_retry: Some(EventHandler::new(move |_| handlers.handle_retry.call(()))),
+            }),
+            toolbar: Some(ListToolbarProps {
+                search_value: list_state.search_input(),
+                search_placeholder: "Search posts by title, content, or author".to_string(),
+                disabled: list_loading,
+                on_search_input: handlers.handle_search.clone(),
+                status_selected: match filters.read().status {
+                    Some(PostStatus::Published) => "Published".to_string(),
+                    Some(PostStatus::Draft) => "Draft".to_string(),
+                    Some(PostStatus::Archived) => "Archived".to_string(),
+                    None => "All".to_string(),
+                },
+                on_status_select: EventHandler::new(handle_status_select),
+            }),
+            on_prev: move |_| { handlers.handle_prev.call(current_page); },
+            on_next: move |_| { handlers.handle_next.call(current_page); },
+            // Render selection actions between toolbar and table (below_toolbar slot)
+            below_toolbar: if !selected_ids.read().is_empty() {
+                Some(rsx! {
+                    div { class: "w-full flex items-center justify-between bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-md px-4 py-3 shadow-sm",
+                        span { class: "text-sm text-muted-foreground", "{selected_ids.read().len()} selected" }
                         div { class: "flex items-center gap-2",
-                                Badge {
-                                    variant: BadgeVariant::Outline,
-                                    class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800",
-                                    "{post.category.name}"
-                                }
-                            span { class: if post.is_published() { "px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" } else { "px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
-                                "POST_STATUS"
-                            }
-                        }
-                        h3 { class: "font-semibold text-lg line-clamp-2", "{post.title}" }
-                    }
-                    DropdownMenu {
-                        DropdownMenuTrigger { class: "h-8 w-8",
-                            Button {
-                                class: "h-8 w-8",
-                                variant: ButtonVariant::Ghost,
-                                div { class: "w-4 h-4",
-                                    Icon { icon: LdEllipsis {} }
-                                }
-                            }
-                        }
-                        DropdownMenuContent {
-                            DropdownMenuItem {
-                                onclick: move |_| {
-                                    let nav = navigator();
-                                    nav.push(Route::PostsEditScreen { id: post.id });
+                            Button { variant: ButtonVariant::Outline, class: "h-8",
+                                onclick: {
+                                    let mut selected_ids = selected_ids;
+                                    move |_| {
+                                        // TODO: Implement bulk publish action
+                                        selected_ids.set(Vec::new());
+                                    }
                                 },
-                                "Edit"
+                                "Publish"
                             }
-                            DropdownMenuItem { "Duplicate" }
-                            DropdownMenuItem {
-                                variant: String::from("destructive"),
-                                class: "text-red-500 dark:text-red-400",
-                                onclick: move |_| {
-                                    let posts = use_post();
-                                    spawn(async move {
-                                        posts.remove(post.id).await;
-                                        posts.list().await;
-                                    });
+                            Button { variant: ButtonVariant::Outline, class: "h-8",
+                                onclick: {
+                                    let mut selected_ids = selected_ids;
+                                    move |_| {
+                                        // TODO: Implement bulk draft action
+                                        selected_ids.set(Vec::new());
+                                    }
+                                },
+                                "Set as Draft"
+                            }
+                            Button { variant: ButtonVariant::Outline, class: "h-8 text-red-600 border-red-200 dark:border-red-800 dark:hover:bg-red-950/20 hover:bg-red-50",
+                                onclick: {
+                                    let mut selected_ids = selected_ids;
+                                    move |_| {
+                                        // TODO: Implement bulk delete
+                                        selected_ids.set(Vec::new());
+                                    }
                                 },
                                 "Delete"
                             }
                         }
                     }
-                }
-            }
-            CardContent { class: "p-4 pt-0 pb-0",
-                if let Some(excerpt) = &post.excerpt {
-                    p { class: "text-zinc-500 dark:text-zinc-400 text-sm line-clamp-2 mt-1",
-                        "{excerpt}"
-                    }
-                }
-                // Tags
-                if !post.tags.is_empty() {
-                    div { class: "flex flex-wrap gap-1.5 mt-3",
-                        {post.tags.iter().take(3).map(|tag| rsx! {
-                            Badge { variant: BadgeVariant::Secondary, "{tag.name}" }
-                        })}
-                        if post.tags.len() > 3 {
-                            Badge { variant: BadgeVariant::Secondary, "+{post.tags.len() - 3}" }
-                        }
-                    }
-                }
-            }
-            CardFooter { class: "p-4 pt-0 flex items-center justify-between",
-                div { class: "flex items-center gap-2",
-                    Avatar { class: "w-8 h-8",
-                        AvatarImage {
-                            src: post.author.avatar.as_ref().map(|a| a.file_url.clone()).unwrap_or_default(),
-                            alt: post.author.name.clone(),
-                        }
-                        AvatarFallback {
-                            span { class: "text-xs font-medium",
-                                {generate_avatar_fallback(&post.author.name)}
-                            }
-                        }
-                    }
-                    span { class: "text-xs text-zinc-500 dark:text-zinc-400", "{post.author.name}" }
-                }
-                // Stats with date between views and likes
-                div { class: "flex items-center gap-3 text-zinc-500 dark:text-zinc-400",
-                    div { class: "flex items-center gap-1 text-xs",
-                        div { class: "w-3.5 h-3.5",
-                            Icon { icon: LdCalendar {} }
-                        }
-                        span {
-                            if post.is_published() && post.published_at.is_some() {
-                                {format_short_date(post.published_at.as_ref().unwrap())}
-                            } else {
-                                {format_short_date(&post.created_at)}
-                            }
-                        }
-                    }
-                    div { class: "flex items-center gap-1 text-xs",
-                        div { class: "w-3.5 h-3.5",
-                            Icon { icon: LdEye {} }
-                        }
-                        span { "{post.view_count}" }
-                    }
-                    div { class: "flex items-center gap-1 text-xs",
-                        div { class: "w-3.5 h-3.5",
-                            Icon { icon: LdHeart {} }
-                        }
-                        span { "{post.likes_count}" }
-                    }
-                }
-            }
-        }
-    }
-}
-
-#[component]
-fn PostListItem(post: Post) -> Element {
-    rsx! {
-        Card { class: "pt-0 pb-0 overflow-hidden transition-all hover:shadow-md dark:bg-zinc-900",
-            div { class: "flex flex-col md:flex-row",
-                // Featured image
-                if let Some(featured_image) = &post.featured_image {
-                    div { class: "md:w-48 lg:w-60 aspect-video md:aspect-square overflow-hidden",
-                        img {
-                            src: "{featured_image.file_url}",
-                            alt: "{post.title}",
-                            class: "h-full w-full object-cover",
-                        }
+                })
+            } else { None },
+            // Table body content only - headers are now handled by DataTableScreen
+            if posts.is_empty() {
+                if list_loading && !has_data {
+                    SkeletonTableRows {
+                        row_count: 6,
+                        cells: vec![
+                            SkeletonCellConfig::custom(UICellType::Default, "w-12 py-2 px-3"),
+                            SkeletonCellConfig::custom(UICellType::Default, "py-2 px-3"),
+                            SkeletonCellConfig::custom(UICellType::Default, "py-2 px-3"),
+                            SkeletonCellConfig::custom(UICellType::Default, "py-2 px-3"),
+                            SkeletonCellConfig::custom(UICellType::Badge, "py-2 px-3"),
+                            SkeletonCellConfig::custom(UICellType::Default, "py-2 px-3"),
+                            SkeletonCellConfig::custom(UICellType::Default, "py-2 px-3"),
+                            SkeletonCellConfig::custom(UICellType::Default, "py-2 px-3"),
+                            SkeletonCellConfig::custom(UICellType::Default, "py-2 px-3"),
+                            SkeletonCellConfig::custom(UICellType::Action, "w-12 py-2 px-3"),
+                        ],
                     }
                 } else {
-                    div { class: "md:w-48 lg:w-60 aspect-video md:aspect-square bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center",
-                        div { class: "w-10 h-10 text-zinc-400 dark:text-zinc-600",
-                            Icon { icon: LdMessageSquare {} }
+                    td { colspan: "10", class: "py-12 px-4 text-center",
+                        ListEmptyState {
+                            title: "No posts found".to_string(),
+                            description: "Try adjusting your search or create a new post to get started.".to_string(),
+                            clear_label: "Clear search".to_string(),
+                            create_label: "Create your first post".to_string(),
+                            on_clear: move |_| { handlers.handle_clear.call(()); },
+                            on_create: move |_| { nav.push(Route::PostsAddScreen {}); },
                         }
                     }
                 }
+            } else {
+                {posts.iter().map(|post| {
+                    let post_id = post.id;
+                    let is_selected = selected_ids.read().contains(&post_id);
 
-                div { class: "flex-1 p-4",
-                    div { class: "flex items-start justify-between",
-                        div { class: "space-y-1",
-                            div { class: "flex items-center gap-2",
-                                    Badge { variant: BadgeVariant::Secondary, "{post.category.name}" }
-                                span { class: if post.is_published() { "px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" } else { "px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
-                                    "POST_STATIUS"
-                                }
-                            }
-                            h3 { class: "font-semibold text-lg", "{post.title}" }
-                        }
-                        DropdownMenu {
-                            DropdownMenuTrigger { class: "h-8 w-8",
-                                button { class: "h-8 w-8 flex items-center justify-center",
-                                    div { class: "w-4 h-4",
-                                        Icon { icon: LdEllipsis {} }
-                                    }
-                                }
-                            }
-                            DropdownMenuContent {
-                                DropdownMenuItem {
-                                    onclick: move |_| {
-                                        let nav = navigator();
-                                        nav.push(Route::PostsEditScreen { id: post.id });
+                    rsx! {
+                        tr {
+                            key: "{post_id}",
+                            class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors",
+                            // Selection checkbox
+                            td { class: "w-12 py-2 px-3",
+                                Checkbox {
+                                    checked: is_selected,
+                                    onchange: {
+                                        let mut selected_ids = selected_ids;
+                                        move |_| {
+                                            let mut ids = selected_ids.peek().clone();
+                                            if ids.contains(&post_id) {
+                                                ids.retain(|id| *id != post_id);
+                                            } else {
+                                                ids.push(post_id);
+                                            }
+                                            selected_ids.set(ids);
+                                        }
                                     },
-                                    "Edit"
-                                }
-                                DropdownMenuItem { "Duplicate" }
-                                DropdownMenuItem {
-                                    class: "text-red-500 dark:text-red-400",
-                                    onclick: move |_| {
-                                        let posts = use_post();
-                                        spawn(async move {
-                                            posts.remove(post.id).await;
-                                            posts.list().await;
-                                        });
-                                    },
-                                    "Delete"
                                 }
                             }
-                        }
-                    }
-
-                    if let Some(excerpt) = &post.excerpt {
-                        p { class: "text-zinc-500 dark:text-zinc-400 text-sm mt-2 line-clamp-2",
-                            "{excerpt}"
-                        }
-                    }
-                    if !post.tags.is_empty() {
-                        div { class: "flex flex-wrap gap-1.5 mt-3",
-                            {post.tags.iter().take(5).map(|tag| rsx! {
-                                Badge { variant: BadgeVariant::Secondary, "{tag.name}" }
-                            })}
-                            if post.tags.len() > 5 {
-                                Badge { variant: BadgeVariant::Secondary, "+{post.tags.len() - 5}" }
-                            }
-                        }
-                    }
-                    div { class: "flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t",
-                        div { class: "flex items-center gap-2",
-                            Avatar { class: "w-8 h-8",
-                                AvatarImage {
-                                    src: post.author.avatar.as_ref().map(|a| a.file_url.clone()).unwrap_or_default(),
-                                    alt: post.author.name.clone(),
-                                }
-                                AvatarFallback {
-                                    span { class: "text-xs font-medium",
-                                        {generate_avatar_fallback(&post.author.name)}
-                                    }
-                                }
-                            }
-                            span { class: "text-xs font-medium text-zinc-500 dark:text-zinc-400",
-                                "{post.author.name}"
-                            }
-                        }
-                        div { class: "flex items-center gap-4 mt-2 sm:mt-0 text-zinc-500 dark:text-zinc-400",
-                            div { class: "flex items-center gap-1 text-xs",
-                                div { class: "w-3.5 h-3.5",
-                                    Icon { icon: LdEye {} }
-                                }
-                                span { "{post.view_count}" }
-                            }
-                            div { class: "flex items-center gap-1 text-xs",
-                                div { class: "w-3.5 h-3.5",
-                                    Icon { icon: LdCalendar {} }
-                                }
-                                span {
-                                    if post.is_published() && post.published_at.is_some() {
-                                        {format_short_date(post.published_at.as_ref().unwrap())}
+                            // Title with featured image
+                            td { class: "py-2 px-3",
+                                div { class: "flex items-center gap-3",
+                                    if let Some(featured_image) = &post.featured_image {
+                                        div { class: "w-12 h-12 rounded overflow-hidden flex-shrink-0",
+                                            img {
+                                                src: "{featured_image.file_url}",
+                                                alt: "{post.title}",
+                                                class: "w-full h-full object-cover",
+                                            }
+                                        }
                                     } else {
-                                        {format_short_date(&post.created_at)}
+                                        div { class: "w-12 h-12 rounded bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center flex-shrink-0",
+                                            div { class: "w-5 h-5 text-zinc-400 dark:text-zinc-600",
+                                                Icon { icon: LdMessageSquare {} }
+                                            }
+                                        }
+                                    }
+                                    div { class: "min-w-0",
+                                        div { class: "font-medium text-sm truncate max-w-xs", "{post.title}" }
+                                        if let Some(excerpt) = &post.excerpt {
+                                            p { class: "text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-xs mt-0.5",
+                                                "{excerpt}"
+                                            }
+                                        }
                                     }
                                 }
                             }
-                            div { class: "flex items-center gap-1 text-xs",
-                                div { class: "w-3.5 h-3.5",
-                                    Icon { icon: LdHeart {} }
+                            // Author
+                            td { class: "py-2 px-3",
+                                div { class: "flex items-center gap-2",
+                                    Avatar { class: "w-7 h-7",
+                                        AvatarImage {
+                                            src: post.author.avatar.as_ref().map(|a| a.file_url.clone()).unwrap_or_default(),
+                                            alt: post.author.name.clone(),
+                                        }
+                                        AvatarFallback {
+                                            span { class: "text-xs font-medium",
+                                                {generate_avatar_fallback(&post.author.name)}
+                                            }
+                                        }
+                                    }
+                                    span { class: "text-xs font-medium text-zinc-700 dark:text-zinc-300 truncate max-w-[120px]",
+                                        "{post.author.name}"
+                                    }
                                 }
-                                span { "{post.likes_count}" }
                             }
-                            div { class: "flex items-center gap-1 text-xs",
-                                div { class: "w-3.5 h-3.5",
-                                    Icon { icon: LdTag {} }
+                            // Category
+                            td { class: "py-2 px-3",
+                                Badge {
+                                    variant: BadgeVariant::Outline,
+                                    class: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300",
+                                    "{post.category.name}"
                                 }
-                                span { "{post.tags.len()}" }
+                            }
+                            // Status
+                            td { class: "py-2 px-3",
+                                {match post.status {
+                                    PostStatus::Published => rsx! {
+                                        Badge {
+                                            variant: BadgeVariant::Secondary,
+                                            class: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+                                            "Published"
+                                        }
+                                    },
+                                    PostStatus::Draft => rsx! {
+                                        Badge {
+                                            variant: BadgeVariant::Secondary,
+                                            class: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+                                            "Draft"
+                                        }
+                                    },
+                                    PostStatus::Archived => rsx! {
+                                        Badge {
+                                            variant: BadgeVariant::Secondary,
+                                            class: "bg-zinc-100 text-zinc-800 dark:bg-zinc-800/30 dark:text-zinc-400",
+                                            "Archived"
+                                        }
+                                    },
+                                }}
+                            }
+                            // Stats (views, likes, tags)
+                            td { class: "py-2 px-3",
+                                div { class: "flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400",
+                                    div { class: "flex items-center gap-1",
+                                        div { class: "w-3.5 h-3.5",
+                                            Icon { icon: LdEye {} }
+                                        }
+                                        span { "{post.view_count}" }
+                                    }
+                                    div { class: "flex items-center gap-1",
+                                        div { class: "w-3.5 h-3.5",
+                                            Icon { icon: LdHeart {} }
+                                        }
+                                        span { "{post.likes_count}" }
+                                    }
+                                    div { class: "flex items-center gap-1",
+                                        div { class: "w-3.5 h-3.5",
+                                            Icon { icon: LdTag {} }
+                                        }
+                                        span { "{post.tags.len()}" }
+                                    }
+                                }
+                            }
+                            // Published date
+                            td { class: "py-2 px-3 text-xs text-zinc-500 dark:text-zinc-400 whitespace-nowrap",
+                                {if let Some(published_at) = &post.published_at {
+                                    format_short_date_dt(published_at)
+                                } else {
+                                    "—".to_string()
+                                }}
+                            }
+                            // Created date
+                            td { class: "py-2 px-3 text-xs text-zinc-500 dark:text-zinc-400 whitespace-nowrap",
+                                {format_short_date_dt(&post.created_at)}
+                            }
+                            // Updated date
+                            td { class: "py-2 px-3 text-xs text-zinc-500 dark:text-zinc-400 whitespace-nowrap",
+                                {format_short_date_dt(&post.updated_at)}
+                            }
+                            // Actions dropdown
+                            td { class: "w-12 py-2 px-3",
+                                DropdownMenu {
+                                    DropdownMenuTrigger { class: "h-8 w-8",
+                                        Button {
+                                            variant: ButtonVariant::Ghost,
+                                            class: "h-8 w-8 p-0",
+                                            div { class: "w-4 h-4",
+                                                Icon { icon: LdEllipsis {} }
+                                            }
+                                        }
+                                    }
+                                    DropdownMenuContent { class: "w-40",
+                                        DropdownMenuItem {
+                                            onclick: {
+                                                let nav = nav.clone();
+                                                move |_| {
+                                                    nav.push(Route::PostsEditScreen { id: post_id });
+                                                }
+                                            },
+                                            "Edit"
+                                        }
+                                        DropdownMenuItem {
+                                            onclick: move |_| {
+                                                // TODO: Implement duplicate
+                                            },
+                                            "Duplicate"
+                                        }
+                                        DropdownMenuItem {
+                                            class: "text-red-600 dark:text-red-400",
+                                            onclick: {
+                                                let posts_state = posts_state;
+                                                move |_| {
+                                                    let posts_state = posts_state;
+                                                    spawn(async move {
+                                                        posts_state.remove(post_id).await;
+                                                        let remove_state = posts_state.remove.read();
+                                                        if let Some(state) = remove_state.get(&post_id) {
+                                                            if state.is_success() {
+                                                                // Reload the list
+                                                                posts_state.fetch_list_with_query(filters()).await;
+                                                            }
+                                                        }
+                                                    });
+                                                }
+                                            },
+                                            "Delete"
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
-                }
+                })}
             }
         }
     }
