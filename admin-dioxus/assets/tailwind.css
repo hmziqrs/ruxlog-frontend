@@ -469,6 +469,9 @@
   .my-2 {
     margin-block: calc(0.25rem * 2);
   }
+  .my-4 {
+    margin-block: calc(0.25rem * 4);
+  }
   .my-8 {
     margin-block: calc(0.25rem * 8);
   }
@@ -495,6 +498,9 @@
   }
   .mt-4 {
     margin-top: calc(0.25rem * 4);
+  }
+  .mt-5 {
+    margin-top: calc(0.25rem * 5);
   }
   .mt-6 {
     margin-top: calc(0.25rem * 6);
@@ -741,6 +747,9 @@
   }
   .min-h-4 {
     min-height: calc(0.25rem * 4);
+  }
+  .min-h-\[1\.5em\] {
+    min-height: 1.5em;
   }
   .min-h-\[260px\] {
     min-height: 260px;

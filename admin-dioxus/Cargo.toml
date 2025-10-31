@@ -57,6 +57,8 @@ web-sys = { version = "0.3.69", features = [
     "ImageBitmap",
     "FilePropertyBag",
     "BlobPropertyBag",
+    "Selection",
+    "Range",
 ] }
 lazy_static = "1.4.0"
 im = "15.1.0"

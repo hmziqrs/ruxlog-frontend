@@ -42,36 +42,41 @@ pub struct RichTextEditorProps {
 /// Main rich text editor component.
 #[component]
 pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
-    // Editor state
-    let mut doc = use_signal(|| {
+    // Initial HTML content from props (computed once)
+    let initial_html = {
         if let Some(json) = &props.initial_value {
-            serde_json::from_str::<Doc>(json).unwrap_or_default()
+            if let Ok(doc) = serde_json::from_str::<Doc>(json) {
+                render_doc(&doc)
+            } else {
+                String::new()
+            }
         } else {
-            Doc::default()
+            String::new()
         }
-    });
+    };
 
     let mut selection = use_signal(|| Selection::collapsed(Position::start()));
     let mut is_focused = use_signal(|| false);
 
-    // Execute a command
-    let mut execute_command = move |cmd: Box<dyn Command>| {
-        let mut current_doc = doc.read().clone();
-        let current_selection = selection.read().clone();
-
-        if let Ok(new_selection) = cmd.execute(&mut current_doc, &current_selection) {
-            doc.set(current_doc.clone());
-            selection.set(new_selection);
-
-            // Notify parent of change
-            if let Ok(json) = serde_json::to_string(&current_doc) {
-                props.on_change.call(json);
-            }
-        }
+    // Execute a command (placeholder for now)
+    let mut execute_command = move |_cmd: Box<dyn Command>| {
+        // TODO: Implement command execution
+        // For now, commands from toolbar won't work until we properly
+        // implement HTML->AST parsing and cursor position tracking
     };
 
-    // Render HTML from AST
-    let html_content = use_memo(move || render_doc(&doc.read()));
+    // Set initial content on mount
+    use_effect(move || {
+        if !initial_html.is_empty() {
+            if let Some(window) = web_sys::window() {
+                if let Some(document) = window.document() {
+                    if let Ok(Some(element)) = document.query_selector(".editor-content") {
+                        let _ = element.set_inner_html(&initial_html);
+                    }
+                }
+            }
+        }
+    });
 
     rsx! {
         div {
@@ -85,11 +90,20 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                 }
             }
 
-            // Editor content area
+            // Editor content area - simple contenteditable without dangerous_inner_html
             div {
-                class: "editor-content p-4 min-h-[300px] focus:outline-none text-gray-900 dark:text-gray-100",
+                class: "editor-content min-h-[300px] focus:outline-none",
                 contenteditable: if props.readonly { "false" } else { "true" },
                 tabindex: "0",
+                "data-placeholder": "{props.placeholder}",
+
+                style: "
+                    padding: 1rem;
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    line-height: 1.6;
+                    color: inherit;
+                ",
 
                 onfocus: move |_| {
                     is_focused.set(true);
@@ -104,38 +118,41 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                         return;
                     }
 
-                    // Parse HTML back to AST
-                    // For now, we'll use a simplified approach
-                    // In production, you'd implement a proper HTML->AST parser
-                    let value = evt.value();
-                    // Sanitize the HTML
-                    let clean = sanitize_html(&value);
+                    // Get the HTML content from contenteditable
+                    let html_value = evt.value();
 
-                    // Notify parent (simplified - in production parse to AST first)
+                    // Sanitize and notify parent
+                    let clean = sanitize_html(&html_value);
                     props.on_change.call(clean);
                 },
+            }
 
-                // Render the document
-                dangerous_inner_html: "{html_content}",
-
-                // Show placeholder when empty
-                if doc.read().blocks.is_empty() ||
-                   (doc.read().blocks.len() == 1 && doc.read().blocks[0].children.is_empty()) {
-                    div {
-                        class: "text-gray-400 dark:text-gray-500 pointer-events-none absolute",
-                        "{props.placeholder}"
-                    }
-                }
+            // Inline styles for placeholder
+            style {
+                r"
+                .editor-content[data-placeholder]:empty:before {{
+                    content: attr(data-placeholder);
+                    color: #9ca3af;
+                    pointer-events: none;
+                }}
+                .dark .editor-content[data-placeholder]:empty:before {{
+                    color: #6b7280;
+                }}
+                .editor-content:focus {{
+                    outline: 2px solid #3b82f6;
+                    outline-offset: -2px;
+                }}
+                .dark .editor-content:focus {{
+                    outline-color: #60a5fa;
+                }}
+                "
             }
 
             // Character count (optional)
             if *is_focused.read() {
                 div {
                     class: "px-4 py-2 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700",
-                    {
-                        let char_count = count_characters(&doc.read());
-                        format!("{} characters", char_count)
-                    }
+                    "Type to edit..."
                 }
             }
         }
@@ -174,17 +191,10 @@ pub fn ContentViewer(value: String, #[props(default = String::new())] class: Str
     }
 }
 
-/// Counts total characters in the document.
-fn count_characters(doc: &Doc) -> usize {
-    let mut count = 0;
-    for block in &doc.blocks {
-        for inline in &block.children {
-            if let Inline::Text { text, .. } = inline {
-                count += text.chars().count();
-            }
-        }
-    }
-    count
+/// Strip HTML tags for character counting.
+fn strip_html_tags(html: &str) -> String {
+    let re = regex::Regex::new(r"<[^>]*>").unwrap();
+    re.replace_all(html, "").to_string()
 }
 
 #[cfg(test)]
@@ -192,10 +202,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_counts_characters() {
-        let mut doc = Doc::default();
-        doc.blocks[0] = Block::new_paragraph().with_text("Hello world");
-        assert_eq!(count_characters(&doc), 11);
+    fn it_strips_html_tags() {
+        let html = "<p>Hello <strong>world</strong></p>";
+        let stripped = strip_html_tags(html);
+        assert_eq!(stripped, "Hello world");
     }
 
     #[test]
@@ -203,5 +213,13 @@ mod tests {
         let json = r#"{"blocks":[{"id":"test","kind":{"type":"paragraph"},"align":"left","attrs":{},"children":[{"type":"text","text":"Test","marks":{}}]}]}"#;
         let doc: Doc = serde_json::from_str(json).unwrap();
         assert_eq!(doc.blocks.len(), 1);
+    }
+
+    #[test]
+    fn it_renders_empty_content() {
+        let doc = Doc::default();
+        let html = render_doc(&doc);
+        // Should have at least the default paragraph
+        assert!(!html.is_empty());
     }
 }
