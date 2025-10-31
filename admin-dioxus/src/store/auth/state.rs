@@ -15,16 +15,17 @@ pub struct AuthState {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum UserRole {
-    #[serde(rename = "super-admin")]
+    // #[serde(rename = "super-admin")]
     SuperAdmin,
-    #[serde(rename = "admin")]
+    // #[serde(rename = "admin")]
     Admin,
-    #[serde(rename = "moderator")]
+    // #[serde(rename = "moderator")]
     Moderator,
-    #[serde(rename = "author")]
+    // #[serde(rename = "author")]
     Author,
-    #[serde(rename = "user")]
+    // #[serde(rename = "user")]
     User,
 }
 

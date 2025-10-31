@@ -1,23 +1,8 @@
+use crate::store::auth::UserRole;
 use crate::store::StateFrame;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub enum UserRole {
-    SuperAdmin,
-    Admin,
-    Moderator,
-    Author,
-    User,
-}
-
-impl Default for UserRole {
-    fn default() -> Self {
-        UserRole::User
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct User {
