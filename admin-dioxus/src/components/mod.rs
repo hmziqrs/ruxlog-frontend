@@ -63,3 +63,6 @@ pub use image_editor::*;
 
 mod user_avatar;
 pub use user_avatar::*;
+
+mod user_details_dialog;
+pub use user_details_dialog::*;

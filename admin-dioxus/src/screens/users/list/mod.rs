@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use crate::components::sonner::{use_sonner, ToastOptions};
 use crate::components::{
     DataTableScreen, HeaderColumn, ListEmptyState, ListErrorBannerProps, ListToolbarProps,
-    PageHeaderProps, SkeletonCellConfig, SkeletonTableRows, UserAvatar,
+    PageHeaderProps, SkeletonCellConfig, SkeletonTableRows, UserAvatar, UserDetailsDialog,
 };
 use crate::hooks::{use_list_screen_with_handlers, ListScreenConfig};
 use crate::router::Route;
@@ -28,6 +28,9 @@ pub fn UsersListScreen() -> Element {
     let filters = use_signal(|| UsersListQuery::new());
     // Local selection state for the current page
     let selected_ids = use_signal(|| Vec::<i32>::new());
+    // Dialog state for viewing user details
+    let mut details_dialog_open = use_signal(|| false);
+    let mut selected_user_for_details = use_signal(|| None::<User>);
 
     // Use the enhanced hook that creates handlers for us
     let (list_state, handlers) = use_list_screen_with_handlers(
@@ -325,8 +328,12 @@ pub fn UsersListScreen() -> Element {
                                             "Edit"
                                         }
                                         DropdownMenuItem {
-                                            onclick: move |_| {
-                                                nav.push(Route::UsersEditScreen { id: user_id });
+                                            onclick: {
+                                                let user = user.clone();
+                                                move |_| {
+                                                    selected_user_for_details.set(Some(user.clone()));
+                                                    details_dialog_open.set(true);
+                                                }
                                             },
                                             "View Details"
                                         }
@@ -334,7 +341,6 @@ pub fn UsersListScreen() -> Element {
                                             onclick: {
                                                 let user_name = user_name.clone();
                                                 move |_| {
-                                                    let id = user_id;
                                                     let name = user_name.clone();
                                                     let toasts = toasts;
                                                     spawn(async move {
@@ -403,6 +409,12 @@ pub fn UsersListScreen() -> Element {
                     }
                 })}
             }
+        }
+
+        // User details dialog - rendered once outside the table
+        UserDetailsDialog {
+            is_open: details_dialog_open,
+            user: selected_user_for_details(),
         }
     }
 }
