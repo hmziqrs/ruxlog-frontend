@@ -127,6 +127,26 @@ pub fn UserFormContainer(props: UserFormContainerProps) -> Element {
         });
     };
 
+    // Track upload status and resolve media ID
+    use_effect(move || {
+        let form_data = form.read().data.clone();
+
+        // Check avatar blob URL
+        if let Some(avatar_blob) = &form_data.avatar_blob_url {
+            if form_data.avatar_id.is_none() {
+                // Check if upload completed
+                if let Some(media) = media_state.get_uploaded_media(avatar_blob) {
+                    gloo_console::log!(
+                        "[UserForm] Avatar upload complete, media ID:",
+                        media.id.to_string()
+                    );
+                    let mut form_mut = form.write();
+                    form_mut.data.avatar_id = Some(media.id);
+                }
+            }
+        }
+    });
+
     rsx! {
         div {
             if let Some(t) = props.title.clone() { h1 { class: "sr-only", {t} } }
