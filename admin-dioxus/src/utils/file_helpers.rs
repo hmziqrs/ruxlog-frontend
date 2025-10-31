@@ -53,15 +53,20 @@ pub fn validate_file_type(file: &File, allowed_types: &[&str]) -> bool {
     }
 
     let file_type = file.type_();
-    allowed_types.iter().any(|allowed| file_type.starts_with(allowed))
+    allowed_types
+        .iter()
+        .any(|allowed| file_type.starts_with(allowed))
 }
 
 /// Get file extension from filename
 pub fn get_file_extension(filename: &str) -> Option<String> {
-    filename
-        .rsplit('.')
-        .next()
-        .and_then(|ext| if ext.len() < filename.len() { Some(ext.to_lowercase()) } else { None })
+    filename.rsplit('.').next().and_then(|ext| {
+        if ext.len() < filename.len() {
+            Some(ext.to_lowercase())
+        } else {
+            None
+        }
+    })
 }
 
 /// Check if file is an image based on mime type
@@ -147,7 +152,13 @@ mod tests {
     #[test]
     fn test_truncate_filename() {
         assert_eq!(truncate_filename("short.png", 20), "short.png");
-        assert_eq!(truncate_filename("very_long_filename_here.png", 20), "very_l...here.png");
-        assert_eq!(truncate_filename("noextension_but_very_long", 15), "noext...ry_long");
+        assert_eq!(
+            truncate_filename("very_long_filename_here.png", 20),
+            "very_l...here.png"
+        );
+        assert_eq!(
+            truncate_filename("noextension_but_very_long", 15),
+            "noext...ry_long"
+        );
     }
 }

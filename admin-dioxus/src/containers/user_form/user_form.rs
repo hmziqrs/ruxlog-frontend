@@ -5,7 +5,8 @@ use web_sys::{Blob, Url};
 
 use super::form::{use_user_form, UserForm};
 use crate::components::{
-    AppInput, ConfirmDialog, ImageEditorModal, MediaUploadItem, MediaUploadZone, PasswordInput,
+    AppInput, ConfirmDialog, ImageEditorModal, MediaPreviewItem, MediaUploadItem, MediaUploadZone,
+    PasswordInput,
 };
 use crate::hooks::OxForm;
 use crate::router::Route;
@@ -284,7 +285,10 @@ pub fn UserFormContainer(props: UserFormContainerProps) -> Element {
                             div { class: "space-y-3",
                                 label { class: "block text-sm font-medium text-foreground", "Profile Picture" }
                                 {
-                                    if let Some(blob) = form.read().data.avatar_blob_url.clone() {
+                                    let form_data = form.read().data.clone();
+
+                                    if let Some(blob) = form_data.avatar_blob_url {
+                                        // Show newly uploaded avatar (blob URL)
                                         let file_info = media_state.get_file_info(&blob);
                                         let (filename, file_size) = if let Some(info) = file_info {
                                             (info.filename, info.size)
@@ -304,7 +308,22 @@ pub fn UserFormContainer(props: UserFormContainerProps) -> Element {
                                                 on_edit: Some(EventHandler::new(handle_edit_uploaded)),
                                             }
                                         }
+                                    } else if let Some(existing_avatar) = form_data.existing_avatar {
+                                        // Show existing avatar from server
+                                        rsx! {
+                                            MediaPreviewItem {
+                                                media: existing_avatar.clone(),
+                                                alt: form_data.name.clone(),
+                                                on_remove: Some(EventHandler::new(move |_id: i32| {
+                                                    let mut form_mut = form.write();
+                                                    form_mut.data.existing_avatar = None;
+                                                    form_mut.data.avatar_id = None;
+                                                })),
+                                                on_edit: Some(EventHandler::new(handle_edit_uploaded)),
+                                            }
+                                        }
                                     } else {
+                                        // Show upload zone
                                         rsx! {
                                             MediaUploadZone {
                                                 on_upload: move |_blob_urls: Vec<String>| {

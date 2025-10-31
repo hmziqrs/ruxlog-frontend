@@ -66,3 +66,6 @@ pub use user_avatar::*;
 
 mod user_details_dialog;
 pub use user_details_dialog::*;
+
+mod media_preview_item;
+pub use media_preview_item::*;

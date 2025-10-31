@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use validator::Validate;
 
 use crate::hooks::{OxForm, OxFormModel};
-use crate::store::{UserRole, UsersAddPayload, UsersEditPayload};
+use crate::store::{Media, UserRole, UsersAddPayload, UsersEditPayload};
 
 #[derive(Debug, Validate, Clone, PartialEq)]
 pub struct UserForm {
@@ -26,6 +26,10 @@ pub struct UserForm {
 
     pub avatar_blob_url: Option<String>,
 
+    /// Existing avatar from server (used when editing)
+    #[validate(skip)]
+    pub existing_avatar: Option<Media>,
+
     pub is_update: bool,
 }
 
@@ -40,6 +44,7 @@ impl UserForm {
             confirm_password: Some(String::new()),
             avatar_id: None,
             avatar_blob_url: None,
+            existing_avatar: None,
             is_update: false,
         }
     }

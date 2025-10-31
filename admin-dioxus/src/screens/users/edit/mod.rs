@@ -60,7 +60,8 @@ pub fn UsersEditScreen(id: i32) -> Element {
         password: None,         // Don't prefill password for edit
         confirm_password: None, // Don't prefill confirm password for edit
         avatar_id: u.avatar.as_ref().map(|a| a.id),
-        avatar_blob_url: None, // No blob URL when editing existing
+        avatar_blob_url: None,             // No blob URL when editing existing
+        existing_avatar: u.avatar.clone(), // Pass existing avatar for display
         is_update: true,
     });
 

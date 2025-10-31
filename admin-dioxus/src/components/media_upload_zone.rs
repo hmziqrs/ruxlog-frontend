@@ -108,7 +108,9 @@ pub fn MediaUploadZone(props: MediaUploadZoneProps) -> Element {
 
                                     // If on_file_selected is provided, extract Files and pass them
                                     if let Some(on_file_selected) = on_file_selected_clone {
-                                        gloo_console::log!("[MediaUploadZone] Using on_file_selected callback");
+                                        gloo_console::log!(
+                                            "[MediaUploadZone] Using on_file_selected callback"
+                                        );
                                         let mut file_vec = Vec::new();
                                         let limit = if max_files > 0 {
                                             max_files.min(files.length() as usize)
@@ -170,7 +172,8 @@ pub fn MediaUploadZone(props: MediaUploadZoneProps) -> Element {
     // Drag event handlers are temporarily disabled due to type compatibility issues
     // Will be re-enabled after fixing event handler signatures
 
-    let border_class = "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700";
+    let border_class =
+        "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700";
 
     rsx! {
         div {
@@ -283,7 +286,7 @@ async fn process_files_async(
             let payload = MediaUploadPayload {
                 file: file.clone(),
                 reference_type: reference_type.clone(),
-                width: None,  // Could be calculated if needed
+                width: None, // Could be calculated if needed
                 height: None,
             };
 
@@ -291,11 +294,19 @@ async fn process_files_async(
             gloo_console::log!("[process_files_async] Initiating upload for:", &filename);
             match media_state.upload(payload).await {
                 Ok(blob_url) => {
-                    gloo_console::log!("[process_files_async] Upload initiated successfully, blob URL:", &blob_url);
+                    gloo_console::log!(
+                        "[process_files_async] Upload initiated successfully, blob URL:",
+                        &blob_url
+                    );
                     blob_urls.push(blob_url);
                 }
                 Err(e) => {
-                    gloo_console::error!("[process_files_async] Upload failed for", &filename, ":", e);
+                    gloo_console::error!(
+                        "[process_files_async] Upload failed for",
+                        &filename,
+                        ":",
+                        e
+                    );
                 }
             }
         } else {

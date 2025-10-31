@@ -139,21 +139,18 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
     pub async fn set_api_error(&mut self, response: &HttpResponse) {
         match response.json::<ApiError>().await {
             Ok(api_error) => {
-                let msg = api_error
-                    .message
-                    .clone()
-                    .or_else(|| {
-                        // Fallback to a generic message when server omits message in production
-                        Some(format!(
-                            "Request failed{} (status {})",
-                            api_error
-                                .code
-                                .as_ref()
-                                .map(|c| format!(" with code {}", c))
-                                .unwrap_or_default(),
-                            api_error.status
-                        ))
-                    });
+                let msg = api_error.message.clone().or_else(|| {
+                    // Fallback to a generic message when server omits message in production
+                    Some(format!(
+                        "Request failed{} (status {})",
+                        api_error
+                            .code
+                            .as_ref()
+                            .map(|c| format!(" with code {}", c))
+                            .unwrap_or_default(),
+                        api_error.status
+                    ))
+                });
                 self.set_failed(msg);
             }
             Err(_) => {
@@ -339,7 +336,6 @@ where
         }
     }
 }
-
 
 /// Specialized version for updating items in a PaginatedList cache
 pub async fn edit_state_abstraction<K, T, Payload, F, GetId, OnSuccess>(
@@ -586,4 +582,3 @@ where
         }
     }
 }
-
