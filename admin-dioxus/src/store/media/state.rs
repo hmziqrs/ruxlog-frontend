@@ -34,7 +34,6 @@ pub enum UploadStatus {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "snake_case")]
 pub struct Media {
     pub id: i32,
     pub object_key: String,
@@ -43,11 +42,20 @@ pub struct Media {
     pub size: i64,
     pub width: Option<i32>,
     pub height: Option<i32>,
+    #[serde(default)]
     pub extension: Option<String>,
+    #[serde(default)]
     pub uploader_id: Option<i32>,
+    #[serde(default)]
     pub reference_type: Option<MediaReference>,
+    #[serde(default = "default_datetime")]
     pub created_at: DateTime<Utc>,
+    #[serde(default = "default_datetime")]
     pub updated_at: DateTime<Utc>,
+}
+
+fn default_datetime() -> DateTime<Utc> {
+    Utc::now()
 }
 
 impl Default for Media {
