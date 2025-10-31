@@ -60,7 +60,7 @@ impl TabsState {
             if self.active_index == initial_tab {
                 break;
             }
-            self.active_index = self.active_index;
+            // self.active_index = self.active_index;
             break;
         }
     }
@@ -82,7 +82,7 @@ impl TabsState {
             if self.active_index == initial_tab {
                 break;
             }
-            self.active_index = self.active_index;
+            // self.active_index = self.active_index;
             break;
         }
     }

@@ -200,7 +200,7 @@ impl CommandContext {
     }
 
     pub fn set_active_index(&mut self, index: usize) {
-        if index < 0 {
+        if index == 0 {
             self.active_index = 0;
         } else if index >= self.groups.len() {
             self.active_index = self.max_index;
