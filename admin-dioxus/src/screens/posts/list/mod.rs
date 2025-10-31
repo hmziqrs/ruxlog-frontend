@@ -7,7 +7,9 @@ use context::{PostListContext, ViewMode};
 
 use dioxus::prelude::*;
 
-use crate::components::{DataTableScreen, ListErrorBannerProps, ListToolbarProps, PageHeaderProps};
+use crate::components::{
+    DataTableScreen, HeaderColumn, ListErrorBannerProps, ListToolbarProps, PageHeaderProps,
+};
 use crate::hooks::{use_list_screen_with_handlers, ListScreenConfig};
 use crate::router::Route;
 use crate::store::{use_categories, use_post, use_tag, use_user, ListStore};
@@ -131,9 +133,66 @@ pub fn PostsListScreen() -> Element {
         None
     };
 
+    // Define table headers
+    let headers = vec![
+        HeaderColumn::new("", false, "w-12 py-2 px-3", None),
+        HeaderColumn::new(
+            "Title",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("title"),
+        ),
+        HeaderColumn::new(
+            "Author",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("author_id"),
+        ),
+        HeaderColumn::new(
+            "Category",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("category_id"),
+        ),
+        HeaderColumn::new(
+            "Status",
+            false,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            None,
+        ),
+        HeaderColumn::new(
+            "Stats",
+            false,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            None,
+        ),
+        HeaderColumn::new(
+            "Published",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("published_at"),
+        ),
+        HeaderColumn::new(
+            "Created",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("created_at"),
+        ),
+        HeaderColumn::new(
+            "Updated",
+            true,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            Some("updated_at"),
+        ),
+        HeaderColumn::new("", false, "w-12 py-2 px-3", None),
+    ];
+
     rsx! {
         DataTableScreen {
             frame: (posts_state.list)(),
+            headers: if *ctx.view_mode.read() == ViewMode::Table { Some(headers) } else { None },
+            current_sort_field: if *ctx.view_mode.read() == ViewMode::Table { Some(list_state.sort_field()) } else { None },
+            on_sort: if *ctx.view_mode.read() == ViewMode::Table { Some(handlers.handle_sort.clone()) } else { None },
             header: Some(PageHeaderProps {
                 title: "Posts".to_string(),
                 description: "Manage and view your blog posts. Create, edit, and organize content.".to_string(),
@@ -193,8 +252,6 @@ pub fn PostsListScreen() -> Element {
                     posts: posts.clone(),
                     list_loading,
                     has_data,
-                    current_sort_field: list_state.sort_field(),
-                    on_sort: handlers.handle_sort,
                     on_clear: handlers.handle_clear
                 }
             } else {
