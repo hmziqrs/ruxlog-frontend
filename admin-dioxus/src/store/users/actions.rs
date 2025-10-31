@@ -1,213 +1,85 @@
 use super::{User, UsersAddPayload, UsersEditPayload, UsersListQuery, UsersState};
 use crate::services::http_client;
-use crate::store::{PaginatedList, StateFrame};
+use crate::store::{
+    edit_state_abstraction, list_state_abstraction, remove_state_abstraction,
+    state_request_abstraction, view_state_abstraction, PaginatedList, StateFrame,
+};
 use std::collections::HashMap;
 
 impl UsersState {
     pub async fn add(&self, payload: UsersAddPayload) {
-        self.add.write().set_loading(None);
-        let result = http_client::post("/admin/create", &payload).send().await;
-        match result {
-            Ok(response) => {
-                if (200..300).contains(&response.status()) {
-                    match response.json::<User>().await {
-                        Ok(user) => {
-                            self.add.write().set_success(None, None);
-                            // Update the list with the new user
-                            let mut tmp = self.list.write();
-                            if let Some(mut paginated) = tmp.data.clone() {
-                                paginated.data.insert(0, user);
-                                paginated.total += 1;
-                                tmp.set_success(Some(paginated), None);
-                            }
-                        }
-                        Err(e) => {
-                            self.add
-                                .write()
-                                .set_failed(Some(format!("Failed to parse user: {}", e)));
-                        }
-                    }
-                } else {
-                    self.add.write().set_api_error(&response).await;
-                }
-            }
-            Err(e) => {
-                self.add
-                    .write()
-                    .set_failed(Some(format!("Network error: {}", e)));
-            }
+        let meta_payload = payload.clone();
+        let request = http_client::post("/admin/create", &payload);
+        let created = state_request_abstraction(
+            &self.add,
+            Some(meta_payload),
+            request.send(),
+            "user",
+            |_user: &User| (None, None),
+        )
+        .await;
+
+        if created.is_some() {
+            self.list().await;
         }
     }
 
     pub async fn edit(&self, id: i32, payload: UsersEditPayload) {
-        let mut edit_map = self.edit.write();
-        edit_map
-            .entry(id)
-            .or_insert_with(StateFrame::new)
-            .set_loading(None);
-        let result = http_client::post(&format!("/admin/update/{}", id), &payload)
-            .send()
-            .await;
-        match result {
-            Ok(response) => {
-                if (200..300).contains(&response.status()) {
-                    match response.json::<User>().await {
-                        Ok(user) => {
-                            edit_map
-                                .entry(id)
-                                .or_insert_with(StateFrame::new)
-                                .set_success(None, None);
-                            // Update the user in the list
-                            let mut list = self.list.write();
-                            if let Some(mut paginated) = list.data.clone() {
-                                if let Some(item) = paginated.data.iter_mut().find(|u| u.id == id) {
-                                    *item = user.clone();
-                                }
-                                list.set_success(Some(paginated), None);
-                            }
-                            // Update the view if it exists
-                            let mut view_map = self.view.write();
-                            if let Some(view_state) = view_map.get_mut(&id) {
-                                view_state.set_success(Some(Some(user)), None);
-                            }
-                        }
-                        Err(e) => {
-                            edit_map
-                                .entry(id)
-                                .or_insert_with(StateFrame::new)
-                                .set_failed(Some(format!("Failed to parse user: {}", e)));
-                        }
-                    }
-                } else {
-                    edit_map
-                        .entry(id)
-                        .or_insert_with(StateFrame::new)
-                        .set_api_error(&response)
-                        .await;
-                }
-            }
-            Err(e) => {
-                edit_map
-                    .entry(id)
-                    .or_insert_with(StateFrame::new)
-                    .set_failed(Some(format!("Network error: {}", e)));
-            }
-        }
+        let _user = edit_state_abstraction(
+            &self.edit,
+            id,
+            payload.clone(),
+            http_client::post(&format!("/admin/update/{}", id), &payload).send(),
+            "user",
+            Some(&self.list),
+            Some(&self.view),
+            |user: &User| user.id,
+            None::<fn(&User)>,
+        )
+        .await;
     }
 
     pub async fn remove(&self, id: i32) {
-        let mut remove_map = self.remove.write();
-        remove_map
-            .entry(id)
-            .or_insert_with(StateFrame::new)
-            .set_loading(None);
-        let result = http_client::post(&format!("/admin/delete/{}", id), &())
-            .send()
-            .await;
-        match result {
-            Ok(response) => {
-                if (200..300).contains(&response.status()) {
-                    remove_map
-                        .entry(id)
-                        .or_insert_with(StateFrame::new)
-                        .set_success(None, None);
-                    // Remove from the list
-                    let mut list = self.list.write();
-                    if let Some(mut paginated) = list.data.clone() {
-                        paginated.data.retain(|u| u.id != id);
-                        paginated.total = paginated.total.saturating_sub(1);
-                        list.set_success(Some(paginated), None);
-                    }
-                } else {
-                    remove_map
-                        .entry(id)
-                        .or_insert_with(StateFrame::new)
-                        .set_api_error(&response)
-                        .await;
-                }
-            }
-            Err(e) => {
-                remove_map
-                    .entry(id)
-                    .or_insert_with(StateFrame::new)
-                    .set_failed(Some(format!("Network error: {}", e)));
-            }
-        }
+        let _ = remove_state_abstraction(
+            &self.remove,
+            id,
+            http_client::post(&format!("/admin/delete/{}", id), &()).send(),
+            "user",
+            Some(&self.list),
+            Some(&self.view),
+            |user: &User| user.id,
+            None::<fn()>,
+        )
+        .await;
     }
 
     pub async fn list(&self) {
-        self.list_with_query(UsersListQuery::default()).await;
+        let _ = list_state_abstraction::<PaginatedList<User>>(
+            &self.list,
+            http_client::post("/admin/list", &serde_json::json!({})),
+            "users",
+        )
+        .await;
     }
 
     pub async fn list_with_query(&self, query: UsersListQuery) {
-        self.list.write().set_loading(None);
-        let result = http_client::post("/admin/list", &query).send().await;
-        match result {
-            Ok(response) => {
-                if (200..300).contains(&response.status()) {
-                    match response.json::<PaginatedList<User>>().await {
-                        Ok(users) => {
-                            self.list.write().set_success(Some(users), None);
-                        }
-                        Err(e) => {
-                            self.list
-                                .write()
-                                .set_failed(Some(format!("Failed to parse users: {}", e)));
-                        }
-                    }
-                } else {
-                    self.list.write().set_api_error(&response).await;
-                }
-            }
-            Err(e) => {
-                self.list
-                    .write()
-                    .set_failed(Some(format!("Network error: {}", e)));
-            }
-        }
+        let _ = list_state_abstraction::<PaginatedList<User>>(
+            &self.list,
+            http_client::post("/admin/list", &query),
+            "users",
+        )
+        .await;
     }
 
     pub async fn view(&self, id: i32) {
-        let mut view_map = self.view.write();
-        view_map
-            .entry(id)
-            .or_insert_with(StateFrame::new)
-            .set_loading(None);
-        let result = http_client::get(&format!("/admin/view/{}", id))
-            .send()
-            .await;
-        match result {
-            Ok(response) => {
-                if (200..300).contains(&response.status()) {
-                    match response.json::<User>().await {
-                        Ok(user) => {
-                            view_map
-                                .entry(id)
-                                .or_insert_with(StateFrame::new)
-                                .set_success(Some(Some(user)), None);
-                        }
-                        Err(e) => {
-                            view_map
-                                .entry(id)
-                                .or_insert_with(StateFrame::new)
-                                .set_failed(Some(format!("Failed to parse user: {}", e)));
-                        }
-                    }
-                } else {
-                    view_map
-                        .entry(id)
-                        .or_insert_with(StateFrame::new)
-                        .set_api_error(&response)
-                        .await;
-                }
-            }
-            Err(e) => {
-                view_map
-                    .entry(id)
-                    .or_insert_with(StateFrame::new)
-                    .set_failed(Some(format!("Network error: {}", e)));
-            }
-        }
+        let _ = view_state_abstraction(
+            &self.view,
+            id,
+            http_client::get(&format!("/admin/view/{}", id)).send(),
+            "user",
+            |user: &User| user.clone(),
+        )
+        .await;
     }
 
     pub fn reset(&self) {

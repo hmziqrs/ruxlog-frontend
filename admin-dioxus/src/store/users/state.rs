@@ -106,11 +106,11 @@ impl ListQuery for UsersListQuery {
 }
 
 pub struct UsersState {
-    pub add: GlobalSignal<StateFrame<()>>,
-    pub edit: GlobalSignal<HashMap<i32, StateFrame<()>>>,
-    pub remove: GlobalSignal<HashMap<i32, StateFrame<()>>>,
+    pub add: GlobalSignal<StateFrame<(), UsersAddPayload>>,
+    pub edit: GlobalSignal<HashMap<i32, StateFrame<(), UsersEditPayload>>>,
+    pub remove: GlobalSignal<HashMap<i32, StateFrame>>,
     pub list: GlobalSignal<StateFrame<PaginatedList<User>>>,
-    pub view: GlobalSignal<HashMap<i32, StateFrame<Option<User>>>>,
+    pub view: GlobalSignal<HashMap<i32, StateFrame<User>>>,
 }
 
 impl UsersState {
