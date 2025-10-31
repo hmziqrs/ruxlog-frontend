@@ -263,7 +263,7 @@ fn handle_set_block_type(document: &web_sys::Document, block_kind: &BlockKind) {
             exec_command(document, "insertOrderedList");
         }
         BlockKind::TaskList { .. } => {
-            exec_command(document, "insertUnorderedList");
+            toggle_task_list(document);
         }
         BlockKind::ListItem
         | BlockKind::TaskItem { .. }
@@ -358,6 +358,21 @@ fn insert_html(document: &web_sys::Document, html: &str) {
     exec_command_with_value(document, "insertHTML", html);
 }
 
+fn toggle_task_list(document: &web_sys::Document) {
+    if let Some(list) = selection_list_element(document) {
+        if element_has_class(&list, "task-list") {
+            convert_to_plain_list(&list);
+        } else {
+            convert_to_task_list(document, &list);
+        }
+    } else {
+        exec_command(document, "insertUnorderedList");
+        if let Some(list) = selection_list_element(document) {
+            convert_to_task_list(document, &list);
+        }
+    }
+}
+
 fn toggle_inline_code(document: &web_sys::Document) {
     if selection_in_code(document) {
         remove_inline_code(document);
@@ -450,6 +465,155 @@ pub(crate) fn selection_in_code(document: &web_sys::Document) -> bool {
         }
     }
     false
+}
+
+fn selection_list_element(document: &web_sys::Document) -> Option<web_sys::Element> {
+    if let Ok(Some(selection)) = document.get_selection() {
+        if let Some(anchor) = selection.anchor_node() {
+            if let Some(list) = find_ancestor_element(&anchor, "ul") {
+                return Some(list);
+            }
+            if let Some(list) = find_ancestor_element(&anchor, "ol") {
+                return Some(list);
+            }
+        }
+        if let Some(focus) = selection.focus_node() {
+            if let Some(list) = find_ancestor_element(&focus, "ul") {
+                return Some(list);
+            }
+            if let Some(list) = find_ancestor_element(&focus, "ol") {
+                return Some(list);
+            }
+        }
+    }
+    None
+}
+
+fn convert_to_task_list(document: &web_sys::Document, list: &web_sys::Element) {
+    add_class(list, "task-list");
+
+    for item in list_items(list) {
+        add_class(&item, "task-list-item");
+        ensure_checkbox(document, &item);
+    }
+}
+
+fn convert_to_plain_list(list: &web_sys::Element) {
+    remove_class(list, "task-list");
+
+    for item in list_items(list) {
+        remove_class(&item, "task-list-item");
+        remove_checkbox(&item);
+    }
+}
+
+fn ensure_checkbox(document: &web_sys::Document, item: &web_sys::Element) {
+    if has_checkbox(item) {
+        return;
+    }
+
+    if let Ok(input) = document.create_element("input") {
+        let _ = input.set_attribute("type", "checkbox");
+        add_class(&input, "task-checkbox");
+
+        let text_node = document.create_text_node(" ");
+
+        if let Some(first_child) = item.first_child() {
+            let _ = item.insert_before(&input, Some(&first_child));
+            let _ = item.insert_before(&text_node, Some(&first_child));
+        } else {
+            let _ = item.append_child(&input);
+            let _ = item.append_child(&text_node);
+        }
+    }
+}
+
+fn remove_checkbox(item: &web_sys::Element) {
+    if let Some(first_element) = item.first_element_child() {
+        if first_element.tag_name().eq_ignore_ascii_case("input") {
+            let _ = item.remove_child(&first_element);
+        }
+    }
+
+    if let Some(first_child) = item.first_child() {
+        if first_child.node_type() == web_sys::Node::TEXT_NODE {
+            if first_child
+                .node_value()
+                .unwrap_or_default()
+                .trim()
+                .is_empty()
+            {
+                let _ = item.remove_child(&first_child);
+            }
+        }
+    }
+}
+
+fn has_checkbox(item: &web_sys::Element) -> bool {
+    if let Some(first_element) = item.first_element_child() {
+        return first_element.tag_name().eq_ignore_ascii_case("input");
+    }
+    false
+}
+
+fn list_items(list: &web_sys::Element) -> Vec<web_sys::Element> {
+    if let Ok(nodes) = list.query_selector_all(":scope > li") {
+        let mut items = Vec::with_capacity(nodes.length() as usize);
+        for idx in 0..nodes.length() {
+            if let Some(node) = nodes.item(idx) {
+                if let Ok(element) = node.dyn_into::<web_sys::Element>() {
+                    items.push(element);
+                }
+            }
+        }
+        items
+    } else {
+        Vec::new()
+    }
+}
+
+fn add_class(element: &web_sys::Element, class_name: &str) {
+    if element_has_class(element, class_name) {
+        return;
+    }
+
+    let mut classes: Vec<String> = element
+        .get_attribute("class")
+        .unwrap_or_default()
+        .split_whitespace()
+        .filter(|value| !value.is_empty())
+        .map(|value| value.to_string())
+        .collect();
+    classes.push(class_name.to_string());
+    let _ = element.set_attribute("class", &classes.join(" "));
+}
+
+fn remove_class(element: &web_sys::Element, class_name: &str) {
+    let mut classes: Vec<String> = element
+        .get_attribute("class")
+        .unwrap_or_default()
+        .split_whitespace()
+        .filter(|value| !value.is_empty() && !value.eq_ignore_ascii_case(class_name))
+        .map(|value| value.to_string())
+        .collect();
+
+    if classes.is_empty() {
+        let _ = element.remove_attribute("class");
+    } else {
+        classes.dedup();
+        let _ = element.set_attribute("class", &classes.join(" "));
+    }
+}
+
+fn element_has_class(element: &web_sys::Element, class_name: &str) -> bool {
+    element
+        .get_attribute("class")
+        .map(|value| {
+            value
+                .split_whitespace()
+                .any(|existing| existing.eq_ignore_ascii_case(class_name))
+        })
+        .unwrap_or(false)
 }
 
 fn build_image_html(

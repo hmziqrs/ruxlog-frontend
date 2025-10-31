@@ -51,6 +51,7 @@ pub fn sanitize_html(input: &str) -> String {
         "ul",
         "ol",
         "li",
+        "input",
         // Images and media
         "img",
         "figure",
@@ -106,10 +107,17 @@ pub fn sanitize_html(input: &str) -> String {
     tag_attrs.insert("code", ["class"].into_iter().collect());
     tag_attrs.insert("pre", ["class"].into_iter().collect());
     tag_attrs.insert("li", ["class"].into_iter().collect());
-    tag_attrs.insert("ol", ["start", "type"].into_iter().collect());
+    tag_attrs.insert("ul", ["class"].into_iter().collect());
+    tag_attrs.insert("ol", ["class", "start", "type"].into_iter().collect());
     tag_attrs.insert("table", ["class"].into_iter().collect());
     tag_attrs.insert("th", ["scope", "colspan", "rowspan"].into_iter().collect());
     tag_attrs.insert("td", ["colspan", "rowspan"].into_iter().collect());
+    tag_attrs.insert(
+        "input",
+        ["type", "checked", "disabled", "class", "contenteditable"]
+            .into_iter()
+            .collect(),
+    );
 
     builder.tag_attributes(tag_attrs);
 
