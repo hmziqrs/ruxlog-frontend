@@ -71,6 +71,9 @@ pub trait Command {
 
     /// Returns a human-readable description of the command.
     fn description(&self) -> &str;
+
+    /// Downcasting support for command inspection.
+    fn as_any(&self) -> &dyn std::any::Any;
 }
 
 /// Command execution errors.
@@ -145,6 +148,10 @@ impl Command for InsertText {
     fn description(&self) -> &str {
         "Insert text"
     }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 }
 
 /// Toggles a mark (bold, italic, etc.) on the current selection.
@@ -216,6 +223,10 @@ impl Command for ToggleMark {
             MarkType::Code => "Toggle code",
         }
     }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 }
 
 /// Converts the current block to a different type.
@@ -243,6 +254,10 @@ impl Command for SetBlockType {
     fn description(&self) -> &str {
         "Change block type"
     }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 }
 
 /// Inserts a new block at the current position.
@@ -265,6 +280,10 @@ impl Command for InsertBlock {
 
     fn description(&self) -> &str {
         "Insert block"
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 }
 
@@ -345,6 +364,10 @@ impl Command for SplitBlock {
     fn description(&self) -> &str {
         "Split block (Enter)"
     }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 }
 
 /// Deletes content in the current selection.
@@ -405,6 +428,10 @@ impl Command for DeleteSelection {
     fn description(&self) -> &str {
         "Delete selection"
     }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 }
 
 /// Inserts a link at the current selection.
@@ -462,6 +489,10 @@ impl Command for InsertLink {
 
     fn description(&self) -> &str {
         "Insert link"
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 }
 

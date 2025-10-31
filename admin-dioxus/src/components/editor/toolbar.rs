@@ -22,6 +22,33 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
     let mut show_image_dialog = use_signal(|| false);
     let mut show_embed_dialog = use_signal(|| false);
 
+    // Track active formatting states
+    let mut is_bold = use_signal(|| false);
+    let mut is_italic = use_signal(|| false);
+    let mut is_underline = use_signal(|| false);
+    let mut is_strikethrough = use_signal(|| false);
+
+    // Update active states when selection changes
+    use_effect(move || {
+        if let Some(window) = web_sys::window() {
+            if let Some(document) = window.document() {
+                // Check which formatting commands are active
+                if let Ok(bold) = js_sys::eval("document.queryCommandState('bold')") {
+                    is_bold.set(bold.as_bool().unwrap_or(false));
+                }
+                if let Ok(italic) = js_sys::eval("document.queryCommandState('italic')") {
+                    is_italic.set(italic.as_bool().unwrap_or(false));
+                }
+                if let Ok(underline) = js_sys::eval("document.queryCommandState('underline')") {
+                    is_underline.set(underline.as_bool().unwrap_or(false));
+                }
+                if let Ok(strike) = js_sys::eval("document.queryCommandState('strikeThrough')") {
+                    is_strikethrough.set(strike.as_bool().unwrap_or(false));
+                }
+            }
+        }
+    });
+
     rsx! {
         div {
             class: "toolbar border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2 flex items-center gap-1 flex-wrap",
@@ -33,6 +60,7 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
                 ToolbarButton {
                     icon: "B",
                     title: "Bold (Ctrl+B)",
+                    active: *is_bold.read(),
                     on_click: move |_| {
                         props.on_command.call(Box::new(ToggleMark {
                             mark_type: MarkType::Bold,
@@ -44,6 +72,7 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
                     icon: "I",
                     title: "Italic (Ctrl+I)",
                     class: "italic",
+                    active: *is_italic.read(),
                     on_click: move |_| {
                         props.on_command.call(Box::new(ToggleMark {
                             mark_type: MarkType::Italic,
@@ -55,6 +84,7 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
                     icon: "U",
                     title: "Underline (Ctrl+U)",
                     class: "underline",
+                    active: *is_underline.read(),
                     on_click: move |_| {
                         props.on_command.call(Box::new(ToggleMark {
                             mark_type: MarkType::Underline,
@@ -66,6 +96,7 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
                     icon: "S",
                     title: "Strikethrough",
                     class: "line-through",
+                    active: *is_strikethrough.read(),
                     on_click: move |_| {
                         props.on_command.call(Box::new(ToggleMark {
                             mark_type: MarkType::Strike,
@@ -292,11 +323,18 @@ fn ToolbarButton(
     icon: String,
     title: String,
     #[props(default = String::new())] class: String,
+    #[props(default = false)] active: bool,
     on_click: EventHandler<MouseEvent>,
 ) -> Element {
+    let active_class = if active {
+        "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
+    } else {
+        ""
+    };
+
     rsx! {
         button {
-            class: "toolbar-button px-3 py-1.5 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition-colors text-sm font-medium {class}",
+            class: "toolbar-button px-3 py-1.5 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition-colors text-sm font-medium {class} {active_class}",
             title: "{title}",
             r#type: "button",
             onclick: move |evt| on_click.call(evt),

@@ -9,12 +9,13 @@ pub mod sanitizer;
 pub mod toolbar;
 
 pub use ast::{Block, BlockAlign, BlockKind, Doc, EmbedProvider, Inline, Link, MarkSet, TextSize};
-pub use commands::{Command, CommandError, MarkType, Position, Selection};
+pub use commands::{Command, CommandError, MarkType, Position, Selection, ToggleMark};
 pub use renderer::render_doc;
 pub use sanitizer::sanitize_html;
 
 use dioxus::prelude::*;
 use toolbar::Toolbar;
+use wasm_bindgen::prelude::*;
 
 /// Props for the RichTextEditor component.
 #[derive(Props, Clone, PartialEq)]
@@ -58,11 +59,32 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
     let mut selection = use_signal(|| Selection::collapsed(Position::start()));
     let mut is_focused = use_signal(|| false);
 
-    // Execute a command (placeholder for now)
-    let mut execute_command = move |_cmd: Box<dyn Command>| {
-        // TODO: Implement command execution
-        // For now, commands from toolbar won't work until we properly
-        // implement HTML->AST parsing and cursor position tracking
+    // Execute a command using browser's native execCommand
+    let mut execute_command = move |cmd: Box<dyn Command>| {
+        // Determine the execCommand based on command type
+        let command_name = if let Some(toggle_mark) = cmd.as_any().downcast_ref::<ToggleMark>() {
+            match toggle_mark.mark_type {
+                MarkType::Bold => Some("bold"),
+                MarkType::Italic => Some("italic"),
+                MarkType::Underline => Some("underline"),
+                MarkType::Strike => Some("strikeThrough"),
+                MarkType::Code => {
+                    // For code, we'll use a different approach
+                    // execCommand doesn't support inline code well
+                    None
+                }
+            }
+        } else {
+            None
+        };
+
+        if let Some(cmd_name) = command_name {
+            // Call execCommand via JavaScript
+            let _ = js_sys::eval(&format!(
+                r#"document.execCommand('{}', false, null)"#,
+                cmd_name
+            ));
+        }
     };
 
     // Set initial content on mount
