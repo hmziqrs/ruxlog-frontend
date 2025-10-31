@@ -388,7 +388,7 @@ Manual testing checklist:
 7. ✅ Add HTML→AST parser for structured content persistence
 8. ✅ Integrate RichTextEditor into BlogForm container
 9. ✅ Implement autosave with debouncing (server autosave for edits; localStorage draft for new posts)
-10. ⏳ Add media picker dialog integration
+10. ✅ Add media picker dialog integration
 11. ⏳ Implement bubble menu for quick formatting
 12. ⏳ Add slash commands for block insertion
 

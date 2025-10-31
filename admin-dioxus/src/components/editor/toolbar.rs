@@ -3,6 +3,8 @@
 //! Provides formatting controls and block type selection.
 
 use super::{commands::*, selection_in_code};
+use crate::components::MediaPickerDialog;
+use crate::store::{Media, MediaReference};
 use dioxus::prelude::*;
 
 /// Props for the Toolbar component.
@@ -253,7 +255,7 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
                     icon: "📷",
                     title: "Insert Image",
                     on_click: move |_| {
-                        show_image_dialog.set(true);
+                        show_image_dialog.set(!show_image_dialog());
                     },
                 }
 
@@ -281,23 +283,23 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
                 }
             }
 
-            if *show_image_dialog.read() {
-                ImageDialog {
-                    on_close: move |_| show_image_dialog.set(false),
-                    on_insert: move |(src, alt, caption)| {
-                        props.on_command.call(Box::new(InsertBlock {
-                            block_type: super::ast::BlockKind::Image {
-                                src,
-                                alt,
-                                title: None,
-                                width: None,
-                                height: None,
-                                caption,
-                            },
-                        }));
-                        show_image_dialog.set(false);
-                    },
-                }
+            MediaPickerDialog {
+                open: *show_image_dialog.read(),
+                on_close: move |_| show_image_dialog.set(false),
+                on_select: move |media: Media| {
+                    props.on_command.call(Box::new(InsertBlock {
+                        block_type: super::ast::BlockKind::Image {
+                            src: media.file_url.clone(),
+                            alt: Some(media.object_key.clone()),
+                            title: None,
+                            width: None,
+                            height: None,
+                            caption: None,
+                        },
+                    }));
+                },
+                filter_type: Some("image/*".to_string()),
+                reference_type: Some(MediaReference::Post),
             }
 
             if *show_embed_dialog.read() {
