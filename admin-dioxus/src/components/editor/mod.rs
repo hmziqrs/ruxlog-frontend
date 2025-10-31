@@ -4,12 +4,14 @@
 
 pub mod ast;
 pub mod commands;
+pub mod parser;
 pub mod renderer;
 pub mod sanitizer;
 pub mod toolbar;
 
 pub use ast::{Block, BlockAlign, BlockKind, Doc, EmbedProvider, Inline, Link, MarkSet, TextSize};
 pub use commands::{Command, CommandError, MarkType, Position, Selection, ToggleMark};
+pub use parser::parse_html;
 pub use renderer::render_doc;
 pub use sanitizer::sanitize_html;
 
@@ -140,6 +142,10 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                         return;
                     }
 
+                    if let Some(document) = current_document() {
+                        sync_task_checkbox_state(&document);
+                    }
+
                     // Get the HTML content from contenteditable
                     let html_value = evt.value();
 
@@ -166,6 +172,25 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                 }}
                 .dark .editor-content:focus {{
                     outline-color: #60a5fa;
+                }}
+                .editor-content .task-list {{
+                    list-style: none;
+                    padding-left: 0;
+                    margin: 0;
+                }}
+                .editor-content .task-list-item {{
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 0.5rem;
+                    margin: 0.25rem 0;
+                }}
+                .editor-content .task-checkbox {{
+                    margin-top: 0.35rem;
+                    width: 1rem;
+                    height: 1rem;
+                }}
+                .dark .editor-content .task-checkbox {{
+                    accent-color: #60a5fa;
                 }}
                 "
             }
@@ -242,18 +267,18 @@ fn handle_toggle_mark(document: &web_sys::Document, mark: MarkType) -> bool {
 fn handle_set_block_type(document: &web_sys::Document, block_kind: &BlockKind) {
     match block_kind {
         BlockKind::Paragraph => {
-            exec_command_with_value(document, "formatBlock", "<p>");
+            format_block_custom(document, "p");
         }
         BlockKind::Heading { level } => {
             let level = (*level).clamp(1, 6);
-            let tag = format!("<h{}>", level);
-            exec_command_with_value(document, "formatBlock", &tag);
+            let tag = format!("h{}", level);
+            format_block_custom(document, &tag);
         }
         BlockKind::Quote => {
-            exec_command_with_value(document, "formatBlock", "<blockquote>");
+            format_block_custom(document, "blockquote");
         }
         BlockKind::CodeBlock { .. } => {
-            exec_command_with_value(document, "formatBlock", "<pre>");
+            format_block_custom(document, "pre");
             ensure_pre_has_code(document);
         }
         BlockKind::BulletList { .. } => {
@@ -271,6 +296,128 @@ fn handle_set_block_type(document: &web_sys::Document, block_kind: &BlockKind) {
         | BlockKind::Embed { .. }
         | BlockKind::Rule => {}
     }
+}
+
+/// Custom implementation of formatBlock that works reliably in modern browsers.
+/// Replaces the deprecated execCommand('formatBlock') approach.
+fn format_block_custom(document: &web_sys::Document, tag_name: &str) {
+    use wasm_bindgen::JsCast;
+    use web_sys::HtmlElement;
+
+    let Some(window) = web_sys::window() else {
+        return;
+    };
+
+    let Some(selection) = window.get_selection().ok().flatten() else {
+        return;
+    };
+
+    if selection.range_count() == 0 {
+        return;
+    }
+
+    let Ok(range) = selection.get_range_at(0) else {
+        return;
+    };
+
+    // Store the current offset for cursor restoration
+    let start_offset = range.start_offset().unwrap_or(0);
+
+    // Get the common ancestor container
+    let Ok(container) = range.common_ancestor_container() else {
+        return;
+    };
+
+    // Find the block-level parent element
+    let block_element = find_block_element(&container);
+
+    if let Some(old_block) = block_element {
+        // Check if we're already the right type
+        if let Some(element) = old_block.dyn_ref::<web_sys::Element>() {
+            if element.tag_name().to_lowercase() == tag_name.to_lowercase() {
+                return; // Already the right type
+            }
+        }
+
+        // Create new element
+        let Ok(new_element) = document.create_element(tag_name) else {
+            return;
+        };
+
+        // Copy innerHTML from old to new
+        if let Some(html_old) = old_block.dyn_ref::<HtmlElement>() {
+            if let Some(html_new) = new_element.dyn_ref::<HtmlElement>() {
+                html_new.set_inner_html(&html_old.inner_html());
+
+                // Copy class attribute if any (preserve styling)
+                if let Some(old_elem) = old_block.dyn_ref::<web_sys::Element>() {
+                    if let Some(class_attr) = old_elem.get_attribute("class") {
+                        let _ = new_element.set_attribute("class", &class_attr);
+                    }
+                }
+
+                // Replace old with new
+                if let Some(parent) = old_block.parent_node() {
+                    let _ = parent.replace_child(&new_element, &old_block);
+
+                    // Restore cursor position
+                    let _ = selection.remove_all_ranges();
+                    if let Ok(new_range) = document.create_range() {
+                        // Try to restore the exact cursor position
+                        if let Some(first_child) = new_element.first_child() {
+                            let _ = new_range.set_start(&first_child, start_offset);
+                            let _ = new_range.set_end(&first_child, start_offset);
+                        } else {
+                            // Fallback: place cursor at the end
+                            let _ = new_range.select_node_contents(&new_element);
+                            let _ = new_range.collapse_with_to_start(false);
+                        }
+                        let _ = selection.add_range(&new_range);
+                    }
+
+                    // Focus the new element
+                    if let Some(html_elem) = new_element.dyn_ref::<HtmlElement>() {
+                        let _ = html_elem.focus();
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Find the closest block-level element ancestor.
+/// Stops at editor-content div to avoid escaping the editor boundary.
+fn find_block_element(node: &web_sys::Node) -> Option<web_sys::Node> {
+    use wasm_bindgen::JsCast;
+
+    let mut current = Some(node.clone());
+
+    while let Some(node) = current {
+        if let Some(element) = node.dyn_ref::<web_sys::Element>() {
+            let tag = element.tag_name().to_lowercase();
+
+            // Stop if we hit the editor-content div
+            if tag == "div"
+                && element
+                    .get_attribute("class")
+                    .map_or(false, |c| c.contains("editor-content"))
+            {
+                // If we're at editor-content, return null to create a new paragraph
+                return None;
+            }
+
+            // Check if it's a formattable block-level element
+            if matches!(
+                tag.as_str(),
+                "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote" | "pre"
+            ) {
+                return Some(node);
+            }
+        }
+        current = node.parent_node();
+    }
+
+    None
 }
 
 fn handle_insert_block(document: &web_sys::Document, block_kind: &BlockKind) {
@@ -515,6 +662,7 @@ fn ensure_checkbox(document: &web_sys::Document, item: &web_sys::Element) {
     if let Ok(input) = document.create_element("input") {
         let _ = input.set_attribute("type", "checkbox");
         add_class(&input, "task-checkbox");
+        let _ = input.set_attribute("contenteditable", "false");
 
         let text_node = document.create_text_node(" ");
 
@@ -614,6 +762,22 @@ fn element_has_class(element: &web_sys::Element, class_name: &str) -> bool {
                 .any(|existing| existing.eq_ignore_ascii_case(class_name))
         })
         .unwrap_or(false)
+}
+
+fn sync_task_checkbox_state(document: &web_sys::Document) {
+    if let Ok(node_list) = document.query_selector_all(".task-checkbox") {
+        for idx in 0..node_list.length() {
+            if let Some(node) = node_list.item(idx) {
+                if let Ok(input) = node.dyn_into::<web_sys::HtmlInputElement>() {
+                    if input.checked() {
+                        let _ = input.set_attribute("checked", "checked");
+                    } else {
+                        let _ = input.remove_attribute("checked");
+                    }
+                }
+            }
+        }
+    }
 }
 
 fn build_image_html(
@@ -718,7 +882,8 @@ pub fn ContentViewer(value: String, #[props(default = String::new())] class: Str
 
     rsx! {
         div {
-            class: "content-viewer prose prose-sm dark:prose-invert max-w-none {class}",
+            class: "content-viewer prose dark:prose-invert max-w-none {class}",
+            style: "white-space: normal; overflow-wrap: break-word;",
             dangerous_inner_html: "{html_content}",
         }
     }

@@ -259,10 +259,13 @@ src/components/editor/
   ✅ sanitizer.rs            // HTML whitelist via ammonia, XSS prevention
   ✅ toolbar.rs              // Top toolbar with formatting buttons and dialogs
                              // Active state detection via queryCommandState
+  ✅ parser.rs               // HTML → AST parser using scraper crate (693 lines)
+                             // Parses sanitized HTML back to AST for persistence
+                             // Supports all block types and inline formatting
+                             // 9 comprehensive tests (all passing)
   ⏳ bubble_menu.rs          // Selection bubble (planned)
   ⏳ keymap.rs               // Custom keyboard shortcuts (planned)
   ⏳ media_picker.rs         // Dialog using use_media() list + upload (planned)
-  ⏳ html_parser.rs          // HTML → AST parser (planned)
   ⏳ styles.css              // Editor‑specific overrides (planned)
 ```
 
@@ -292,6 +295,14 @@ src/screens/
   - InsertText, ToggleMark, SetBlockType, InsertBlock, SplitBlock, DeleteSelection, InsertLink
   - All commands implement `as_any()` for downcasting
 
+- `src/components/editor/parser.rs`
+  - `parse_html()` function converts HTML string to Doc AST
+  - Uses scraper crate for HTML parsing with CSS selectors
+  - Handles all block types (paragraphs, headings, lists, images, embeds, code blocks)
+  - Parses inline formatting (bold, italic, underline, strikethrough, code, links)
+  - Supports task lists, alignment, and custom attributes
+  - Comprehensive test suite with 9 passing tests
+
 Wiring:
 - ✅ Export `pub mod editor;` in `src/components/mod.rs`.
 - ✅ Demo route added to `src/router.rs` as `/demo/editor`.
@@ -306,19 +317,25 @@ The editor currently uses a simplified, browser-native approach that prioritizes
 
 1. **Initial Render:** AST converted to HTML via `render_doc()`, set once using DOM manipulation in `use_effect`
 2. **Editing:** Browser's native contenteditable handles all text input, cursor movement, selection
-3. **Formatting:** `document.execCommand` applies formatting (bold, italic, underline, strikethrough)
+3. **Formatting:** Custom DOM manipulation for block formatting (headings, paragraphs, quotes, code blocks); `document.execCommand` for inline formatting (bold, italic, underline, strikethrough)
 4. **State Detection:** `document.queryCommandState` checks active formatting for toolbar button highlighting
 5. **Change Sync:** `oninput` event captures HTML, sanitizes it, and notifies parent component
-6. **Persistence:** Sanitized HTML passed to parent; can be saved directly or converted to AST
+6. **Persistence:** Sanitized HTML passed to parent; can be saved directly or converted to AST via `parse_html()`
+
+**Recent Improvements:**
+- ✅ **Custom Block Formatting:** Replaced deprecated `execCommand('formatBlock')` with direct DOM manipulation in `format_block_custom()` for reliable H1-H6, P, Quote, and Code formatting
+- ✅ **HTML→AST Parser:** Full bidirectional conversion between HTML and AST using `parse_html()` for structured persistence
+- ✅ **WASM Build Fix:** Added `getrandom` dependency with `wasm_js` feature to fix WebAssembly compilation errors
 
 **Why This Approach:**
 - ✅ Preserves cursor position (no DOM re-renders during editing)
-- ✅ Leverages battle-tested browser editing behavior
+- ✅ Leverages battle-tested browser editing behavior where reliable
+- ✅ Custom implementations for deprecated/unreliable browser APIs
 - ✅ Works with native undo/redo
 - ✅ Supports native clipboard operations
 - ✅ Minimal JavaScript/WASM overhead
-- ⚠️ Limited to features supported by execCommand
-- ⚠️ HTML-first (AST used for initial render and structured features)
+- ✅ Structured persistence via AST parser
+- ⚠️ Hybrid approach (custom + execCommand) requires careful maintenance
 - ⚠️ Requires HTML→AST parser for full round-trip editing
 
 **Future Enhancement Path:**
@@ -353,15 +370,15 @@ Manual testing checklist:
 ## Next Steps Priority
 
 **Immediate (to reach MVP):**
-1. ⏳ Implement inline code formatting (custom implementation, not execCommand)
-2. ⏳ Integrate heading/paragraph formatBlock commands
-3. ⏳ Implement list insertion (insertUnorderedList, insertOrderedList)
-4. ⏳ Wire up link dialog to createLink/unlink commands
-5. ⏳ Implement image insertion from dialog
-6. ⏳ Implement embed insertion for YouTube/X
+1. ✅ Implement inline code formatting (custom implementation, not execCommand)
+2. ✅ Integrate heading/paragraph formatBlock commands
+3. ✅ Implement list insertion (insertUnorderedList, insertOrderedList)
+4. ✅ Wire up link dialog to createLink/unlink commands
+5. ✅ Implement image insertion from dialog
+6. ✅ Implement embed insertion for YouTube/X
 
 **Short-term (core features):**
-7. ⏳ Add HTML→AST parser for structured content persistence
+7. ✅ Add HTML→AST parser for structured content persistence
 8. ⏳ Integrate with BlogForm container
 9. ⏳ Implement autosave with debouncing
 10. ⏳ Add media picker dialog integration
