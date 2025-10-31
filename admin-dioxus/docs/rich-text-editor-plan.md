@@ -122,6 +122,15 @@ Storage plan:
 - UI primitives: reuse `ui/shadcn` components for Dialog, Popover, Dropdown, Button, Icons.
 - Container wiring: embed `Editor` inside `src/containers/blog_form/blog_form.rs`, replace the `textarea`/plain input for `content` with the editor; keep `BlogForm` content synchronized.
 
+## Repo Reuse (concrete hooks and components)
+
+- Floating layers: `src/components/portal_v2.rs` for bubble menu, toolbars, dialogs.
+- Dialogs/popovers/menus: `src/ui/shadcn/dialog.rs`, `src/ui/shadcn/popover.rs`, `src/ui/shadcn/dropdown_menu.rs`, `src/ui/shadcn/combobox.rs`.
+- Notifications: `src/components/sonner/*` for autosave success/failure and errors.
+- Media: `src/store/media/*` for upload/list/view and progress; UI helpers in `src/components/media_upload_zone.rs`, `src/components/media_upload_list.rs`, `src/components/media_preview_item.rs`.
+- Image editing: `src/components/image_editor/*` (crop/resize/rotate/compress) hooked to selected images.
+- Posts revisions: `src/store/posts/actions.rs` (`revisions_list`, `revisions_restore`) for an in‑editor history panel.
+
 
 ## Commands & Features (initial release)
 
@@ -131,11 +140,14 @@ Storage plan:
 - Lists: Bullet/Numbered/Task; `Tab` to indent, `Shift+Tab` outdent; `Enter` to create next item; toggle task checkbox.
 - Align: left/center/right/justify on block wrappers (`text-left|center|right|justify`).
 - Links: add/edit/unlink on selection; when an image is selected, wrap image node in `<a>…</a>`.
-- Images: insert via picker, set alt text, optional caption (`<figure><img/><figcaption/></figure>`), alignment presets.
-- Embeds: YouTube (accept normal or share URLs → normalize to embed URL), X (accept tweet URL → twitframe); generic iframe for a whitelisted set.
+- Internal linking: link popover includes a search combobox for posts/tags and inserts internal URLs.
+- Images: insert via picker, set alt text, optional caption (`<figure><img/><figcaption/></figure>`), alignment presets; invoke inline image editor (crop/resize/rotate/compress) on selected image to update `src`.
+- Clipboard and drag‑drop images: detect pasted/dropped files, call `use_media().upload(...)`, insert a placeholder node with progress, resolve to final URL on success.
+- Embeds: YouTube (accept normal or share URLs → normalize to embed URL), X (accept tweet URL → twitframe); generic iframe for a whitelisted set; wrap in responsive `aspect-video` container and show a metadata placeholder while resolving.
 - Clear formatting: remove marks from selection; convert to paragraph.
 - Clipboard: paste text/HTML → sanitize; auto‑link plain URLs.
 - Autosave: throttle + debounce; local draft fallback in `localStorage` with `draft:post:{id}`.
+- Block reordering: drag handles per block and keyboard reordering (Alt/Option + Arrow Up/Down).
 
 
 ## Files & Modules
@@ -171,12 +183,12 @@ Allowed attributes:
 - `a[href|title|target|rel]` protocols: `http, https, mailto`.
 - `img[src|alt|title|width|height|class]` protocols: `http, https, data:image/*` (optional, can disable).
 - `iframe[src|width|height|allow|allowfullscreen|loading|title]` with host whitelist.
-- global `class` for Tailwind utilities; no `style` attributes.
+- global `class` for Tailwind utilities; no `style` attributes. Keep a narrow class allowlist for embeds/images (alignment, `aspect-video`, width presets) to reduce styling injection risk.
 
 
 ## Embeds
 
-- YouTube: detect from `youtube.com/watch?v=...` or `youtu.be/...` → `https://www.youtube.com/embed/{id}`. Set `allow` to `accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share` and `allowfullscreen`.
+- YouTube: detect from `youtube.com/watch?v=...` or `youtu.be/...` → `https://www.youtube.com/embed/{id}`. Set `allow` to `accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share` and `allowfullscreen`. Wrap in a `div` with `aspect-video`.
 - X: accept `https://twitter.com/{user}/status/{id}` or `https://x.com/...` → iframe `https://twitframe.com/show?url={encoded_url}`.
 - Generic: consider `maps.google.com` and others in a later phase; otherwise block unknown hosts.
 
@@ -191,12 +203,18 @@ Allowed attributes:
 ## Paste, Drag & Drop
 
 - Paste: intercept `paste` event, read `text/plain` and `text/html`; prefer HTML sanitized; map inline styles → semantic where possible; auto‑link URLs.
-- Drop: accept image files; call `use_media().upload(...)` and insert a temporary placeholder that updates to final URL on success.
+- Drop: accept image files; call `use_media().upload(...)` and insert a temporary placeholder that updates to final URL on success. For large images, prefer upload over `data:` URLs; optionally reject `data:` beyond a small threshold.
 
 
 ## Undo/Redo & History
 
 - Canonical, model‑level history with bounded size and coalescing (group typing bursts, merge adjacent mark toggles). Native browser history is suppressed inside the editable surface to avoid divergence.
+
+## Revisions & Versioning (server‑side)
+
+- Show a “History” panel reading from `posts.revisions_list(post_id)` with timestamps and diff summaries.
+- “Restore this version” triggers `posts.revisions_restore(post_id, revision_id)` and reloads the editor content.
+- Optional: snapshot current editor content before restore for quick undo.
 
 
 ## Performance
@@ -204,6 +222,7 @@ Allowed attributes:
 - Debounce heavy DOM→AST conversion and autosave; throttle measuring.
 - Keep selection read/writes minimal; batch DOM mutations per command.
 - Avoid large inline styles; prefer Tailwind classes.
+ - Virtualize long documents for block lists (measure viewport and only render nearby blocks) if needed in extremely long posts; otherwise keep to simple render for clarity.
 
 
 ## Testing Strategy
@@ -214,6 +233,8 @@ Allowed attributes:
   - html<->doc serialization helpers on small samples.
 - Manual QA checklist per feature (toolbar toggles, lists, link/image/embed flows, paste) in `docs`.
 - E2E (later): playwright‑style scripts if we introduce CI browser tests.
+ - Link validation and normalization tests; internal link picker search and insertion.
+ - Paste pipeline tests for image blobs and placeholder resolution.
 
 ## Workstreams (all delivered in the initial release)
 
@@ -221,9 +242,12 @@ Allowed attributes:
 - Renderer and selection mapping with stable node IDs.
 - Commands and keymaps for marks, blocks, lists, alignment, rules, code, tasks.
 - Toolbar, bubble menu, slash menu with a11y.
-- Link popover, media picker dialog integration, embed dialog with URL normalization.
+- Link popover (with internal search), media picker dialog integration, embed dialog with URL normalization and responsive wrapper.
 - Sanitization and paste pipeline; auto‑link and markdown-ish input rules.
 - Autosave + draft recovery; Sonner feedback hooks for save states.
+ - Inline image editor integration (crop/resize/rotate/compress).
+ - Revisions panel backed by `posts.revisions_list`/`revisions_restore`.
+ - Block reordering (drag handles + keyboard).
 
 
 ## Open Questions
@@ -244,7 +268,8 @@ Allowed attributes:
 
 ## Acceptance (initial release)
 
-- Author can: type text; set headings and alignment; style inline text; create bullet/numbered/task lists; insert links; insert images via media picker; insert YouTube/X embeds; paste from Word/Google Docs with sensible formatting.
+- Author can: type text; set headings and alignment; style inline text; create bullet/numbered/task lists; insert links (including internal links via search); insert images via media picker and edit them inline; insert YouTube/X embeds with responsive frames; paste from Word/Google Docs with sensible formatting; paste or drop images with upload placeholders.
 - Saved `Post.content` contains sanitized HTML with only allowed tags/attrs; no broken links or insecure iframes.
-- Undo/redo powered by the model history works across all operations; keyboard shortcuts match expectations; a11y labels exist and focus flows are correct.
+- Undo/redo powered by the model history works across all operations; keyboard shortcuts match expectations; a11y labels exist and focus flows are correct; blocks can be reordered via drag handles and keyboard shortcuts.
 - BlogForm integrates seamlessly; existing list/detail screens render content correctly.
+ - Revisions panel lists versions and restoring one updates the editor and server; current content is snapshotted before restore.
