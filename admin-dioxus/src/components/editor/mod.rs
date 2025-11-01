@@ -25,7 +25,6 @@ pub use toolbar::LinkDialog;
 use commands::{InsertBlock, InsertLink, SetBlockType};
 use dioxus::prelude::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use toolbar::Toolbar;
 use wasm_bindgen::JsCast;
 
 static EDITOR_ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
@@ -83,6 +82,7 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
     let mut show_slash_menu = use_signal(|| false);
     let mut slash_query = use_signal(|| String::new());
     let mut show_link_dialog = use_signal(|| false);
+    let mut is_dragging_over = use_signal(|| false);
 
     // Keyboard shortcuts registry
     let shortcuts = use_signal(|| ShortcutRegistry::with_defaults());
@@ -376,13 +376,54 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
         }
     };
 
+    // Drag-and-drop event handlers
+    let handle_drag_over = move |evt: Event<DragData>| {
+        evt.prevent_default();
+        is_dragging_over.set(true);
+    };
+
+    let handle_drag_enter = move |evt: Event<DragData>| {
+        evt.prevent_default();
+        is_dragging_over.set(true);
+    };
+
+    let handle_drag_leave = move |evt: Event<DragData>| {
+        evt.prevent_default();
+        is_dragging_over.set(false);
+    };
+
+    let handle_drop = move |evt: Event<DragData>| {
+        evt.prevent_default();
+        is_dragging_over.set(false);
+
+        if props.readonly {
+            return;
+        }
+
+        // Access files from drag event
+        // TODO: Implement proper native event handling for file access
+        // The Dioxus FileData abstraction needs to be properly converted to web_sys::File
+        // For now, show a visual indication that drag-and-drop was attempted
+        gloo_console::warn!("[RichTextEditor] Drag-and-drop file handling - feature in development");
+
+        // Users can use the toolbar's image insertion dialog as an alternative
+        // This feature requires accessing the native JavaScript DataTransfer API
+    };
+
+    // Compute editor content class
+    let editor_content_class = if *is_dragging_over.read() {
+        "editor-content min-h-[300px] focus:outline-none drag-over"
+    } else {
+        "editor-content min-h-[300px] focus:outline-none"
+    };
+
     rsx! {
         div {
             class: "rich-text-editor border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm {props.class}",
 
             // Toolbar
             if !props.readonly {
-                Toolbar {
+                toolbar::Toolbar {
                     on_command: move |cmd| execute_command(cmd),
                     selection: selection.read().clone(),
                 }
@@ -391,7 +432,7 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
             // Editor content area - simple contenteditable without dangerous_inner_html
             div {
                 id: "{editor_id}",
-                class: "editor-content min-h-[300px] focus:outline-none",
+                class: "{editor_content_class}",
                 contenteditable: if props.readonly { "false" } else { "true" },
                 tabindex: "0",
                 "data-placeholder": "{props.placeholder}",
@@ -415,6 +456,11 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
 
                 onmouseup: update_selection_mouse,
                 onkeyup: update_selection_keyboard,
+
+                ondragover: handle_drag_over,
+                ondragenter: handle_drag_enter,
+                ondragleave: handle_drag_leave,
+                ondrop: handle_drop,
 
                 oninput: move |evt| {
                     if props.readonly {
@@ -473,7 +519,7 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                 }
             }
 
-            // Inline styles for placeholder
+            // Inline styles for placeholder, drag-drop, and upload progress
             style {
                 r"
                 .editor-content[data-placeholder]:empty:before {{
@@ -490,6 +536,35 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                 }}
                 .dark .editor-content:focus {{
                     outline-color: #60a5fa;
+                }}
+                .editor-content.drag-over {{
+                    background-color: rgba(59, 130, 246, 0.05);
+                    border: 2px dashed #3b82f6;
+                }}
+                .dark .editor-content.drag-over {{
+                    background-color: rgba(96, 165, 250, 0.05);
+                    border-color: #60a5fa;
+                }}
+                .upload-placeholder {{
+                    position: relative;
+                    display: inline-block;
+                    margin: 1rem 0;
+                }}
+                .upload-progress {{
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(0, 0, 0, 0.7);
+                    color: white;
+                    padding: 0.5rem 1rem;
+                    border-radius: 0.375rem;
+                    font-size: 0.875rem;
+                    pointer-events: none;
+                }}
+                .dark .upload-progress {{
+                    background: rgba(255, 255, 255, 0.2);
+                    backdrop-filter: blur(4px);
                 }}
                 .editor-content ul {{
                     list-style-type: disc;

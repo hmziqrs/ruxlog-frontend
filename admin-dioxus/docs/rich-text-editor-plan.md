@@ -42,6 +42,12 @@ Primary goals (initial release is "complete"):
 - ✅ Built comprehensive keyboard shortcut system (25+ shortcuts)
 - ✅ Integrated autosave with debouncing (server + localStorage)
 - ✅ Added complete documentation (shortcuts reference, architecture)
+- 🚧 **Drag-and-drop foundation:** Visual feedback (drag-over state), event handlers, CSS styling
+  - Editor shows blue dashed border when dragging files over it
+  - Event handlers (ondragover, ondragenter, ondragleave, ondrop) implemented
+  - Upload placeholder UI and progress indicator CSS added
+  - **Pending:** File access requires native JavaScript bridge due to Dioxus FileData limitations
+  - **Alternative:** Users can use toolbar image insertion dialog which works fully
 
 **Items 1-13 Complete (13/23 total)** - See "Next Steps Priority" section below for remaining features.
 
@@ -426,10 +432,10 @@ Manual testing checklist:
 16. ⏳ Image editing integration (crop/resize/rotate)
 17. ⏳ Paste handling improvements (preserve formatting from Word/GDocs)
 18. ⏳ Full keyboard accessibility (roving tabindex, ARIA)
+19. 🚧 Drag-and-drop image upload (visual feedback done, file access in progress)
 
 **Long-term (advanced):**
-19. ⏳ Revisions panel with server restore
-20. ⏳ Drag-and-drop image upload
+20. ⏳ Revisions panel with server restore
 21. ⏳ Internal link search/autocomplete
 22. ⏳ Table support
 23. ⏳ E2E browser test suite (Playwright)
