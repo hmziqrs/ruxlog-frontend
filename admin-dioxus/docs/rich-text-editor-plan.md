@@ -95,8 +95,30 @@ Primary goals (initial release is "complete"):
     - Full keyboard control via existing shortcuts (25+ combinations)
   - **Semantic HTML:** Proper button types, roles, and labels throughout
   - **Focus management:** Clear focus indicators in light and dark modes
+- ✅ **Image editing integration (FULLY IMPLEMENTED):**
+  - **Double-click to edit:** Images in the editor open the image editor modal on double-click
+  - **Visual feedback:** Hover effect with blue outline and subtle shadow on images
+  - **Image editor modal:** Full integration with existing `ImageEditorModal` component
+    - Crop tool with adjustable region selection
+    - Resize tool with aspect ratio lock
+    - Rotate tool (90°, 180°, 270°, custom angles)
+    - Compress tool with quality slider (0-100%)
+  - **Seamless workflow:**
+    - JavaScript bridge detects double-click events on images
+    - Fetches image from src URL and creates blob for editing
+    - Opens image editor modal with full editing capabilities
+    - On save: uploads edited image to media API
+    - Automatically replaces original image in editor with new version
+  - **State management:**
+    - Tracks editing image source during edit session
+    - Stores reference to image DOM element for replacement
+    - Polling mechanism detects pending image edits from JavaScript
+  - **CSS styling:**
+    - `cursor: pointer` on images to indicate interactivity
+    - Smooth hover transitions with opacity and shadow effects
+    - Blue outline on hover in light mode, lighter blue in dark mode
 
-**Items 1-18 Complete (18/23 total, 78%)** - See "Next Steps Priority" section below for remaining features.
+**Items 1-19 Complete (19/23 total, 83%)** - See "Next Steps Priority" section below for remaining features.
 
 Non‑goals: collaborative editing/OT, comments/track changes, themeable custom fonts beyond system + Tailwind classes, arbitrary script embeds.
 
@@ -122,14 +144,8 @@ Non‑goals: collaborative editing/OT, comments/track changes, themeable custom 
 - Sanitization layer for XSS prevention
 - Platform-aware (macOS Cmd vs Windows/Linux Ctrl)
 
-**Future Enhancements (Items 14-23):**
-- Custom transaction-based undo/redo with history coalescing
-- Block reordering with drag handles and keyboard navigation
-- Image editing integration (crop/resize/rotate)
-- Advanced paste handling (preserve formatting from Word/GDocs)
-- Full keyboard accessibility (roving tabindex, ARIA)
+**Future Enhancements (Items 20-23):**
 - Revisions panel with server restore
-- Drag-and-drop image upload
 - Internal link search/autocomplete
 - Table support
 - E2E browser test suite (Playwright)
@@ -479,7 +495,7 @@ Manual testing checklist:
 16. ✅ Undo/redo with transaction history and coalescing
 17. ✅ Block reordering with keyboard shortcuts (Alt+Up/Down)
 18. ✅ Keyboard accessibility with ARIA attributes and screen reader support
-19. ⏳ Image editing integration (crop/resize/rotate)
+19. ✅ Image editing integration (crop/resize/rotate)
 
 **Long-term (advanced):**
 20. ⏳ Revisions panel with server restore

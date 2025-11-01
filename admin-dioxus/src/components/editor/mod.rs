@@ -28,7 +28,8 @@ use commands::{InsertBlock, InsertLink, SetBlockType};
 use dioxus::prelude::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use wasm_bindgen::JsCast;
-use crate::store::{use_media, MediaReference, MediaUploadPayload};
+use crate::components::image_editor::ImageEditorModal;
+use crate::store::{use_media, use_image_editor, MediaReference, MediaUploadPayload};
 
 static EDITOR_ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
@@ -97,6 +98,10 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
     // Screen reader announcements
     let mut sr_announcement = use_signal(|| String::new());
 
+    // Image editor integration
+    let image_editor = use_image_editor();
+    let mut editing_image_src = use_signal(|| Option::<String>::None);
+
     // Keyboard shortcuts registry
     let shortcuts = use_signal(|| ShortcutRegistry::with_defaults());
 
@@ -158,6 +163,99 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                 }
             }
         }
+    });
+
+    // Set up double-click handler for images to open editor
+    use_effect(move || {
+        let id = editor_id();
+        let js_setup_image_dblclick = format!(
+            r#"
+            (function() {{
+                const editor = document.getElementById('{}');
+                if (!editor) return;
+
+                // Remove existing listener if any
+                if (editor._imageEditHandler) {{
+                    editor.removeEventListener('dblclick', editor._imageEditHandler);
+                }}
+
+                // Add new listener
+                editor._imageEditHandler = async function(e) {{
+                    if (e.target.tagName === 'IMG') {{
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        const imageSrc = e.target.src;
+                        console.log('[RichTextEditor] Image double-clicked:', imageSrc);
+
+                        // Store the image element for later replacement
+                        window._editingImageElement = e.target;
+
+                        // Trigger opening the image editor
+                        // This will be detected by checking window._editingImageElement in Rust
+                        window._pendingImageEdit = imageSrc;
+                    }}
+                }};
+
+                editor.addEventListener('dblclick', editor._imageEditHandler);
+            }})()
+            "#,
+            id
+        );
+        let _ = js_sys::eval(&js_setup_image_dblclick);
+    });
+
+    // Poll for pending image edits from JavaScript
+    use_effect(move || {
+        spawn(async move {
+            loop {
+                gloo_timers::future::sleep(std::time::Duration::from_millis(100)).await;
+
+                // Check if there's a pending image edit
+                let js_check_pending = "window._pendingImageEdit || null";
+                if let Ok(pending_val) = js_sys::eval(js_check_pending) {
+                    if let Some(src) = pending_val.as_string() {
+                        gloo_console::log!("[RichTextEditor] Opening image editor for:", &src);
+
+                        // Clear the pending flag
+                        let _ = js_sys::eval("window._pendingImageEdit = null");
+
+                        editing_image_src.set(Some(src.clone()));
+
+                        // Fetch the image and create a blob URL
+                        if let Some(window) = web_sys::window() {
+                            match wasm_bindgen_futures::JsFuture::from(window.fetch_with_str(&src)).await {
+                                Ok(response) => {
+                                    if let Ok(response) = response.dyn_into::<web_sys::Response>() {
+                                        if let Ok(blob_promise) = response.blob() {
+                                            match wasm_bindgen_futures::JsFuture::from(blob_promise).await {
+                                                Ok(blob) => {
+                                                    if let Ok(blob) = blob.dyn_into::<web_sys::Blob>() {
+                                                        if let Ok(blob_url) = web_sys::Url::create_object_url_with_blob(&blob) {
+                                                            gloo_console::log!("[RichTextEditor] Opening image editor with blob URL:", &blob_url);
+
+                                                            if let Err(e) = image_editor.open_editor(None, blob_url).await {
+                                                                gloo_console::error!("[RichTextEditor] Failed to open image editor:", &e);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                Err(e) => {
+                                                    gloo_console::error!("[RichTextEditor] Failed to get blob:", format!("{:?}", e));
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    gloo_console::error!("[RichTextEditor] Failed to fetch image:", format!("{:?}", e));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
     });
 
     // Track selection changes for bubble menu
@@ -699,6 +797,72 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
         }
     };
 
+    // Image editor: Handle save callback
+    let handle_image_editor_save = move |edited_file: web_sys::File| {
+        gloo_console::log!("[RichTextEditor] Image editor saved, uploading edited image...");
+
+        let media_state_ref = media_state;
+        let mut editing_image_src_clone = editing_image_src.clone();
+
+        spawn(async move {
+            // Upload the edited file
+            let payload = MediaUploadPayload {
+                file: edited_file,
+                reference_type: Some(MediaReference::Post),
+                width: None,
+                height: None,
+            };
+
+            match media_state_ref.upload(payload).await {
+                Ok(_upload_blob_url) => {
+                    gloo_console::log!("[RichTextEditor] Edited image uploaded, refreshing media list...");
+
+                    // Wait a bit for server processing
+                    gloo_timers::future::sleep(std::time::Duration::from_millis(500)).await;
+
+                    // Refresh media list to get the new URL
+                    let _ = media_state_ref.list().await;
+
+                    // Get the latest media item (should be our upload)
+                    let media_url = {
+                        let list_state = media_state_ref.list.read();
+                        list_state.data.as_ref()
+                            .and_then(|paginated| paginated.data.first())
+                            .map(|m| m.file_url.clone())
+                    };
+
+                    if let Some(new_url) = media_url {
+                        gloo_console::log!("[RichTextEditor] Replacing image with:", &new_url);
+
+                        // Replace the image in the editor using the stored element reference
+                        let js_replace = format!(
+                            r#"
+                            (function() {{
+                                const imgElement = window._editingImageElement;
+                                if (imgElement) {{
+                                    imgElement.src = '{}';
+                                    window._editingImageElement = null;
+                                }}
+                            }})()
+                            "#,
+                            new_url
+                        );
+
+                        let _ = js_sys::eval(&js_replace);
+
+                        // Clear the editing state
+                        editing_image_src_clone.set(None);
+                    } else {
+                        gloo_console::error!("[RichTextEditor] Failed to get media URL after upload");
+                    }
+                }
+                Err(e) => {
+                    gloo_console::error!("[RichTextEditor] Failed to upload edited image:", &e.to_string());
+                }
+            }
+        });
+    };
+
     // Compute editor content class
     let editor_content_class = if *is_dragging_over.read() {
         "editor-content min-h-[300px] focus:outline-none drag-over"
@@ -905,6 +1069,13 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                 }
             }
 
+            // Image editor modal
+            if !props.readonly {
+                ImageEditorModal {
+                    on_save: handle_image_editor_save,
+                }
+            }
+
             // Inline styles for placeholder, drag-drop, and upload progress
             style {
                 r"
@@ -1025,6 +1196,23 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                 }}
                 .editor-content code {{
                     font-family: monospace;
+                }}
+                /* Image editing styles */
+                .editor-content img {{
+                    max-width: 100%;
+                    height: auto;
+                    border-radius: 0.375rem;
+                    cursor: pointer;
+                    transition: all 0.2s ease-in-out;
+                }}
+                .editor-content img:hover {{
+                    opacity: 0.9;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                    outline: 2px solid #3b82f6;
+                    outline-offset: 2px;
+                }}
+                .dark .editor-content img:hover {{
+                    outline-color: #60a5fa;
                 }}
                 /* Block reordering drag handles */
                 .editor-content > * {{
