@@ -26,6 +26,7 @@ use commands::{InsertBlock, InsertLink, SetBlockType};
 use dioxus::prelude::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use wasm_bindgen::JsCast;
+use crate::store::{use_media, MediaReference, MediaUploadPayload};
 
 static EDITOR_ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
@@ -83,9 +84,29 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
     let mut slash_query = use_signal(|| String::new());
     let mut show_link_dialog = use_signal(|| false);
     let mut is_dragging_over = use_signal(|| false);
+    let mut uploading_images = use_signal(|| Vec::<String>::new());
 
     // Keyboard shortcuts registry
     let shortcuts = use_signal(|| ShortcutRegistry::with_defaults());
+
+    // Media state for uploads
+    let media_state = use_media();
+
+    // Initialize JavaScript bridge on mount
+    use_effect(move || {
+        let id = editor_id();
+        let js_init = format!(
+            r#"
+            if (typeof window.editorDragDropBridge === 'undefined') {{
+                {}
+            }}
+            window.editorDragDropBridge.captureDragEvent('{}');
+            "#,
+            include_str!("drag_drop_bridge.js"),
+            id
+        );
+        let _ = js_sys::eval(&js_init);
+    });
 
     // Execute a command using browser's native execCommand
     let execute_command = move |cmd: Box<dyn Command>| {
@@ -400,14 +421,154 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
             return;
         }
 
-        // Access files from drag event
-        // TODO: Implement proper native event handling for file access
-        // The Dioxus FileData abstraction needs to be properly converted to web_sys::File
-        // For now, show a visual indication that drag-and-drop was attempted
-        gloo_console::warn!("[RichTextEditor] Drag-and-drop file handling - feature in development");
+        // Use JavaScript bridge to access files
+        // The bridge captures the native drop event and exposes the files
+        let js_get_files = r#"
+            (function() {
+                const files = window.editorDragDropBridge.getFilesFromLastDrop();
+                return window.editorDragDropBridge.processFiles(files);
+            })()
+        "#;
 
-        // Users can use the toolbar's image insertion dialog as an alternative
-        // This feature requires accessing the native JavaScript DataTransfer API
+        let files_result = js_sys::eval(js_get_files);
+        if files_result.is_err() {
+            gloo_console::error!("[RichTextEditor] Failed to access dropped files");
+            return;
+        }
+
+        let files_val = files_result.unwrap();
+        let files_array = js_sys::Array::from(&files_val);
+
+        if files_array.length() == 0 {
+            gloo_console::warn!("[RichTextEditor] No files in drop event");
+            return;
+        }
+
+        gloo_console::log!("[RichTextEditor] Processing", files_array.length().to_string(), "dropped files");
+
+        // Process each file
+        for i in 0..files_array.length() {
+            let file_obj = files_array.get(i);
+            let file_obj = file_obj.dyn_into::<js_sys::Object>().unwrap();
+
+            // Extract properties from the file object
+            let blob_url = js_sys::Reflect::get(&file_obj, &"blobUrl".into())
+                .ok()
+                .and_then(|v| v.as_string())
+                .unwrap_or_default();
+
+            let file_type = js_sys::Reflect::get(&file_obj, &"type".into())
+                .ok()
+                .and_then(|v| v.as_string())
+                .unwrap_or_default();
+
+            // Only process image files
+            if !file_type.starts_with("image/") {
+                gloo_console::warn!("[RichTextEditor] Skipping non-image file:", &file_type);
+                continue;
+            }
+
+            // Get the native File object for upload
+            let native_file = js_sys::Reflect::get(&file_obj, &"file".into())
+                .ok()
+                .and_then(|v| v.dyn_into::<web_sys::File>().ok());
+
+            if native_file.is_none() {
+                gloo_console::error!("[RichTextEditor] Could not extract File object");
+                continue;
+            }
+
+            let file = native_file.unwrap();
+
+            // Add to uploading list
+            let mut current_uploading = uploading_images();
+            current_uploading.push(blob_url.clone());
+            uploading_images.set(current_uploading);
+
+            // Insert placeholder image immediately
+            if let Some(document) = current_document() {
+                let placeholder_html = format!(
+                    r#"<div class="upload-placeholder" data-blob-url="{}">
+                        <img src="{}" alt="Uploading..." class="editor-image max-w-full rounded-md opacity-50" />
+                        <div class="upload-progress">Uploading...</div>
+                    </div>"#,
+                    blob_url, blob_url
+                );
+                insert_html(&document, &placeholder_html);
+            }
+
+            // Upload the file in the background
+            let media_state_ref = media_state;
+            let blob_url_clone = blob_url.clone();
+            let mut uploading_images_clone = uploading_images.clone();
+
+            spawn(async move {
+                let payload = MediaUploadPayload {
+                    file,
+                    reference_type: Some(MediaReference::Post),
+                    width: None,
+                    height: None,
+                };
+
+                match media_state_ref.upload(payload).await {
+                    Ok(upload_blob_url) => {
+                        gloo_console::log!("[RichTextEditor] Upload successful:", &upload_blob_url);
+
+                        // Poll for the actual media URL (the upload is async)
+                        // We need to wait a bit for the server to process
+                        gloo_timers::future::sleep(std::time::Duration::from_millis(500)).await;
+
+                        let media_url = {
+                            let blob_to_media = media_state_ref.blob_to_media.read();
+                            if let Some(Some(media)) = blob_to_media.get(&upload_blob_url) {
+                                Some(media.file_url.clone())
+                            } else {
+                                None
+                            }
+                        };
+
+                        if let Some(actual_url) = media_url {
+                            // Replace placeholder with actual image
+                            if let Some(window) = web_sys::window() {
+                                if let Some(document) = window.document() {
+                                    let selector = format!("[data-blob-url='{}']", blob_url_clone);
+                                    if let Ok(Some(placeholder)) = document.query_selector(&selector) {
+                                        let img_html = format!(
+                                            r#"<img src="{}" alt="" class="editor-image max-w-full rounded-md" loading="lazy" />"#,
+                                            actual_url
+                                        );
+                                        placeholder.set_outer_html(&img_html);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Remove from uploading list
+                        let mut current = uploading_images_clone();
+                        current.retain(|url| url != &blob_url_clone);
+                        uploading_images_clone.set(current);
+                    }
+                    Err(err) => {
+                        gloo_console::error!("[RichTextEditor] Upload failed:", &err);
+
+                        // Remove placeholder on error
+                        if let Some(window) = web_sys::window() {
+                            if let Some(document) = window.document() {
+                                let selector = format!("[data-blob-url='{}']", blob_url_clone);
+                                if let Ok(Some(placeholder)) = document.query_selector(&selector) {
+                                    let _ = placeholder.remove();
+                                }
+                            }
+                        }
+
+                        // Remove from uploading list
+                        let mut current = uploading_images_clone();
+                        current.retain(|url| url != &blob_url_clone);
+                        uploading_images_clone.set(current);
+                    }
+                }
+            });
+        }
     };
 
     // Compute editor content class
@@ -461,6 +622,62 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                 ondragenter: handle_drag_enter,
                 ondragleave: handle_drag_leave,
                 ondrop: handle_drop,
+
+                onpaste: move |evt: Event<ClipboardData>| {
+                    if props.readonly {
+                        return;
+                    }
+
+                    // Prevent default paste to handle it ourselves
+                    evt.prevent_default();
+
+                    // Use JavaScript bridge to get clipboard data
+                    // The bridge captures the native paste event via event listener
+                    let js_get_clipboard = "window.editorDragDropBridge.getClipboardData()";
+
+                    match js_sys::eval(js_get_clipboard) {
+                        Ok(clip_data) => {
+                            // Parse the clipboard data
+                            let clip_type = js_sys::Reflect::get(&clip_data, &"type".into())
+                                .ok()
+                                .and_then(|v| v.as_string())
+                                .unwrap_or_default();
+
+                            let clip_content = js_sys::Reflect::get(&clip_data, &"content".into())
+                                .ok()
+                                .and_then(|v| v.as_string())
+                                .unwrap_or_default();
+
+                            if clip_content.is_empty() || clip_type == "empty" {
+                                return;
+                            }
+
+                            // Process based on type
+                            let sanitized_content = if clip_type == "html" {
+                                gloo_console::log!("[RichTextEditor] Pasting HTML content (preserving formatting)");
+                                // Sanitize the HTML to remove unwanted tags/attributes
+                                // This preserves formatting from Word/Google Docs while removing unsafe content
+                                sanitize_html(&clip_content)
+                            } else {
+                                gloo_console::log!("[RichTextEditor] Pasting plain text");
+                                // Escape HTML entities in plain text and preserve line breaks
+                                clip_content.replace('&', "&amp;")
+                                    .replace('<', "&lt;")
+                                    .replace('>', "&gt;")
+                                    .replace('"', "&quot;")
+                                    .replace('\n', "<br>")
+                            };
+
+                            // Insert the sanitized content at the cursor
+                            if let Some(document) = current_document() {
+                                insert_html(&document, &sanitized_content);
+                            }
+                        }
+                        Err(e) => {
+                            gloo_console::error!("[RichTextEditor] Failed to access clipboard:", format!("{:?}", e));
+                        }
+                    }
+                },
 
                 oninput: move |evt| {
                     if props.readonly {

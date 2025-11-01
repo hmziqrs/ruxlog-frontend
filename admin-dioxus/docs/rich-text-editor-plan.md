@@ -42,14 +42,25 @@ Primary goals (initial release is "complete"):
 - ✅ Built comprehensive keyboard shortcut system (25+ shortcuts)
 - ✅ Integrated autosave with debouncing (server + localStorage)
 - ✅ Added complete documentation (shortcuts reference, architecture)
-- 🚧 **Drag-and-drop foundation:** Visual feedback (drag-over state), event handlers, CSS styling
-  - Editor shows blue dashed border when dragging files over it
-  - Event handlers (ondragover, ondragenter, ondragleave, ondrop) implemented
-  - Upload placeholder UI and progress indicator CSS added
-  - **Pending:** File access requires native JavaScript bridge due to Dioxus FileData limitations
-  - **Alternative:** Users can use toolbar image insertion dialog which works fully
+- ✅ **Drag-and-drop image upload (FULLY IMPLEMENTED):**
+  - JavaScript bridge (`drag_drop_bridge.js`) to access native DataTransfer API
+  - Visual feedback: blue dashed border when dragging files over editor
+  - Instant placeholder images with blob URLs and "Uploading..." indicator
+  - Background upload to media API with progress tracking
+  - Automatic replacement of placeholders with actual uploaded images
+  - Error handling: placeholders removed on upload failure
+  - Image-only filtering (non-image files ignored)
+  - Full integration with existing media state management
+- ✅ **Enhanced paste handling (FULLY IMPLEMENTED):**
+  - Custom `onpaste` event handler preventing default browser behavior
+  - JavaScript bridge captures clipboard data from native paste events
+  - HTML preservation: formatting from Word/Google Docs maintained
+  - Automatic sanitization through existing `ammonia`-based sanitizer
+  - Plain text fallback with HTML entity escaping
+  - Line break preservation (`\n` → `<br>`)
+  - Seamless integration with existing content sanitization pipeline
 
-**Items 1-13 Complete (13/23 total)** - See "Next Steps Priority" section below for remaining features.
+**Items 1-15 Complete (15/23 total)** - See "Next Steps Priority" section below for remaining features.
 
 Non‑goals: collaborative editing/OT, comments/track changes, themeable custom fonts beyond system + Tailwind classes, arbitrary script embeds.
 
@@ -427,12 +438,12 @@ Manual testing checklist:
 
 **Medium-term (polish):**
 13. ✅ Custom keyboard shortcut system
-14. ⏳ Undo/redo with transaction history
-15. ⏳ Block reordering (drag handles + keyboard)
-16. ⏳ Image editing integration (crop/resize/rotate)
-17. ⏳ Paste handling improvements (preserve formatting from Word/GDocs)
-18. ⏳ Full keyboard accessibility (roving tabindex, ARIA)
-19. 🚧 Drag-and-drop image upload (visual feedback done, file access in progress)
+14. ✅ Drag-and-drop image upload (fully functional with JavaScript bridge)
+15. ✅ Paste handling improvements (preserve formatting from Word/GDocs)
+16. ⏳ Undo/redo with transaction history **← NEXT**
+17. ⏳ Block reordering (drag handles + keyboard)
+18. ⏳ Image editing integration (crop/resize/rotate)
+19. ⏳ Full keyboard accessibility (roving tabindex, ARIA)
 
 **Long-term (advanced):**
 20. ⏳ Revisions panel with server restore
