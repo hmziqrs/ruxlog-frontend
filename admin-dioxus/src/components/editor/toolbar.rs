@@ -57,10 +57,15 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
     rsx! {
         div {
             class: "toolbar border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2 flex items-center gap-1 flex-wrap",
+            role: "toolbar",
+            "aria-label": "Text formatting toolbar",
+            "aria-orientation": "horizontal",
 
             // Text formatting group
             div {
                 class: "toolbar-group flex items-center gap-1 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2",
+                role: "group",
+                "aria-label": "Text formatting",
 
                 ToolbarButton {
                     icon: "B",
@@ -124,6 +129,8 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
             // Block type group
             div {
                 class: "toolbar-group flex items-center gap-1 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2",
+                role: "group",
+                "aria-label": "Block types and headings",
 
                 ToolbarButton {
                     icon: "P",
@@ -169,6 +176,8 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
             // List group
             div {
                 class: "toolbar-group flex items-center gap-1 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2",
+                role: "group",
+                "aria-label": "Lists",
 
                 ToolbarButton {
                     icon: "•",
@@ -338,11 +347,18 @@ fn ToolbarButton(
         ""
     };
 
+    // Extract the action name from title (before the shortcut in parentheses)
+    let aria_label = title.split('(').next().unwrap_or(&title).trim();
+
     rsx! {
         button {
             class: "toolbar-button px-3 py-1.5 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 dark:active:bg-gray-600 transition-colors text-sm font-medium {class} {active_class}",
             title: "{title}",
             r#type: "button",
+            role: "button",
+            "aria-label": "{aria_label}",
+            "aria-pressed": "{active}",
+            tabindex: "0",
             onclick: move |evt| on_click.call(evt),
             "{icon}"
         }

@@ -94,6 +94,9 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
     // Track if we're in the middle of an undo/redo operation
     let mut is_undoing = use_signal(|| false);
 
+    // Screen reader announcements
+    let mut sr_announcement = use_signal(|| String::new());
+
     // Keyboard shortcuts registry
     let shortcuts = use_signal(|| ShortcutRegistry::with_defaults());
 
@@ -267,7 +270,10 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                         props.on_change.call(sanitize_html(&restored_html));
 
                         is_undoing.set(false);
+                        sr_announcement.set("Undo applied".to_string());
                         gloo_console::log!("[RichTextEditor] Undo applied");
+                    } else {
+                        sr_announcement.set("Nothing to undo".to_string());
                     }
                 }
                 ShortcutAction::Redo => {
@@ -288,7 +294,10 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                         props.on_change.call(sanitize_html(&restored_html));
 
                         is_undoing.set(false);
+                        sr_announcement.set("Redo applied".to_string());
                         gloo_console::log!("[RichTextEditor] Redo applied");
+                    } else {
+                        sr_announcement.set("Nothing to redo".to_string());
                     }
                 }
                 ShortcutAction::Save => {
@@ -322,8 +331,11 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                                                     props.on_change.call(clean);
                                                 }
 
+                                                sr_announcement.set("Block moved up".to_string());
                                                 gloo_console::log!("[RichTextEditor] Moved block up");
                                             }
+                                        } else {
+                                            sr_announcement.set("Cannot move block up, already at top".to_string());
                                         }
                                     }
                                 }
@@ -359,8 +371,11 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                                                     props.on_change.call(clean);
                                                 }
 
+                                                sr_announcement.set("Block moved down".to_string());
                                                 gloo_console::log!("[RichTextEditor] Moved block down");
                                             }
+                                        } else {
+                                            sr_announcement.set("Cannot move block down, already at bottom".to_string());
                                         }
                                     }
                                 }
@@ -710,6 +725,10 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                 contenteditable: if props.readonly { "false" } else { "true" },
                 tabindex: "0",
                 "data-placeholder": "{props.placeholder}",
+                role: "textbox",
+                "aria-label": "Rich text editor",
+                "aria-multiline": "true",
+                "aria-readonly": if props.readonly { "true" } else { "false" },
 
                 style: "
                     padding: 1rem;
@@ -1046,7 +1065,28 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                     background: #3b82f6;
                     margin: 0.5rem 0;
                 }}
+                /* Screen reader only - visually hidden but accessible */
+                .sr-only {{
+                    position: absolute;
+                    width: 1px;
+                    height: 1px;
+                    padding: 0;
+                    margin: -1px;
+                    overflow: hidden;
+                    clip: rect(0, 0, 0, 0);
+                    white-space: nowrap;
+                    border-width: 0;
+                }}
                 "
+            }
+
+            // Screen reader announcements (visually hidden)
+            div {
+                class: "sr-only",
+                role: "status",
+                "aria-live": "polite",
+                "aria-atomic": "true",
+                "{sr_announcement.read()}"
             }
 
             // Character count (optional)

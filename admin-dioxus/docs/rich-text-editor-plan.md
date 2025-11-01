@@ -79,8 +79,24 @@ Primary goals (initial release is "complete"):
   - CSS styling for drag handles (hover-visible, positioned left of blocks)
   - Drag handle UI ready for future drag-and-drop implementation
   - Works with all block types: paragraphs, headings, lists, quotes, code blocks
+- ✅ **Keyboard accessibility and screen reader support (FULLY IMPLEMENTED):**
+  - **ARIA attributes:** Complete semantic markup for assistive technologies
+    - Toolbar: `role="toolbar"`, `aria-label`, `aria-orientation="horizontal"`
+    - Button groups: `role="group"` with descriptive `aria-label` values
+    - Toolbar buttons: `role="button"`, `aria-label`, `aria-pressed` for toggles
+    - Editor: `role="textbox"`, `aria-multiline="true"`, `aria-readonly`
+  - **Screen reader announcements:** Live region with `aria-live="polite"`
+    - Undo/redo actions: "Undo applied", "Nothing to undo", etc.
+    - Block reordering: "Block moved up/down", boundary notifications
+    - Visually hidden `.sr-only` class for accessible-only content
+  - **Keyboard navigation:**
+    - All toolbar buttons: `tabindex="0"` for keyboard access
+    - Consistent tab order through toolbar groups
+    - Full keyboard control via existing shortcuts (25+ combinations)
+  - **Semantic HTML:** Proper button types, roles, and labels throughout
+  - **Focus management:** Clear focus indicators in light and dark modes
 
-**Items 1-17 Complete (17/23 total, 74%)** - See "Next Steps Priority" section below for remaining features.
+**Items 1-18 Complete (18/23 total, 78%)** - See "Next Steps Priority" section below for remaining features.
 
 Non‑goals: collaborative editing/OT, comments/track changes, themeable custom fonts beyond system + Tailwind classes, arbitrary script embeds.
 
@@ -462,7 +478,7 @@ Manual testing checklist:
 15. ✅ Paste handling improvements (preserve formatting from Word/GDocs)
 16. ✅ Undo/redo with transaction history and coalescing
 17. ✅ Block reordering with keyboard shortcuts (Alt+Up/Down)
-18. ⏳ Full keyboard accessibility (roving tabindex, ARIA) **← IN PROGRESS**
+18. ✅ Keyboard accessibility with ARIA attributes and screen reader support
 19. ⏳ Image editing integration (crop/resize/rotate)
 
 **Long-term (advanced):**
