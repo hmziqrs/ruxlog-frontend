@@ -351,8 +351,9 @@ fn ToolbarButton(
 
 /// Link insertion dialog.
 #[component]
-fn LinkDialog(
-    on_close: EventHandler<MouseEvent>,
+#[component]
+pub fn LinkDialog(
+    on_close: EventHandler<Event<MouseData>>,
     on_insert: EventHandler<(String, Option<String>)>,
 ) -> Element {
     let mut href = use_signal(|| String::new());

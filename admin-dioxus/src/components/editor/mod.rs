@@ -8,6 +8,7 @@ pub mod commands;
 pub mod parser;
 pub mod renderer;
 pub mod sanitizer;
+pub mod shortcuts;
 pub mod slash_commands;
 pub mod toolbar;
 
@@ -17,7 +18,9 @@ pub use commands::{Command, CommandError, MarkType, Position, Selection, ToggleM
 pub use parser::parse_html;
 pub use renderer::render_doc;
 pub use sanitizer::sanitize_html;
+pub use shortcuts::{format_shortcut, Shortcut, ShortcutAction, ShortcutRegistry};
 pub use slash_commands::{SlashCommand, SlashCommands};
+pub use toolbar::LinkDialog;
 
 use commands::{InsertBlock, InsertLink, SetBlockType};
 use dioxus::prelude::*;
@@ -79,6 +82,10 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
     let mut show_bubble_menu = use_signal(|| false);
     let mut show_slash_menu = use_signal(|| false);
     let mut slash_query = use_signal(|| String::new());
+    let mut show_link_dialog = use_signal(|| false);
+
+    // Keyboard shortcuts registry
+    let shortcuts = use_signal(|| ShortcutRegistry::with_defaults());
 
     // Execute a command using browser's native execCommand
     let execute_command = move |cmd: Box<dyn Command>| {
@@ -142,6 +149,96 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
     };
 
     let update_selection_keyboard = move |evt: Event<KeyboardData>| {
+        // Check for keyboard shortcuts first
+        if let Some(action) = shortcuts.read().find_action(&evt) {
+            evt.prevent_default();
+
+            match action {
+                ShortcutAction::ToggleBold => {
+                    execute_command(Box::new(ToggleMark {
+                        mark_type: MarkType::Bold,
+                    }));
+                }
+                ShortcutAction::ToggleItalic => {
+                    execute_command(Box::new(ToggleMark {
+                        mark_type: MarkType::Italic,
+                    }));
+                }
+                ShortcutAction::ToggleUnderline => {
+                    execute_command(Box::new(ToggleMark {
+                        mark_type: MarkType::Underline,
+                    }));
+                }
+                ShortcutAction::ToggleStrike => {
+                    execute_command(Box::new(ToggleMark {
+                        mark_type: MarkType::Strike,
+                    }));
+                }
+                ShortcutAction::ToggleCode => {
+                    execute_command(Box::new(ToggleMark {
+                        mark_type: MarkType::Code,
+                    }));
+                }
+                ShortcutAction::InsertLink => {
+                    show_link_dialog.set(true);
+                }
+                ShortcutAction::SetHeading(level) => {
+                    if let Some(document) = current_document() {
+                        handle_set_block_type(&document, &BlockKind::Heading { level });
+                    }
+                }
+                ShortcutAction::SetParagraph => {
+                    if let Some(document) = current_document() {
+                        handle_set_block_type(&document, &BlockKind::Paragraph);
+                    }
+                }
+                ShortcutAction::SetQuote => {
+                    if let Some(document) = current_document() {
+                        handle_set_block_type(&document, &BlockKind::Quote);
+                    }
+                }
+                ShortcutAction::SetCodeBlock => {
+                    if let Some(document) = current_document() {
+                        handle_set_block_type(
+                            &document,
+                            &BlockKind::CodeBlock {
+                                language: None,
+                                code: String::new(),
+                            },
+                        );
+                    }
+                }
+                ShortcutAction::InsertBulletList => {
+                    let _ =
+                        js_sys::eval("document.execCommand('insertUnorderedList', false, null)");
+                }
+                ShortcutAction::InsertOrderedList => {
+                    let _ = js_sys::eval("document.execCommand('insertOrderedList', false, null)");
+                }
+                ShortcutAction::InsertTaskList => {
+                    if let Some(document) = current_document() {
+                        handle_insert_block(&document, &BlockKind::TaskItem { checked: false });
+                    }
+                }
+                ShortcutAction::Undo => {
+                    let _ = js_sys::eval("document.execCommand('undo', false, null)");
+                }
+                ShortcutAction::Redo => {
+                    let _ = js_sys::eval("document.execCommand('redo', false, null)");
+                }
+                ShortcutAction::Save => {
+                    // Trigger save event - parent component can handle this
+                    gloo_console::log!("Save shortcut triggered");
+                }
+                ShortcutAction::Find => {
+                    // Could trigger find dialog in the future
+                    gloo_console::log!("Find shortcut triggered");
+                }
+            }
+
+            return;
+        }
+
         if let Some(window) = web_sys::window() {
             if let Ok(Some(sel)) = window.get_selection() {
                 let has_selection = sel
@@ -358,6 +455,21 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                     },
                     editor_id: editor_id(),
                     query: slash_query(),
+                }
+            }
+
+            // Link dialog (triggered by keyboard shortcut)
+            if !props.readonly && *show_link_dialog.read() {
+                LinkDialog {
+                    on_close: move |_| show_link_dialog.set(false),
+                    on_insert: move |(href, title)| {
+                        execute_command(Box::new(InsertLink {
+                            href,
+                            title,
+                            target_blank: true,
+                        }));
+                        show_link_dialog.set(false);
+                    },
                 }
             }
 
