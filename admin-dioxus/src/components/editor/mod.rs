@@ -5,6 +5,7 @@
 pub mod ast;
 pub mod bubble_menu;
 pub mod commands;
+pub mod history;
 pub mod parser;
 pub mod renderer;
 pub mod sanitizer;
@@ -15,6 +16,7 @@ pub mod toolbar;
 pub use ast::{Block, BlockAlign, BlockKind, Doc, EmbedProvider, Inline, Link, MarkSet, TextSize};
 pub use bubble_menu::BubbleMenu;
 pub use commands::{Command, CommandError, MarkType, Position, Selection, ToggleMark};
+pub use history::{History, Transaction, TransactionType};
 pub use parser::parse_html;
 pub use renderer::render_doc;
 pub use sanitizer::sanitize_html;
@@ -85,6 +87,12 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
     let mut show_link_dialog = use_signal(|| false);
     let mut is_dragging_over = use_signal(|| false);
     let mut uploading_images = use_signal(|| Vec::<String>::new());
+
+    // Custom undo/redo history manager
+    let mut edit_history = use_signal(|| History::new(initial_html.clone()));
+
+    // Track if we're in the middle of an undo/redo operation
+    let mut is_undoing = use_signal(|| false);
 
     // Keyboard shortcuts registry
     let shortcuts = use_signal(|| ShortcutRegistry::with_defaults());
@@ -242,10 +250,46 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                     }
                 }
                 ShortcutAction::Undo => {
-                    let _ = js_sys::eval("document.execCommand('undo', false, null)");
+                    // Use custom history instead of browser's native undo
+                    if let Some(restored_html) = edit_history.write().undo() {
+                        is_undoing.set(true);
+
+                        // Update the editor content
+                        if let Some(window) = web_sys::window() {
+                            if let Some(document) = window.document() {
+                                if let Some(element) = document.get_element_by_id(&editor_id()) {
+                                    let _ = element.set_inner_html(&restored_html);
+                                }
+                            }
+                        }
+
+                        // Notify parent of change
+                        props.on_change.call(sanitize_html(&restored_html));
+
+                        is_undoing.set(false);
+                        gloo_console::log!("[RichTextEditor] Undo applied");
+                    }
                 }
                 ShortcutAction::Redo => {
-                    let _ = js_sys::eval("document.execCommand('redo', false, null)");
+                    // Use custom history instead of browser's native redo
+                    if let Some(restored_html) = edit_history.write().redo() {
+                        is_undoing.set(true);
+
+                        // Update the editor content
+                        if let Some(window) = web_sys::window() {
+                            if let Some(document) = window.document() {
+                                if let Some(element) = document.get_element_by_id(&editor_id()) {
+                                    let _ = element.set_inner_html(&restored_html);
+                                }
+                            }
+                        }
+
+                        // Notify parent of change
+                        props.on_change.call(sanitize_html(&restored_html));
+
+                        is_undoing.set(false);
+                        gloo_console::log!("[RichTextEditor] Redo applied");
+                    }
                 }
                 ShortcutAction::Save => {
                     // Trigger save event - parent component can handle this
@@ -254,6 +298,75 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                 ShortcutAction::Find => {
                     // Could trigger find dialog in the future
                     gloo_console::log!("Find shortcut triggered");
+                }
+                ShortcutAction::MoveBlockUp => {
+                    // Move the current block up in the DOM
+                    if let Some(window) = web_sys::window() {
+                        if let Some(document) = window.document() {
+                            // Get the selection to find current block
+                            if let Some(sel) = document.get_selection().ok().flatten() {
+                                if let Some(anchor_node) = sel.anchor_node() {
+                                    // Find the parent block element
+                                    if let Some(block) = find_parent_block(&anchor_node, &document) {
+                                        // Get the previous sibling block
+                                        if let Some(prev_block) = block.previous_element_sibling() {
+                                            // Swap positions
+                                            if let Some(parent) = block.parent_element() {
+                                                let _ = parent.insert_before(&block, Some(&prev_block));
+
+                                                // Add to history
+                                                if let Some(element) = document.get_element_by_id(&editor_id()) {
+                                                    let new_html = element.inner_html();
+                                                    let clean = sanitize_html(&new_html);
+                                                    edit_history.write().push(clean.clone(), TransactionType::BlockChange);
+                                                    props.on_change.call(clean);
+                                                }
+
+                                                gloo_console::log!("[RichTextEditor] Moved block up");
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                ShortcutAction::MoveBlockDown => {
+                    // Move the current block down in the DOM
+                    if let Some(window) = web_sys::window() {
+                        if let Some(document) = window.document() {
+                            // Get the selection to find current block
+                            if let Some(sel) = document.get_selection().ok().flatten() {
+                                if let Some(anchor_node) = sel.anchor_node() {
+                                    // Find the parent block element
+                                    if let Some(block) = find_parent_block(&anchor_node, &document) {
+                                        // Get the next sibling block
+                                        if let Some(next_block) = block.next_element_sibling() {
+                                            // Get the block after next (for insertion point)
+                                            let after_next = next_block.next_element_sibling();
+
+                                            // Swap positions
+                                            if let Some(parent) = block.parent_element() {
+                                                // Cast Element to Node for insert_before
+                                                let after_next_node = after_next.as_ref().map(|e| e as &web_sys::Node);
+                                                let _ = parent.insert_before(&block, after_next_node);
+
+                                                // Add to history
+                                                if let Some(element) = document.get_element_by_id(&editor_id()) {
+                                                    let new_html = element.inner_html();
+                                                    let clean = sanitize_html(&new_html);
+                                                    edit_history.write().push(clean.clone(), TransactionType::BlockChange);
+                                                    props.on_change.call(clean);
+                                                }
+
+                                                gloo_console::log!("[RichTextEditor] Moved block down");
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -671,6 +784,18 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                             // Insert the sanitized content at the cursor
                             if let Some(document) = current_document() {
                                 insert_html(&document, &sanitized_content);
+
+                                // Manually trigger history entry for paste operation
+                                // Get the updated content after paste
+                                if let Some(window) = web_sys::window() {
+                                    if let Some(doc) = window.document() {
+                                        if let Some(element) = doc.get_element_by_id(&editor_id()) {
+                                            let new_html = element.inner_html();
+                                            let clean = sanitize_html(&new_html);
+                                            edit_history.write().push(clean, TransactionType::Paste);
+                                        }
+                                    }
+                                }
                             }
                         }
                         Err(e) => {
@@ -691,8 +816,33 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                     // Get the HTML content from contenteditable
                     let html_value = evt.value();
 
-                    // Sanitize and notify parent
+                    // Sanitize
                     let clean = sanitize_html(&html_value);
+
+                    // Add to history (unless we're in the middle of undo/redo)
+                    if !*is_undoing.read() {
+                        // Determine transaction type based on content change
+                        // Simple heuristic: if content length difference is small, it's typing
+                        let current_len = edit_history.read().current_state().len();
+                        let new_len = clean.len();
+                        let len_diff = (new_len as i32 - current_len as i32).abs();
+
+                        let transaction_type = if len_diff <= 5 {
+                            // Small change - likely typing or delete
+                            if new_len > current_len {
+                                TransactionType::Typing
+                            } else {
+                                TransactionType::Delete
+                            }
+                        } else {
+                            // Large change - likely paste or formatting
+                            TransactionType::Other
+                        };
+
+                        edit_history.write().push(clean.clone(), transaction_type);
+                    }
+
+                    // Notify parent
                     props.on_change.call(clean);
                 },
             }
@@ -856,6 +1006,45 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                 }}
                 .editor-content code {{
                     font-family: monospace;
+                }}
+                /* Block reordering drag handles */
+                .editor-content > * {{
+                    position: relative;
+                }}
+                .editor-content > *:hover .drag-handle {{
+                    opacity: 1;
+                }}
+                .drag-handle {{
+                    position: absolute;
+                    left: -2rem;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    cursor: grab;
+                    opacity: 0;
+                    transition: opacity 0.2s;
+                    padding: 0.25rem;
+                    color: #9ca3af;
+                }}
+                .dark .drag-handle {{
+                    color: #6b7280;
+                }}
+                .drag-handle:hover {{
+                    color: #3b82f6;
+                }}
+                .dark .drag-handle:hover {{
+                    color: #60a5fa;
+                }}
+                .drag-handle:active {{
+                    cursor: grabbing;
+                }}
+                .block-dragging {{
+                    opacity: 0.5;
+                    background: rgba(59, 130, 246, 0.1);
+                }}
+                .drop-indicator {{
+                    height: 2px;
+                    background: #3b82f6;
+                    margin: 0.5rem 0;
                 }}
                 "
             }
@@ -1134,6 +1323,29 @@ fn find_block_element(node: &web_sys::Node) -> Option<web_sys::Node> {
                 "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote" | "pre"
             ) {
                 return Some(node);
+            }
+        }
+        current = node.parent_node();
+    }
+
+    None
+}
+
+/// Find the parent block element for reordering purposes.
+/// Returns the direct child of the editor-content div.
+fn find_parent_block(node: &web_sys::Node, _document: &web_sys::Document) -> Option<web_sys::Element> {
+    use wasm_bindgen::JsCast;
+
+    let mut current = Some(node.clone());
+
+    while let Some(node) = current {
+        if let Some(element) = node.dyn_ref::<web_sys::Element>() {
+            // Check if the parent is the editor-content div
+            if let Some(parent) = element.parent_element() {
+                if parent.get_attribute("class").map_or(false, |c| c.contains("editor-content")) {
+                    // This element is a direct child of editor-content
+                    return Some(element.clone());
+                }
             }
         }
         current = node.parent_node();

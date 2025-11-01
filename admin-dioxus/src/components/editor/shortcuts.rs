@@ -84,6 +84,10 @@ pub enum ShortcutAction {
     Redo,
     Save,
     Find,
+    /// Move current block up
+    MoveBlockUp,
+    /// Move current block down
+    MoveBlockDown,
 }
 
 impl ShortcutAction {
@@ -115,6 +119,8 @@ impl ShortcutAction {
             Self::Redo => "Redo",
             Self::Save => "Save",
             Self::Find => "Find",
+            Self::MoveBlockUp => "Move block up",
+            Self::MoveBlockDown => "Move block down",
         }
     }
 }
@@ -212,6 +218,16 @@ impl ShortcutRegistry {
 
         // Find
         registry.register(Shortcut::new("f".to_string()).ctrl(), ShortcutAction::Find);
+
+        // Block reordering
+        registry.register(
+            Shortcut::new("ArrowUp".to_string()).alt(),
+            ShortcutAction::MoveBlockUp,
+        );
+        registry.register(
+            Shortcut::new("ArrowDown".to_string()).alt(),
+            ShortcutAction::MoveBlockDown,
+        );
 
         registry
     }
