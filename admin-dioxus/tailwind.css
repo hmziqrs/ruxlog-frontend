@@ -24,13 +24,14 @@
     @apply bg-background;
 }
 
-.ce-popover-item-html button:hover,
-.ce-popover-item button:hover {
-    @apply bg-foreground/05;
+.ce-popover-item-html > button:hover,
+button.ce-popover-item:hover {
+    @apply !bg-foreground/10;
 }
 
-.ce-popover-item--active {
-    @apply bg-foreground/55;
+.ce-inline-tool.ce-inline-tool--active,
+button.ce-popover-item--active {
+    @apply bg-foreground/20;
 }
 
 .ce-inline-tool-hyperlink-wrapper {

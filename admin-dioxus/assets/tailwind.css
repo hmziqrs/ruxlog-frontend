@@ -5626,16 +5626,16 @@ html[dir='rtl'], [data-sonner-toaster][dir='rtl'] {
 .ce-popover__items {
   background-color: var(--background);
 }
-.ce-popover-item-html button:hover, .ce-popover-item button:hover {
-  background-color: var(--foreground);
+.ce-popover-item-html > button:hover, button.ce-popover-item:hover {
+  background-color: var(--foreground) !important;
   @supports (color: color-mix(in lab, red, red)) {
-    background-color: color-mix(in oklab, var(--foreground) 10%, transparent);
+    background-color: color-mix(in oklab, var(--foreground) 10%, transparent) !important;
   }
 }
-.ce-popover-item--active {
+.ce-inline-tool.ce-inline-tool--active, button.ce-popover-item--active {
   background-color: var(--foreground);
   @supports (color: color-mix(in lab, red, red)) {
-    background-color: color-mix(in oklab, var(--foreground) 25%, transparent);
+    background-color: color-mix(in oklab, var(--foreground) 20%, transparent);
   }
 }
 .ce-inline-tool-hyperlink-wrapper {
