@@ -67,7 +67,7 @@ pub fn BubbleMenu(props: BubbleMenuProps) -> Element {
                                         document.get_element_by_id(&editor_id_clone)
                                     {
                                         if let Ok(editor_html) = editor.dyn_into::<HtmlElement>() {
-                                            let editor_rect =
+                                            let _editor_rect =
                                                 editor_html.get_bounding_client_rect();
 
                                             // Position menu above selection, centered
@@ -81,13 +81,13 @@ pub fn BubbleMenu(props: BubbleMenuProps) -> Element {
 
                                             // Adjust if menu would go off-screen
                                             let left = left.max(10.0).min(
-                                                (window
+                                                window
                                                     .inner_width()
                                                     .ok()
                                                     .and_then(|w| w.as_f64())
                                                     .unwrap_or(1000.0)
                                                     - menu_width
-                                                    - 10.0),
+                                                    - 10.0,
                                             );
                                             let top = if top < 0.0 {
                                                 rect.bottom() + gap // Show below if not enough space above

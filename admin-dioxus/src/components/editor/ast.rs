@@ -51,6 +51,17 @@ impl Block {
         Self::new(BlockKind::Heading { level })
     }
 
+    pub fn new_table(rows: usize, cols: usize) -> Self {
+        let headers = vec![vec![Inline::text("")]; cols];
+        let rows = vec![vec![vec![Inline::text("")]; cols]; rows];
+        let column_align = vec![TableAlign::default(); cols];
+        Self::new(BlockKind::Table {
+            headers,
+            rows,
+            column_align,
+        })
+    }
+
     pub fn with_text(mut self, text: impl Into<String>) -> Self {
         self.children.push(Inline::text(text));
         self
@@ -104,6 +115,22 @@ pub enum BlockKind {
         height: Option<u32>,
     },
     Rule,
+    Table {
+        headers: Vec<Vec<Inline>>,
+        rows: Vec<Vec<Vec<Inline>>>,
+        #[serde(default)]
+        column_align: Vec<TableAlign>,
+    },
+}
+
+/// Column alignment for table cells.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum TableAlign {
+    #[default]
+    Left,
+    Center,
+    Right,
 }
 
 /// Supported embed providers.

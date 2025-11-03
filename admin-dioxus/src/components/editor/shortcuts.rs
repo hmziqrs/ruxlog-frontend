@@ -2,8 +2,6 @@
 //!
 //! Provides a flexible system for registering and handling keyboard shortcuts.
 
-use super::ast::BlockKind;
-use super::commands::*;
 use dioxus::prelude::*;
 use std::collections::HashMap;
 

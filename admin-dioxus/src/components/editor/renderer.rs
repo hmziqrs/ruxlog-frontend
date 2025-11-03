@@ -206,6 +206,61 @@ pub fn render_block(block: &Block) -> String {
         BlockKind::Rule => {
             format!("<hr class=\"my-8 border-gray-300\">\n")
         }
+        BlockKind::Table {
+            headers,
+            rows,
+            column_align,
+        } => {
+            let mut html = format!(
+                "<div class=\"mb-4 overflow-x-auto{}\"><table class=\"min-w-full border-collapse border border-gray-300 dark:border-gray-600\">\n",
+                align_class
+            );
+
+            // Render table header
+            if !headers.is_empty() {
+                html.push_str("  <thead class=\"bg-gray-100 dark:bg-gray-700\">\n    <tr>\n");
+                for (col_idx, header_cell) in headers.iter().enumerate() {
+                    let align = column_align.get(col_idx).unwrap_or(&TableAlign::Left);
+                    let align_class = match align {
+                        TableAlign::Left => " text-left",
+                        TableAlign::Center => " text-center",
+                        TableAlign::Right => " text-right",
+                    };
+                    let content = render_inlines(header_cell);
+                    html.push_str(&format!(
+                        "      <th class=\"border border-gray-300 dark:border-gray-600 px-4 py-2 font-semibold text-gray-900 dark:text-gray-100{}\">{}</th>\n",
+                        align_class, content
+                    ));
+                }
+                html.push_str("    </tr>\n  </thead>\n");
+            }
+
+            // Render table rows
+            if !rows.is_empty() {
+                html.push_str("  <tbody>\n");
+                for row in rows {
+                    html.push_str("    <tr>\n");
+                    for (col_idx, cell) in row.iter().enumerate() {
+                        let align = column_align.get(col_idx).unwrap_or(&TableAlign::Left);
+                        let align_class = match align {
+                            TableAlign::Left => " text-left",
+                            TableAlign::Center => " text-center",
+                            TableAlign::Right => " text-right",
+                        };
+                        let content = render_inlines(cell);
+                        html.push_str(&format!(
+                            "      <td class=\"border border-gray-300 dark:border-gray-600 px-4 py-2 text-gray-900 dark:text-gray-100{}\">{}</td>\n",
+                            align_class, content
+                        ));
+                    }
+                    html.push_str("    </tr>\n");
+                }
+                html.push_str("  </tbody>\n");
+            }
+
+            html.push_str("</table></div>\n");
+            html
+        }
     }
 }
 

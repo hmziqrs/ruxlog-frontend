@@ -148,6 +148,25 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
 
         if let Some(insert_link) = cmd.as_any().downcast_ref::<InsertLink>() {
             handle_insert_link(&document, insert_link);
+            return;
+        }
+
+        if let Some(insert_table) = cmd.as_any().downcast_ref::<commands::InsertTable>() {
+            gloo_console::log!("[Editor] InsertTable command received: rows=", insert_table.rows, "cols=", insert_table.cols);
+            let headers = vec![vec![Inline::text("")]; insert_table.cols];
+            let rows = vec![vec![vec![Inline::text("")]; insert_table.cols]; insert_table.rows];
+            let column_align = vec![ast::TableAlign::default(); insert_table.cols];
+            gloo_console::log!("[Editor] Calling handle_insert_block with table");
+            handle_insert_block(
+                &document,
+                &BlockKind::Table {
+                    headers,
+                    rows,
+                    column_align,
+                },
+            );
+            gloo_console::log!("[Editor] Table inserted successfully");
+            return;
         }
     };
 
@@ -540,7 +559,7 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
         if let Some(document) = current_document() {
             if let Ok(Some(sel)) = document.get_selection() {
                 if sel.range_count() > 0 {
-                    if let Ok(range) = sel.get_range_at(0) {
+                    if let Ok(_range) = sel.get_range_at(0) {
                         // Delete backwards to remove '/' and query
                         let delete_count = 1 + slash_query().len();
                         for _ in 0..delete_count {
@@ -616,6 +635,22 @@ pub fn RichTextEditor(props: RichTextEditorProps) -> Element {
                             width: None,
                             height: None,
                             caption: None,
+                        },
+                    );
+                }
+            }
+            SlashCommand::Table => {
+                if let Some(document) = current_document() {
+                    // Insert a default 3x3 table
+                    let headers = vec![vec![Inline::text("")]; 3];
+                    let rows = vec![vec![vec![Inline::text("")]; 3]; 3];
+                    let column_align = vec![ast::TableAlign::default(); 3];
+                    handle_insert_block(
+                        &document,
+                        &BlockKind::Table {
+                            headers,
+                            rows,
+                            column_align,
                         },
                     );
                 }
@@ -1376,7 +1411,8 @@ fn handle_set_block_type(document: &web_sys::Document, block_kind: &BlockKind) {
         | BlockKind::TaskItem { .. }
         | BlockKind::Image { .. }
         | BlockKind::Embed { .. }
-        | BlockKind::Rule => {}
+        | BlockKind::Rule
+        | BlockKind::Table { .. } => {}
     }
 }
 
@@ -1614,6 +1650,17 @@ fn handle_insert_block(document: &web_sys::Document, block_kind: &BlockKind) {
         } => {
             let html = build_embed_html(provider, url, title.as_deref(), *width, *height);
             insert_html(document, &html);
+        }
+        BlockKind::Table {
+            headers,
+            rows,
+            column_align,
+        } => {
+            gloo_console::log!("[handle_insert_block] Building table HTML");
+            let html = build_table_html(headers, rows, column_align);
+            gloo_console::log!("[handle_insert_block] Table HTML:", &html);
+            insert_html(document, &html);
+            gloo_console::log!("[handle_insert_block] Table HTML inserted");
         }
         BlockKind::Paragraph
         | BlockKind::Heading { .. }
@@ -2014,6 +2061,61 @@ fn build_embed_html(
         "<div class=\"editor-embed aspect-video\"><iframe src=\"{}\" title=\"{}\" frameborder=\"0\" allow=\"{}\" allowfullscreen{}{}></iframe></div>",
         src_attr, title_attr, allow_attr, width_attr, height_attr
     )
+}
+
+fn build_table_html(
+    headers: &[Vec<Inline>],
+    rows: &[Vec<Vec<Inline>>],
+    column_align: &[ast::TableAlign],
+) -> String {
+    use super::renderer::render_inlines;
+
+    let mut html = String::from("<div class=\"mb-4 overflow-x-auto\"><table class=\"min-w-full border-collapse border border-gray-300 dark:border-gray-600\">");
+
+    // Render headers
+    if !headers.is_empty() {
+        html.push_str("<thead class=\"bg-gray-100 dark:bg-gray-700\"><tr>");
+        for (i, header_cell) in headers.iter().enumerate() {
+            let align = column_align.get(i).unwrap_or(&ast::TableAlign::Left);
+            let align_class = match align {
+                ast::TableAlign::Left => " text-left",
+                ast::TableAlign::Center => " text-center",
+                ast::TableAlign::Right => " text-right",
+            };
+            let content = render_inlines(header_cell);
+            html.push_str(&format!(
+                "<th class=\"border border-gray-300 dark:border-gray-600 px-4 py-2 font-semibold text-gray-900 dark:text-gray-100{}\">{}</th>",
+                align_class, content
+            ));
+        }
+        html.push_str("</tr></thead>");
+    }
+
+    // Render rows
+    if !rows.is_empty() {
+        html.push_str("<tbody>");
+        for row in rows {
+            html.push_str("<tr>");
+            for (i, cell) in row.iter().enumerate() {
+                let align = column_align.get(i).unwrap_or(&ast::TableAlign::Left);
+                let align_class = match align {
+                    ast::TableAlign::Left => " text-left",
+                    ast::TableAlign::Center => " text-center",
+                    ast::TableAlign::Right => " text-right",
+                };
+                let content = render_inlines(cell);
+                html.push_str(&format!(
+                    "<td class=\"border border-gray-300 dark:border-gray-600 px-4 py-2 text-gray-900 dark:text-gray-100{}\">{}</td>",
+                    align_class, content
+                ));
+            }
+            html.push_str("</tr>");
+        }
+        html.push_str("</tbody>");
+    }
+
+    html.push_str("</table></div>");
+    html
 }
 
 fn escape_attribute(value: &str) -> String {

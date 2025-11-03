@@ -2,8 +2,6 @@
 //!
 //! Displays a menu when user types '/' to insert different block types.
 
-use super::ast::BlockKind;
-use super::commands::*;
 use dioxus::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlElement;
@@ -38,6 +36,7 @@ pub enum SlashCommand {
     CodeBlock,
     Divider,
     Image,
+    Table,
 }
 
 impl SlashCommand {
@@ -54,6 +53,7 @@ impl SlashCommand {
             Self::CodeBlock,
             Self::Divider,
             Self::Image,
+            Self::Table,
         ]
     }
 
@@ -70,6 +70,7 @@ impl SlashCommand {
             Self::CodeBlock => "Code Block",
             Self::Divider => "Divider",
             Self::Image => "Image",
+            Self::Table => "Table",
         }
     }
 
@@ -86,6 +87,7 @@ impl SlashCommand {
             Self::CodeBlock => "</>",
             Self::Divider => "—",
             Self::Image => "🖼",
+            Self::Table => "▦",
         }
     }
 
@@ -102,6 +104,7 @@ impl SlashCommand {
             Self::CodeBlock => "Code with syntax highlighting",
             Self::Divider => "Horizontal rule",
             Self::Image => "Insert image",
+            Self::Table => "Insert table with rows and columns",
         }
     }
 

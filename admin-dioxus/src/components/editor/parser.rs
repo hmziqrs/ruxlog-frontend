@@ -39,6 +39,7 @@ pub fn parse_html(html: &str) -> Doc {
         "blockquote",
         "pre",
         "hr",
+        "table",
         "figure",
         "img:not(figure img)", // Only standalone images, not those inside figures
     ];
@@ -110,6 +111,9 @@ fn parse_element_to_block(
             BlockKind::CodeBlock { language, code }
         }
         "hr" => BlockKind::Rule,
+        "table" => {
+            return parse_table_block(el, counter);
+        }
         "figure" => {
             // Check if this is an image or embed
             if let Some(img) = find_descendant(el, "img") {
@@ -396,6 +400,123 @@ fn detect_embed_provider(url: &str) -> EmbedProvider {
     } else {
         EmbedProvider::Generic
     }
+}
+
+/// Parses a table element into a Table block.
+fn parse_table_block(
+    table_el: scraper::element_ref::ElementRef,
+    counter: &mut usize,
+) -> Option<Block> {
+    let mut headers: Vec<Vec<Inline>> = Vec::new();
+    let mut rows: Vec<Vec<Vec<Inline>>> = Vec::new();
+    let mut column_align: Vec<TableAlign> = Vec::new();
+
+    // Parse thead for headers
+    if let Some(thead) = find_descendant(table_el, "thead") {
+        if let Some(tr) = find_descendant(thead, "tr") {
+            let th_selector = Selector::parse("th").ok()?;
+            for (_col_idx, th) in tr.select(&th_selector).enumerate() {
+                let cell_content = parse_inline_content(th);
+                headers.push(cell_content);
+
+                // Parse column alignment from th
+                let align = parse_cell_alignment(th);
+                column_align.push(align);
+            }
+        }
+    }
+
+    // Parse tbody for data rows
+    if let Some(tbody) = find_descendant(table_el, "tbody") {
+        let tr_selector = Selector::parse("tr").ok()?;
+        for tr in tbody.select(&tr_selector) {
+            let mut row_cells: Vec<Vec<Inline>> = Vec::new();
+            let td_selector = Selector::parse("td").ok()?;
+            for td in tr.select(&td_selector) {
+                let cell_content = parse_inline_content(td);
+                row_cells.push(cell_content);
+            }
+            if !row_cells.is_empty() {
+                rows.push(row_cells);
+            }
+        }
+    }
+
+    // If no explicit thead/tbody, try to parse tr elements directly
+    if headers.is_empty() && rows.is_empty() {
+        let tr_selector = Selector::parse("tr").ok()?;
+        let mut first_row = true;
+        for tr in table_el.select(&tr_selector) {
+            // First row might be headers if it contains th elements
+            if first_row {
+                let th_selector = Selector::parse("th").ok()?;
+                let th_count = tr.select(&th_selector).count();
+
+                if th_count > 0 {
+                    // This row has th elements, treat as header
+                    for th in tr.select(&th_selector) {
+                        let cell_content = parse_inline_content(th);
+                        headers.push(cell_content);
+                        let align = parse_cell_alignment(th);
+                        column_align.push(align);
+                    }
+                    first_row = false;
+                    continue;
+                }
+            }
+
+            // Regular data row with td elements
+            let td_selector = Selector::parse("td").ok()?;
+            let mut row_cells: Vec<Vec<Inline>> = Vec::new();
+            for td in tr.select(&td_selector) {
+                let cell_content = parse_inline_content(td);
+                row_cells.push(cell_content);
+            }
+            if !row_cells.is_empty() {
+                rows.push(row_cells);
+            }
+            first_row = false;
+        }
+    }
+
+    // Ensure column_align has enough entries
+    let max_cols = headers.len().max(rows.iter().map(|r| r.len()).max().unwrap_or(0));
+    while column_align.len() < max_cols {
+        column_align.push(TableAlign::default());
+    }
+
+    Some(Block {
+        id: generate_id(counter),
+        kind: BlockKind::Table {
+            headers,
+            rows,
+            column_align,
+        },
+        align: BlockAlign::Left,
+        attrs: HashMap::new(),
+        children: vec![],
+    })
+}
+
+/// Parses cell alignment from th/td element.
+fn parse_cell_alignment(cell_el: scraper::element_ref::ElementRef) -> TableAlign {
+    if let Some(class) = cell_el.value().attr("class") {
+        if class.contains("text-center") {
+            return TableAlign::Center;
+        } else if class.contains("text-right") {
+            return TableAlign::Right;
+        }
+    }
+
+    if let Some(style) = cell_el.value().attr("style") {
+        if style.contains("text-align: center") || style.contains("text-align:center") {
+            return TableAlign::Center;
+        } else if style.contains("text-align: right") || style.contains("text-align:right") {
+            return TableAlign::Right;
+        }
+    }
+
+    TableAlign::Left
 }
 
 /// Parses text alignment from element classes or styles.

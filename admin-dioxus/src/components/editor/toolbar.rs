@@ -23,6 +23,7 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
     let mut show_link_dialog = use_signal(|| false);
     let mut show_image_dialog = use_signal(|| false);
     let mut show_embed_dialog = use_signal(|| false);
+    let mut show_table_dialog = use_signal(|| false);
 
     // Track active formatting states
     let mut is_bold = use_signal(|| false);
@@ -275,6 +276,14 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
                         show_embed_dialog.set(true);
                     },
                 }
+
+                ToolbarButton {
+                    icon: "▦",
+                    title: "Insert Table",
+                    on_click: move |_| {
+                        show_table_dialog.set(true);
+                    },
+                }
             }
 
             // Dialogs
@@ -325,6 +334,21 @@ pub fn Toolbar(props: ToolbarProps) -> Element {
                             },
                         }));
                         show_embed_dialog.set(false);
+                    },
+                }
+            }
+
+            if *show_table_dialog.read() {
+                TableDialog {
+                    on_close: move |_| show_table_dialog.set(false),
+                    on_insert: move |(rows, cols)| {
+                        gloo_console::log!("[Toolbar] TableDialog on_insert called: rows=", rows, "cols=", cols);
+                        props.on_command.call(Box::new(super::commands::InsertTable {
+                            rows,
+                            cols,
+                        }));
+                        gloo_console::log!("[Toolbar] Closing table dialog");
+                        show_table_dialog.set(false);
                     },
                 }
             }
@@ -594,6 +618,79 @@ fn EmbedDialog(
                             r#type: "button",
                             onclick: move |_| {
                                 on_insert.call((provider.read().clone(), url.read().clone()));
+                            },
+                            "Insert"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Table insertion dialog.
+#[component]
+pub fn TableDialog(
+    on_close: EventHandler<MouseEvent>,
+    on_insert: EventHandler<(usize, usize)>,
+) -> Element {
+    let mut rows = use_signal(|| String::from("3"));
+    let mut cols = use_signal(|| String::from("3"));
+
+    rsx! {
+        div {
+            class: "fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50",
+            onclick: move |evt| {
+                evt.stop_propagation();
+                on_close.call(evt);
+            },
+
+            div {
+                class: "bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl max-w-md w-full",
+                onclick: move |evt| evt.stop_propagation(),
+
+                h3 { class: "text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100", "Insert Table" }
+
+                div { class: "space-y-4",
+                    div {
+                        label { class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1", "Rows" }
+                        input {
+                            class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            r#type: "number",
+                            min: "1",
+                            max: "20",
+                            value: "{rows}",
+                            oninput: move |evt| rows.set(evt.value()),
+                        }
+                    }
+
+                    div {
+                        label { class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1", "Columns" }
+                        input {
+                            class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                            r#type: "number",
+                            min: "1",
+                            max: "10",
+                            value: "{cols}",
+                            oninput: move |evt| cols.set(evt.value()),
+                        }
+                    }
+
+                    div { class: "flex justify-end gap-2 pt-2",
+                        button {
+                            class: "px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md",
+                            r#type: "button",
+                            onclick: move |evt| on_close.call(evt),
+                            "Cancel"
+                        }
+                        button {
+                            class: "px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600",
+                            r#type: "button",
+                            onclick: move |_| {
+                                let rows_val = rows.read().parse::<usize>().unwrap_or(3).clamp(1, 20);
+                                let cols_val = cols.read().parse::<usize>().unwrap_or(3).clamp(1, 10);
+                                gloo_console::log!("[TableDialog] Insert clicked: rows=", rows_val, "cols=", cols_val);
+                                on_insert.call((rows_val, cols_val));
                             },
                             "Insert"
                         }

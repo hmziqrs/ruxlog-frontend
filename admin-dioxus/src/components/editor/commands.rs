@@ -496,6 +496,204 @@ impl Command for InsertLink {
     }
 }
 
+/// Inserts a table with the specified dimensions.
+pub struct InsertTable {
+    pub rows: usize,
+    pub cols: usize,
+}
+
+impl Command for InsertTable {
+    fn execute(&self, doc: &mut Doc, selection: &Selection) -> Result<Selection, CommandError> {
+        let pos = selection.focus;
+        if pos.block_index >= doc.blocks.len() {
+            return Err(CommandError::InvalidBlockIndex);
+        }
+
+        let table_block = Block::new_table(self.rows, self.cols);
+        doc.blocks.insert(pos.block_index + 1, table_block);
+
+        Ok(Selection::collapsed(Position::new(pos.block_index + 1, 0)))
+    }
+
+    fn description(&self) -> &str {
+        "Insert table"
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
+
+/// Adds a row to a table at the specified block index.
+pub struct AddTableRow {
+    pub block_index: usize,
+    pub row_index: Option<usize>, // None = add at end
+}
+
+impl Command for AddTableRow {
+    fn execute(&self, doc: &mut Doc, _selection: &Selection) -> Result<Selection, CommandError> {
+        if self.block_index >= doc.blocks.len() {
+            return Err(CommandError::InvalidBlockIndex);
+        }
+
+        let block = &mut doc.blocks[self.block_index];
+        if let BlockKind::Table { rows, headers, .. } = &mut block.kind {
+            let cols = headers.len();
+            let new_row = vec![vec![Inline::text("")]; cols];
+
+            if let Some(idx) = self.row_index {
+                if idx <= rows.len() {
+                    rows.insert(idx, new_row);
+                } else {
+                    return Err(CommandError::InvalidSelection);
+                }
+            } else {
+                rows.push(new_row);
+            }
+
+            Ok(Selection::collapsed(Position::new(self.block_index, 0)))
+        } else {
+            Err(CommandError::UnsupportedOperation)
+        }
+    }
+
+    fn description(&self) -> &str {
+        "Add table row"
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
+
+/// Adds a column to a table at the specified block index.
+pub struct AddTableColumn {
+    pub block_index: usize,
+    pub col_index: Option<usize>, // None = add at end
+}
+
+impl Command for AddTableColumn {
+    fn execute(&self, doc: &mut Doc, _selection: &Selection) -> Result<Selection, CommandError> {
+        if self.block_index >= doc.blocks.len() {
+            return Err(CommandError::InvalidBlockIndex);
+        }
+
+        let block = &mut doc.blocks[self.block_index];
+        if let BlockKind::Table { rows, headers, column_align } = &mut block.kind {
+            let insert_at = self.col_index.unwrap_or(headers.len());
+
+            // Add to headers
+            if insert_at <= headers.len() {
+                headers.insert(insert_at, vec![Inline::text("")]);
+                column_align.insert(insert_at, TableAlign::default());
+            } else {
+                return Err(CommandError::InvalidSelection);
+            }
+
+            // Add to all rows
+            for row in rows.iter_mut() {
+                if insert_at <= row.len() {
+                    row.insert(insert_at, vec![Inline::text("")]);
+                } else {
+                    row.push(vec![Inline::text("")]);
+                }
+            }
+
+            Ok(Selection::collapsed(Position::new(self.block_index, 0)))
+        } else {
+            Err(CommandError::UnsupportedOperation)
+        }
+    }
+
+    fn description(&self) -> &str {
+        "Add table column"
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
+
+/// Deletes a row from a table.
+pub struct DeleteTableRow {
+    pub block_index: usize,
+    pub row_index: usize,
+}
+
+impl Command for DeleteTableRow {
+    fn execute(&self, doc: &mut Doc, _selection: &Selection) -> Result<Selection, CommandError> {
+        if self.block_index >= doc.blocks.len() {
+            return Err(CommandError::InvalidBlockIndex);
+        }
+
+        let block = &mut doc.blocks[self.block_index];
+        if let BlockKind::Table { rows, .. } = &mut block.kind {
+            if self.row_index < rows.len() {
+                rows.remove(self.row_index);
+                Ok(Selection::collapsed(Position::new(self.block_index, 0)))
+            } else {
+                Err(CommandError::InvalidSelection)
+            }
+        } else {
+            Err(CommandError::UnsupportedOperation)
+        }
+    }
+
+    fn description(&self) -> &str {
+        "Delete table row"
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
+
+/// Deletes a column from a table.
+pub struct DeleteTableColumn {
+    pub block_index: usize,
+    pub col_index: usize,
+}
+
+impl Command for DeleteTableColumn {
+    fn execute(&self, doc: &mut Doc, _selection: &Selection) -> Result<Selection, CommandError> {
+        if self.block_index >= doc.blocks.len() {
+            return Err(CommandError::InvalidBlockIndex);
+        }
+
+        let block = &mut doc.blocks[self.block_index];
+        if let BlockKind::Table { rows, headers, column_align } = &mut block.kind {
+            if self.col_index < headers.len() {
+                // Remove from headers
+                headers.remove(self.col_index);
+                if self.col_index < column_align.len() {
+                    column_align.remove(self.col_index);
+                }
+
+                // Remove from all rows
+                for row in rows.iter_mut() {
+                    if self.col_index < row.len() {
+                        row.remove(self.col_index);
+                    }
+                }
+
+                Ok(Selection::collapsed(Position::new(self.block_index, 0)))
+            } else {
+                Err(CommandError::InvalidSelection)
+            }
+        } else {
+            Err(CommandError::UnsupportedOperation)
+        }
+    }
+
+    fn description(&self) -> &str {
+        "Delete table column"
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
