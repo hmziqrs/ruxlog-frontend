@@ -26,6 +26,44 @@ pub fn EditorJsHost(initial_json: Option<String>) -> Element {
     });
 
     rsx! {
+        // SVG sprite for editorjs-hyperlink icons
+        svg {
+            style: "display: none;",
+            defs {
+                symbol {
+                    id: "link",
+                    "viewBox": "0 0 14 10",
+                    path {
+                        d: "M1.5 5h11M10 1.5l3.5 3.5L10 8.5",
+                        stroke: "currentColor",
+                        "stroke-width": "1.5",
+                        fill: "none",
+                        "stroke-linecap": "round",
+                    }
+                }
+                symbol {
+                    id: "unlink",
+                    "viewBox": "0 0 15 11",
+                    path {
+                        d: "M1.5 5.5h5m3 0h5M10 2l3.5 3.5L10 9",
+                        stroke: "currentColor",
+                        "stroke-width": "1.5",
+                        fill: "none",
+                        "stroke-linecap": "round",
+                    }
+                    line {
+                        x1: "6.5",
+                        y1: "1",
+                        x2: "8.5",
+                        y2: "10",
+                        stroke: "currentColor",
+                        "stroke-width": "1.5",
+                        "stroke-linecap": "round",
+                    }
+                }
+            }
+        }
+
         script { r#type: "module", src: asset!("/assets/editor.bundle.js") }
 
         div { id: "editorjs", class: "min-h-[300px] border rounded-md" }
