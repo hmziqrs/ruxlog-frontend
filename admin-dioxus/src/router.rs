@@ -7,7 +7,6 @@ use crate::screens::AnalyticsScreen;
 use crate::screens::CategoriesAddScreen;
 use crate::screens::CategoriesEditScreen;
 use crate::screens::CategoriesListScreen;
-use crate::screens::EditorDemo;
 use crate::screens::HomeScreen;
 use crate::screens::LoginScreen;
 use crate::screens::MediaListScreen;
@@ -72,8 +71,5 @@ pub enum Route {
 
     #[route("/demo/sonner")]
     SonnerDemoScreen {},
-
-    #[route("/demo/editor")]
-    EditorDemo {},
 }
 pub static OPEN_ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| vec![Route::LoginScreen {}]);

@@ -1,7 +1,7 @@
 use dioxus::{logger::tracing, prelude::*};
 
 use super::form::{use_blog_form, BlogForm};
-use crate::components::editor::RichTextEditor;
+// use crate::components::editor::RichTextEditor; // Moved to legacy - using TypeScript editor instead
 use crate::components::AppInput;
 use crate::router::Route;
 use crate::store::{
@@ -328,12 +328,13 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                                 "Content "
                                                 span { class: "text-error", "*" }
                                             }
-                                            RichTextEditor {
-                                                initial_value: {
-                                                    let v = form.read().data.content.clone();
-                                                    if v.is_empty() { None } else { Some(v) }
-                                                },
-                                                on_change: move |new_html: String| {
+                                            // TODO: Replace with TypeScript editor integration
+                                            textarea {
+                                                class: "w-full min-h-[300px] px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                                                placeholder: "Write your post...",
+                                                value: "{form.read().data.content}",
+                                                oninput: move |evt| {
+                                                    let new_html = evt.value();
                                                     let mut autosave_gen = autosave_gen;
                                                     form.write().update_field("content", new_html.clone());
                                                     if let Some(window) = web_sys::window() {
@@ -363,8 +364,6 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                                         }
                                                     }
                                                 },
-                                                placeholder: "Write your post...".to_string(),
-                                                class: "min-h-[300px]".to_string(),
                                             }
                                         }
 

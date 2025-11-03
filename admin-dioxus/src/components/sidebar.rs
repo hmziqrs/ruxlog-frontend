@@ -151,14 +151,6 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                         is_active: is_active(Route::UsersListScreen {}),
                     }
                     SidebarModuleLink {
-                        main_route: Route::EditorDemo {},
-                        icon: rsx! {
-                            Icon { icon: LdFileText }
-                        },
-                        label: "📝 Editor Demo",
-                        is_active: is_active(Route::EditorDemo {}),
-                    }
-                    SidebarModuleLink {
                         main_route: Route::AnalyticsScreen {},
                         icon: rsx! {
                             Icon { icon: LdAreaChart }

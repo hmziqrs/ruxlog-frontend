@@ -40,7 +40,6 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
         Route::UsersListScreen {} => ("Users", Some("List")),
         Route::AnalyticsScreen {} => ("Analytics", None),
         Route::SonnerDemoScreen {} => ("Sonner Demo", None),
-        Route::EditorDemo {} => ("Editor Demo", None),
         Route::HomeScreen {} | Route::LoginScreen {} => ("Dashboard", None),
     };
 

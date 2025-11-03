@@ -70,8 +70,5 @@ pub use user_details_dialog::*;
 mod media_preview_item;
 pub use media_preview_item::*;
 
-pub mod editor;
-pub use editor::*;
-
 mod media_picker_dialog;
 pub use media_picker_dialog::*;
