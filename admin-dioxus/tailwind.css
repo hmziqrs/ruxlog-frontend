@@ -1,9 +1,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin '@tailwindcss/typography';
 @import "./src/styles/toast.css";
 @import "./src/styles/sonner.css";
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant dark (&:is(.dark *));
+
+.ce-block__content {
+    @apply prose;
+
+    @apply dark:prose-invert;
+}
 
 :root {
     /* --background: #ffffff; */
