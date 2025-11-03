@@ -47,7 +47,11 @@
 }
 
 .ce-inline-tool-hyperlink--button {
-    @apply w-full px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background;
+    @apply inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50;
+    @apply h-9 !px-4 !py-2 !border !border-zinc-200 dark:!border-zinc-800 !bg-background !text-foreground shadow-sm hover:!bg-accent hover:!text-accent-foreground;
+    font-family: var(--font-sans) !important;
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
 }
 
 .ce-toolbox svg,
