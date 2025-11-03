@@ -48,9 +48,22 @@ button.ce-popover-item--active {
 }
 
 .ce-inline-tool-hyperlink--input,
-.ce-inline-tool-input {
-    @apply w-full !px-3 !py-2 !bg-background !border !border-zinc-200 dark:!border-zinc-800 !rounded-md !text-foreground placeholder:!text-muted-foreground focus:!outline-none focus:!ring-2 focus:!ring-ring;
+.ce-inline-tool-input,
+.cdx-search-field__input {
+    @apply w-full !px-3 !py-2 !bg-transparent !border-0 !text-foreground placeholder:!text-muted-foreground focus:!outline-none focus:!ring-0;
     font-family: var(--font-sans) !important;
+}
+
+.cdx-search-field {
+    @apply bg-background border border-zinc-200 dark:border-zinc-800 rounded-md transition-colors;
+}
+
+.cdx-search-field:focus-within {
+    @apply border-ring ring-2 ring-ring/20;
+}
+
+.cdx-search-field__icon {
+    @apply text-muted-foreground flex items-center justify-center h-full m-0;
 }
 
 .ce-inline-tool-hyperlink--select-target,
