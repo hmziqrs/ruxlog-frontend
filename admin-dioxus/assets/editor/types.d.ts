@@ -1,5 +1,15 @@
 // Type declarations for Editor.js packages without official types
 
+// Window extensions for Rust wasm_bindgen bridge
+declare global {
+  interface Window {
+    editorjs_upload_file?: (file: File) => Promise<{
+      success: number;
+      file: { url: string };
+    }>;
+  }
+}
+
 declare module 'editorjs-drag-drop' {
   import type EditorJS from '@editorjs/editorjs';
 

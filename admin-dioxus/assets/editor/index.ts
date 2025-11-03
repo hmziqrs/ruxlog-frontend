@@ -162,12 +162,30 @@ const mountEditor = async (): Promise<void> => {
         class: Image,
         config: {
           uploader: {
-            // Phase 1: URL-only uploads
-            // TODO: Implement file upload via Rust media store
+            // Upload by URL
             uploadByUrl: async (url: string) => ({
               success: 1,
               file: { url },
             }),
+            // Upload by file - integrated with Rust media store
+            uploadByFile: async (file: File) => {
+              try {
+                // @ts-ignore - editorjs_upload_file is exposed by Rust wasm_bindgen
+                if (typeof window.editorjs_upload_file !== 'function') {
+                  console.error('[EditorJS] Upload bridge not available');
+                  throw new Error('Upload functionality not available');
+                }
+
+                console.log('[EditorJS] Uploading file:', file.name);
+                // @ts-ignore
+                const response = await window.editorjs_upload_file(file);
+                console.log('[EditorJS] Upload response:', response);
+                return response;
+              } catch (err) {
+                console.error('[EditorJS] Upload failed:', err);
+                throw err;
+              }
+            },
           },
         },
       },
@@ -178,15 +196,40 @@ const mountEditor = async (): Promise<void> => {
       link: {
         class: Link,
         config: {
-          // TODO: Provide endpoint for link metadata fetching if needed
-          // endpoint: '/api/link-preview',
+          // Link metadata fetching endpoint (optional)
+          // Can be added later if needed: endpoint: '/api/link-preview'
         },
       },
       attaches: {
         class: Attaches,
         config: {
-          // TODO: Implement file upload via Rust media store
-          // uploader: { uploadByFile: ... }
+          uploader: {
+            // Upload file attachments via Rust media store
+            uploadByFile: async (file: File) => {
+              try {
+                // @ts-ignore - editorjs_upload_file is exposed by Rust wasm_bindgen
+                if (typeof window.editorjs_upload_file !== 'function') {
+                  console.error('[EditorJS] Upload bridge not available');
+                  throw new Error('Upload functionality not available');
+                }
+
+                console.log('[EditorJS] Uploading attachment:', file.name);
+                // @ts-ignore
+                const response = await window.editorjs_upload_file(file);
+                console.log('[EditorJS] Attachment upload response:', response);
+
+                // Attaches tool expects additional metadata
+                return {
+                  ...response,
+                  title: file.name,
+                  size: file.size,
+                };
+              } catch (err) {
+                console.error('[EditorJS] Attachment upload failed:', err);
+                throw err;
+              }
+            },
+          },
         },
       },
       code: {

@@ -50,6 +50,7 @@ dependencies = [
  "reqwest",
  "scraper",
  "serde",
+ "serde-wasm-bindgen",
  "serde_json",
  "uuid",
  "validator",
