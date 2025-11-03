@@ -25,8 +25,14 @@
 }
 
 .ce-popover-item-html > button:hover,
-button.ce-popover-item:hover {
+button.ce-popover-item:hover,
+.ce-popover-item:hover {
     @apply !bg-foreground/10;
+}
+
+.ce-popover-item,
+.ce-popover-item__title {
+    @apply text-foreground;
 }
 
 .ce-inline-tool.ce-inline-tool--active,
