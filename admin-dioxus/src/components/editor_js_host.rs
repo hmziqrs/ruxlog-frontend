@@ -26,7 +26,7 @@ pub fn EditorJsHost(initial_json: Option<String>) -> Element {
     });
 
     rsx! {
-        script { r#type: "module", src: asset!("/assets/editor.js") }
+        script { r#type: "module", src: asset!("/assets/editor.bundle.js") }
 
         div { id: "editorjs", class: "min-h-[300px] border rounded-md" }
     }

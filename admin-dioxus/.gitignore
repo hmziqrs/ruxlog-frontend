@@ -7,3 +7,6 @@
 **/*.rs.bk
 node_modules
 bun.lock
+
+# Generated bundles
+assets/editor.bundle.js
