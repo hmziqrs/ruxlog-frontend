@@ -24,6 +24,15 @@
     @apply bg-background;
 }
 
+.ce-popover-item-html button:hover,
+.ce-popover-item button:hover {
+    @apply bg-foreground/05;
+}
+
+.ce-popover-item--active {
+    @apply bg-foreground/55;
+}
+
 .ce-inline-tool-hyperlink-wrapper {
     @apply bg-background p-3 space-y-2 !border-t-0;
 }
