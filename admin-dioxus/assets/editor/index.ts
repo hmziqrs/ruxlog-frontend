@@ -29,6 +29,7 @@ import Alert from "editorjs-alert";
 import InlineCode from "@editorjs/inline-code";
 import Marker from "@editorjs/marker";
 import Underline from "@editorjs/underline";
+import Hyperlink from "editorjs-hyperlink";
 
 // Plugins
 import DragDrop from "editorjs-drag-drop";
@@ -193,7 +194,8 @@ const mountEditor = async (): Promise<void> => {
         class: Embed,
         inlineToolbar: true,
       },
-      link: {
+      // Renamed from "link" to "linktool" to avoid conflict with inline hyperlink
+      linktool: {
         class: Link,
         config: {
           // Link metadata fetching endpoint (optional)
@@ -259,6 +261,17 @@ const mountEditor = async (): Promise<void> => {
         class: Marker,
       },
       underline: Underline,
+      hyperlink: {
+        class: Hyperlink,
+        config: {
+          shortcut: "CMD+L",
+          target: "_blank",
+          rel: "nofollow",
+          availableTargets: ["_blank", "_self"],
+          availableRels: ["author", "noreferrer", "nofollow"],
+          validate: false,
+        },
+      },
     },
     data: parseInitialData(),
     onReady: async () => {

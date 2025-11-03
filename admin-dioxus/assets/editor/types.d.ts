@@ -56,3 +56,18 @@ declare module 'editorjs-alert' {
     save(block: HTMLElement): any;
   }
 }
+
+declare module 'editorjs-hyperlink' {
+  import type { InlineTool, InlineToolConstructorOptions } from '@editorjs/editorjs';
+
+  export default class Hyperlink implements InlineTool {
+    constructor(options: InlineToolConstructorOptions);
+    static get isInline(): boolean;
+    render(): HTMLElement;
+    surround(range: Range): void;
+    checkState(): boolean;
+    renderActions(): HTMLElement;
+    save(): void;
+    static get sanitize(): any;
+  }
+}
