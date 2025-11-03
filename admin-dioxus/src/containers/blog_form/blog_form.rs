@@ -2,7 +2,7 @@ use dioxus::{logger::tracing, prelude::*};
 
 use super::form::{use_blog_form, BlogForm};
 // use crate::components::editor::RichTextEditor; // Moved to legacy - using TypeScript editor instead
-use crate::components::AppInput;
+use crate::components::{AppInput, EditorJsHost};
 use crate::router::Route;
 use crate::store::{
     use_categories, use_post, use_tag, PostAutosavePayload, PostCreatePayload, PostEditPayload,
@@ -11,6 +11,7 @@ use crate::store::{
 use chrono::Utc;
 use dioxus_time::sleep;
 use std::time::Duration;
+use wasm_bindgen::{closure::Closure, JsCast};
 
 #[component]
 pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
@@ -94,6 +95,71 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
     let mut form = blog_form_hook.form;
     let mut auto_slug = blog_form_hook.auto_slug;
     let autosave_gen = use_signal(|| 0u64);
+    let mut listener_handle =
+        use_signal(|| None::<(web_sys::EventTarget, Closure<dyn FnMut(web_sys::Event)>)>);
+    let mut form_signal = form;
+    let mut autosave_signal = autosave_gen;
+    let posts_store = posts;
+    let post_id_value = post_id;
+
+    use_effect(move || {
+        if let Some((event_target, listener)) = listener_handle.write().take() {
+            let _ = event_target.remove_event_listener_with_callback(
+                "editor:change",
+                listener.as_ref().unchecked_ref(),
+            );
+        }
+
+        if let Some(window) = web_sys::window() {
+            let event_target: web_sys::EventTarget = window.clone().into();
+            let listener = Closure::wrap(Box::new(move |event: web_sys::Event| {
+                if let Ok(custom_event) = event.dyn_into::<web_sys::CustomEvent>() {
+                    if let Some(detail) = custom_event.detail().as_string() {
+                        form_signal.write().update_field("content", detail.clone());
+
+                        if let Some(window) = web_sys::window() {
+                            if let Ok(Some(storage)) = window.local_storage() {
+                                let _ = storage.set_item("blog_form_draft_content", &detail);
+                            }
+                        }
+
+                        if let Some(edit_id) = post_id_value {
+                            let this_tick = autosave_signal() + 1;
+                            autosave_signal.set(this_tick);
+                            let posts_ref = posts_store;
+                            let debounce_signal = autosave_signal;
+                            let content_for_save = detail.clone();
+                            spawn(async move {
+                                sleep(Duration::from_millis(1500)).await;
+                                if debounce_signal() != this_tick {
+                                    return;
+                                }
+                                posts_ref
+                                    .autosave(PostAutosavePayload {
+                                        post_id: edit_id,
+                                        content: content_for_save,
+                                        updated_at: Utc::now(),
+                                    })
+                                    .await;
+                            });
+                        }
+                    }
+                }
+            }) as Box<dyn FnMut(_)>);
+
+            if event_target
+                .add_event_listener_with_callback(
+                    "editor:change",
+                    listener.as_ref().unchecked_ref(),
+                )
+                .is_ok()
+            {
+                listener_handle.set(Some((event_target, listener)));
+            } else {
+                listener.forget();
+            }
+        }
+    });
 
     // Handle successful submission
     use_effect(move || {
@@ -323,49 +389,28 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                     }
 
                     // Content field
-                                        div { class: "space-y-2",
-                                            label { class: "block text-sm font-medium text-primary",
-                                                "Content "
-                                                span { class: "text-error", "*" }
-                                            }
-                                            // TODO: Replace with TypeScript editor integration
-                                            textarea {
-                                                class: "w-full min-h-[300px] px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-                                                placeholder: "Write your post...",
-                                                value: "{form.read().data.content}",
-                                                oninput: move |evt| {
-                                                    let new_html = evt.value();
-                                                    let mut autosave_gen = autosave_gen;
-                                                    form.write().update_field("content", new_html.clone());
-                                                    if let Some(window) = web_sys::window() {
-                                                        if let Ok(Some(storage)) = window.local_storage() {
-                                                            let _ = storage.set_item("blog_form_draft_content", &new_html);
-                                                        }
-                                                    }
+                    {
+                        let content_value = {
+                            let reader = form.read();
+                            reader.data.content.clone()
+                        };
 
-                                                    if is_edit_mode {
-                                                        if let Some(id) = post_id {
-                                                            let this_tick = autosave_gen() + 1;
-                                                            autosave_gen.set(this_tick);
-                                                            let posts_local = posts;
-                                                            let html_for_save = new_html.clone();
-                                                            let debounce_gen = autosave_gen;
-                                                            spawn(async move {
-                                                                sleep(Duration::from_millis(1500)).await;
-                                                                if debounce_gen() != this_tick {
-                                                                    return;
-                                                                }
-                                                                posts_local.autosave(PostAutosavePayload {
-                                                                    post_id: id,
-                                                                    content: html_for_save,
-                                                                    updated_at: Utc::now(),
-                                                                }).await;
-                                                            });
-                                                        }
-                                                    }
-                                                },
-                                            }
-                                        }
+                        let initial_json = if content_value.trim().is_empty() {
+                            None
+                        } else {
+                            Some(content_value)
+                        };
+
+                        rsx! {
+                            div { class: "space-y-2",
+                                label { class: "block text-sm font-medium text-primary",
+                                    "Content "
+                                    span { class: "text-error", "*" }
+                                }
+                                EditorJsHost { initial_json }
+                            }
+                        }
+                    }
 
                     // Form actions
                     div { class: "flex justify-end gap-4 pt-4",
