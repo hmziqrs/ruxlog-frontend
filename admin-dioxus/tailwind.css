@@ -12,9 +12,8 @@
     @apply dark:prose-invert;
 }
 
-/* Editor.js Hyperlink Popover - Dark/Light Mode */
 .ce-popover__container {
-    @apply bg-popover border border-border shadow-lg;
+    @apply bg-background border border-border shadow-none;
 }
 
 .ce-popover__nothing-found-message {
@@ -22,11 +21,11 @@
 }
 
 .ce-popover__items {
-    @apply bg-popover;
+    @apply bg-background;
 }
 
 .ce-inline-tool-hyperlink-wrapper {
-    @apply bg-popover p-3 space-y-2;
+    @apply bg-background p-3 space-y-2;
 }
 
 .ce-inline-tool-hyperlink--input {

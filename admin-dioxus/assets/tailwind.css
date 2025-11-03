@@ -5613,15 +5613,15 @@ html[dir='rtl'], [data-sonner-toaster][dir='rtl'] {
   border-style: var(--tw-border-style);
   border-width: 1px;
   border-color: var(--border);
-  background-color: var(--popover);
-  --tw-shadow: 0 10px 15px -3px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 4px 6px -4px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
+  background-color: var(--background);
+  --tw-shadow: 0 0 #0000;
   box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
 }
 .ce-popover__nothing-found-message {
   color: var(--muted-foreground);
 }
 .ce-popover__items {
-  background-color: var(--popover);
+  background-color: var(--background);
 }
 .ce-inline-tool-hyperlink-wrapper {
   :where(& > :not(:last-child)) {
@@ -5629,7 +5629,7 @@ html[dir='rtl'], [data-sonner-toaster][dir='rtl'] {
     margin-block-start: calc(calc(0.25rem * 2) * var(--tw-space-y-reverse));
     margin-block-end: calc(calc(0.25rem * 2) * calc(1 - var(--tw-space-y-reverse)));
   }
-  background-color: var(--popover);
+  background-color: var(--background);
   padding: calc(0.25rem * 3);
 }
 .ce-inline-tool-hyperlink--input {
