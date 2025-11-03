@@ -5579,14 +5579,15 @@ html[dir='rtl'], [data-sonner-toaster][dir='rtl'] {
     margin-block-start: calc(calc(0.25rem * 2) * var(--tw-space-y-reverse));
     margin-block-end: calc(calc(0.25rem * 2) * calc(1 - var(--tw-space-y-reverse)));
   }
-  border-top-style: var(--tw-border-style);
-  border-top-width: 0px;
+  border-top-style: var(--tw-border-style) !important;
+  border-top-width: 0px !important;
   background-color: var(--background);
   padding: calc(0.25rem * 3);
 }
 .ce-inline-tool-hyperlink-wrapper--showed {
-  border-top-style: var(--tw-border-style);
-  border-top-width: 0px;
+  border-top-style: var(--tw-border-style) !important;
+  border-top-width: 0px !important;
+  border-top: none !important;
 }
 .ce-popover-item-separator__line {
   background-color: var(--color-zinc-200);

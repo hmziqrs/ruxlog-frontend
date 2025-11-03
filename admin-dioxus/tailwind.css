@@ -25,11 +25,12 @@
 }
 
 .ce-inline-tool-hyperlink-wrapper {
-    @apply bg-background p-3 space-y-2 border-t-0;
+    @apply bg-background p-3 space-y-2 !border-t-0;
 }
 
 .ce-inline-tool-hyperlink-wrapper--showed {
-    @apply border-t-0;
+    @apply !border-t-0;
+    border-top: none !important;
 }
 
 .ce-popover-item-separator__line {
