@@ -4,7 +4,7 @@ use hmziq_dioxus_free_icons::icons::ld_icons::{
 };
 use hmziq_dioxus_free_icons::Icon;
 
-use crate::{router::Route, store::use_auth};
+use crate::{components::ConfirmDialog, router::Route, store::use_auth};
 
 #[derive(Props, PartialEq, Clone)]
 pub struct SidebarModuleLinkProps {
@@ -61,15 +61,26 @@ pub fn SidebarModuleLink(props: SidebarModuleLinkProps) -> Element {
 pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
     let auth_store = use_auth();
     let current_route = use_route::<Route>();
+    let mut logout_dialog_open = use_signal(|| false);
 
     let is_active = |route: Route| -> bool {
         std::mem::discriminant(&current_route) == std::mem::discriminant(&route)
     };
 
+    let handle_logout_click = move |_| {
+        logout_dialog_open.set(true);
+    };
+
+    let handle_logout_confirm = move |_| {
+        spawn(async move {
+            auth_store.logout().await;
+        });
+    };
+
     rsx! {
         div {
             class: format!(
-                "fixed inset-0 bg-black/30 z-30 transition-opacity duration-300 {} backdrop-blur-xs",
+                "fixed inset-0 bg-black/30 z-20 transition-opacity duration-300 {} backdrop-blur-xs",
                 if expanded() { "opacity-100" } else { "opacity-0 pointer-events-none" },
             ),
             onclick: move |_| toggle.call(()),
@@ -77,7 +88,7 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
 
         aside {
             class: format!(
-                "fixed inset-y-0 left-0 z-40 w-64 bg-zinc-200 dark:bg-zinc-950/95 transition-all duration-300 transform border-r border-zinc-300 dark:border-zinc-800 {}",
+                "fixed inset-y-0 left-0 z-30 w-64 bg-zinc-200 dark:bg-zinc-950/95 transition-all duration-300 transform border-r border-zinc-300 dark:border-zinc-800 {}",
                 if expanded() { "translate-x-0" } else { "-translate-x-full" },
             ),
             div { class: "flex h-16 items-center justify-between border-b border-zinc-300 dark:border-zinc-800 px-4 transition-colors duration-300",
@@ -172,14 +183,23 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
             div { class: "absolute bottom-0 left-0 right-0 border-t border-zinc-300 dark:border-zinc-800 transition-colors duration-300",
                 button {
                     class: "flex w-full items-center flex-1 px-3 h-15 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-900/90 dark:hover:text-white transition-colors duration-200",
-                    onclick: move |_| {
-                        spawn(async move {
-                            auth_store.logout().await;
-                        });
-                    },
+                    onclick: handle_logout_click,
                     Icon { icon: LdLogOut, width: 18, height: 18 }
                     span { class: "ml-3", "Logout" }
                 }
+            }
+        }
+
+        // Logout confirmation dialog
+        if logout_dialog_open() {
+            ConfirmDialog {
+                is_open: logout_dialog_open,
+                title: "Confirm Logout".to_string(),
+                description: "Are you sure you want to logout?".to_string(),
+                confirm_label: "Logout".to_string(),
+                cancel_label: "Cancel".to_string(),
+                on_confirm: handle_logout_confirm,
+                on_cancel: move |_| logout_dialog_open.set(false),
             }
         }
     }

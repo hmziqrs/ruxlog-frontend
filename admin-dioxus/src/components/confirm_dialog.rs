@@ -25,7 +25,6 @@ pub fn ConfirmDialog(mut props: ConfirmDialogProps) -> Element {
 
     rsx! {
         AppPortal {
-            // Backdrop
             div {
                 class: "fixed inset-0 z-50 bg-black/50",
                 onclick: move |_| {
@@ -34,15 +33,12 @@ pub fn ConfirmDialog(mut props: ConfirmDialogProps) -> Element {
                 },
             }
 
-            // Dialog content
             div {
                 class: "fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%] w-full max-w-lg",
                 onclick: move |e| e.stop_propagation(),
 
                 div {
                     class: "bg-background rounded-lg border p-6 shadow-lg",
-
-                    // Header
                     div { class: "flex items-start justify-between mb-4",
                         div {
                             h2 { class: "text-lg font-semibold", "{props.title}" }
@@ -57,8 +53,6 @@ pub fn ConfirmDialog(mut props: ConfirmDialogProps) -> Element {
                             Icon { icon: LdX, width: 20, height: 20 }
                         }
                     }
-
-                    // Footer
                     div { class: "flex justify-end gap-2 mt-6",
                         Button {
                             variant: ButtonVariant::Outline,
