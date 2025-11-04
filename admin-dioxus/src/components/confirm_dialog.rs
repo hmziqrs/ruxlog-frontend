@@ -12,6 +12,8 @@ pub struct ConfirmDialogProps {
     pub confirm_label: String,
     #[props(default = "Cancel".to_string())]
     pub cancel_label: String,
+    #[props(default = "60".to_string())]
+    pub z_index: String,
     pub on_confirm: EventHandler<()>,
     pub on_cancel: EventHandler<()>,
 }
@@ -25,8 +27,9 @@ pub fn ConfirmDialog(mut props: ConfirmDialogProps) -> Element {
 
     rsx! {
         AppPortal {
+            z_index: props.z_index.clone(),
             div {
-                class: "fixed inset-0 z-[60] bg-black/50",
+                class: "fixed inset-0 bg-black/50",
                 onclick: move |_| {
                     props.is_open.set(false);
                     props.on_cancel.call(());
@@ -34,7 +37,7 @@ pub fn ConfirmDialog(mut props: ConfirmDialogProps) -> Element {
             }
 
             div {
-                class: "fixed left-[50%] top-[50%] z-[60] translate-x-[-50%] translate-y-[-50%] w-full max-w-lg",
+                class: "fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-full max-w-lg",
                 onclick: move |e| e.stop_propagation(),
 
                 div {

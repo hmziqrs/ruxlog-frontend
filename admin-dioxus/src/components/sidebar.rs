@@ -200,6 +200,7 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                 cancel_label: "Cancel".to_string(),
                 on_confirm: handle_logout_confirm,
                 on_cancel: move |_| logout_dialog_open.set(false),
+                z_index: "60".to_string(),
             }
         }
     }

@@ -6,8 +6,8 @@ pub struct AppPortalProps {
     pub class: String,
     /// The content to be displayed inside the portal
     pub children: Element,
-    // #[props(default = 0)]
-    // pub index: i32,
+    #[props(default = "10".to_string())]
+    pub z_index: String,
     #[props(default = None)]
     pub onclick: Option<EventHandler<MouseEvent>>,
 }
@@ -36,7 +36,7 @@ pub fn AppPortal(props: AppPortalProps) -> Element {
                     handler.call(e);
                 }
             },
-            class: format!("fixed z-[100] top-0 left-0 w-full h-full {}", props.class),
+            class: format!("fixed z-[{}] top-0 left-0 w-full h-full {}", props.z_index, props.class),
             {props.children}
         }
     }
