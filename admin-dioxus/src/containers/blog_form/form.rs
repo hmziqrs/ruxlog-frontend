@@ -117,22 +117,8 @@ pub struct UseBlogForm {
 }
 
 pub fn use_blog_form(initial_state: BlogForm) -> UseBlogForm {
-    let mut form_signal: Signal<OxForm<BlogForm>> = use_signal(|| OxForm::new(initial_state));
+    let form_signal: Signal<OxForm<BlogForm>> = use_signal(|| OxForm::new(initial_state));
     let auto_slug: Signal<bool> = use_signal(|| true);
-
-    use_effect(move || {
-        let title = {
-            let form_data = form_signal.read();
-            form_data.data.title.clone()
-        };
-
-        if *auto_slug.read() && !title.is_empty() {
-            let sanitized_slug = BlogForm::sanitize_slug(&title);
-            form_signal
-                .write()
-                .update_field("slug", sanitized_slug.to_string());
-        }
-    });
 
     UseBlogForm {
         form: form_signal,
