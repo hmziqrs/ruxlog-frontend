@@ -24,7 +24,7 @@ pub fn SidebarModuleLink(props: SidebarModuleLinkProps) -> Element {
         div { class: "flex flex-row w-full",
             div {
                 class: format_args!(
-                    "flex items-center flex-1 rounded-md px-3 py-2 text-sm font-medium {} transition-colors duration-200",
+                    "flex items-center flex-1 px-3 py-2 text-sm font-medium {} transition-colors duration-200",
                     if props.is_active {
                         "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
                     } else {
@@ -98,81 +98,80 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                 }
             }
 
-            nav { class: "px-2",
-                div { class: "",
-                    SidebarModuleLink {
-                        main_route: Route::HomeScreen {},
-                        icon: rsx! {
-                            Icon { icon: LdHome }
-                        },
-                        label: "Dashboard",
-                        is_active: is_active(Route::HomeScreen {}),
-                        on_close: move |_| toggle.call(()),
-                    }
-                    SidebarModuleLink {
-                        main_route: Route::PostsListScreen {},
-                        add_route: Some(Route::PostsAddScreen {}),
-                        icon: rsx! {
-                            Icon { icon: LdFileText }
-                        },
-                        label: "Posts",
-                        is_active: is_active(Route::PostsListScreen {}),
-                        on_close: move |_| toggle.call(()),
-                    }
-                    SidebarModuleLink {
-                        main_route: Route::CategoriesListScreen {},
-                        add_route: Some(Route::CategoriesAddScreen {}),
-                        icon: rsx! {
-                            Icon { icon: LdFolder }
-                        },
-                        label: "Categories",
-                        is_active: is_active(Route::CategoriesListScreen {}),
-                        on_close: move |_| toggle.call(()),
-                    }
-                    SidebarModuleLink {
-                        main_route: Route::TagsListScreen {},
-                        add_route: Some(Route::TagsAddScreen {}),
-                        icon: rsx! {
-                            Icon { icon: LdTag }
-                        },
-                        label: "Tags",
-                        is_active: is_active(Route::TagsListScreen {}),
-                        on_close: move |_| toggle.call(()),
-                    }
-                    SidebarModuleLink {
-                        main_route: Route::MediaListScreen {},
-                        add_route: Some(Route::MediaUploadScreen {}),
-                        icon: rsx! {
-                            Icon { icon: LdImage }
-                        },
-                        label: "Media",
-                        is_active: is_active(Route::MediaListScreen {}),
-                        on_close: move |_| toggle.call(()),
-                    }
-                    SidebarModuleLink {
-                        main_route: Route::UsersListScreen {},
-                        add_route: Some(Route::UsersAddScreen {}),
-                        icon: rsx! {
-                            Icon { icon: LdUser }
-                        },
-                        label: "Users",
-                        is_active: is_active(Route::UsersListScreen {}),
-                        on_close: move |_| toggle.call(()),
-                    }
-                    SidebarModuleLink {
-                        main_route: Route::AnalyticsScreen {},
-                        icon: rsx! {
-                            Icon { icon: LdAreaChart }
-                        },
-                        label: "Analytics",
-                        is_active: is_active(Route::AnalyticsScreen {}),
-                        on_close: move |_| toggle.call(()),
-                    }
+            div { class: "overflow-y-auto",
+                SidebarModuleLink {
+                    main_route: Route::HomeScreen {},
+                    icon: rsx! {
+                        Icon { icon: LdHome }
+                    },
+                    label: "Dashboard",
+                    is_active: is_active(Route::HomeScreen {}),
+                    on_close: move |_| toggle.call(()),
+                }
+                SidebarModuleLink {
+                    main_route: Route::PostsListScreen {},
+                    add_route: Some(Route::PostsAddScreen {}),
+                    icon: rsx! {
+                        Icon { icon: LdFileText }
+                    },
+                    label: "Posts",
+                    is_active: is_active(Route::PostsListScreen {}),
+                    on_close: move |_| toggle.call(()),
+                }
+                SidebarModuleLink {
+                    main_route: Route::CategoriesListScreen {},
+                    add_route: Some(Route::CategoriesAddScreen {}),
+                    icon: rsx! {
+                        Icon { icon: LdFolder }
+                    },
+                    label: "Categories",
+                    is_active: is_active(Route::CategoriesListScreen {}),
+                    on_close: move |_| toggle.call(()),
+                }
+                SidebarModuleLink {
+                    main_route: Route::TagsListScreen {},
+                    add_route: Some(Route::TagsAddScreen {}),
+                    icon: rsx! {
+                        Icon { icon: LdTag }
+                    },
+                    label: "Tags",
+                    is_active: is_active(Route::TagsListScreen {}),
+                    on_close: move |_| toggle.call(()),
+                }
+                SidebarModuleLink {
+                    main_route: Route::MediaListScreen {},
+                    add_route: Some(Route::MediaUploadScreen {}),
+                    icon: rsx! {
+                        Icon { icon: LdImage }
+                    },
+                    label: "Media",
+                    is_active: is_active(Route::MediaListScreen {}),
+                    on_close: move |_| toggle.call(()),
+                }
+                SidebarModuleLink {
+                    main_route: Route::UsersListScreen {},
+                    add_route: Some(Route::UsersAddScreen {}),
+                    icon: rsx! {
+                        Icon { icon: LdUser }
+                    },
+                    label: "Users",
+                    is_active: is_active(Route::UsersListScreen {}),
+                    on_close: move |_| toggle.call(()),
+                }
+                SidebarModuleLink {
+                    main_route: Route::AnalyticsScreen {},
+                    icon: rsx! {
+                        Icon { icon: LdAreaChart }
+                    },
+                    label: "Analytics",
+                    is_active: is_active(Route::AnalyticsScreen {}),
+                    on_close: move |_| toggle.call(()),
                 }
             }
-            div { class: "absolute bottom-0 left-0 right-0 border-t border-zinc-300 dark:border-zinc-800 p-4 transition-colors duration-300",
+
+            div { class: "absolute bottom-0 left-0 right-0 border-t border-zinc-300 dark:border-zinc-800 transition-colors duration-300",
                 button {
-                    class: "flex w-full items-center flex-1 rounded-md px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-900/90 dark:hover:text-white transition-colors duration-200",
+                    class: "flex w-full items-center flex-1 px-6 py-4 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-900/90 dark:hover:text-white transition-colors duration-200",
                     onclick: move |_| {
                         spawn(async move {
                             auth_store.logout().await;
