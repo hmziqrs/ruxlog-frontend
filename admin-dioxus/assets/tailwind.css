@@ -1111,6 +1111,9 @@
   .h-20 {
     height: calc(0.25rem * 20);
   }
+  .h-24 {
+    height: calc(0.25rem * 24);
+  }
   .h-26 {
     height: calc(0.25rem * 26);
   }
@@ -1218,6 +1221,9 @@
   }
   .w-10 {
     width: calc(0.25rem * 10);
+  }
+  .w-11 {
+    width: calc(0.25rem * 11);
   }
   .w-12 {
     width: calc(0.25rem * 12);
@@ -1468,6 +1474,9 @@
   }
   .list-none {
     list-style-type: none;
+  }
+  .appearance-none {
+    appearance: none;
   }
   .auto-rows-min {
     grid-auto-rows: min-content;
@@ -1723,6 +1732,10 @@
     border-style: var(--tw-border-style);
     border-width: 2px;
   }
+  .border-4 {
+    border-style: var(--tw-border-style);
+    border-width: 4px;
+  }
   .border-t {
     border-top-style: var(--tw-border-style);
     border-top-width: 1px;
@@ -1746,6 +1759,10 @@
   .border-dashed {
     --tw-border-style: dashed;
     border-style: dashed;
+  }
+  .border-solid {
+    --tw-border-style: solid;
+    border-style: solid;
   }
   .border-amber-200 {
     border-color: var(--color-amber-200);
@@ -1776,6 +1793,9 @@
     @supports (color: color-mix(in lab, red, red)) {
       border-color: color-mix(in oklab, var(--border) 70%, transparent);
     }
+  }
+  .border-current {
+    border-color: currentcolor;
   }
   .border-gray-200 {
     border-color: var(--color-gray-200);
@@ -1818,6 +1838,9 @@
   }
   .border-t-zinc-700 {
     border-top-color: var(--color-zinc-700);
+  }
+  .border-r-transparent {
+    border-right-color: transparent;
   }
   .bg-accent {
     background-color: var(--accent);
@@ -1875,6 +1898,12 @@
   }
   .bg-border {
     background-color: var(--border);
+  }
+  .bg-border\/50 {
+    background-color: var(--border);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--border) 50%, transparent);
+    }
   }
   .bg-border\/60 {
     background-color: var(--border);
@@ -2184,6 +2213,9 @@
   }
   .text-right {
     text-align: right;
+  }
+  .align-\[-0\.125em\] {
+    vertical-align: -0.125em;
   }
   .align-middle {
     vertical-align: middle;
@@ -2744,10 +2776,96 @@
       color: var(--muted-foreground);
     }
   }
+  .before\:pointer-events-none {
+    &::before {
+      content: var(--tw-content);
+      pointer-events: none;
+    }
+  }
+  .before\:absolute {
+    &::before {
+      content: var(--tw-content);
+      position: absolute;
+    }
+  }
+  .before\:h-5 {
+    &::before {
+      content: var(--tw-content);
+      height: calc(0.25rem * 5);
+    }
+  }
+  .before\:w-5 {
+    &::before {
+      content: var(--tw-content);
+      width: calc(0.25rem * 5);
+    }
+  }
+  .before\:translate-x-0\.5 {
+    &::before {
+      content: var(--tw-content);
+      --tw-translate-x: calc(0.25rem * 0.5);
+      translate: var(--tw-translate-x) var(--tw-translate-y);
+    }
+  }
+  .before\:translate-y-0\.5 {
+    &::before {
+      content: var(--tw-content);
+      --tw-translate-y: calc(0.25rem * 0.5);
+      translate: var(--tw-translate-x) var(--tw-translate-y);
+    }
+  }
+  .before\:rounded-full {
+    &::before {
+      content: var(--tw-content);
+      border-radius: calc(infinity * 1px);
+    }
+  }
+  .before\:bg-white {
+    &::before {
+      content: var(--tw-content);
+      background-color: var(--color-white);
+    }
+  }
+  .before\:shadow-sm {
+    &::before {
+      content: var(--tw-content);
+      --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
+      box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+    }
+  }
+  .before\:transition-transform {
+    &::before {
+      content: var(--tw-content);
+      transition-property: transform, translate, scale, rotate;
+      transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+      transition-duration: var(--tw-duration, var(--default-transition-duration));
+    }
+  }
+  .before\:duration-200 {
+    &::before {
+      content: var(--tw-content);
+      --tw-duration: 200ms;
+      transition-duration: 200ms;
+    }
+  }
   .last\:border-b-0 {
     &:last-child {
       border-bottom-style: var(--tw-border-style);
       border-bottom-width: 0px;
+    }
+  }
+  .checked\:bg-primary {
+    &:checked {
+      background-color: var(--primary);
+    }
+  }
+  .checked\:before\:translate-x-5 {
+    &:checked {
+      &::before {
+        content: var(--tw-content);
+        --tw-translate-x: calc(0.25rem * 5);
+        translate: var(--tw-translate-x) var(--tw-translate-y);
+      }
     }
   }
   .hover\:border-border {
@@ -3462,6 +3580,11 @@
       &:focus {
         color: var(--destructive);
       }
+    }
+  }
+  .motion-reduce\:animate-\[spin_1\.5s_linear_infinite\] {
+    @media (prefers-reduced-motion: reduce) {
+      animation: spin 1.5s linear infinite;
     }
   }
   .sm\:flex {
@@ -6230,6 +6353,11 @@ input:not(.checkbox), textarea:not(.checkbox) {
   syntax: "*";
   inherits: false;
 }
+@property --tw-content {
+  syntax: "*";
+  initial-value: "";
+  inherits: false;
+}
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -6314,6 +6442,7 @@ input:not(.checkbox), textarea:not(.checkbox) {
       --tw-backdrop-sepia: initial;
       --tw-duration: initial;
       --tw-ease: initial;
+      --tw-content: "";
       --tw-animation-delay: 0s;
       --tw-animation-direction: normal;
       --tw-animation-duration: initial;

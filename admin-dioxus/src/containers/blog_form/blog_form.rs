@@ -8,6 +8,7 @@ use crate::store::{
     use_categories, use_post, use_tag, PostAutosavePayload, PostCreatePayload, PostEditPayload,
     PostStatus,
 };
+use crate::ui::shadcn::{Button, ButtonVariant};
 use chrono::Utc;
 use dioxus_time::sleep;
 use std::time::Duration;
@@ -82,10 +83,10 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
     let form_data = initial_form.read();
     if form_data.is_none() {
         return rsx! {
-            div { class: "flex items-center justify-center h-screen",
+            div { class: "flex items-center justify-center min-h-[400px]",
                 div { class: "text-center",
-                    div { class: "loading loading-spinner loading-lg" }
-                    p { class: "mt-4", "Loading..." }
+                    div { class: "inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" }
+                    p { class: "mt-4 text-sm text-muted-foreground", "Loading..." }
                 }
             }
         };
@@ -183,54 +184,56 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
     });
 
     rsx! {
-        div { class: "p-8 max-w-4xl mx-auto",
-            div { class: "bg-base-100 shadow-2xl rounded-xl p-8",
-                h1 { class: "text-2xl font-bold mb-6 text-primary",
-                    if is_edit_mode { "Edit Blog Post" } else { "New Blog Post" }
-                }
+        div {
+            h1 { class: "sr-only",
+                if is_edit_mode { "Edit Blog Post" } else { "New Blog Post" }
+            }
 
-                // Show error message if submission failed
-                {
-                    let add_state = posts.add.read();
-                    let edit_state = if let Some(id) = post_id {
-                        posts.edit.read().get(&id).cloned()
-                    } else {
-                        None
-                    };
+            // Show error message if submission failed
+            {
+                let add_state = posts.add.read();
+                let edit_state = if let Some(id) = post_id {
+                    posts.edit.read().get(&id).cloned()
+                } else {
+                    None
+                };
 
-                    let is_failed = add_state.is_failed() || edit_state.as_ref().map_or(false, |s| s.is_failed());
-                    let error_message = add_state.message.clone().or_else(|| edit_state.as_ref().and_then(|s| s.message.clone()));
+                let is_failed = add_state.is_failed() || edit_state.as_ref().map_or(false, |s| s.is_failed());
+                let error_message = add_state.message.clone().or_else(|| edit_state.as_ref().and_then(|s| s.message.clone()));
 
-                    if is_failed {
-                        rsx! {
-                            div { class: "alert alert-error mb-6",
+                if is_failed {
+                    rsx! {
+                        div { class: "rounded-md border border-red-200 bg-red-50 p-4 mb-6 text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300",
+                            div { class: "flex items-start gap-3",
                                 svg {
                                     xmlns: "http://www.w3.org/2000/svg",
-                                    class: "stroke-current shrink-0 h-6 w-6",
-                                    fill: "none",
-                                    view_box: "0 0 24 24",
+                                    class: "h-5 w-5 flex-shrink-0",
+                                    view_box: "0 0 20 20",
+                                    fill: "currentColor",
                                     path {
-                                        stroke_linecap: "round",
-                                        stroke_linejoin: "round",
-                                        stroke_width: "2",
-                                        d: "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        fill_rule: "evenodd",
+                                        d: "M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z",
+                                        clip_rule: "evenodd"
                                     }
                                 }
-                                span {
+                                span { class: "text-sm font-medium",
                                     {error_message.unwrap_or_else(|| "Failed to save post".to_string())}
                                 }
                             }
                         }
-                    } else {
-                        rsx! { }
                     }
+                } else {
+                    rsx! { }
                 }
+            }
 
-                form {
-                    class: "space-y-6",
-                    onsubmit: move |e| {
-                        e.prevent_default();
-                    },
+            div { class: "rounded-xl border border-border/70 bg-transparent",
+                div { class: "px-6 py-6 space-y-6",
+                    form {
+                        class: "space-y-6",
+                        onsubmit: move |e| {
+                            e.prevent_default();
+                        },
 
                     // Title field
                     AppInput {
@@ -250,13 +253,13 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                     // Slug field with auto-generate option
                     div { class: "space-y-2",
                         div { class: "flex justify-between items-center",
-                            label { class: "block text-sm font-medium text-primary", "Slug" }
+                            label { class: "block text-sm font-medium text-foreground", "Slug" }
                             if !is_edit_mode {
                                 div { class: "flex items-center gap-2",
-                                    span { class: "text-sm", "Auto-generate" }
+                                    span { class: "text-sm text-muted-foreground", "Auto-generate" }
                                     div { class: "flex items-center",
                                         input {
-                                            class: "checkbox checkbox-primary",
+                                            class: "h-4 w-4 rounded border-border/70 bg-transparent text-primary focus:ring-2 focus:ring-ring/40",
                                             r#type: "checkbox",
                                             checked: *auto_slug.read(),
                                             onclick: move |_| {
@@ -279,12 +282,12 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
 
                     // Category selection
                     div { class: "space-y-2",
-                        label { class: "block text-sm font-medium text-primary",
+                        label { class: "block text-sm font-medium text-foreground",
                             "Category "
-                            span { class: "text-error", "*" }
+                            span { class: "text-red-500", "*" }
                         }
                         select {
-                            class: "select select-bordered w-full",
+                            class: "w-full rounded-md border border-border/70 bg-transparent px-3 py-2 text-sm text-foreground focus:border-ring focus:ring-2 focus:ring-ring/40 transition-colors",
                             required: true,
                             value: form.read().data.category_id.map(|id| id.to_string()).unwrap_or_default(),
                             onchange: move |event| {
@@ -308,12 +311,12 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
 
                     // Tags selection
                     div { class: "space-y-2",
-                        label { class: "block text-sm font-medium text-primary", "Tags" }
+                        label { class: "block text-sm font-medium text-foreground", "Tags" }
                         {
                             let tags_list = tags.list.read();
                             tags_list.data.as_ref().map(|tags_data| {
                                 rsx! {
-                                    div { class: "flex flex-wrap gap-2 p-4 border rounded-lg",
+                                    div { class: "flex flex-wrap gap-2 p-4 border border-border/70 rounded-lg bg-transparent",
                                         for tag in &tags_data.data {
                                             {
                                                 let tag_id = tag.id;
@@ -324,7 +327,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                                         class: "flex items-center gap-2 cursor-pointer",
                                                         input {
                                                             r#type: "checkbox",
-                                                            class: "checkbox checkbox-primary checkbox-sm",
+                                                            class: "h-4 w-4 rounded border-border/70 bg-transparent text-primary focus:ring-2 focus:ring-ring/40",
                                                             checked: form.read().data.tag_ids.contains(&tag_id),
                                                             onchange: move |_| {
                                                                 let mut form_write = form.write();
@@ -335,7 +338,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                                                 }
                                                             },
                                                         }
-                                                        span { class: "text-sm", "{tag_name}" }
+                                                        span { class: "text-sm text-foreground", "{tag_name}" }
                                                     }
                                                 }
                                             }
@@ -343,16 +346,16 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                     }
                                 }
                             }).unwrap_or_else(|| rsx! {
-                                div { class: "text-sm text-gray-500", "Loading tags..." }
+                                div { class: "text-sm text-muted-foreground", "Loading tags..." }
                             })
                         }
                     }
 
                     // Excerpt field
                     div { class: "space-y-2",
-                        label { class: "block text-sm font-medium text-primary", "Excerpt" }
+                        label { class: "block text-sm font-medium text-foreground", "Excerpt" }
                         textarea {
-                            class: "w-full px-4 py-2 textarea textarea-bordered",
+                            class: "w-full h-24 resize-none rounded-md border border-border/70 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:border-ring focus:ring-2 focus:ring-ring/40",
                             placeholder: "Brief description of the post",
                             rows: "3",
                             value: form.read().data.excerpt.clone(),
@@ -371,14 +374,14 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                     }
 
                     // Published status switch
-                    div { class: "flex flex-row items-center justify-between border rounded-lg p-4",
+                    div { class: "flex flex-row items-center justify-between border border-border/70 rounded-lg p-4 bg-transparent",
                         div { class: "space-y-0.5",
-                            label { class: "text-base font-medium", "Publish" }
-                            div { class: "text-sm text-gray-500", "Make this post publicly available" }
+                            label { class: "text-base font-medium text-foreground", "Publish" }
+                            div { class: "text-sm text-muted-foreground", "Make this post publicly available" }
                         }
                         div { class: "flex items-center",
                             input {
-                                class: "toggle toggle-primary",
+                                class: "relative h-6 w-11 cursor-pointer appearance-none rounded-full bg-border/50 transition-colors duration-200 checked:bg-primary focus:ring-2 focus:ring-ring/40 before:pointer-events-none before:absolute before:h-5 before:w-5 before:translate-x-0.5 before:translate-y-0.5 before:rounded-full before:bg-white before:shadow-sm before:transition-transform before:duration-200 checked:before:translate-x-5",
                                 r#type: "checkbox",
                                 checked: form.read().data.is_published,
                                 onchange: move |event| {
@@ -403,9 +406,9 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
 
                         rsx! {
                             div { class: "space-y-2",
-                                label { class: "block text-sm font-medium text-primary",
+                                label { class: "block text-sm font-medium text-foreground",
                                     "Content "
-                                    span { class: "text-error", "*" }
+                                    span { class: "text-red-500", "*" }
                                 }
                                 EditorJsHost { initial_json }
                             }
@@ -414,17 +417,14 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
 
                     // Form actions
                     div { class: "flex justify-end gap-4 pt-4",
-                        button {
-                            class: "btn btn-ghost",
-                            r#type: "button",
+                        Button {
+                            variant: ButtonVariant::Ghost,
                             onclick: move |_| {
                                 nav.push(Route::PostsListScreen {});
                             },
                             "Cancel"
                         }
-                        button {
-                            class: "btn btn-primary",
-                            r#type: "submit",
+                        Button {
                             disabled: {
                                 let add_state = posts.add.read();
                                 let edit_state = if let Some(id) = post_id {
@@ -434,9 +434,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                 };
                                 add_state.is_loading() || edit_state.as_ref().map_or(false, |s| s.is_loading())
                             },
-                            onclick: move |e| {
-                                e.prevent_default();
-
+                            onclick: move |_| {
                                 let form_data = form.read();
 
                                 // Validate required fields
@@ -523,13 +521,16 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                 let is_submitting = add_state.is_loading() || edit_state.as_ref().map_or(false, |s| s.is_loading());
 
                                 if is_submitting {
-                                    rsx! { span { class: "loading loading-spinner" } }
+                                    rsx! {
+                                        span { class: "mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent" }
+                                    }
                                 } else {
                                     rsx! { }
                                 }
                             }
                             if is_edit_mode { "Update Post" } else { "Create Post" }
                         }
+                    }
                     }
                 }
             }
