@@ -424,6 +424,8 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                         }
                     }
 
+                    div { class: "h-px bg-border/60" }
+
                     // Content field
                     {
                         let content_value = {
@@ -456,26 +458,26 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                 div { class: "space-y-8",
                     // Metadata card
                     div { class: "rounded-xl border border-border/70 bg-transparent",
-                        div { class: "px-6 py-6",
+                        div { class: "px-6 pt-6",
                             h2 { class: "text-lg font-semibold", "Metadata" }
                             p { class: "text-sm text-muted-foreground", "Organize and categorize your post." }
                         }
                         div { class: "px-6 py-6 space-y-6",
                     // Published status switch
-                    div { class: "flex flex-row items-center justify-between border border-border/70 rounded-lg p-4 bg-transparent",
+                    div { class: "flex items-center justify-between",
                         div { class: "space-y-0.5",
-                            label { class: "text-base font-medium text-foreground", "Publish" }
-                            div { class: "text-sm text-muted-foreground", "Make this post publicly available" }
-                        }
-                        div { class: "flex items-center",
-                            input {
-                                class: "relative h-6 w-11 cursor-pointer appearance-none rounded-full bg-border/50 transition-colors duration-200 checked:bg-primary focus:ring-2 focus:ring-ring/40 before:pointer-events-none before:absolute before:h-5 before:w-5 before:translate-x-0.5 before:translate-y-0.5 before:rounded-full before:bg-white before:shadow-sm before:transition-transform before:duration-200 checked:before:translate-x-5",
-                                r#type: "checkbox",
-                                checked: form.read().data.is_published,
-                                onchange: move |event| {
-                                    form.write().data.is_published = event.checked();
-                                },
+                            label { class: "block text-sm font-medium text-foreground", "Published" }
+                            p { class: "text-xs text-muted-foreground",
+                                if form.read().data.is_published { "This post is publicly visible." } else { "This post is saved as draft." }
                             }
+                        }
+                        input {
+                            class: "relative h-6 w-11 cursor-pointer appearance-none rounded-full bg-border/50 transition-colors duration-200 checked:bg-primary focus:ring-2 focus:ring-ring/40 before:pointer-events-none before:absolute before:h-5 before:w-5 before:translate-x-0.5 before:translate-y-0.5 before:rounded-full before:bg-white before:shadow-sm before:transition-transform before:duration-200 checked:before:translate-x-5",
+                            r#type: "checkbox",
+                            checked: form.read().data.is_published,
+                            onchange: move |event| {
+                                form.write().data.is_published = event.checked();
+                            },
                         }
                     }
 
@@ -601,7 +603,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
 
                     // Featured image card
                     div { class: "rounded-xl border border-border/70 bg-transparent",
-                        div { class: "px-6 py-6",
+                        div { class: "px-6 pt-6",
                             h2 { class: "text-lg font-semibold", "Featured Image" }
                             p { class: "text-sm text-muted-foreground", "Main image displayed with your post." }
                         }
