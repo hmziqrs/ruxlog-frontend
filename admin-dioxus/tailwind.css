@@ -90,6 +90,16 @@ button.ce-popover-item--active {
     color: var(--foreground);
 }
 
+.ce-toolbar__plus,
+.ce-toolbar__settings-btn {
+    @apply text-foreground hover:bg-foreground/10 transition-colors;
+}
+
+.ce-toolbar__plus svg,
+.ce-toolbar__settings-btn svg {
+    color: var(--foreground);
+}
+
 :root {
     /* --background: #ffffff; */
     /* --foreground: #171717; */
