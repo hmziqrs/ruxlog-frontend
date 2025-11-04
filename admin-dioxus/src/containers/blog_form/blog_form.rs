@@ -8,7 +8,7 @@ use crate::store::{
     use_categories, use_image_editor, use_media, use_post, use_tag, MediaReference,
     MediaUploadPayload, PostAutosavePayload, PostCreatePayload, PostEditPayload, PostStatus,
 };
-use crate::ui::shadcn::{Button, ButtonVariant};
+use crate::ui::shadcn::{Button, ButtonVariant, Checkbox};
 use chrono::Utc;
 use dioxus_time::sleep;
 use std::time::Duration;
@@ -382,18 +382,13 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                         div { class: "flex justify-between items-center",
                             label { class: "block text-sm font-medium text-foreground", "Slug" }
                             if !is_edit_mode {
-                                div { class: "flex items-center gap-2",
+                                label { class: "flex items-center gap-2 cursor-pointer",
                                     span { class: "text-sm text-muted-foreground", "Auto-generate" }
-                                    div { class: "flex items-center",
-                                        input {
-                                            class: "h-4 w-4 rounded border-border/70 bg-transparent text-primary focus:ring-2 focus:ring-ring/40",
-                                            r#type: "checkbox",
-                                            checked: *auto_slug.read(),
-                                            onclick: move |_| {
-                                                let current = *auto_slug.peek();
-                                                auto_slug.set(!current);
-                                            },
-                                        }
+                                    Checkbox {
+                                        checked: *auto_slug.read(),
+                                        onchange: move |checked: bool| {
+                                            auto_slug.set(checked);
+                                        },
                                     }
                                 }
                             }
