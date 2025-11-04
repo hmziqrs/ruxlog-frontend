@@ -26,7 +26,7 @@ pub fn ConfirmDialog(mut props: ConfirmDialogProps) -> Element {
     rsx! {
         AppPortal {
             div {
-                class: "fixed inset-0 z-50 bg-black/50",
+                class: "fixed inset-0 z-[60] bg-black/50",
                 onclick: move |_| {
                     props.is_open.set(false);
                     props.on_cancel.call(());
@@ -34,7 +34,7 @@ pub fn ConfirmDialog(mut props: ConfirmDialogProps) -> Element {
             }
 
             div {
-                class: "fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%] w-full max-w-lg",
+                class: "fixed left-[50%] top-[50%] z-[60] translate-x-[-50%] translate-y-[-50%] w-full max-w-lg",
                 onclick: move |e| e.stop_propagation(),
 
                 div {
