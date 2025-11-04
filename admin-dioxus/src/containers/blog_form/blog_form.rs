@@ -354,13 +354,21 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                 }
             }
 
-            div { class: "rounded-xl border border-border/70 bg-transparent",
-                div { class: "px-6 py-6 space-y-6",
-                    form {
-                        class: "space-y-6",
-                        onsubmit: move |e| {
-                            e.prevent_default();
-                        },
+            div { class: "grid grid-cols-1 gap-10 lg:grid-cols-3",
+                // Main column
+                div { class: "lg:col-span-2 space-y-8",
+                    // Post details card
+                    div { class: "rounded-xl border border-border/70 bg-transparent",
+                        div { class: "px-6 py-6",
+                            h2 { class: "text-lg font-semibold", "Post Content" }
+                            p { class: "text-sm text-muted-foreground", "Write and format your blog post content." }
+                        }
+                        div { class: "px-6 py-6 space-y-6",
+                            form {
+                                class: "space-y-6",
+                                onsubmit: move |e| {
+                                    e.prevent_default();
+                                },
 
                     // Title field
                     AppInput {
@@ -401,6 +409,77 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                             placeholder: "Post slug",
                         }
                     }
+
+                    // Excerpt field
+                    div { class: "space-y-2",
+                        label { class: "block text-sm font-medium text-foreground", "Excerpt" }
+                        textarea {
+                            class: "w-full h-24 resize-none rounded-md border border-border/70 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:border-ring focus:ring-2 focus:ring-ring/40",
+                            placeholder: "Brief description of the post",
+                            rows: "3",
+                            value: form.read().data.excerpt.clone(),
+                            oninput: move |event| {
+                                form.write().update_field("excerpt", event.value());
+                            },
+                        }
+                    }
+
+                    // Content field
+                    {
+                        let content_value = {
+                            let reader = form.read();
+                            reader.data.content.clone()
+                        };
+
+                        let initial_json = if content_value.trim().is_empty() {
+                            None
+                        } else {
+                            Some(content_value)
+                        };
+
+                        rsx! {
+                            div { class: "space-y-2",
+                                label { class: "block text-sm font-medium text-foreground",
+                                    "Content "
+                                    span { class: "text-red-500", "*" }
+                                }
+                                EditorJsHost { initial_json }
+                            }
+                        }
+                    }
+                            }
+                        }
+                    }
+                }
+
+                // Sidebar column
+                div { class: "space-y-8",
+                    // Metadata card
+                    div { class: "rounded-xl border border-border/70 bg-transparent",
+                        div { class: "px-6 py-6",
+                            h2 { class: "text-lg font-semibold", "Metadata" }
+                            p { class: "text-sm text-muted-foreground", "Organize and categorize your post." }
+                        }
+                        div { class: "px-6 py-6 space-y-6",
+                    // Published status switch
+                    div { class: "flex flex-row items-center justify-between border border-border/70 rounded-lg p-4 bg-transparent",
+                        div { class: "space-y-0.5",
+                            label { class: "text-base font-medium text-foreground", "Publish" }
+                            div { class: "text-sm text-muted-foreground", "Make this post publicly available" }
+                        }
+                        div { class: "flex items-center",
+                            input {
+                                class: "relative h-6 w-11 cursor-pointer appearance-none rounded-full bg-border/50 transition-colors duration-200 checked:bg-primary focus:ring-2 focus:ring-ring/40 before:pointer-events-none before:absolute before:h-5 before:w-5 before:translate-x-0.5 before:translate-y-0.5 before:rounded-full before:bg-white before:shadow-sm before:transition-transform before:duration-200 checked:before:translate-x-5",
+                                r#type: "checkbox",
+                                checked: form.read().data.is_published,
+                                onchange: move |event| {
+                                    form.write().data.is_published = event.checked();
+                                },
+                            }
+                        }
+                    }
+
+                    div { class: "h-px bg-border/60" }
 
                     // Category selection
                     div { class: "space-y-2",
@@ -517,29 +596,18 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                             })
                         }
                     }
-
-                    // Excerpt field
-                    div { class: "space-y-2",
-                        label { class: "block text-sm font-medium text-foreground", "Excerpt" }
-                        textarea {
-                            class: "w-full h-24 resize-none rounded-md border border-border/70 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:border-ring focus:ring-2 focus:ring-ring/40",
-                            placeholder: "Brief description of the post",
-                            rows: "3",
-                            value: form.read().data.excerpt.clone(),
-                            oninput: move |event| {
-                                form.write().update_field("excerpt", event.value());
-                            },
                         }
                     }
 
-                    // Featured image upload
-                    div { class: "space-y-2",
-                        div { class: "space-y-1",
-                            label { class: "block text-sm font-medium text-foreground", "Featured Image" }
-                            p { class: "text-xs text-muted-foreground", "Main image displayed with your post" }
+                    // Featured image card
+                    div { class: "rounded-xl border border-border/70 bg-transparent",
+                        div { class: "px-6 py-6",
+                            h2 { class: "text-lg font-semibold", "Featured Image" }
+                            p { class: "text-sm text-muted-foreground", "Main image displayed with your post." }
                         }
-
-                        {
+                        div { class: "px-6 py-6",
+                    // Featured image upload
+                    {
                             let form_data = form.read();
                             let has_featured_blob = form_data.data.featured_image_blob_url.is_some();
                             let featured_blob_url = form_data.data.featured_image_blob_url.clone();
@@ -587,92 +655,54 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                             }
                         }
                     }
-
-                    // Published status switch
-                    div { class: "flex flex-row items-center justify-between border border-border/70 rounded-lg p-4 bg-transparent",
-                        div { class: "space-y-0.5",
-                            label { class: "text-base font-medium text-foreground", "Publish" }
-                            div { class: "text-sm text-muted-foreground", "Make this post publicly available" }
                         }
-                        div { class: "flex items-center",
-                            input {
-                                class: "relative h-6 w-11 cursor-pointer appearance-none rounded-full bg-border/50 transition-colors duration-200 checked:bg-primary focus:ring-2 focus:ring-ring/40 before:pointer-events-none before:absolute before:h-5 before:w-5 before:translate-x-0.5 before:translate-y-0.5 before:rounded-full before:bg-white before:shadow-sm before:transition-transform before:duration-200 checked:before:translate-x-5",
-                                r#type: "checkbox",
-                                checked: form.read().data.is_published,
-                                onchange: move |event| {
-                                    form.write().data.is_published = event.checked();
-                                },
-                            }
-                        }
-                    }
 
-                    // Content field
-                    {
-                        let content_value = {
-                            let reader = form.read();
-                            reader.data.content.clone()
-                        };
+                }
+            }
 
-                        let initial_json = if content_value.trim().is_empty() {
-                            None
+            // Form actions
+            div { class: "flex justify-end gap-4",
+                Button {
+                    variant: ButtonVariant::Ghost,
+                    onclick: move |_| {
+                        nav.push(Route::PostsListScreen {});
+                    },
+                    "Cancel"
+                }
+                Button {
+                    disabled: {
+                        let add_state = posts.add.read();
+                        let edit_state = if let Some(id) = post_id {
+                            posts.edit.read().get(&id).cloned()
                         } else {
-                            Some(content_value)
+                            None
                         };
+                        add_state.is_loading() || edit_state.as_ref().map_or(false, |s| s.is_loading())
+                    },
+                    onclick: move |_| {
+                        let form_data = form.read();
 
-                        rsx! {
-                            div { class: "space-y-2",
-                                label { class: "block text-sm font-medium text-foreground",
-                                    "Content "
-                                    span { class: "text-red-500", "*" }
-                                }
-                                EditorJsHost { initial_json }
-                            }
+                        // Validate required fields
+                        if form_data.data.title.is_empty() {
+                            tracing::error!("Title is required");
+                            return;
                         }
-                    }
-
-                    // Form actions
-                    div { class: "flex justify-end gap-4 pt-4",
-                        Button {
-                            variant: ButtonVariant::Ghost,
-                            onclick: move |_| {
-                                nav.push(Route::PostsListScreen {});
-                            },
-                            "Cancel"
+                        if form_data.data.content.is_empty() {
+                            tracing::error!("Content is required");
+                            return;
                         }
-                        Button {
-                            disabled: {
-                                let add_state = posts.add.read();
-                                let edit_state = if let Some(id) = post_id {
-                                    posts.edit.read().get(&id).cloned()
-                                } else {
-                                    None
-                                };
-                                add_state.is_loading() || edit_state.as_ref().map_or(false, |s| s.is_loading())
-                            },
-                            onclick: move |_| {
-                                let form_data = form.read();
+                        if form_data.data.slug.is_empty() {
+                            tracing::error!("Slug is required");
+                            return;
+                        }
+                        if form_data.data.category_id.is_none() {
+                            tracing::error!("Category is required");
+                            return;
+                        }
 
-                                // Validate required fields
-                                if form_data.data.title.is_empty() {
-                                    tracing::error!("Title is required");
-                                    return;
-                                }
-                                if form_data.data.content.is_empty() {
-                                    tracing::error!("Content is required");
-                                    return;
-                                }
-                                if form_data.data.slug.is_empty() {
-                                    tracing::error!("Slug is required");
-                                    return;
-                                }
-                                if form_data.data.category_id.is_none() {
-                                    tracing::error!("Category is required");
-                                    return;
-                                }
-
-                                if let Some(id) = post_id {
-                                    // Edit existing post
-                                    let payload = PostEditPayload {
+                        if let Some(id) = post_id {
+                            // Edit existing post
+                            let payload = PostEditPayload {
                                         title: Some(form_data.data.title.clone()),
                                         content: Some(form_data.data.content.clone()),
                                         slug: Some(form_data.data.slug.clone()),
@@ -736,9 +766,6 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                 }
                             }
                             if is_edit_mode { "Update Post" } else { "Create Post" }
-                        }
-                    }
-                    }
                 }
             }
 
