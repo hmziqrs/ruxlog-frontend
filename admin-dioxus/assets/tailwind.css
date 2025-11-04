@@ -1105,8 +1105,14 @@
   .h-12 {
     height: calc(0.25rem * 12);
   }
+  .h-15 {
+    height: calc(0.25rem * 15);
+  }
   .h-16 {
     height: calc(0.25rem * 16);
+  }
+  .h-18 {
+    height: calc(0.25rem * 18);
   }
   .h-20 {
     height: calc(0.25rem * 20);

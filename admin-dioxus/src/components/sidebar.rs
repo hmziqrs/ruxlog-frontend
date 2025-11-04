@@ -24,7 +24,7 @@ pub fn SidebarModuleLink(props: SidebarModuleLinkProps) -> Element {
         div { class: "flex flex-row w-full",
             div {
                 class: format_args!(
-                    "flex items-center flex-1 px-3 py-2 text-sm font-medium {} transition-colors duration-200",
+                    "flex items-center flex-1 px-3 h-12 text-sm font-medium {} transition-colors duration-200",
                     if props.is_active {
                         "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
                     } else {
@@ -40,7 +40,7 @@ pub fn SidebarModuleLink(props: SidebarModuleLinkProps) -> Element {
                 div { class: "flex-1" }
                 if let Some(add_route) = props.add_route {
                     div {
-                        class: "self-end rounded hover:bg-zinc-300 dark:hover:bg-zinc-800/90 p-1",
+                        class: "hover:bg-zinc-300 dark:hover:bg-zinc-800/90",
                         onclick: move |e| {
                             e.stop_propagation();
                             nav.push(add_route.clone());
@@ -171,7 +171,7 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
 
             div { class: "absolute bottom-0 left-0 right-0 border-t border-zinc-300 dark:border-zinc-800 transition-colors duration-300",
                 button {
-                    class: "flex w-full items-center flex-1 px-6 py-4 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-900/90 dark:hover:text-white transition-colors duration-200",
+                    class: "flex w-full items-center flex-1 px-3 h-15 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-900/90 dark:hover:text-white transition-colors duration-200",
                     onclick: move |_| {
                         spawn(async move {
                             auth_store.logout().await;
