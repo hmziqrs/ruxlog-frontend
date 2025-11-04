@@ -18,7 +18,9 @@ pub struct BlogForm {
 
     pub excerpt: String,
 
-    pub featured_image_url: String,
+    // Featured image tracking
+    pub featured_image_blob_url: Option<String>, // For preview while uploading
+    pub featured_image_media_id: Option<i32>,    // For backend submission
 
     pub is_published: bool,
 
@@ -44,11 +46,18 @@ impl BlogForm {
             content: String::new(),
             slug: String::new(),
             excerpt: String::new(),
-            featured_image_url: String::new(),
+            featured_image_blob_url: None,
+            featured_image_media_id: None,
             is_published: false,
             category_id: None,
             tag_ids: vec![],
         }
+    }
+
+    // Check if any images are still uploading
+    pub fn is_uploading(&self) -> bool {
+        // If we have a blob URL but no media ID yet, upload is in progress
+        self.featured_image_blob_url.is_some() && self.featured_image_media_id.is_none()
     }
 
     pub fn sanitize_slug(text: &str) -> String {
@@ -80,15 +89,11 @@ impl OxFormModel for BlogForm {
         map.insert("content".to_string(), self.content.clone());
         map.insert("slug".to_string(), self.slug.clone());
         map.insert("excerpt".to_string(), self.excerpt.clone());
-        map.insert(
-            "featured_image_url".to_string(),
-            self.featured_image_url.clone(),
-        );
         map.insert("is_published".to_string(), self.is_published.to_string());
         if let Some(category_id) = self.category_id {
             map.insert("category_id".to_string(), category_id.to_string());
         }
-        // Tag IDs are handled separately in the form UI
+        // Featured image and tag IDs are handled separately
         map
     }
 
@@ -98,7 +103,6 @@ impl OxFormModel for BlogForm {
             "content" => self.content = value.to_string(),
             "slug" => self.slug = value.to_string(),
             "excerpt" => self.excerpt = value.to_string(),
-            "featured_image_url" => self.featured_image_url = value.to_string(),
             "is_published" => self.is_published = value.parse().unwrap_or(false),
             "category_id" => self.category_id = value.parse().ok(),
             _ => {}

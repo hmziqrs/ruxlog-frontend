@@ -2,17 +2,18 @@ use dioxus::{logger::tracing, prelude::*};
 
 use super::form::{use_blog_form, BlogForm};
 // use crate::components::editor::RichTextEditor; // Moved to legacy - using TypeScript editor instead
-use crate::components::{AppInput, EditorJsHost};
+use crate::components::{AppInput, ConfirmDialog, EditorJsHost, ImageEditorModal, MediaUploadItem, MediaUploadZone};
 use crate::router::Route;
 use crate::store::{
-    use_categories, use_post, use_tag, PostAutosavePayload, PostCreatePayload, PostEditPayload,
-    PostStatus,
+    use_categories, use_image_editor, use_media, use_post, use_tag, MediaReference,
+    MediaUploadPayload, PostAutosavePayload, PostCreatePayload, PostEditPayload, PostStatus,
 };
 use crate::ui::shadcn::{Button, ButtonVariant};
 use chrono::Utc;
 use dioxus_time::sleep;
 use std::time::Duration;
 use wasm_bindgen::{closure::Closure, JsCast};
+use web_sys::{Blob, Url};
 
 #[component]
 pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
@@ -20,6 +21,13 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
     let categories = use_categories();
     let tags = use_tag();
     let nav = use_navigator();
+    let media_state = use_media();
+    let editor_state = use_image_editor();
+
+    // Image editing state
+    let mut edit_confirm_open = use_signal(|| false);
+    let mut pending_file = use_signal(|| None::<web_sys::File>);
+    let mut pending_field = use_signal(|| None::<String>);
 
     // Initialize form with existing post data if editing
     let mut initial_form = use_signal(|| None::<BlogForm>);
@@ -53,11 +61,11 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                         content: post.content.clone(),
                         slug: post.slug.clone(),
                         excerpt: post.excerpt.clone().unwrap_or_default(),
-                        featured_image_url: post
+                        featured_image_blob_url: post
                             .featured_image
                             .as_ref()
-                            .map(|m| m.file_url.clone())
-                            .unwrap_or_default(),
+                            .map(|m| m.file_url.clone()),
+                        featured_image_media_id: post.featured_image.as_ref().map(|m| m.id),
                         is_published: post.status == PostStatus::Published,
                         category_id: Some(post.category.id),
                         tag_ids: post.tags.iter().map(|t| t.id).collect(),
@@ -162,6 +170,125 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
         }
     });
 
+    // Track upload status and resolve media IDs
+    use_effect(move || {
+        let form_data = form.read().data.clone();
+
+        // Check featured image blob URL
+        if let Some(featured_blob) = &form_data.featured_image_blob_url {
+            if form_data.featured_image_media_id.is_none() {
+                // Check if upload completed
+                if let Some(media) = media_state.get_uploaded_media(featured_blob) {
+                    gloo_console::log!(
+                        "[BlogForm] Featured image upload complete, media ID:",
+                        media.id.to_string()
+                    );
+                    let mut form_mut = form.write();
+                    form_mut.data.featured_image_media_id = Some(media.id);
+                }
+            }
+        }
+    });
+
+    // Handle file selection from upload zone
+    let handle_file_selected = move |_field_name: String| {
+        move |files: Vec<web_sys::File>| {
+            if let Some(file) = files.first() {
+                pending_file.set(Some(file.clone()));
+                pending_field.set(Some(_field_name.clone()));
+                edit_confirm_open.set(true);
+            }
+        }
+    };
+
+    // Handle edit confirmation - open image editor
+    let handle_edit_confirm = move |_| {
+        let file = pending_file();
+        if let Some(f) = file {
+            gloo_console::log!("[BlogForm] Opening editor for file:", f.name());
+            // Create blob URL for the file
+            let blob: &Blob = f.as_ref();
+            if let Ok(blob_url) = Url::create_object_url_with_blob(blob) {
+                spawn(async move {
+                    let _ = editor_state.open_editor(Some(f.clone()), blob_url).await;
+                });
+            }
+        }
+    };
+
+    // Handle edit skip - upload directly
+    let handle_edit_skip = move |_| {
+        let file = pending_file();
+        let field = pending_field();
+
+        if let (Some(f), Some(_field_name)) = (file, field) {
+            gloo_console::log!("[BlogForm] Skipping edit, uploading directly:", f.name());
+
+            // Upload the file
+            spawn(async move {
+                let payload = MediaUploadPayload {
+                    file: f.clone(),
+                    reference_type: Some(MediaReference::Post),
+                    width: None,
+                    height: None,
+                };
+
+                match media_state.upload(payload).await {
+                    Ok(blob_url) => {
+                        gloo_console::log!("[BlogForm] Upload successful:", &blob_url);
+                        let mut form_mut = form.write();
+                        form_mut.data.featured_image_blob_url = Some(blob_url);
+                    }
+                    Err(e) => {
+                        gloo_console::error!("[BlogForm] Upload failed:", e);
+                    }
+                }
+            });
+        }
+    };
+
+    // Handle image editor save - upload edited file
+    let handle_editor_save = move |edited_file: web_sys::File| {
+        let field = pending_field();
+
+        if let Some(_field_name) = field {
+            gloo_console::log!("[BlogForm] Editor saved, uploading edited file:", edited_file.name());
+
+            // Upload the edited file
+            spawn(async move {
+                let payload = MediaUploadPayload {
+                    file: edited_file,
+                    reference_type: Some(MediaReference::Post),
+                    width: None,
+                    height: None,
+                };
+
+                match media_state.upload(payload).await {
+                    Ok(blob_url) => {
+                        gloo_console::log!("[BlogForm] Edited upload successful:", &blob_url);
+                        let mut form_mut = form.write();
+                        form_mut.data.featured_image_blob_url = Some(blob_url);
+                    }
+                    Err(e) => {
+                        gloo_console::error!("[BlogForm] Edited upload failed:", e);
+                    }
+                }
+            });
+        }
+    };
+
+    // Handle re-edit of already uploaded image
+    let handle_edit_uploaded = move |_field: String| {
+        move |blob_url: String| {
+            gloo_console::log!("[BlogForm] Re-editing uploaded image:", &blob_url);
+            pending_field.set(Some(_field.clone()));
+            // Open editor directly with the blob URL
+            spawn(async move {
+                let _ = editor_state.open_editor(None, blob_url).await;
+            });
+        }
+    };
+
     // Handle successful submission
     use_effect(move || {
         let add_state = posts.add.read();
@@ -242,7 +369,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                         label: "Title",
                         placeholder: "Post title",
                         onblur: move |_| {
-                            if !*auto_slug.read() && !is_edit_mode {
+                            if *auto_slug.read() && !is_edit_mode {
                                 let title_value = form.peek().get_field("title").unwrap().value.clone();
                                 let sanitized = BlogForm::sanitize_slug(&title_value);
                                 form.write().update_field("slug", sanitized);
@@ -365,12 +492,60 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                         }
                     }
 
-                    // Featured image URL field
-                    AppInput {
-                        name: "featured_image_url",
-                        form,
-                        label: "Featured Image URL",
-                        placeholder: "https://example.com/image.jpg",
+                    // Featured image upload
+                    div { class: "space-y-2",
+                        div { class: "space-y-1",
+                            label { class: "block text-sm font-medium text-foreground", "Featured Image" }
+                            p { class: "text-xs text-muted-foreground", "Main image displayed with your post" }
+                        }
+
+                        {
+                            let form_data = form.read();
+                            let has_featured_blob = form_data.data.featured_image_blob_url.is_some();
+                            let featured_blob_url = form_data.data.featured_image_blob_url.clone();
+
+                            rsx! {
+                                if has_featured_blob {
+                                    // Show uploaded image with status
+                                    {
+                                        let blob = featured_blob_url.as_ref().unwrap();
+                                        let file_info = media_state.get_file_info(blob);
+                                        let (filename, file_size) = if let Some(info) = file_info {
+                                            (info.filename, info.size)
+                                        } else {
+                                            ("Featured Image".to_string(), 0)
+                                        };
+
+                                        rsx! {
+                                            MediaUploadItem {
+                                                blob_url: blob.clone(),
+                                                filename,
+                                                file_size,
+                                                on_remove: move |_url: String| {
+                                                    let mut form_mut = form.write();
+                                                    form_mut.data.featured_image_blob_url = None;
+                                                    form_mut.data.featured_image_media_id = None;
+                                                },
+                                                on_edit: Some(EventHandler::new(handle_edit_uploaded("featured_image".to_string()))),
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    MediaUploadZone {
+                                        on_upload: move |_blob_urls: Vec<String>| {
+                                            // Not used - we use on_file_selected instead
+                                        },
+                                        on_file_selected: Some(EventHandler::new(handle_file_selected("featured_image".to_string()))),
+                                        reference_type: Some(MediaReference::Post),
+                                        max_files: 1,
+                                        allowed_types: vec!["image/".to_string()],
+                                        title: "Upload featured image".to_string(),
+                                        description: "Click to select an image file".to_string(),
+                                        multiple: false,
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     // Published status switch
@@ -466,11 +641,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                         } else {
                                             Some(form_data.data.excerpt.clone())
                                         },
-                                        featured_image: if form_data.data.featured_image_url.is_empty() {
-                                            None
-                                        } else {
-                                            form_data.data.featured_image_url.parse::<i32>().ok()
-                                        },
+                                        featured_image: form_data.data.featured_image_media_id,
                                         status: Some(if form_data.data.is_published {
                                             PostStatus::Published
                                         } else {
@@ -495,11 +666,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                         } else {
                                             Some(form_data.data.excerpt.clone())
                                         },
-                                        featured_image: if form_data.data.featured_image_url.is_empty() {
-                                            None
-                                        } else {
-                                            form_data.data.featured_image_url.parse::<i32>().ok()
-                                        },
+                                        featured_image: form_data.data.featured_image_media_id,
                                         is_published: form_data.data.is_published,
                                         category_id: form_data.data.category_id.unwrap(),
                                         tag_ids: form_data.data.tag_ids.clone(),
@@ -533,6 +700,22 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                     }
                     }
                 }
+            }
+
+            // Confirm edit dialog
+            ConfirmDialog {
+                is_open: edit_confirm_open,
+                title: "Edit image before uploading?".to_string(),
+                description: "You can crop, resize, rotate, or compress the image before uploading.".to_string(),
+                confirm_label: "Edit Image".to_string(),
+                cancel_label: "Skip & Upload".to_string(),
+                on_confirm: handle_edit_confirm,
+                on_cancel: handle_edit_skip,
+            }
+
+            // Image editor modal
+            ImageEditorModal {
+                on_save: handle_editor_save,
             }
         }
     }
