@@ -1138,9 +1138,6 @@
   .h-px {
     height: 1px;
   }
-  .h-screen {
-    height: 100vh;
-  }
   .max-h-40 {
     max-height: calc(0.25rem * 40);
   }
@@ -2063,9 +2060,6 @@
   }
   .fill-current {
     fill: currentcolor;
-  }
-  .stroke-current {
-    stroke: currentcolor;
   }
   .object-cover {
     object-fit: cover;
