@@ -8,7 +8,7 @@ use crate::store::{
     use_categories, use_image_editor, use_media, use_post, use_tag, MediaReference,
     MediaUploadPayload, PostAutosavePayload, PostCreatePayload, PostEditPayload, PostStatus,
 };
-use crate::ui::shadcn::{Button, ButtonVariant, Checkbox};
+use crate::ui::shadcn::{Badge, BadgeVariant, Button, ButtonVariant, Checkbox, Combobox, ComboboxItem, Skeleton};
 use chrono::Utc;
 use dioxus_time::sleep;
 use std::time::Duration;
@@ -408,67 +408,112 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                             "Category "
                             span { class: "text-red-500", "*" }
                         }
-                        select {
-                            class: "w-full rounded-md border border-border/70 bg-transparent px-3 py-2 text-sm text-foreground focus:border-ring focus:ring-2 focus:ring-ring/40 transition-colors",
-                            required: true,
-                            value: form.read().data.category_id.map(|id| id.to_string()).unwrap_or_default(),
-                            onchange: move |event| {
-                                if let Ok(id) = event.value().parse::<i32>() {
-                                    form.write().data.category_id = Some(id);
-                                }
-                            },
-                            option { value: "", disabled: true, selected: form.read().data.category_id.is_none(),
-                                "Select a category"
-                            }
-                            for category in categories.list.read().data.as_ref().map(|d| &d.data).unwrap_or(&vec![]) {
-                                option {
-                                    key: "{category.id}",
-                                    value: "{category.id}",
-                                    selected: form.read().data.category_id == Some(category.id),
-                                    "{category.name}"
+                        {
+                            let cat_list = categories.list.read();
+                            let is_loading = cat_list.is_loading();
+                            let is_failed = cat_list.is_failed();
+                            let items: Vec<ComboboxItem> = cat_list
+                                .data
+                                .as_ref()
+                                .map(|d| &d.data)
+                                .unwrap_or(&vec![])
+                                .iter()
+                                .map(|c| ComboboxItem { value: c.id.to_string(), label: c.name.clone() })
+                                .collect();
+                            let current_val = form.read().data.category_id.map(|id| id.to_string());
+
+                            rsx! {
+                                if is_loading && items.is_empty() {
+                                    Skeleton { class: Some("h-10 w-full".to_string()) }
+                                } else if is_failed {
+                                    div { class: "rounded-md border border-red-200 bg-red-50 p-3 text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300",
+                                        p { class: "text-sm", "Failed to load categories" }
+                                    }
+                                } else {
+                                    Combobox {
+                                        items,
+                                        placeholder: "Select category...".to_string(),
+                                        value: current_val,
+                                        width: "w-full".to_string(),
+                                        onvaluechange: Some(EventHandler::new(move |val: Option<String>| {
+                                            if let Some(v) = val {
+                                                if let Ok(id) = v.parse::<i32>() {
+                                                    form.write().data.category_id = Some(id);
+                                                }
+                                            }
+                                        })),
+                                    }
                                 }
                             }
                         }
                     }
 
                     // Tags selection
-                    div { class: "space-y-2",
+                    div { class: "space-y-3",
                         label { class: "block text-sm font-medium text-foreground", "Tags" }
+                        p { class: "text-xs text-muted-foreground", "Select tags that categorize your post" }
+
                         {
                             let tags_list = tags.list.read();
                             tags_list.data.as_ref().map(|tags_data| {
+                                let selected_tags: Vec<_> = tags_data.data.iter()
+                                    .filter(|tag| form.read().data.tag_ids.contains(&tag.id))
+                                    .collect();
+
                                 rsx! {
+                                    // Selected tags display
+                                    if !selected_tags.is_empty() {
+                                        div { class: "flex flex-wrap gap-2 p-3 border border-border/70 rounded-lg bg-muted/30",
+                                            for tag in selected_tags {
+                                                {
+                                                    let tag_id = tag.id;
+                                                    let tag_name = tag.name.clone();
+                                                    rsx! {
+                                                        Badge {
+                                                            key: "{tag_id}",
+                                                            variant: BadgeVariant::Secondary,
+                                                            class: "cursor-pointer hover:bg-destructive hover:text-white transition-colors",
+                                                            onclick: move |_| {
+                                                                form.write().data.tag_ids.retain(|&id| id != tag_id);
+                                                            },
+                                                            "{tag_name}"
+                                                            span { class: "ml-1", "×" }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Available tags
                                     div { class: "flex flex-wrap gap-2 p-4 border border-border/70 rounded-lg bg-transparent",
                                         for tag in &tags_data.data {
                                             {
                                                 let tag_id = tag.id;
                                                 let tag_name = tag.name.clone();
-                                                rsx! {
-                                                    label {
-                                                        key: "{tag_id}",
-                                                        class: "flex items-center gap-2 cursor-pointer",
-                                                        input {
-                                                            r#type: "checkbox",
-                                                            class: "h-4 w-4 rounded border-border/70 bg-transparent text-primary focus:ring-2 focus:ring-ring/40",
-                                                            checked: form.read().data.tag_ids.contains(&tag_id),
-                                                            onchange: move |_| {
-                                                                let mut form_write = form.write();
-                                                                if form_write.data.tag_ids.contains(&tag_id) {
-                                                                    form_write.data.tag_ids.retain(|&id| id != tag_id);
-                                                                } else {
-                                                                    form_write.data.tag_ids.push(tag_id);
-                                                                }
+                                                let is_selected = form.read().data.tag_ids.contains(&tag_id);
+
+                                                if !is_selected {
+                                                    rsx! {
+                                                        Badge {
+                                                            key: "{tag_id}",
+                                                            variant: BadgeVariant::Outline,
+                                                            class: "cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors",
+                                                            onclick: move |_| {
+                                                                form.write().data.tag_ids.push(tag_id);
                                                             },
+                                                            "+ {tag_name}"
                                                         }
-                                                        span { class: "text-sm text-foreground", "{tag_name}" }
                                                     }
+                                                } else {
+                                                    rsx! { }
                                                 }
                                             }
                                         }
                                     }
                                 }
                             }).unwrap_or_else(|| rsx! {
-                                div { class: "text-sm text-muted-foreground", "Loading tags..." }
+                                div { class: "text-sm text-muted-foreground p-4 border border-border/70 rounded-lg", "Loading tags..." }
                             })
                         }
                     }
