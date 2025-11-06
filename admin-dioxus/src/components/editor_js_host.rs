@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use gloo_console::error;
+use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
 
 #[component]
@@ -22,6 +23,19 @@ pub fn EditorJsHost(initial_json: Option<String>) -> Element {
                     error!("[EditorJsHost] Failed clearing initial data", err);
                 }
             }
+
+            // Expose upload function to window
+            let upload_fn = Closure::wrap(Box::new(move |file: web_sys::File| {
+                wasm_bindgen_futures::future_to_promise(async move {
+                    crate::utils::js_bridge::editorjs_upload_file(file).await
+                })
+            }) as Box<dyn Fn(web_sys::File) -> js_sys::Promise>);
+
+            let key = JsValue::from_str("editorjs_upload_file");
+            if let Err(err) = js_sys::Reflect::set(&window_js, &key, upload_fn.as_ref()) {
+                error!("[EditorJsHost] Failed exposing upload function", err);
+            }
+            upload_fn.forget();
         }
     });
 

@@ -16,6 +16,9 @@ pub mod types;
 pub mod ui;
 pub mod utils;
 
+#[allow(unused_imports)]
+use utils::js_bridge;
+
 fn main() {
     dioxus::launch(App);
 }

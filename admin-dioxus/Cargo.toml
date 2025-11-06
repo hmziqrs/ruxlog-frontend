@@ -62,6 +62,8 @@ web-sys = { version = "0.3.69", features = [
     "BlobPropertyBag",
     "Selection",
     "Range",
+    "CustomEvent",
+    "Event",
 ] }
 lazy_static = "1.4.0"
 im = "15.1.0"
