@@ -11,7 +11,8 @@ use crate::hooks::use_previous;
 use crate::router::Route;
 use crate::store::{
     use_categories, use_image_editor, use_media, use_post, use_tag, MediaReference,
-    MediaUploadPayload, PostAutosavePayload, PostContent, PostCreatePayload, PostEditPayload, PostStatus,
+    MediaUploadPayload, PostAutosavePayload, PostContent, PostCreatePayload, PostEditPayload,
+    PostStatus,
 };
 use crate::ui::shadcn::{
     Badge, BadgeVariant, Button, ButtonVariant, Checkbox, Combobox, ComboboxItem, Skeleton,
@@ -763,7 +764,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                         } else {
                                             Some(form_data.data.excerpt.clone())
                                         },
-                                        featured_image: form_data.data.featured_image_media_id,
+                                        featured_image_id: form_data.data.featured_image_media_id,
                                         status: Some(if form_data.data.is_published {
                                             PostStatus::Published
                                         } else {
@@ -788,7 +789,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                         } else {
                                             Some(form_data.data.excerpt.clone())
                                         },
-                                        featured_image: form_data.data.featured_image_media_id,
+                                        featured_image_id: form_data.data.featured_image_media_id,
                                         is_published: form_data.data.is_published,
                                         category_id: form_data.data.category_id.unwrap(),
                                         tag_ids: form_data.data.tag_ids.clone(),
