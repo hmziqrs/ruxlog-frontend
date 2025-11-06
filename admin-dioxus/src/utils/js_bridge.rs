@@ -61,12 +61,14 @@ pub async fn editorjs_upload_file(file: File) -> Result<JsValue, JsValue> {
                             #[derive(Serialize)]
                             struct EditorJsFile {
                                 url: String,
+                                media_id: i32,
                             }
 
                             let response = EditorJsUploadResponse {
                                 success: 1,
                                 file: EditorJsFile {
                                     url: media.file_url,
+                                    media_id: media.id,
                                 },
                             };
 
