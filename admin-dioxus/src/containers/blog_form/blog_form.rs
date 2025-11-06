@@ -18,6 +18,7 @@ use crate::ui::shadcn::{
 };
 use chrono::Utc;
 use dioxus_time::sleep;
+use serde_json;
 use std::time::Duration;
 use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::{Blob, Url};
@@ -755,7 +756,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                             // Edit existing post
                             let payload = PostEditPayload {
                                         title: Some(form_data.data.title.clone()),
-                                        content: Some(form_data.data.content.clone()),
+                                        content: Some(serde_json::from_str(&form_data.data.content).unwrap()),
                                         slug: Some(form_data.data.slug.clone()),
                                         excerpt: if form_data.data.excerpt.is_empty() {
                                             None
@@ -780,7 +781,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                     // Create new post
                                     let payload = PostCreatePayload {
                                         title: form_data.data.title.clone(),
-                                        content: form_data.data.content.clone(),
+                                        content: serde_json::from_str(&form_data.data.content).unwrap(),
                                         slug: form_data.data.slug.clone(),
                                         excerpt: if form_data.data.excerpt.is_empty() {
                                             None

@@ -3,6 +3,7 @@ use crate::types::SortParam;
 use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
+use serde_json;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -105,7 +106,7 @@ impl Post {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct PostCreatePayload {
     pub title: String,
-    pub content: String,
+    pub content: serde_json::Value,
     pub published_at: Option<DateTime<Utc>>,
     #[serde(default)]
     pub is_published: bool,
@@ -120,7 +121,7 @@ pub struct PostCreatePayload {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct PostEditPayload {
     pub title: Option<String>,
-    pub content: Option<String>,
+    pub content: Option<serde_json::Value>,
     pub published_at: Option<DateTime<Utc>>,
     pub status: Option<PostStatus>,
     pub slug: Option<String>,
