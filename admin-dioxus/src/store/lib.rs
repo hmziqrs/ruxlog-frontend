@@ -207,7 +207,12 @@ where
                     Err(e) => {
                         // Try to get the raw response text for better debugging
                         let response_text = response.text().await.unwrap_or_default();
-                        tracing::error!("Failed to parse {}: {:?}\nResponse: {}", parse_label, e, response_text);
+                        tracing::error!(
+                            "Failed to parse {}: {:?}\nResponse: {}",
+                            parse_label,
+                            e,
+                            response_text
+                        );
                         state
                             .write()
                             .set_failed(Some(format!("Failed to parse {}: {}", parse_label, e)));
@@ -315,6 +320,7 @@ where
                         Some(parsed)
                     }
                     Err(e) => {
+                        tracing::error!("Failed to parse {}: {}", parse_label, e);
                         let mut map = state.write();
                         map.entry(id)
                             .or_insert_with(StateFrame::new)

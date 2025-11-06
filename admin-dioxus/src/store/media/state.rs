@@ -220,6 +220,11 @@ pub struct MediaUsageDetailsRequest {
     pub media_ids: Vec<i32>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct MediaUsageDetailsResponse {
+    pub data: Vec<MediaUsageDetails>,
+}
+
 pub struct MediaState {
     pub upload: GlobalSignal<StateFrame<(), MediaUploadPayload>>,
     pub remove: GlobalSignal<HashMap<i32, StateFrame>>,
