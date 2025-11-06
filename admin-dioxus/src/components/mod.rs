@@ -62,6 +62,9 @@ pub use media_upload_list::*;
 mod confirm_dialog;
 pub use confirm_dialog::*;
 
+mod post_success_dialog;
+pub use post_success_dialog::*;
+
 pub mod image_editor;
 pub use image_editor::*;
 

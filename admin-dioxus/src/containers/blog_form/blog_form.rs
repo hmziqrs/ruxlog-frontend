@@ -2,13 +2,19 @@ use dioxus::{logger::tracing, prelude::*};
 
 use super::form::{use_blog_form, BlogForm};
 // use crate::components::editor::RichTextEditor; // Moved to legacy - using TypeScript editor instead
-use crate::components::{AppInput, ConfirmDialog, EditorJsHost, ImageEditorModal, MediaUploadItem, MediaUploadZone};
+use crate::components::{
+    AppInput, ConfirmDialog, EditorJsHost, ImageEditorModal, MediaUploadItem, MediaUploadZone,
+    PostSuccessDialog,
+};
+use crate::hooks::use_previous;
 use crate::router::Route;
 use crate::store::{
     use_categories, use_image_editor, use_media, use_post, use_tag, MediaReference,
     MediaUploadPayload, PostAutosavePayload, PostCreatePayload, PostEditPayload, PostStatus,
 };
-use crate::ui::shadcn::{Badge, BadgeVariant, Button, ButtonVariant, Checkbox, Combobox, ComboboxItem, Skeleton};
+use crate::ui::shadcn::{
+    Badge, BadgeVariant, Button, ButtonVariant, Checkbox, Combobox, ComboboxItem, Skeleton,
+};
 use chrono::Utc;
 use dioxus_time::sleep;
 use std::time::Duration;
@@ -28,6 +34,9 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
     let mut edit_confirm_open = use_signal(|| false);
     let mut pending_file = use_signal(|| None::<web_sys::File>);
     let mut pending_field = use_signal(|| None::<String>);
+
+    // Success dialog state
+    let mut success_dialog_open = use_signal(|| false);
 
     // Initialize form with existing post data if editing
     let mut initial_form = use_signal(|| None::<BlogForm>);
@@ -252,7 +261,10 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
         let field = pending_field();
 
         if let Some(_field_name) = field {
-            gloo_console::log!("[BlogForm] Editor saved, uploading edited file:", edited_file.name());
+            gloo_console::log!(
+                "[BlogForm] Editor saved, uploading edited file:",
+                edited_file.name()
+            );
 
             // Upload the edited file
             spawn(async move {
@@ -289,24 +301,27 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
         }
     };
 
-    // Handle successful submission
-    use_effect(move || {
-        let add_state = posts.add.read();
-        let edit_state = if let Some(id) = post_id {
-            posts.edit.read().get(&id).cloned()
-        } else {
-            None
-        };
+    // Handle successful submission with use_previous to detect state transitions
+    let add_state = posts.add.read();
+    let edit_state = if let Some(id) = post_id {
+        posts.edit.read().get(&id).cloned()
+    } else {
+        None
+    };
+    let any_success =
+        add_state.is_success() || edit_state.as_ref().map_or(false, |s| s.is_success());
+    let prev_success = use_previous(any_success);
 
-        if add_state.is_success() || edit_state.as_ref().map_or(false, |s| s.is_success()) {
-            spawn(async move {
+    use_effect(move || {
+        if let Some(prev) = prev_success {
+            if !prev && any_success {
                 if let Some(window) = web_sys::window() {
                     if let Ok(Some(storage)) = window.local_storage() {
                         let _ = storage.remove_item("blog_form_draft_content");
                     }
                 }
-                nav.push(Route::PostsListScreen {});
-            });
+                success_dialog_open.set(true);
+            }
         }
     });
 
@@ -370,7 +385,6 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                     e.prevent_default();
                                 },
 
-                    // Title field
                     AppInput {
                         name: "title",
                         form,
@@ -384,8 +398,6 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                             }
                         },
                     }
-
-                    // Slug field with auto-generate option
                     div { class: "space-y-2",
                         div { class: "flex justify-between items-center",
                             label { class: "block text-sm font-medium text-foreground", "Slug" }
@@ -410,7 +422,6 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                         }
                     }
 
-                    // Excerpt field
                     div { class: "space-y-2",
                         label { class: "block text-sm font-medium text-foreground", "Excerpt" }
                         textarea {
@@ -426,7 +437,6 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
 
                     div { class: "h-px bg-border/60" }
 
-                    // Content field
                     {
                         let content_value = {
                             let reader = form.read();
@@ -601,14 +611,12 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                         }
                     }
 
-                    // Featured image card
                     div { class: "rounded-xl border border-border/70 bg-transparent",
                         div { class: "px-6 pt-6",
                             h2 { class: "text-lg font-semibold", "Featured Image" }
                             p { class: "text-sm text-muted-foreground", "Main image displayed with your post." }
                         }
                         div { class: "px-6 py-6",
-                    // Featured image upload
                     {
                             let form_data = form.read();
                             let has_featured_blob = form_data.data.featured_image_blob_url.is_some();
@@ -785,6 +793,22 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
             // Image editor modal
             ImageEditorModal {
                 on_save: handle_editor_save,
+            }
+
+            if any_success {
+                PostSuccessDialog {
+                    is_open: success_dialog_open,
+                    post_id: {
+                        if post_id.is_some() {
+                            post_id
+                        } else if prev_success.unwrap_or(false) {
+                            add_state.data.as_ref().map(|d| d.id)
+                        } else {
+                            None
+                        }
+                    },
+                    is_new_post: post_id.is_none(),
+                }
             }
         }
     }
