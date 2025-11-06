@@ -4,7 +4,10 @@ use crate::components::{
     DataTableScreen, HeaderColumn, ListEmptyState, ListErrorBannerProps, ListToolbarProps,
     MediaUsageDialog, PageHeaderProps, SkeletonCellConfig, SkeletonTableRows,
 };
-use crate::hooks::{use_list_screen_with_handlers, ListScreenConfig};
+use crate::hooks::{
+    use_list_screen_with_handlers, use_state_frame_map_toast, ListScreenConfig,
+    StateFrameToastConfig,
+};
 use crate::router::Route;
 use crate::store::{use_media, ListQuery, ListStore, Media, MediaListQuery, MediaReference};
 use crate::types::Order;
@@ -235,10 +238,37 @@ pub fn MediaListScreen() -> Element {
                         mime_type.split('/').next().unwrap_or("FILE").to_uppercase()
                     };
 
+                    // Add toast notification for delete operations
+                    let toast_config = StateFrameToastConfig {
+                        loading_title: "Deleting media...".to_string(),
+                        success_title: Some("Media deleted successfully".to_string()),
+                        error_title: Some("Failed to delete media".to_string()),
+                        ..Default::default()
+                    };
+                    use_state_frame_map_toast(&media_state.remove, media_id, toast_config);
+
+                    // Check if this item is being deleted
+                    let is_deleting = media_state.remove.read().get(&media_id).map_or(false, |frame| frame.is_loading());
+
                     rsx! {
-                        tr { class: "border-b border-zinc-200 dark:border-zinc-800 hover:bg-muted/30 transition-colors",
+                        tr {
+                            key: "{media_id}",
+                            class: "relative border-b border-zinc-200 dark:border-zinc-800 hover:bg-muted/30 transition-colors",
+
+
+                            // Absolute positioned overlay
+                            div {
+                                class: if is_deleting {
+                                    "absolute inset-0 z-10 bg-background/50 backdrop-blur-[1px] flex items-center justify-center"
+                                } else {
+                                    "absolute inset-0 z-10 bg-background/50 backdrop-blur-[1px] flex items-center justify-center hidden"
+                                },
+                                div { class: "h-6 w-6 rounded-full border-2 border-zinc-300 border-t-zinc-700 animate-spin" }
+                            }
+
                             // Selection checkbox cell
-                            td { class: "py-2 px-3 w-12 text-xs md:text-sm",
+                            td {
+                                class: "py-2 px-3 w-12 text-xs md:text-sm",
                                 Checkbox {
                                     checked: selected_ids.read().contains(&media_id),
                                     onchange: Some(EventHandler::new({
@@ -314,7 +344,11 @@ pub fn MediaListScreen() -> Element {
                             td { class: "py-2 px-3 text-xs md:text-sm",
                                 DropdownMenu {
                                     DropdownMenuTrigger {
-                                        Button { variant: ButtonVariant::Ghost, class: "h-8 w-8 p-0 bg-transparent hover:bg-muted/50", div { class: "w-4 h-4", Icon { icon: LdEllipsis {} } } }
+                                        Button {
+                                            variant: ButtonVariant::Ghost,
+                                            class: "h-8 w-8 p-0 bg-transparent hover:bg-muted/50",
+                                            div { class: "w-4 h-4", Icon { icon: LdEllipsis {} } }
+                                        }
                                     }
                                     DropdownMenuContent { class: "bg-background border-zinc-200 dark:border-zinc-800",
                                         DropdownMenuItem {
