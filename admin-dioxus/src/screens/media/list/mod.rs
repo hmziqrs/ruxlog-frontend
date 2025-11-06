@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 use crate::components::{
     DataTableScreen, HeaderColumn, ListEmptyState, ListErrorBannerProps, ListToolbarProps,
-    PageHeaderProps, SkeletonCellConfig, SkeletonTableRows,
+    MediaUsageDialog, PageHeaderProps, SkeletonCellConfig, SkeletonTableRows,
 };
 use crate::hooks::{use_list_screen_with_handlers, ListScreenConfig};
 use crate::router::Route;
@@ -23,6 +23,8 @@ pub fn MediaListScreen() -> Element {
 
     let filters = use_signal(|| MediaListQuery::new());
     let selected_ids = use_signal(|| Vec::<i32>::new());
+    let usage_dialog_open = use_signal(|| false);
+    let usage_dialog_media = use_signal(|| None::<Media>);
 
     // Use the enhanced hook that creates handlers for us
     let (list_state, handlers) = use_list_screen_with_handlers(
@@ -329,6 +331,18 @@ pub fn MediaListScreen() -> Element {
                                         }
                                         DropdownMenuItem {
                                             onclick: {
+                                                let media_clone = media.clone();
+                                                let mut usage_dialog_open = usage_dialog_open;
+                                                let mut usage_dialog_media = usage_dialog_media;
+                                                move |_| {
+                                                    usage_dialog_open.set(true);
+                                                    usage_dialog_media.set(Some(media_clone.clone()));
+                                                }
+                                            },
+                                            "View Usage"
+                                        }
+                                        DropdownMenuItem {
+                                            onclick: {
                                                 let url = media.file_url.clone();
                                                 move |_| {
                                                     // Copy to clipboard
@@ -354,6 +368,14 @@ pub fn MediaListScreen() -> Element {
                         }
                     }
                 })}
+            }
+        }
+
+        // Media Usage Dialog
+        if let Some(media) = &*usage_dialog_media.read() {
+            MediaUsageDialog {
+                is_open: usage_dialog_open,
+                media: media.clone(),
             }
         }
     }

@@ -295,6 +295,22 @@ impl MediaState {
         .await;
     }
 
+    pub async fn fetch_usage_details(&self, request: &MediaUsageDetailsRequest) -> Result<Vec<MediaUsageDetails>, String> {
+        match http_client::post("/media/v1/usage/details", request).send().await {
+            Ok(response) => {
+                if response.ok() {
+                    match response.json::<Vec<MediaUsageDetails>>().await {
+                        Ok(data) => Ok(data),
+                        Err(e) => Err(format!("Failed to parse response: {:?}", e)),
+                    }
+                } else {
+                    Err(format!("Request failed with status: {}", response.status()))
+                }
+            }
+            Err(e) => Err(format!("Request failed: {:?}", e)),
+        }
+    }
+
     pub fn reset(&self) {
         *self.upload.write() = StateFrame::new();
         *self.remove.write() = HashMap::new();
