@@ -48,6 +48,14 @@ pub struct Media {
     pub uploader_id: Option<i32>,
     #[serde(default)]
     pub reference_type: Option<MediaReference>,
+    #[serde(default)]
+    pub content_hash: Option<String>,
+    #[serde(default)]
+    pub is_optimized: bool,
+    #[serde(default)]
+    pub optimized_at: Option<DateTime<Utc>>,
+    #[serde(default)]
+    pub usage_count: i32,
     #[serde(default = "default_datetime")]
     pub created_at: DateTime<Utc>,
     #[serde(default = "default_datetime")]
@@ -71,6 +79,10 @@ impl Default for Media {
             extension: None,
             uploader_id: None,
             reference_type: None,
+            content_hash: None,
+            is_optimized: false,
+            optimized_at: None,
+            usage_count: 0,
             created_at: DateTime::<Utc>::from_timestamp(0, 0).unwrap_or_else(|| Utc::now()),
             updated_at: DateTime::<Utc>::from_timestamp(0, 0).unwrap_or_else(|| Utc::now()),
         }

@@ -95,6 +95,12 @@ pub fn MediaListScreen() -> Element {
             None,
         ),
         HeaderColumn::new(
+            "Usage",
+            false,
+            "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
+            None,
+        ),
+        HeaderColumn::new(
             "Uploaded",
             true,
             "py-2 px-3 text-left font-medium text-xs md:text-sm whitespace-nowrap",
@@ -198,12 +204,13 @@ pub fn MediaListScreen() -> Element {
                             SkeletonCellConfig::custom(crate::components::UICellType::Default, "py-2 px-3"),
                             SkeletonCellConfig::custom(crate::components::UICellType::Badge, "py-2 px-3"),
                             SkeletonCellConfig::custom(crate::components::UICellType::Default, "py-2 px-3"),
+                            SkeletonCellConfig::custom(crate::components::UICellType::Default, "py-2 px-3"),
                             SkeletonCellConfig::custom(crate::components::UICellType::Action, "py-2 px-3"),
                         ],
                     }
                 } else {
                     tr { class: "border-b border-zinc-200 dark:border-zinc-800",
-                        td { colspan: "9", class: "py-12 px-4 text-center",
+                        td { colspan: "10", class: "py-12 px-4 text-center",
                             ListEmptyState {
                                 title: "No media found".to_string(),
                                 description: "Try adjusting your search or upload media to get started.".to_string(),
@@ -288,6 +295,13 @@ pub fn MediaListScreen() -> Element {
                                     Badge { class: "text-xs", "{ref_type}" }
                                 } else {
                                     span { class: "text-muted-foreground", "—" }
+                                }
+                            }
+                            // Usage cell
+                            td { class: "py-2 px-3 text-xs md:text-sm text-muted-foreground whitespace-nowrap",
+                                span {
+                                    class: "font-medium",
+                                    "{media.usage_count} refs"
                                 }
                             }
                             // Upload date cell
