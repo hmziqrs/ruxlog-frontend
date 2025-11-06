@@ -28,10 +28,14 @@ pub struct CategoryForm {
     // Logo image tracking
     pub logo_blob_url: Option<String>, // For preview while uploading
     pub logo_media_id: Option<i32>,    // For backend submission
+    pub logo_filename: Option<String>, // Existing media filename
+    pub logo_size: Option<i64>,        // Existing media size
 
     // Cover image tracking
     pub cover_blob_url: Option<String>, // For preview while uploading
     pub cover_media_id: Option<i32>,    // For backend submission
+    pub cover_filename: Option<String>, // Existing media filename
+    pub cover_size: Option<i64>,        // Existing media size
 
     // keep as string for input, will parse into i32 for payloads
     pub parent_id: String,
@@ -60,17 +64,27 @@ impl CategoryForm {
             active: true,
             logo_blob_url: None,
             logo_media_id: None,
+            logo_filename: None,
+            logo_size: None,
             cover_blob_url: None,
             cover_media_id: None,
+            cover_filename: None,
+            cover_size: None,
             parent_id: String::new(),
         }
     }
 
     // Check if any images are still uploading
     pub fn is_uploading(&self) -> bool {
-        // If we have a blob URL but no media ID yet, upload is in progress
-        (self.logo_blob_url.is_some() && self.logo_media_id.is_none())
-            || (self.cover_blob_url.is_some() && self.cover_media_id.is_none())
+        // If we have a blob URL but no media ID AND no existing filename/size
+        // (meaning it's a new upload, not an existing image), upload is in progress
+        let logo_uploading = self.logo_blob_url.is_some()
+            && self.logo_media_id.is_none()
+            && self.logo_filename.is_none();
+        let cover_uploading = self.cover_blob_url.is_some()
+            && self.cover_media_id.is_none()
+            && self.cover_filename.is_none();
+        logo_uploading || cover_uploading
     }
 
     pub fn sanitize_slug(text: &str) -> String {

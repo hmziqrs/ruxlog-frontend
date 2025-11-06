@@ -140,8 +140,14 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                         let mut form_mut = form.write();
                         if field_name == "logo" {
                             form_mut.data.logo_blob_url = Some(blob_url);
+                            // Clear existing media info to use upload tracking
+                            form_mut.data.logo_filename = None;
+                            form_mut.data.logo_size = None;
                         } else if field_name == "cover" {
                             form_mut.data.cover_blob_url = Some(blob_url);
+                            // Clear existing media info to use upload tracking
+                            form_mut.data.cover_filename = None;
+                            form_mut.data.cover_size = None;
                         }
                     }
                     Err(e) => {
@@ -177,8 +183,14 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                         let mut form_mut = form.write();
                         if field_name == "logo" {
                             form_mut.data.logo_blob_url = Some(blob_url);
+                            // Clear existing media info to use upload tracking
+                            form_mut.data.logo_filename = None;
+                            form_mut.data.logo_size = None;
                         } else if field_name == "cover" {
                             form_mut.data.cover_blob_url = Some(blob_url);
+                            // Clear existing media info to use upload tracking
+                            form_mut.data.cover_filename = None;
+                            form_mut.data.cover_size = None;
                         }
                     }
                     Err(e) => {
@@ -292,11 +304,15 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                             // Show uploaded image with status
                                             {
                                                 let blob = logo_blob_url.as_ref().unwrap();
-                                                // let status = media_state.get_upload_status(blob);
-                                                let file_info = media_state.get_file_info(blob);
-                                                let (filename, file_size) = if let Some(info) = file_info {
+                                                // Check if we have existing media info first, otherwise check upload tracking
+                                                let (filename, file_size) = if let (Some(fname), Some(fsize)) = (&form_data.logo_filename, form_data.logo_size) {
+                                                    // Use existing media info
+                                                    (fname.clone(), fsize)
+                                                } else if let Some(info) = media_state.get_file_info(blob) {
+                                                    // Use upload tracking info for new uploads
                                                     (info.filename, info.size)
                                                 } else {
+                                                    // Fallback
                                                     ("Logo".to_string(), 0)
                                                 };
 
@@ -305,10 +321,13 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                                         blob_url: blob.clone(),
                                                         filename,
                                                         file_size,
+                                                        is_existing: form_data.logo_filename.is_some(),
                                                         on_remove: move |_url: String| {
                                                             let mut form_mut = form.write();
                                                             form_mut.data.logo_blob_url = None;
                                                             form_mut.data.logo_media_id = None;
+                                                            form_mut.data.logo_filename = None;
+                                                            form_mut.data.logo_size = None;
                                                         },
                                                         on_edit: Some(EventHandler::new(handle_edit_uploaded("logo".to_string()))),
                                                     }
@@ -349,11 +368,15 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                             // Show uploaded image with status
                                             {
                                                 let blob = cover_blob_url.as_ref().unwrap();
-                                                // let status = media_state.get_upload_status(blob);
-                                                let file_info = media_state.get_file_info(blob);
-                                                let (filename, file_size) = if let Some(info) = file_info {
+                                                // Check if we have existing media info first, otherwise check upload tracking
+                                                let (filename, file_size) = if let (Some(fname), Some(fsize)) = (&form_data.cover_filename, form_data.cover_size) {
+                                                    // Use existing media info
+                                                    (fname.clone(), fsize)
+                                                } else if let Some(info) = media_state.get_file_info(blob) {
+                                                    // Use upload tracking info for new uploads
                                                     (info.filename, info.size)
                                                 } else {
+                                                    // Fallback
                                                     ("Cover".to_string(), 0)
                                                 };
 
@@ -362,10 +385,13 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                                         blob_url: blob.clone(),
                                                         filename,
                                                         file_size,
+                                                        is_existing: form_data.cover_filename.is_some(),
                                                         on_remove: move |_url: String| {
                                                             let mut form_mut = form.write();
                                                             form_mut.data.cover_blob_url = None;
                                                             form_mut.data.cover_media_id = None;
+                                                            form_mut.data.cover_filename = None;
+                                                            form_mut.data.cover_size = None;
                                                         },
                                                         on_edit: Some(EventHandler::new(handle_edit_uploaded("cover".to_string()))),
                                                     }

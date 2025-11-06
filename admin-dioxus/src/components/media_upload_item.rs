@@ -21,6 +21,9 @@ pub struct MediaUploadItemProps {
     /// Optional callback when user clicks edit
     #[props(default)]
     pub on_edit: Option<EventHandler<String>>,
+    /// Whether this is an existing media (not a new upload)
+    #[props(default)]
+    pub is_existing: bool,
 }
 
 /// Component that displays a single file upload with progress and status
@@ -30,7 +33,12 @@ pub fn MediaUploadItem(props: MediaUploadItemProps) -> Element {
     let blob_url = props.blob_url.clone();
 
     // Get current upload status and progress
-    let status = media_state.get_upload_status(&blob_url);
+    let status = if props.is_existing {
+        // For existing media, always show as success
+        Some(UploadStatus::Success)
+    } else {
+        media_state.get_upload_status(&blob_url)
+    };
     let progress = media_state.get_upload_progress(&blob_url);
 
     let is_uploading = matches!(status, Some(UploadStatus::Uploading));
