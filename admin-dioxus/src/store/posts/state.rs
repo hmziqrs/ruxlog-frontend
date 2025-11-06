@@ -351,7 +351,7 @@ pub struct PostCreatePayload {
     pub is_published: bool,
     pub slug: String,
     pub excerpt: Option<String>,
-    pub featured_image: Option<i32>,
+    pub featured_image_id: Option<i32>,
     pub category_id: i32,
     #[serde(default)]
     pub tag_ids: Vec<i32>,
@@ -365,7 +365,7 @@ pub struct PostEditPayload {
     pub status: Option<PostStatus>,
     pub slug: Option<String>,
     pub excerpt: Option<String>,
-    pub featured_image: Option<i32>,
+    pub featured_image_id: Option<i32>,
     pub category_id: Option<i32>,
     pub tag_ids: Option<Vec<i32>>,
 }
