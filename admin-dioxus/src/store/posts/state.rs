@@ -75,81 +75,97 @@ pub struct PostContent {
 pub enum EditorJsBlock {
     #[serde(rename = "header")]
     Header {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
         data: HeaderBlock,
     },
     #[serde(rename = "paragraph")]
     Paragraph {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
         data: ParagraphBlock,
     },
     #[serde(rename = "list")]
     List {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
         data: ListBlock,
     },
     #[serde(rename = "delimiter")]
     Delimiter {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
     },
     #[serde(rename = "image")]
     Image {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
         data: ImageBlock,
     },
     #[serde(rename = "embed")]
     Embed {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
         data: EmbedBlock,
     },
     #[serde(rename = "linktool")]
     LinkTool {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
         data: LinkToolBlock,
     },
     #[serde(rename = "attaches")]
     Attaches {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
         data: AttachesBlock,
     },
     #[serde(rename = "code")]
     Code {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
         data: CodeBlock,
     },
     #[serde(rename = "raw")]
     Raw {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
         data: RawBlock,
     },
     #[serde(rename = "table")]
     Table {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
         data: TableBlock,
     },
     #[serde(rename = "quote")]
     Quote {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
         data: QuoteBlock,
     },
     #[serde(rename = "warning")]
     Warning {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
         data: WarningBlock,
     },
     #[serde(rename = "button")]
     Button {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
         data: ButtonBlock,
     },
     #[serde(rename = "alert")]
     Alert {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
         data: AlertBlock,
     },
     #[serde(rename = "checklist")]
     Checklist {
-        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        id: Option<String>,
         data: ChecklistBlock,
     },
     #[serde(other)]
@@ -209,6 +225,10 @@ pub struct ImageBlock {
     pub file: ImageFile,
     pub caption: Option<String>,
     pub stretched: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub withBackground: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub withBorder: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

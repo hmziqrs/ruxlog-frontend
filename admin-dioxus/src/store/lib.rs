@@ -1,4 +1,5 @@
 use crate::services::http_client::{HttpError, HttpRequest, HttpResponse};
+use dioxus::logger::tracing;
 use dioxus::prelude::GlobalSignal;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::collections::HashMap;
@@ -204,6 +205,9 @@ where
                         Some(data)
                     }
                     Err(e) => {
+                        // Try to get the raw response text for better debugging
+                        let response_text = response.text().await.unwrap_or_default();
+                        tracing::error!("Failed to parse {}: {:?}\nResponse: {}", parse_label, e, response_text);
                         state
                             .write()
                             .set_failed(Some(format!("Failed to parse {}: {}", parse_label, e)));
