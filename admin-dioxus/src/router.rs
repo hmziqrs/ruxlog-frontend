@@ -14,6 +14,7 @@ use crate::screens::MediaUploadScreen;
 use crate::screens::PostsAddScreen;
 use crate::screens::PostsEditScreen;
 use crate::screens::PostsListScreen;
+use crate::screens::PostsViewScreen;
 use crate::screens::SonnerDemoScreen;
 use crate::screens::TagsAddScreen;
 use crate::screens::TagsEditScreen;
@@ -37,6 +38,8 @@ pub enum Route {
     PostsAddScreen {},
     #[route("/posts/:id/edit")]
     PostsEditScreen { id: i32 },
+    #[route("/posts/:id")]
+    PostsViewScreen { id: i32 },
     #[route("/posts/list")]
     PostsListScreen {},
 

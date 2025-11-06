@@ -36,11 +36,9 @@ pub fn PostSuccessDialog(
     };
 
     let handle_view_post = move |_| {
-        if let Some(_id) = post_id() {
+        if let Some(id) = post_id() {
             is_open.set(false);
-            // TODO: Navigate to post view/preview screen when available
-            // For now, just close the dialog
-            nav.push(Route::PostsListScreen {});
+            nav.push(Route::PostsViewScreen { id });
         }
     };
 

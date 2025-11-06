@@ -26,6 +26,7 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
     let (module, add_suffix): (&str, Option<&str>) = match current_route {
         Route::PostsAddScreen {} => ("Posts", Some("Add")),
         Route::PostsEditScreen { .. } => ("Posts", Some("Edit")),
+        Route::PostsViewScreen { .. } => ("Posts", Some("View")),
         Route::PostsListScreen {} => ("Posts", Some("List")),
         Route::CategoriesAddScreen {} => ("Categories", Some("Add")),
         Route::CategoriesListScreen {} => ("Categories", Some("List")),
