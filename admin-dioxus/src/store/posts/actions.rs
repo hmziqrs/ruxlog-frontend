@@ -24,7 +24,7 @@ impl PostState {
             Some(meta_payload),
             request.send(),
             "post",
-            |_post: &Post| (None, None),
+            |post: &Post| (Some(post.clone()), None),
         )
         .await;
 

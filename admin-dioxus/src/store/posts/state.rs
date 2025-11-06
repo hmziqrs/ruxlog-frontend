@@ -296,7 +296,7 @@ pub struct PostState {
     // Core CRUD operations
     pub view: GlobalSignal<HashMap<i32, StateFrame<Post>>>, // Keyed by post id
     pub list: GlobalSignal<StateFrame<PaginatedList<Post>>>,
-    pub add: GlobalSignal<StateFrame<(), PostCreatePayload>>,
+    pub add: GlobalSignal<StateFrame<Post, PostCreatePayload>>,
     pub edit: GlobalSignal<HashMap<i32, StateFrame<(), PostEditPayload>>>,
     pub remove: GlobalSignal<HashMap<i32, StateFrame>>,
 
