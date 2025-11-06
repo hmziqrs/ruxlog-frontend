@@ -6,7 +6,7 @@ use web_sys::File;
 /// Exposes window.editorjs_upload_file() to JavaScript
 #[wasm_bindgen]
 pub async fn editorjs_upload_file(file: File) -> Result<JsValue, JsValue> {
-    use crate::store::{use_media, MediaUploadPayload, UploadStatus};
+    use crate::store::{use_media, MediaReference, MediaUploadPayload, UploadStatus};
     use serde::Serialize;
 
     gloo_console::log!("[editorjs_upload_file] Starting upload for:", file.name());
@@ -17,7 +17,7 @@ pub async fn editorjs_upload_file(file: File) -> Result<JsValue, JsValue> {
     // Create upload payload
     let payload = MediaUploadPayload {
         file,
-        reference_type: None, // Can be enhanced to accept reference_type from JS
+        reference_type: Some(MediaReference::Post),
         width: None,
         height: None,
     };
