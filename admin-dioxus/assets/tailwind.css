@@ -988,6 +988,9 @@
   .ml-4 {
     margin-left: calc(0.25rem * 4);
   }
+  .ml-6 {
+    margin-left: calc(0.25rem * 6);
+  }
   .ml-auto {
     margin-left: auto;
   }
@@ -1763,6 +1766,10 @@
   .border-t {
     border-top-style: var(--tw-border-style);
     border-top-width: 1px;
+  }
+  .border-t-2 {
+    border-top-style: var(--tw-border-style);
+    border-top-width: 2px;
   }
   .border-r {
     border-right-style: var(--tw-border-style);

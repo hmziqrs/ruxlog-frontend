@@ -11,7 +11,7 @@ use crate::hooks::use_previous;
 use crate::router::Route;
 use crate::store::{
     use_categories, use_image_editor, use_media, use_post, use_tag, MediaReference,
-    MediaUploadPayload, PostAutosavePayload, PostCreatePayload, PostEditPayload, PostStatus,
+    MediaUploadPayload, PostAutosavePayload, PostContent, PostCreatePayload, PostEditPayload, PostStatus,
 };
 use crate::ui::shadcn::{
     Badge, BadgeVariant, Button, ButtonVariant, Checkbox, Combobox, ComboboxItem, Skeleton,
@@ -69,7 +69,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                 if let Some(post) = &post_frame.data {
                     let form = BlogForm {
                         title: post.title.clone(),
-                        content: post.content.clone(),
+                        content: serde_json::to_string(&post.content).unwrap_or_default(),
                         slug: post.slug.clone(),
                         excerpt: post.excerpt.clone().unwrap_or_default(),
                         featured_image_blob_url: post
@@ -756,7 +756,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                             // Edit existing post
                             let payload = PostEditPayload {
                                         title: Some(form_data.data.title.clone()),
-                                        content: Some(serde_json::from_str(&form_data.data.content).unwrap()),
+                                        content: Some(serde_json::from_str::<PostContent>(&form_data.data.content).unwrap()),
                                         slug: Some(form_data.data.slug.clone()),
                                         excerpt: if form_data.data.excerpt.is_empty() {
                                             None
@@ -781,7 +781,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                                     // Create new post
                                     let payload = PostCreatePayload {
                                         title: form_data.data.title.clone(),
-                                        content: serde_json::from_str(&form_data.data.content).unwrap(),
+                                        content: serde_json::from_str::<PostContent>(&form_data.data.content).unwrap(),
                                         slug: form_data.data.slug.clone(),
                                         excerpt: if form_data.data.excerpt.is_empty() {
                                             None

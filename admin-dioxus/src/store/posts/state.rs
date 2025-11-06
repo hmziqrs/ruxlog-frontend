@@ -3,7 +3,6 @@ use crate::types::SortParam;
 use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
-use serde_json;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -64,11 +63,231 @@ impl Default for PostStatus {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub struct PostContent {
+    pub time: u64,
+    pub blocks: Vec<EditorJsBlock>,
+    pub version: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "type")]
+pub enum EditorJsBlock {
+    #[serde(rename = "header")]
+    Header {
+        id: String,
+        data: HeaderBlock,
+    },
+    #[serde(rename = "paragraph")]
+    Paragraph {
+        id: String,
+        data: ParagraphBlock,
+    },
+    #[serde(rename = "list")]
+    List {
+        id: String,
+        data: ListBlock,
+    },
+    #[serde(rename = "delimiter")]
+    Delimiter {
+        id: String,
+    },
+    #[serde(rename = "image")]
+    Image {
+        id: String,
+        data: ImageBlock,
+    },
+    #[serde(rename = "embed")]
+    Embed {
+        id: String,
+        data: EmbedBlock,
+    },
+    #[serde(rename = "linktool")]
+    LinkTool {
+        id: String,
+        data: LinkToolBlock,
+    },
+    #[serde(rename = "attaches")]
+    Attaches {
+        id: String,
+        data: AttachesBlock,
+    },
+    #[serde(rename = "code")]
+    Code {
+        id: String,
+        data: CodeBlock,
+    },
+    #[serde(rename = "raw")]
+    Raw {
+        id: String,
+        data: RawBlock,
+    },
+    #[serde(rename = "table")]
+    Table {
+        id: String,
+        data: TableBlock,
+    },
+    #[serde(rename = "quote")]
+    Quote {
+        id: String,
+        data: QuoteBlock,
+    },
+    #[serde(rename = "warning")]
+    Warning {
+        id: String,
+        data: WarningBlock,
+    },
+    #[serde(rename = "button")]
+    Button {
+        id: String,
+        data: ButtonBlock,
+    },
+    #[serde(rename = "alert")]
+    Alert {
+        id: String,
+        data: AlertBlock,
+    },
+    #[serde(rename = "checklist")]
+    Checklist {
+        id: String,
+        data: ChecklistBlock,
+    },
+    #[serde(other)]
+    Unknown,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct HeaderBlock {
+    pub text: String,
+    pub level: u8,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ParagraphBlock {
+    pub text: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CodeBlock {
+    pub code: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct QuoteBlock {
+    pub text: String,
+    pub caption: Option<String>,
+    pub alignment: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct AlertBlock {
+    #[serde(rename = "type")]
+    pub alert_type: String,
+    pub align: String,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ChecklistItem {
+    pub text: String,
+    pub checked: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ChecklistBlock {
+    pub items: Vec<ChecklistItem>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ListBlock {
+    pub style: String,
+    pub items: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ImageBlock {
+    pub file: ImageFile,
+    pub caption: Option<String>,
+    pub stretched: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ImageFile {
+    pub url: String,
+    pub width: Option<i32>,
+    pub height: Option<i32>,
+    pub name: Option<String>,
+    pub title: Option<String>,
+    #[serde(default)]
+    pub media_id: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct EmbedBlock {
+    pub embed: String,
+    pub width: Option<i32>,
+    pub height: Option<i32>,
+    pub caption: Option<String>,
+    pub source: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct LinkToolBlock {
+    pub link: String,
+    pub meta: LinkToolMeta,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct LinkToolMeta {
+    pub url: String,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub image: Option<ImageFile>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct AttachesBlock {
+    pub file: AttachesFile,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct AttachesFile {
+    pub url: String,
+    pub size: i64,
+    pub name: String,
+    pub extension: String,
+    #[serde(default)]
+    pub media_id: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct RawBlock {
+    pub html: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct TableBlock {
+    pub content: Vec<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct WarningBlock {
+    pub title: String,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ButtonBlock {
+    pub text: String,
+    pub link: Option<String>,
+    pub style: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Post {
     pub id: i32,
     pub title: String,
-    pub content: String,
+    pub content: PostContent,
     pub slug: String,
     pub excerpt: Option<String>,
     pub featured_image: Option<Media>,
@@ -106,7 +325,7 @@ impl Post {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct PostCreatePayload {
     pub title: String,
-    pub content: serde_json::Value,
+    pub content: PostContent,
     pub published_at: Option<DateTime<Utc>>,
     #[serde(default)]
     pub is_published: bool,
@@ -121,7 +340,7 @@ pub struct PostCreatePayload {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct PostEditPayload {
     pub title: Option<String>,
-    pub content: Option<serde_json::Value>,
+    pub content: Option<PostContent>,
     pub published_at: Option<DateTime<Utc>>,
     pub status: Option<PostStatus>,
     pub slug: Option<String>,

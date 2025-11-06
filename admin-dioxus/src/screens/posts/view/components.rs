@@ -1,99 +1,8 @@
 use dioxus::prelude::*;
-use serde::{Deserialize, Serialize};
 use crate::components::PageHeader;
 use crate::router::Route;
-use crate::store::use_post;
+use crate::store::{use_post, PostContent, EditorJsBlock};
 use crate::ui::shadcn::{Button, ButtonVariant};
-
-// ============================================================================
-// EditorJS Types
-// ============================================================================
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct EditorJsData {
-    time: u64,
-    blocks: Vec<EditorJsBlock>,
-    version: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type")]
-enum EditorJsBlock {
-    #[serde(rename = "header")]
-    Header {
-        id: String,
-        data: HeaderBlock,
-    },
-    #[serde(rename = "paragraph")]
-    Paragraph {
-        id: String,
-        data: ParagraphBlock,
-    },
-    #[serde(rename = "code")]
-    Code {
-        id: String,
-        data: CodeBlock,
-    },
-    #[serde(rename = "quote")]
-    Quote {
-        id: String,
-        data: QuoteBlock,
-    },
-    #[serde(rename = "alert")]
-    Alert {
-        id: String,
-        data: AlertBlock,
-    },
-    #[serde(rename = "checklist")]
-    Checklist {
-        id: String,
-        data: ChecklistBlock,
-    },
-    #[serde(other)]
-    Unknown,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct HeaderBlock {
-    text: String,
-    level: u8,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct ParagraphBlock {
-    text: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct CodeBlock {
-    code: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct QuoteBlock {
-    text: String,
-    caption: Option<String>,
-    alignment: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct AlertBlock {
-    #[serde(rename = "type")]
-    alert_type: String,
-    align: String,
-    message: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct ChecklistItem {
-    text: String,
-    checked: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct ChecklistBlock {
-    items: Vec<ChecklistItem>,
-}
 
 // ============================================================================
 // EditorJS Block Renderers
@@ -224,6 +133,236 @@ fn render_checklist_block(block: &EditorJsBlock) -> Element {
     }
 }
 
+fn render_list_block(block: &EditorJsBlock) -> Element {
+    if let EditorJsBlock::List { data, .. } = block {
+        let list_items = data.items.clone();
+        let is_ordered = data.style == "ordered";
+
+        if is_ordered {
+            rsx! {
+                ol { class: "my-6 ml-6 list-decimal space-y-2",
+                    for item in list_items {
+                        li { class: "leading-7", "{item}" }
+                    }
+                }
+            }
+        } else {
+            rsx! {
+                ul { class: "my-6 ml-6 list-disc space-y-2",
+                    for item in list_items {
+                        li { class: "leading-7", "{item}" }
+                    }
+                }
+            }
+        }
+    } else {
+        rsx! {}
+    }
+}
+
+fn render_delimiter_block(block: &EditorJsBlock) -> Element {
+    if let EditorJsBlock::Delimiter { .. } = block {
+        rsx! {
+            div { class: "my-8 flex items-center justify-center",
+                hr { class: "w-16 border-t-2 border-muted" }
+            }
+        }
+    } else {
+        rsx! {}
+    }
+}
+
+fn render_image_block(block: &EditorJsBlock) -> Element {
+    if let EditorJsBlock::Image { data, .. } = block {
+        let url = data.file.url.clone();
+        let caption = &data.caption;
+
+        rsx! {
+            div { class: "my-6",
+                img {
+                    src: "{url}",
+                    alt: caption.as_deref().unwrap_or(""),
+                    class: "w-full h-auto rounded-lg"
+                }
+                if let Some(ref caption) = data.caption {
+                    p { class: "mt-2 text-sm text-muted-foreground text-center italic", "{caption}" }
+                }
+            }
+        }
+    } else {
+        rsx! {}
+    }
+}
+
+fn render_embed_block(block: &EditorJsBlock) -> Element {
+    if let EditorJsBlock::Embed { data, .. } = block {
+        let source = data.source.clone();
+
+        rsx! {
+            div { class: "my-6 rounded-lg overflow-hidden",
+                iframe {
+                    src: "{source}",
+                    class: "w-full",
+                    style: format!("height: {}px;", data.height.unwrap_or(450)),
+                    frame_border: "0",
+                    allowfullscreen: "true"
+                }
+                if let Some(ref caption) = data.caption {
+                    p { class: "mt-2 text-sm text-muted-foreground text-center italic", "{caption}" }
+                }
+            }
+        }
+    } else {
+        rsx! {}
+    }
+}
+
+fn render_linktool_block(block: &EditorJsBlock) -> Element {
+    if let EditorJsBlock::LinkTool { data, .. } = block {
+        let title = data.meta.title.clone();
+        let description = data.meta.description.clone();
+        let image_url = data.meta.image.as_ref().map(|img| img.url.clone());
+        let url = data.meta.url.clone();
+
+        rsx! {
+            a {
+                href: "{url}",
+                target: "_blank",
+                rel: "noopener noreferrer",
+                class: "my-4 block rounded-lg border p-4 hover:bg-muted/50 transition-colors",
+                div { class: "flex gap-4",
+                    if let Some(image_url) = image_url {
+                        img {
+                            src: "{image_url}",
+                            alt: title.as_deref().unwrap_or(""),
+                            class: "w-20 h-20 object-cover rounded"
+                        }
+                    }
+                    div { class: "flex-1",
+                        if let Some(title) = title {
+                            h3 { class: "font-semibold mb-1", "{title}" }
+                        }
+                        if let Some(description) = description {
+                            p { class: "text-sm text-muted-foreground", "{description}" }
+                        }
+                        p { class: "text-xs text-muted-foreground mt-1", "{url}" }
+                    }
+                }
+            }
+        }
+    } else {
+        rsx! {}
+    }
+}
+
+fn render_attaches_block(block: &EditorJsBlock) -> Element {
+    if let EditorJsBlock::Attaches { data, .. } = block {
+        let name = data.file.name.clone();
+        let size = data.file.size;
+        let url = data.file.url.clone();
+        let size_mb = size as f64 / 1024.0 / 1024.0;
+        let size_str = if size_mb > 1.0 {
+            format!("{:.2} MB", size_mb)
+        } else {
+            format!("{:.2} KB", size as f64 / 1024.0)
+        };
+
+        rsx! {
+            div { class: "my-4 p-4 rounded-lg border bg-muted/50",
+                a {
+                    href: "{url}",
+                    target: "_blank",
+                    class: "flex items-center gap-3 text-sm",
+                    "📎 {name} ({size_str})"
+                }
+            }
+        }
+    } else {
+        rsx! {}
+    }
+}
+
+fn render_raw_block(block: &EditorJsBlock) -> Element {
+    if let EditorJsBlock::Raw { data, .. } = block {
+        let html = data.html.clone();
+        rsx! {
+            div { class: "my-4", dangerous_inner_html: "{html}" }
+        }
+    } else {
+        rsx! {}
+    }
+}
+
+fn render_table_block(block: &EditorJsBlock) -> Element {
+    if let EditorJsBlock::Table { data, .. } = block {
+        rsx! {
+            div { class: "my-6 overflow-x-auto",
+                table { class: "min-w-full border-collapse",
+                    tbody {
+                        for row in &data.content {
+                            tr {
+                                for cell in row {
+                                    td { class: "border border-muted px-4 py-2", "{cell}" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        rsx! {}
+    }
+}
+
+fn render_warning_block(block: &EditorJsBlock) -> Element {
+    if let EditorJsBlock::Warning { data, .. } = block {
+        let title = data.title.clone();
+        let message = data.message.clone();
+
+        rsx! {
+            div { class: "my-6 p-4 rounded-lg border bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-950/20 dark:border-yellow-800 dark:text-yellow-300",
+                h3 { class: "font-semibold mb-2", "{title}" }
+                p { "{message}" }
+            }
+        }
+    } else {
+        rsx! {}
+    }
+}
+
+fn render_button_block(block: &EditorJsBlock) -> Element {
+    if let EditorJsBlock::Button { data, .. } = block {
+        let text = data.text.clone();
+        let link = data.link.clone();
+        let style = data.style.as_deref().unwrap_or("primary");
+
+        let button_class = match style {
+            "secondary" => "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+            "outline" => "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+            "ghost" => "hover:bg-accent hover:text-accent-foreground",
+            _ => "bg-primary text-primary-foreground hover:bg-primary/90", // primary
+        };
+
+        if let Some(link) = link {
+            rsx! {
+                a {
+                    href: "{link}",
+                    target: "_blank",
+                    class: "inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 {button_class}",
+                    "{text}"
+                }
+            }
+        } else {
+            rsx! {
+                button { class: "inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 {button_class}", "{text}" }
+            }
+        }
+    } else {
+        rsx! {}
+    }
+}
+
 fn render_unknown_block(block: &EditorJsBlock) -> Element {
     if let EditorJsBlock::Unknown { .. } = block {
         rsx! {
@@ -236,30 +375,28 @@ fn render_unknown_block(block: &EditorJsBlock) -> Element {
     }
 }
 
-fn render_editorjs_content(content: &str) -> Element {
-    match serde_json::from_str::<EditorJsData>(content) {
-        Ok(data) => {
-            rsx! {
-                div { class: "prose prose-neutral dark:prose-invert max-w-none",
-                    for block in &data.blocks {
-                        match block {
-                            EditorJsBlock::Header { .. } => render_header_block(block),
-                            EditorJsBlock::Paragraph { .. } => render_paragraph_block(block),
-                            EditorJsBlock::Code { .. } => render_code_block(block),
-                            EditorJsBlock::Quote { .. } => render_quote_block(block),
-                            EditorJsBlock::Alert { .. } => render_alert_block(block),
-                            EditorJsBlock::Checklist { .. } => render_checklist_block(block),
-                            EditorJsBlock::Unknown { .. } => render_unknown_block(block),
-                        }
-                    }
-                }
-            }
-        }
-        Err(_) => {
-            // Fallback to raw content
-            rsx! {
-                div { class: "prose prose-neutral dark:prose-invert max-w-none",
-                    p { class: "text-muted-foreground", "Failed to parse content" }
+fn render_editorjs_content(content: &PostContent) -> Element {
+    rsx! {
+        div { class: "prose prose-neutral dark:prose-invert max-w-none",
+            for block in &content.blocks {
+                match block {
+                    EditorJsBlock::Header { .. } => render_header_block(block),
+                    EditorJsBlock::Paragraph { .. } => render_paragraph_block(block),
+                    EditorJsBlock::List { .. } => render_list_block(block),
+                    EditorJsBlock::Delimiter { .. } => render_delimiter_block(block),
+                    EditorJsBlock::Image { .. } => render_image_block(block),
+                    EditorJsBlock::Embed { .. } => render_embed_block(block),
+                    EditorJsBlock::LinkTool { .. } => render_linktool_block(block),
+                    EditorJsBlock::Attaches { .. } => render_attaches_block(block),
+                    EditorJsBlock::Code { .. } => render_code_block(block),
+                    EditorJsBlock::Raw { .. } => render_raw_block(block),
+                    EditorJsBlock::Table { .. } => render_table_block(block),
+                    EditorJsBlock::Quote { .. } => render_quote_block(block),
+                    EditorJsBlock::Warning { .. } => render_warning_block(block),
+                    EditorJsBlock::Button { .. } => render_button_block(block),
+                    EditorJsBlock::Alert { .. } => render_alert_block(block),
+                    EditorJsBlock::Checklist { .. } => render_checklist_block(block),
+                    EditorJsBlock::Unknown { .. } => render_unknown_block(block),
                 }
             }
         }
