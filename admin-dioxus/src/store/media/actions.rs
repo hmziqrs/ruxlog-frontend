@@ -1,4 +1,4 @@
-use super::{Media, MediaListQuery, MediaState, MediaUploadPayload, UploadStatus};
+use super::{Media, MediaListQuery, MediaState, MediaUploadPayload, MediaUsageDetails, MediaUsageDetailsRequest, UploadStatus};
 use crate::services::http_client;
 use crate::store::{
     list_state_abstraction, remove_state_abstraction, view_state_abstraction, PaginatedList,
@@ -280,11 +280,27 @@ impl MediaState {
         .await;
     }
 
+    pub async fn usage_details(&self, id: i32) {
+        let _ = view_state_abstraction(
+            &self.usage_details,
+            id,
+            http_client::post(
+                "/media/v1/usage/details",
+                &MediaUsageDetailsRequest { media_ids: vec![id] },
+            )
+            .send(),
+            "media usage details",
+            |usage_details: &MediaUsageDetails| usage_details.clone(),
+        )
+        .await;
+    }
+
     pub fn reset(&self) {
         *self.upload.write() = StateFrame::new();
         *self.remove.write() = HashMap::new();
         *self.list.write() = StateFrame::new();
         *self.view.write() = HashMap::new();
+        *self.usage_details.write() = HashMap::new();
         *self.upload_progress.write() = HashMap::new();
         *self.upload_status.write() = HashMap::new();
         *self.blob_to_media.write() = HashMap::new();

@@ -145,11 +145,75 @@ pub struct FileInfo {
     pub size: i64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct MediaUsageDetails {
+    pub media_id: i32,
+    pub media: Media,
+    pub posts: Vec<PostUsage>,
+    pub categories: Vec<CategoryUsage>,
+    pub users: Vec<UserUsage>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct PostUsage {
+    pub post: PostReference,
+    pub field_name: String,
+    pub usage_id: i32,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CategoryUsage {
+    pub category: CategoryReference,
+    pub field_name: String,
+    pub usage_id: i32,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct UserUsage {
+    pub user: UserReference,
+    pub field_name: String,
+    pub usage_id: i32,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct PostReference {
+    pub id: i32,
+    pub title: String,
+    pub slug: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CategoryReference {
+    pub id: i32,
+    pub name: String,
+    pub slug: String,
+    pub cover_id: Option<i32>,
+    pub logo_id: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct UserReference {
+    pub id: i32,
+    pub name: String,
+    pub email: String,
+    pub role: String,
+    pub avatar_id: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct MediaUsageDetailsRequest {
+    pub media_ids: Vec<i32>,
+}
+
 pub struct MediaState {
     pub upload: GlobalSignal<StateFrame<(), MediaUploadPayload>>,
     pub remove: GlobalSignal<HashMap<i32, StateFrame>>,
     pub list: GlobalSignal<StateFrame<PaginatedList<Media>>>,
     pub view: GlobalSignal<HashMap<i32, StateFrame<Media>>>,
+    pub usage_details: GlobalSignal<HashMap<i32, StateFrame<MediaUsageDetails>>>,
     // Upload tracking
     pub upload_progress: GlobalSignal<HashMap<String, f64>>, // blob URL -> progress %
     pub upload_status: GlobalSignal<HashMap<String, UploadStatus>>, // blob URL -> status
@@ -164,6 +228,7 @@ impl MediaState {
             remove: GlobalSignal::new(|| HashMap::new()),
             list: GlobalSignal::new(|| StateFrame::new()),
             view: GlobalSignal::new(|| HashMap::new()),
+            usage_details: GlobalSignal::new(|| HashMap::new()),
             upload_progress: GlobalSignal::new(|| HashMap::new()),
             upload_status: GlobalSignal::new(|| HashMap::new()),
             blob_to_media: GlobalSignal::new(|| HashMap::new()),
