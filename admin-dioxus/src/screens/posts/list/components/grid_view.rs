@@ -128,6 +128,13 @@ pub fn GridView(posts: Vec<Post>, list_loading: bool, has_data: bool) -> Element
                                                     DropdownMenuItem {
                                                         onclick: {
                                                             let nav = nav.clone();
+                                                            move |_| { nav.push(Route::PostsViewScreen { id: post_id }); }
+                                                        },
+                                                        "View"
+                                                    }
+                                                    DropdownMenuItem {
+                                                        onclick: {
+                                                            let nav = nav.clone();
                                                             move |_| { nav.push(Route::PostsEditScreen { id: post_id }); }
                                                         },
                                                         "Edit"
