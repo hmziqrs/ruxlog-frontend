@@ -308,22 +308,34 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
     } else {
         None
     };
-    let any_success =
-        add_state.is_success() || edit_state.as_ref().map_or(false, |s| s.is_success());
+    let any_success = (post_id.is_none() && add_state.is_success())
+        || (post_id.is_some() && edit_state.as_ref().map_or(false, |s| s.is_success()));
+
     let prev_success = use_previous(any_success);
 
-    use_effect(move || {
+    tracing::debug!(
+        "[BlogForm] add_success: {}, any_success: {}, prev_success: {:?}",
+        add_state.is_success(),
+        any_success,
+        prev_success
+    );
+
+    use_effect(use_reactive!(|(any_success,)| {
         if let Some(prev) = prev_success {
             if !prev && any_success {
+                // Success state just transitioned from false to true
+                // Clean up localStorage draft
                 if let Some(window) = web_sys::window() {
                     if let Ok(Some(storage)) = window.local_storage() {
                         let _ = storage.remove_item("blog_form_draft_content");
                     }
                 }
+
+                // Open success dialog
                 success_dialog_open.set(true);
             }
         }
-    });
+    }));
 
     rsx! {
         div {
@@ -795,20 +807,25 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                 on_save: handle_editor_save,
             }
 
-            if any_success {
-                PostSuccessDialog {
-                    is_open: success_dialog_open,
-                    post_id: {
-                        if post_id.is_some() {
-                            post_id
-                        } else if prev_success.unwrap_or(false) {
-                            add_state.data.as_ref().map(|d| d.id)
-                        } else {
-                            None
-                        }
-                    },
-                    is_new_post: post_id.is_none(),
-                }
+            PostSuccessDialog {
+                is_open: success_dialog_open,
+                post_id: {
+                    if post_id.is_some() {
+                        post_id
+                    } else if prev_success.unwrap_or(false) {
+                        add_state.data.as_ref().map(|d| d.id)
+                    } else {
+                        None
+                    }
+                },
+                is_new_post: post_id.is_none(),
+            },
+
+            button {
+                onclick: move |_| {
+                    success_dialog_open.set(true);
+                },
+                "test confim dialog"
             }
         }
     }

@@ -1,15 +1,22 @@
 use crate::router::Route;
 use crate::ui::custom::AppPortal;
 use crate::ui::shadcn::{Button, ButtonVariant};
+use dioxus::logger::tracing;
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::{icons::ld_icons::LdX, Icon};
 
 #[component]
 pub fn PostSuccessDialog(
     is_open: Signal<bool>,
-    post_id: ReadOnlySignal<i32>,
+    post_id: Option<i32>,
     is_new_post: bool,
 ) -> Element {
+    tracing::info!(
+        "Rendering PostSuccessDialog, is_new_post: {:?} {:?}",
+        is_open,
+        post_id
+    );
+
     if !*is_open.read() {
         return rsx! {};
     }
@@ -22,7 +29,7 @@ pub fn PostSuccessDialog(
     };
 
     let handle_edit_post = move |_| {
-        if let Some(id) = *post_id.peek() {
+        if let Some(id) = post_id {
             is_open.set(false);
             nav.push(Route::PostsEditScreen { id });
         }
