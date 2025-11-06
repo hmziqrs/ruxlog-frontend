@@ -1,4 +1,5 @@
 use dioxus::{logger::tracing, prelude::*};
+use futures_util::StreamExt;
 
 use super::form::{use_blog_form, BlogForm};
 // use crate::components::editor::RichTextEditor; // Moved to legacy - using TypeScript editor instead
@@ -113,12 +114,55 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
     let mut form = blog_form_hook.form;
     let mut auto_slug = blog_form_hook.auto_slug;
     let autosave_gen = use_signal(|| 0u64);
+    // Use coroutine to handle editor changes from JavaScript
+    let editor_change_handler = {
+        let form_signal = form;
+        let autosave_signal = autosave_gen;
+        let posts_store = posts;
+        let post_id_value = post_id;
+
+        use_coroutine(move |mut rx: UnboundedReceiver<String>| async move {
+            let mut form_signal = form_signal;
+            let mut autosave_signal = autosave_signal;
+            let posts_store = posts_store;
+            let post_id_value = post_id_value;
+
+            while let Some(detail) = rx.next().await {
+                form_signal.write().update_field("content", detail.clone());
+
+                if let Some(window) = web_sys::window() {
+                    if let Ok(Some(storage)) = window.local_storage() {
+                        let _ = storage.set_item("blog_form_draft_content", &detail);
+                    }
+                }
+
+                if let Some(edit_id) = post_id_value {
+                    let this_tick = autosave_signal() + 1;
+                    autosave_signal.set(this_tick);
+                    let posts_ref = posts_store;
+                    let debounce_signal = autosave_signal;
+                    let content_for_save = detail.clone();
+
+                    spawn(async move {
+                        sleep(Duration::from_millis(1500)).await;
+                        if debounce_signal() != this_tick {
+                            return;
+                        }
+                        posts_ref
+                            .autosave(PostAutosavePayload {
+                                post_id: edit_id,
+                                content: content_for_save,
+                                updated_at: Utc::now(),
+                            })
+                            .await;
+                    });
+                }
+            }
+        })
+    };
+
     let mut listener_handle =
         use_signal(|| None::<(web_sys::EventTarget, Closure<dyn FnMut(web_sys::Event)>)>);
-    let mut form_signal = form;
-    let mut autosave_signal = autosave_gen;
-    let posts_store = posts;
-    let post_id_value = post_id;
 
     use_effect(move || {
         if let Some((event_target, listener)) = listener_handle.write().take() {
@@ -130,37 +174,12 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
 
         if let Some(window) = web_sys::window() {
             let event_target: web_sys::EventTarget = window.clone().into();
+            let handler = editor_change_handler.clone();
             let listener = Closure::wrap(Box::new(move |event: web_sys::Event| {
                 if let Ok(custom_event) = event.dyn_into::<web_sys::CustomEvent>() {
                     if let Some(detail) = custom_event.detail().as_string() {
-                        form_signal.write().update_field("content", detail.clone());
-
-                        if let Some(window) = web_sys::window() {
-                            if let Ok(Some(storage)) = window.local_storage() {
-                                let _ = storage.set_item("blog_form_draft_content", &detail);
-                            }
-                        }
-
-                        if let Some(edit_id) = post_id_value {
-                            let this_tick = autosave_signal() + 1;
-                            autosave_signal.set(this_tick);
-                            let posts_ref = posts_store;
-                            let debounce_signal = autosave_signal;
-                            let content_for_save = detail.clone();
-                            spawn(async move {
-                                sleep(Duration::from_millis(1500)).await;
-                                if debounce_signal() != this_tick {
-                                    return;
-                                }
-                                posts_ref
-                                    .autosave(PostAutosavePayload {
-                                        post_id: edit_id,
-                                        content: content_for_save,
-                                        updated_at: Utc::now(),
-                                    })
-                                    .await;
-                            });
-                        }
+                        // Send to coroutine which runs in Dioxus context
+                        handler.send(detail);
                     }
                 }
             }) as Box<dyn FnMut(_)>);

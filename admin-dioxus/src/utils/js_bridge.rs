@@ -1,3 +1,4 @@
+use dioxus::prelude::*;
 use wasm_bindgen::prelude::*;
 use web_sys::File;
 
@@ -10,6 +11,7 @@ pub async fn editorjs_upload_file(file: File) -> Result<JsValue, JsValue> {
 
     gloo_console::log!("[editorjs_upload_file] Starting upload for:", file.name());
 
+    // Get media store reference (this is fine, it's just a static reference)
     let media_store = use_media();
 
     // Create upload payload
@@ -71,14 +73,18 @@ pub async fn editorjs_upload_file(file: File) -> Result<JsValue, JsValue> {
                             // Cleanup blob tracking
                             media_store.cleanup_blob(&blob_url);
 
-                            return serde_wasm_bindgen::to_value(&response)
-                                .map_err(|e| JsValue::from_str(&format!("Serialization error: {:?}", e)));
+                            return serde_wasm_bindgen::to_value(&response).map_err(|e| {
+                                JsValue::from_str(&format!("Serialization error: {:?}", e))
+                            });
                         }
                         None => {
                             // Check if there was an error
                             if let Some(status) = media_store.get_upload_status(&blob_url) {
                                 if let UploadStatus::Error(err_msg) = status {
-                                    gloo_console::error!("[editorjs_upload_file] Upload failed:", &err_msg);
+                                    gloo_console::error!(
+                                        "[editorjs_upload_file] Upload failed:",
+                                        &err_msg
+                                    );
                                     media_store.cleanup_blob(&blob_url);
                                     return Err(JsValue::from_str(&err_msg));
                                 }

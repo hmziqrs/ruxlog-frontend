@@ -71,6 +71,7 @@ photon-rs = "0.3.2"
 futures-channel = "0.3"
 js-sys = "0.3"
 serde-wasm-bindgen = "0.6.5"
+futures-util = "0.3.31"
 # dioxus-primitives = { git = "https://github.com/DioxusLabs/components", branch = "main" }
 
 [patch.crates-io]

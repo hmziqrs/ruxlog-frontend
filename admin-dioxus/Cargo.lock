@@ -33,6 +33,7 @@ dependencies = [
  "dioxus-time",
  "dotenvy",
  "futures-channel",
+ "futures-util",
  "getrandom 0.3.3",
  "gloo-console",
  "gloo-net",
