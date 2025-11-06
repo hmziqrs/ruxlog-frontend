@@ -1,4 +1,4 @@
-use crate::store::{use_media, Media, MediaUsageDetails, MediaUsageDetailsRequest};
+use crate::store::{use_media, Media};
 use crate::ui::custom::AppPortal;
 use crate::ui::shadcn::{Badge, Button};
 use crate::utils::dates::format_short_date_dt;
@@ -11,30 +11,17 @@ pub fn MediaUsageDialog(
     media: Media,
 ) -> Element {
     let media_state = use_media();
-    let usage_details = use_signal(|| None::<MediaUsageDetails>);
-    let is_loading = use_signal(|| false);
 
     use_effect({
         let is_open = is_open;
         let media_id = media.id;
         let media_state = media_state;
-        let mut usage_details = usage_details;
-        let mut is_loading = is_loading;
         move || {
             if *is_open.read() {
                 let media_id = media_id;
                 let media_state = media_state;
                 spawn(async move {
-                    is_loading.set(true);
-                    let request = MediaUsageDetailsRequest {
-                        media_ids: vec![media_id],
-                    };
-                    if let Ok(details) = media_state.fetch_usage_details(&request).await {
-                        if let Some(detail) = details.first() {
-                            usage_details.set(Some(detail.clone()));
-                        }
-                    }
-                    is_loading.set(false);
+                    media_state.usage_details(media_id).await;
                 });
             }
         }
@@ -48,8 +35,10 @@ pub fn MediaUsageDialog(
         return rsx! {};
     }
 
-    let details = usage_details.read();
-    let is_loading_val = *is_loading.read();
+    let usage_map = media_state.usage_details.read();
+    let usage_frame = usage_map.get(&media.id);
+    let is_loading = usage_frame.map(|f| f.is_loading()).unwrap_or(false);
+    let details = usage_frame.and_then(|f| f.data.clone());
 
     rsx! {
         AppPortal {
@@ -75,11 +64,11 @@ pub fn MediaUsageDialog(
                     }
 
                     div { class: "overflow-y-auto flex-1",
-                        if is_loading_val {
+                        if is_loading {
                             div { class: "p-6 text-center text-muted-foreground",
                                 "Loading usage details..."
                             }
-                        } else if let Some(details) = &*details {
+                        } else if let Some(details) = details {
                             div { class: "p-6 space-y-6",
                                 // Media info
                                 div { class: "bg-muted/30 rounded-lg p-4",
