@@ -31,7 +31,7 @@ pub fn PostSuccessDialog(
     let handle_edit_post = move |_| {
         if let Some(id) = post_id() {
             is_open.set(false);
-            nav.push(Route::PostsEditScreen { id });
+            nav.replace(Route::PostsEditScreen { id });
         }
     };
 
@@ -92,31 +92,45 @@ pub fn PostSuccessDialog(
                             Icon { icon: LdX, width: 20, height: 20 }
                         }
                     }
-                    div { class: "flex flex-col sm:flex-row justify-end gap-2 mt-6",
-                        Button {
-                            variant: ButtonVariant::Outline,
-                            onclick: handle_new_post,
-                            class: "flex-1",
-                            "New Post"
+                    div { class: "mt-6",
+                        div { class: "flex flex-col sm:flex-row justify-end gap-2 mb-3",
+                            Button {
+                                variant: ButtonVariant::Default,
+                                onclick: handle_new_post,
+                                class: "flex-1",
+                                "New Post"
+                            }
                         }
                         if post_id().is_some() {
-                            Button {
-                                variant: ButtonVariant::Outline,
-                                onclick: handle_edit_post,
-                                class: "flex-1",
-                                "Edit Post"
+                            div { class: "flex flex-col sm:flex-row justify-end gap-2",
+                                Button {
+                                    variant: ButtonVariant::Outline,
+                                    onclick: handle_edit_post,
+                                    class: "flex-1 sm:flex-initial sm:min-w-[120px]",
+                                    "Edit Post"
+                                }
+                                Button {
+                                    variant: ButtonVariant::Outline,
+                                    onclick: handle_view_post,
+                                    class: "flex-1 sm:flex-initial sm:min-w-[120px]",
+                                    "View Post"
+                                }
+                                Button {
+                                    variant: ButtonVariant::Ghost,
+                                    onclick: handle_back_to_list,
+                                    class: "flex-1 sm:flex-initial sm:min-w-[120px]",
+                                    "Back to List"
+                                }
                             }
-                            Button {
-                                variant: ButtonVariant::Outline,
-                                onclick: handle_view_post,
-                                class: "flex-1",
-                                "View Post"
+                        } else {
+                            div { class: "flex flex-col sm:flex-row justify-end gap-2",
+                                Button {
+                                    variant: ButtonVariant::Ghost,
+                                    onclick: handle_back_to_list,
+                                    class: "flex-1",
+                                    "Back to List"
+                                }
                             }
-                        }
-                        Button {
-                            onclick: handle_back_to_list,
-                            class: "flex-1",
-                            "Back to List"
                         }
                     }
                 }
