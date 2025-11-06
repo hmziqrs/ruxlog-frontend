@@ -313,8 +313,18 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
 
     let prev_success = use_previous(any_success);
 
+    // Compute post_id reactively for the dialog
+    let dialog_post_id = use_memo(move || {
+        if post_id.is_some() {
+            post_id
+        } else {
+            posts.add.read().data.as_ref().map(|d| d.id)
+        }
+    });
+
     tracing::debug!(
-        "[BlogForm] add_success: {}, any_success: {}, prev_success: {:?}",
+        "[BlogForm] dialog_postid: {:?} add_success: {}, any_success: {}, prev_success: {:?}",
+        *dialog_post_id.read(),
         add_state.is_success(),
         any_success,
         prev_success
@@ -809,23 +819,8 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
 
             PostSuccessDialog {
                 is_open: success_dialog_open,
-                post_id: {
-                    if post_id.is_some() {
-                        post_id
-                    } else if prev_success.unwrap_or(false) {
-                        add_state.data.as_ref().map(|d| d.id)
-                    } else {
-                        None
-                    }
-                },
+                post_id: dialog_post_id,
                 is_new_post: post_id.is_none(),
-            },
-
-            button {
-                onclick: move |_| {
-                    success_dialog_open.set(true);
-                },
-                "test confim dialog"
             }
         }
     }

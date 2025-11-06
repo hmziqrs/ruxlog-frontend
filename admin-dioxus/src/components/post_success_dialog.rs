@@ -8,13 +8,13 @@ use hmziq_dioxus_free_icons::{icons::ld_icons::LdX, Icon};
 #[component]
 pub fn PostSuccessDialog(
     is_open: Signal<bool>,
-    post_id: Option<i32>,
+    post_id: ReadSignal<Option<i32>>,
     is_new_post: bool,
 ) -> Element {
     tracing::info!(
         "Rendering PostSuccessDialog, is_new_post: {:?} {:?}",
         is_open,
-        post_id
+        post_id()
     );
 
     if !*is_open.read() {
@@ -29,14 +29,14 @@ pub fn PostSuccessDialog(
     };
 
     let handle_edit_post = move |_| {
-        if let Some(id) = post_id {
+        if let Some(id) = post_id() {
             is_open.set(false);
             nav.push(Route::PostsEditScreen { id });
         }
     };
 
     let handle_view_post = move |_| {
-        if let Some(_id) = post_id {
+        if let Some(_id) = post_id() {
             is_open.set(false);
             // TODO: Navigate to post view/preview screen when available
             // For now, just close the dialog
@@ -99,7 +99,7 @@ pub fn PostSuccessDialog(
                             class: "flex-1",
                             "New Post"
                         }
-                        if post_id.is_some() {
+                        if post_id().is_some() {
                             Button {
                                 variant: ButtonVariant::Outline,
                                 onclick: handle_edit_post,
