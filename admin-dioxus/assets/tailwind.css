@@ -465,6 +465,9 @@
   .-mx-4 {
     margin-inline: calc(0.25rem * -4);
   }
+  .-mx-6 {
+    margin-inline: calc(0.25rem * -6);
+  }
   .mx-1 {
     margin-inline: calc(0.25rem * 1);
   }
@@ -3646,6 +3649,11 @@
       animation: spin 1.5s linear infinite;
     }
   }
+  .sm\:-mx-8 {
+    @media (width >= 40rem) {
+      margin-inline: calc(0.25rem * -8);
+    }
+  }
   .sm\:flex {
     @media (width >= 40rem) {
       display: flex;
@@ -3699,6 +3707,11 @@
   .sm\:text-left {
     @media (width >= 40rem) {
       text-align: left;
+    }
+  }
+  .md\:-mx-12 {
+    @media (width >= 48rem) {
+      margin-inline: calc(0.25rem * -12);
     }
   }
   .md\:mt-8 {
@@ -3822,6 +3835,11 @@
   .lg\:col-span-2 {
     @media (width >= 64rem) {
       grid-column: span 2 / span 2;
+    }
+  }
+  .lg\:-mx-16 {
+    @media (width >= 64rem) {
+      margin-inline: calc(0.25rem * -16);
     }
   }
   .lg\:grid-cols-2 {
