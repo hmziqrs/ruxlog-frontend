@@ -179,10 +179,11 @@ impl PostState {
                 }
             }
             Err(e) => {
+                let (kind, msg) = crate::store::classify_transport_error(&e);
                 autosave_map
                     .entry(post_id)
                     .or_insert_with(StateFrame::new)
-                    .set_failed(Some(format!("Network error: {}", e)));
+                    .set_transport_error(kind, Some(msg));
             }
         }
     }
@@ -227,10 +228,11 @@ impl PostState {
                 }
             }
             Err(e) => {
+                let (kind, msg) = crate::store::classify_transport_error(&e);
                 schedule_map
                     .entry(post_id)
                     .or_insert_with(StateFrame::new)
-                    .set_failed(Some(format!("Network error: {}", e)));
+                    .set_transport_error(kind, Some(msg));
             }
         }
     }
@@ -282,10 +284,11 @@ impl PostState {
                 }
             }
             Err(e) => {
+                let (kind, msg) = crate::store::classify_transport_error(&e);
                 revisions_map
                     .entry(post_id)
                     .or_insert_with(StateFrame::new)
-                    .set_failed(Some(format!("Network error: {}", e)));
+                    .set_transport_error(kind, Some(msg));
             }
         }
     }
@@ -329,10 +332,11 @@ impl PostState {
                 }
             }
             Err(e) => {
+                let (kind, msg) = crate::store::classify_transport_error(&e);
                 restore_map
                     .entry(key)
                     .or_insert_with(StateFrame::new)
-                    .set_failed(Some(format!("Network error: {}", e)));
+                    .set_transport_error(kind, Some(msg));
             }
         }
     }
@@ -371,10 +375,11 @@ impl PostState {
                 }
             }
             Err(e) => {
+                let (kind, msg) = crate::store::classify_transport_error(&e);
                 track_map
                     .entry(post_id)
                     .or_insert_with(StateFrame::new)
-                    .set_failed(Some(format!("Network error: {}", e)));
+                    .set_transport_error(kind, Some(msg));
             }
         }
     }
@@ -490,10 +495,11 @@ impl PostState {
                 }
             }
             Err(e) => {
+                let (kind, msg) = crate::store::classify_transport_error(&e);
                 add_map
                     .entry(key)
                     .or_insert_with(StateFrame::new)
-                    .set_failed(Some(format!("Network error: {}", e)));
+                    .set_transport_error(kind, Some(msg));
             }
         }
     }
@@ -536,10 +542,11 @@ impl PostState {
                 }
             }
             Err(e) => {
+                let (kind, msg) = crate::store::classify_transport_error(&e);
                 remove_map
                     .entry(key)
                     .or_insert_with(StateFrame::new)
-                    .set_failed(Some(format!("Network error: {}", e)));
+                    .set_transport_error(kind, Some(msg));
             }
         }
     }

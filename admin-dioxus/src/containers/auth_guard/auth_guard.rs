@@ -71,9 +71,10 @@ pub fn AuthGuardContainer() -> Element {
         let error_msg = init_status
             .error_message()
             .unwrap_or("Failed to initialize user");
-        let error_code = init_status.error_code().map(|c| c.to_string());
+        let error_type = init_status.error_type().map(|c| c.to_string());
         let error_status = init_status.error_status();
         let error_details = init_status.error_details().map(|d| d.to_string());
+        let transport_kind = init_status.transport_error_kind();
 
         return rsx! {
             div { class: "min-h-screen flex items-center justify-center bg-background p-4",
@@ -99,12 +100,34 @@ pub fn AuthGuardContainer() -> Element {
                                 view_box: "0 0 24 24",
                                 path { d: "M12 9v4m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" }
                             }
-                            AlertTitle { "Authentication Error" }
+                        AlertTitle {
+                            if let Some(kind) = transport_kind {
+                                match kind {
+                                    crate::store::TransportErrorKind::Network | crate::store::TransportErrorKind::Timeout => {
+                                        rsx!("Connection Error")
+                                    }
+                                    _ => rsx!("Authentication Error"),
+                                }
+                            } else {
+                                rsx!("Authentication Error")
+                            }
+                        }
                             AlertDescription {
                                 class: "mt-2 space-y-1",
                                 p { class: "text-sm leading-6", {error_msg} }
-                                if let Some(code) = error_code {
-                                    p { class: "text-xs text-muted-foreground", "Code: ", {code} }
+                                if let Some(kind) = transport_kind {
+                                    match kind {
+                                        crate::store::TransportErrorKind::Network => {
+                                            p { class: "text-xs text-muted-foreground", "The API server is unreachable. Check the backend is running and CORS/proxy settings." }
+                                        }
+                                        crate::store::TransportErrorKind::Timeout => {
+                                            p { class: "text-xs text-muted-foreground", "The request timed out. Please try again." }
+                                        }
+                                        _ => {}
+                                    }
+                                }
+                                if let Some(t) = error_type {
+                                    p { class: "text-xs text-muted-foreground", "Type: ", {t} }
                                 }
                                 if let Some(status) = error_status {
                                     p { class: "text-xs text-muted-foreground", "Status: ", {status.to_string()} }

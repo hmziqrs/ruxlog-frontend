@@ -52,7 +52,10 @@ impl AuthState {
                 }
             }
             Err(e) => {
-                self.logout_status.write().set_failed(Some(e.to_string()));
+                let (kind, msg) = crate::store::classify_transport_error(&e);
+                self.logout_status
+                    .write()
+                    .set_transport_error(kind, Some(msg));
                 *self.user.write() = None;
             }
         }
@@ -92,9 +95,10 @@ impl AuthState {
                 }
             }
             Err(e) => {
+                let (kind, msg) = crate::store::classify_transport_error(&e);
                 self.init_status
                     .write()
-                    .set_failed(Some(format!("Network error: {}", e)));
+                    .set_transport_error(kind, Some(msg));
             }
         }
     }
@@ -129,9 +133,10 @@ impl AuthState {
                 }
             }
             Err(e) => {
+                let (kind, msg) = crate::store::classify_transport_error(&e);
                 self.login_status
                     .write()
-                    .set_failed(Some(format!("Network error: {}", e)));
+                    .set_transport_error(kind, Some(msg));
             }
         }
     }

@@ -14,14 +14,16 @@ pub enum StateFrameStatus {
     Failed,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct StateFrame<D: Clone = (), M: Clone = ()> {
     pub status: StateFrameStatus,
     pub message: Option<String>,
     pub data: Option<D>,
     pub meta: Option<M>,
     // Typed server error payload captured from non-2xx responses
-    pub error: Option<ApiErrorInfo>,
+    pub error: Option<ApiError>,
+    // Transport-layer failures (offline, timeout, etc.)
+    pub transport_error: Option<TransportErrorInfo>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -71,6 +73,7 @@ impl<T: Clone, Q: Clone> Default for StateFrame<T, Q> {
             message: None,
             meta: None,
             error: None,
+            transport_error: None,
         }
     }
 }
@@ -87,6 +90,7 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
             message,
             meta: None,
             error: None,
+            transport_error: None,
         }
     }
 
@@ -97,6 +101,7 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
             message: None,
             meta: None,
             error: None,
+            transport_error: None,
         }
     }
 
@@ -120,6 +125,7 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
         self.status = StateFrameStatus::Loading;
         self.message = message;
         self.error = None;
+        self.transport_error = None;
     }
 
     pub fn set_loading_meta(&mut self, meta: Option<Q>, message: Option<String>) {
@@ -127,6 +133,7 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
         self.meta = meta;
         self.message = message;
         self.error = None;
+        self.transport_error = None;
     }
 
     pub fn set_success(&mut self, data: Option<T>, message: Option<String>) {
@@ -134,6 +141,7 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
         self.data = data;
         self.message = message;
         self.error = None;
+        self.transport_error = None;
     }
 
     pub fn set_failed(&mut self, message: Option<String>) {
@@ -141,6 +149,7 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
         self.message = message;
         // Clear any previous typed server error; callers should use set_api_error
         self.error = None;
+        self.transport_error = None;
     }
 
     pub fn set_meta(&mut self, meta: Option<Q>) {
@@ -149,40 +158,44 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
 
     pub async fn set_api_error(&mut self, response: &HttpResponse) {
         match response.json::<ApiError>().await {
-            Ok(api_error) => {
+            Ok(mut api_error) => {
                 let msg = api_error.message.clone().or_else(|| {
-                    // Fallback to a generic message when server omits message in production
                     Some(format!(
                         "Request failed{} (status {})",
                         api_error
-                            .code
+                            .r#type
                             .as_ref()
-                            .map(|c| format!(" with code {}", c))
+                            .map(|c| format!(" with type {}", c))
                             .unwrap_or_default(),
                         api_error.status
                     ))
                 });
 
-                // Project server payload into an Eq-friendly struct for state
-                let info = ApiErrorInfo {
-                    code: api_error.code,
-                    message: msg.clone(),
-                    status: api_error.status,
-                    details: api_error.details,
-                    retry_after: api_error.retry_after,
-                    request_id: api_error.request_id,
-                };
+                // Ensure message populated for UI convenience
+                if api_error.message.is_none() {
+                    api_error.message = msg.clone();
+                }
 
                 self.status = StateFrameStatus::Failed;
                 self.message = msg;
-                self.error = Some(info);
+                self.error = Some(api_error);
+                self.transport_error = None;
             }
             Err(_) => {
                 self.status = StateFrameStatus::Failed;
                 self.message = Some("API error".to_string());
                 self.error = None;
+                self.transport_error = None;
             }
         }
+    }
+
+    /// Mark this frame as a transport-layer failure (network/offline/etc.)
+    pub fn set_transport_error(&mut self, kind: TransportErrorKind, message: Option<String>) {
+        self.status = StateFrameStatus::Failed;
+        self.message = message.clone();
+        self.transport_error = Some(TransportErrorInfo { kind, message });
+        self.error = None;
     }
 
     /// Convenience: unified error message if any
@@ -196,7 +209,12 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
     }
 
     pub fn error_code(&self) -> Option<&str> {
-        self.error.as_ref().and_then(|e| e.code.as_deref())
+        self.error.as_ref().and_then(|e| e.r#type.as_deref())
+    }
+
+    /// Preferred accessor naming for API error type
+    pub fn error_type(&self) -> Option<&str> {
+        self.error.as_ref().and_then(|e| e.r#type.as_deref())
     }
 
     pub fn error_status(&self) -> Option<u16> {
@@ -206,14 +224,21 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
     pub fn error_details(&self) -> Option<&str> {
         self.error.as_ref().and_then(|e| e.details.as_deref())
     }
+
+    pub fn is_offline(&self) -> bool {
+        matches!(self.transport_error.as_ref().map(|t| t.kind), Some(TransportErrorKind::Offline))
+    }
+
+    pub fn transport_error_kind(&self) -> Option<TransportErrorKind> {
+        self.transport_error.as_ref().map(|t| t.kind)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApiError {
-    /// Error type code string coming from server under the JSON key "type" (e.g., "AUTH_001")
-    #[serde(rename = "type")]
-    pub code: Option<String>,
+    /// Error type string coming from server under the JSON key "type" (e.g., "AUTH_001")
+    pub r#type: Option<String>,
     /// Human-readable message (may be omitted in production builds of the server)
     pub message: Option<String>,
     /// HTTP status code echoed by the backend
@@ -232,15 +257,76 @@ pub struct ApiError {
     pub request_id: Option<String>,
 }
 
-/// Reduced, Eq-friendly version of ApiError that we keep in UI state
+// ApiErrorInfo removed; we keep full ApiError in state
+
+/// Transport-layer error information
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TransportErrorKind {
+    Offline,
+    Network,
+    Timeout,
+    Canceled,
+    Unknown,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ApiErrorInfo {
-    pub code: Option<String>,
+pub struct TransportErrorInfo {
+    pub kind: TransportErrorKind,
     pub message: Option<String>,
-    pub status: u16,
-    pub details: Option<String>,
-    pub retry_after: Option<u64>,
-    pub request_id: Option<String>,
+}
+
+/// Best-effort offline detection (wasm only). Returns false on non-wasm targets.
+pub fn is_offline() -> bool {
+    #[cfg(target_arch = "wasm32")]
+    {
+        web_sys::window()
+            .map(|w| w.navigator())
+            .map(|n| !n.on_line())
+            .unwrap_or(false)
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        false
+    }
+}
+
+/// Heuristically classify a transport error and produce a user-facing message.
+pub fn classify_transport_error(e: &HttpError) -> (TransportErrorKind, String) {
+    if is_offline() {
+        return (
+            TransportErrorKind::Offline,
+            "You appear to be offline".to_string(),
+        );
+    }
+
+    let s = format!("{}", e).to_lowercase();
+    if s.contains("failed to fetch") || s.contains("networkerror") || s.contains("network error")
+    {
+        return (
+            TransportErrorKind::Network,
+            "API server is unreachable".to_string(),
+        );
+    }
+    if s.contains("cors") || s.contains("blocked by cors") {
+        return (
+            TransportErrorKind::Network,
+            "Request blocked by CORS configuration".to_string(),
+        );
+    }
+    if s.contains("timeout") || s.contains("timed out") {
+        return (
+            TransportErrorKind::Timeout,
+            "Request timed out".to_string(),
+        );
+    }
+    if s.contains("dns") || s.contains("resolve") || s.contains("name not resolved") {
+        return (
+            TransportErrorKind::Network,
+            "Could not resolve API host".to_string(),
+        );
+    }
+
+    (TransportErrorKind::Network, format!("Network error: {}", e))
 }
 
 /// Send a request, parse JSON into `T`, and update the provided `StateFrame<T>`.
@@ -283,9 +369,8 @@ where
             }
         }
         Err(e) => {
-            state
-                .write()
-                .set_failed(Some(format!("Network error: {}", e)));
+            let (kind, msg) = classify_transport_error(&e);
+            state.write().set_transport_error(kind, Some(msg));
             None
         }
     }
@@ -334,9 +419,8 @@ where
             }
         }
         Err(e) => {
-            state
-                .write()
-                .set_failed(Some(format!("Network error: {}", e)));
+            let (kind, msg) = classify_transport_error(&e);
+            state.write().set_transport_error(kind, Some(msg));
             None
         }
     }
@@ -396,10 +480,11 @@ where
             }
         }
         Err(e) => {
+            let (kind, msg) = classify_transport_error(&e);
             let mut map = state.write();
             map.entry(id)
                 .or_insert_with(StateFrame::new)
-                .set_failed(Some(format!("Network error: {}", e)));
+                .set_transport_error(kind, Some(msg));
             None
         }
     }
@@ -488,10 +573,11 @@ where
             }
         }
         Err(e) => {
+            let (kind, msg) = classify_transport_error(&e);
             let mut map = state.write();
             map.entry(id)
                 .or_insert_with(StateFrame::new)
-                .set_failed(Some(format!("Network error: {}", e)));
+                .set_transport_error(kind, Some(msg));
             None
         }
     }
@@ -567,10 +653,11 @@ where
             }
         }
         Err(e) => {
+            let (kind, msg) = classify_transport_error(&e);
             let mut map = state.write();
             map.entry(id)
                 .or_insert_with(StateFrame::new)
-                .set_failed(Some(format!("Network error: {}", e)));
+                .set_transport_error(kind, Some(msg));
             false
         }
     }
@@ -642,10 +729,11 @@ where
             }
         }
         Err(e) => {
+            let (kind, msg) = classify_transport_error(&e);
             let mut map = state.write();
             map.entry(id)
                 .or_insert_with(StateFrame::new)
-                .set_failed(Some(format!("Network error: {}", e)));
+                .set_transport_error(kind, Some(msg));
             false
         }
     }
