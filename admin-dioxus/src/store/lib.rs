@@ -307,7 +307,7 @@ where
             if (200..300).contains(&response.status()) {
                 match response.json::<Parsed>().await {
                     Ok(parsed) => {
-                        let (data, message) = on_success(&parsed);
+                        let (data, _message) = on_success(&parsed);
                         state.write().set_success(data);
                         Some(parsed)
                     }

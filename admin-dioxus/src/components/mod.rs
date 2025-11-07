@@ -41,6 +41,9 @@ pub use list_empty_state::*;
 mod image_upload;
 pub use image_upload::*;
 
+mod error_details;
+pub use error_details::*;
+
 mod portal_v2;
 pub use portal_v2::*;
 

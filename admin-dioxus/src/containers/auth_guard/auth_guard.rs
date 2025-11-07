@@ -1,10 +1,10 @@
 use dioxus::prelude::*;
 
 use crate::{
-    components::LoadingOverlay,
+    components::{ErrorDetails, ErrorDetailsVariant, LoadingOverlay},
     router::{Route, OPEN_ROUTES},
-    store::use_auth,
-    ui::shadcn::{Alert, AlertDescription, AlertTitle, AlertVariant, Button, ButtonVariant},
+    store::{use_auth, AppError},
+    ui::shadcn::{Button, ButtonVariant},
 };
 
 #[component]
@@ -71,24 +71,18 @@ pub fn AuthGuardContainer() -> Element {
         let error_msg = init_status
             .error_message()
             .unwrap_or_else(|| "Failed to initialize user".to_string());
-        let error_type = init_status.error_type().map(|c| c.to_string());
-        let error_status = init_status.error_status();
-        let error_details = init_status.error_details().map(|d| d.to_string());
         let transport_kind = init_status.transport_error_kind();
         let alert_title = match transport_kind {
             Some(crate::store::TransportErrorKind::Network)
             | Some(crate::store::TransportErrorKind::Timeout) => "Connection Error",
             _ => "Authentication Error",
-        };
-        let transport_hint = match transport_kind {
-            Some(crate::store::TransportErrorKind::Network) => Some(
-                "The API server is unreachable. Check the backend is running and CORS or proxy settings.",
-            ),
-            Some(crate::store::TransportErrorKind::Timeout) => {
-                Some("The request timed out. Please try again.")
-            }
-            _ => None,
-        };
+        }
+        .to_string();
+        let error = init_status.error.clone().or_else(|| {
+            Some(AppError::Other {
+                message: error_msg.clone(),
+            })
+        });
 
         return rsx! {
             div { class: "min-h-screen flex items-center justify-center bg-background p-4",
@@ -102,35 +96,11 @@ pub fn AuthGuardContainer() -> Element {
                                 alt: "Logo",
                             }
                         }
-                        Alert {
-                            variant: AlertVariant::Destructive,
-                            class: "border-red-200 dark:border-red-900/40 bg-transparent [&>svg]:text-current",
-                            svg {
-                                class: "h-5 w-5",
-                                fill: "none",
-                                stroke_width: "2",
-                                stroke_linecap: "round",
-                                stroke_linejoin: "round",
-                                view_box: "0 0 24 24",
-                                path { d: "M12 9v4m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" }
-                            }
-                            AlertTitle { "{alert_title}" }
-                            AlertDescription {
-                                class: "mt-2 space-y-1",
-                                p { class: "text-sm leading-6", {error_msg} }
-                                if let Some(hint) = transport_hint {
-                                    p { class: "text-xs text-muted-foreground", {hint} }
-                                }
-                                if let Some(t) = error_type {
-                                    p { class: "text-xs text-muted-foreground", "Type: ", {t} }
-                                }
-                                if let Some(status) = error_status {
-                                    p { class: "text-xs text-muted-foreground", "Status: ", {status.to_string()} }
-                                }
-                                if let Some(details) = error_details {
-                                    p { class: "text-xs text-muted-foreground break-words", {details} }
-                                }
-                            }
+                        ErrorDetails {
+                            error,
+                            variant: ErrorDetailsVariant::Collapsed,
+                            title: Some(alert_title),
+                            class: Some("w-full".to_string()),
                         }
                         div { class: "flex justify-center pt-2",
                             Button {

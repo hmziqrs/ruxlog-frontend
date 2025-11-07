@@ -95,6 +95,34 @@ pub enum TransportErrorKind {
     Unknown,
 }
 
+impl TransportErrorKind {
+    /// Human-readable label used by UI surfaces.
+    pub fn label(&self) -> &'static str {
+        match self {
+            TransportErrorKind::Offline => "Offline",
+            TransportErrorKind::Network => "Network",
+            TransportErrorKind::Timeout => "Timeout",
+            TransportErrorKind::Canceled => "Canceled",
+            TransportErrorKind::Unknown => "Unknown",
+        }
+    }
+
+    /// Suggested next-step hint for this error kind.
+    pub fn hint(&self) -> Option<&'static str> {
+        match self {
+            TransportErrorKind::Offline => Some("Reconnect to the internet and try again."),
+            TransportErrorKind::Network => {
+                Some("Ensure the API server is running and proxy/CORS settings allow access.")
+            }
+            TransportErrorKind::Timeout => {
+                Some("The request timed out. Retry or inspect backend latency.")
+            }
+            TransportErrorKind::Canceled => Some("The browser canceled this request."),
+            TransportErrorKind::Unknown => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TransportErrorInfo {
     pub kind: TransportErrorKind,
