@@ -1,8 +1,10 @@
 use dioxus::prelude::*;
 
 use crate::{
+    components::LoadingOverlay,
     router::{Route, OPEN_ROUTES},
     store::use_auth,
+    ui::shadcn::{Alert, AlertDescription, AlertTitle, AlertVariant, Button, ButtonVariant},
 };
 
 #[component]
@@ -66,14 +68,76 @@ pub fn AuthGuardContainer() -> Element {
 
     let init_status = auth_store.init_status.read();
     if init_status.is_failed() {
+        let error_msg = init_status
+            .error_message()
+            .unwrap_or("Failed to initialize user");
+        let error_code = init_status.error_code().map(|c| c.to_string());
+        let error_status = init_status.error_status();
+        let error_details = init_status.error_details().map(|d| d.to_string());
+
         return rsx! {
-            div { "Error: Failed to initialize user" }
+            div { class: "min-h-screen flex items-center justify-center bg-background p-4",
+                div { class: "max-w-md w-full",
+                    div { class: "rounded-xl border border-border/60 bg-background p-8 shadow-lg space-y-6",
+                        // Logo
+                        div { class: "flex justify-center mb-2",
+                            img {
+                                class: "h-24 w-24",
+                                src: asset!("/assets/logo.png"),
+                                alt: "Logo",
+                            }
+                        }
+                        Alert {
+                            variant: AlertVariant::Destructive,
+                            class: "border-red-200 dark:border-red-900/40 bg-transparent [&>svg]:text-current",
+                            svg {
+                                class: "h-5 w-5",
+                                fill: "none",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                view_box: "0 0 24 24",
+                                path { d: "M12 9v4m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" }
+                            }
+                            AlertTitle { "Authentication Error" }
+                            AlertDescription {
+                                class: "mt-2 space-y-1",
+                                p { class: "text-sm leading-6", {error_msg} }
+                                if let Some(code) = error_code {
+                                    p { class: "text-xs text-muted-foreground", "Code: ", {code} }
+                                }
+                                if let Some(status) = error_status {
+                                    p { class: "text-xs text-muted-foreground", "Status: ", {status.to_string()} }
+                                }
+                                if let Some(details) = error_details {
+                                    p { class: "text-xs text-muted-foreground break-words", {details} }
+                                }
+                            }
+                        }
+                        div { class: "flex justify-center pt-2",
+                            Button {
+                                variant: ButtonVariant::Outline,
+                                onclick: move |_| {
+                                    spawn(async move {
+                                        auth_store.init().await;
+                                    });
+                                },
+                                "Try Again"
+                            }
+                        }
+                    }
+                }
+            }
         };
     }
 
     if *render_blocked.read() {
         return rsx! {
-            div { "Loading..." }
+            div { class: "min-h-screen bg-background",
+                LoadingOverlay {
+                    visible: render_blocked
+                }
+            }
         };
     }
 
