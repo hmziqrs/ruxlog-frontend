@@ -20,6 +20,8 @@ pub struct StateFrame<D: Clone = (), M: Clone = ()> {
     pub message: Option<String>,
     pub data: Option<D>,
     pub meta: Option<M>,
+    // Typed server error payload captured from non-2xx responses
+    pub error: Option<ApiErrorInfo>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -68,6 +70,7 @@ impl<T: Clone, Q: Clone> Default for StateFrame<T, Q> {
             data: None,
             message: None,
             meta: None,
+            error: None,
         }
     }
 }
@@ -83,6 +86,7 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
             data: None,
             message,
             meta: None,
+            error: None,
         }
     }
 
@@ -92,6 +96,7 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
             data,
             message: None,
             meta: None,
+            error: None,
         }
     }
 
@@ -114,23 +119,28 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
     pub fn set_loading(&mut self, message: Option<String>) {
         self.status = StateFrameStatus::Loading;
         self.message = message;
+        self.error = None;
     }
 
     pub fn set_loading_meta(&mut self, meta: Option<Q>, message: Option<String>) {
         self.status = StateFrameStatus::Loading;
         self.meta = meta;
         self.message = message;
+        self.error = None;
     }
 
     pub fn set_success(&mut self, data: Option<T>, message: Option<String>) {
         self.status = StateFrameStatus::Success;
         self.data = data;
         self.message = message;
+        self.error = None;
     }
 
     pub fn set_failed(&mut self, message: Option<String>) {
         self.status = StateFrameStatus::Failed;
         self.message = message;
+        // Clear any previous typed server error; callers should use set_api_error
+        self.error = None;
     }
 
     pub fn set_meta(&mut self, meta: Option<Q>) {
@@ -152,12 +162,49 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
                         api_error.status
                     ))
                 });
-                self.set_failed(msg);
+
+                // Project server payload into an Eq-friendly struct for state
+                let info = ApiErrorInfo {
+                    code: api_error.code,
+                    message: msg.clone(),
+                    status: api_error.status,
+                    details: api_error.details,
+                    retry_after: api_error.retry_after,
+                    request_id: api_error.request_id,
+                };
+
+                self.status = StateFrameStatus::Failed;
+                self.message = msg;
+                self.error = Some(info);
             }
             Err(_) => {
-                self.set_failed(Some("API error".to_string()));
+                self.status = StateFrameStatus::Failed;
+                self.message = Some("API error".to_string());
+                self.error = None;
             }
         }
+    }
+
+    /// Convenience: unified error message if any
+    pub fn error_message(&self) -> Option<&str> {
+        if let Some(msg) = self.message.as_deref() {
+            if self.is_failed() {
+                return Some(msg);
+            }
+        }
+        self.error.as_ref().and_then(|e| e.message.as_deref())
+    }
+
+    pub fn error_code(&self) -> Option<&str> {
+        self.error.as_ref().and_then(|e| e.code.as_deref())
+    }
+
+    pub fn error_status(&self) -> Option<u16> {
+        self.error.as_ref().map(|e| e.status)
+    }
+
+    pub fn error_details(&self) -> Option<&str> {
+        self.error.as_ref().and_then(|e| e.details.as_deref())
     }
 }
 
@@ -182,6 +229,17 @@ pub struct ApiError {
     pub retry_after: Option<u64>,
     /// Optional request id for tracing/correlation
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub request_id: Option<String>,
+}
+
+/// Reduced, Eq-friendly version of ApiError that we keep in UI state
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ApiErrorInfo {
+    pub code: Option<String>,
+    pub message: Option<String>,
+    pub status: u16,
+    pub details: Option<String>,
+    pub retry_after: Option<u64>,
     pub request_id: Option<String>,
 }
 

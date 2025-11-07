@@ -85,6 +85,7 @@ impl AuthState {
                         }
                     }
                 } else if response.status() == 401 {
+                    // Unauthorized, no user logged in
                     self.init_status.write().set_success(None, None);
                 } else {
                     self.init_status.write().set_api_error(&response).await;
