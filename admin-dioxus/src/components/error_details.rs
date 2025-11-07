@@ -75,7 +75,7 @@ fn ErrorDetailsMinimum(props: ErrorDetailsVariantProps) -> Element {
 
     rsx! {
         Dialog {
-            div { class: format!("inline-flex items-center gap-2 rounded-xl border border-border/70 bg-transparent px-3 py-2 {}", class),
+            div { class: format!("inline-flex items-center gap-2 rounded-lg border border-border/70 bg-transparent px-3 py-2 {}", class),
                 span { class: "flex-1 text-sm text-foreground", {message.clone()} }
                 DialogTrigger {
                     Button {
@@ -111,7 +111,7 @@ fn ErrorDetailsCollapsed(props: ErrorDetailsVariantProps) -> Element {
 
     rsx! {
         div { class: format!("space-y-4 {}", class),
-            div { class: "flex w-full items-start gap-3 rounded-xl border border-border/70 bg-transparent p-4",
+            div { class: "flex w-full items-start gap-3 rounded-lg border border-border/70 bg-transparent p-4",
                 div { class: "flex-1 space-y-1",
                     p { class: "text-sm font-semibold text-foreground", {title.clone()} }
                     p { class: "text-sm text-muted-foreground", {message.clone()} }
@@ -183,8 +183,7 @@ fn ErrorDetailsCard(props: ErrorDetailsCardProps) -> Element {
     let message = props.error.message();
     let rows = collect_detail_rows(&props.error);
     let icon_is_alert = !matches!(props.error, AppError::Other { .. });
-    let mut container_classes =
-        vec!["w-full rounded-2xl border border-border/70 bg-transparent".to_string()];
+    let mut container_classes = vec!["w-full rounded-lg bg-transparent".to_string()];
     if let Some(custom) = props.class.clone() {
         container_classes.push(custom);
     }
