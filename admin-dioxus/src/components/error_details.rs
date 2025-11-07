@@ -75,7 +75,7 @@ fn ErrorDetailsMinimum(props: ErrorDetailsVariantProps) -> Element {
 
     rsx! {
         Dialog {
-            div { class: format!("inline-flex items-center gap-2 {}", class),
+            div { class: format!("inline-flex items-center gap-2 rounded-xl border border-border/70 bg-transparent px-3 py-2 {}", class),
                 span { class: "text-sm text-foreground", {message.clone()} }
                 DialogTrigger {
                     Button {
