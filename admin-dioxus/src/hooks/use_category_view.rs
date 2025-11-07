@@ -36,7 +36,7 @@ pub fn use_category_view(id: i32) -> CategoryViewState {
 
     let is_loading = frame.map(|f| f.is_loading()).unwrap_or(true);
     let is_failed = frame.map(|f| f.is_failed()).unwrap_or(false);
-    let message = frame.and_then(|f| f.message.clone());
+    let message = frame.and_then(|f| f.error_message());
     let category = frame.and_then(|f| f.data.clone());
 
     CategoryViewState {

@@ -43,7 +43,7 @@ pub fn use_state_frame_toast<D: Clone + 'static, M: Clone + 'static>(
     let loading = state.is_loading();
     let success = state.is_success();
     let failed = state.is_failed();
-    let message = state.message.clone();
+    let error_message = state.error_message();
 
     // Track previous loading to detect edges
     let prev_loading = crate::hooks::use_previous(loading);
@@ -75,14 +75,13 @@ pub fn use_state_frame_toast<D: Clone + 'static, M: Clone + 'static>(
                         let title = cfg
                             .success_title
                             .clone()
-                            .or_else(|| message.clone())
                             .unwrap_or_else(|| "Operation completed".to_string());
                         sonner.update_success(id, title, cfg.success_options.clone());
                     } else if failed {
                         let title = cfg
                             .error_title
                             .clone()
-                            .or_else(|| message.clone())
+                            .or_else(|| error_message.clone())
                             .unwrap_or_else(|| "Operation failed".to_string());
                         sonner.update_error(id, title, cfg.error_options.clone());
                     }
@@ -110,7 +109,7 @@ pub fn use_state_frame_map_toast<K, D, M>(
     let loading = frame.is_loading();
     let success = frame.is_success();
     let failed = frame.is_failed();
-    let message = frame.message.clone();
+    let error_message = frame.error_message();
 
     let prev_loading = crate::hooks::use_previous(loading);
 
@@ -139,14 +138,13 @@ pub fn use_state_frame_map_toast<K, D, M>(
                         let title = cfg
                             .success_title
                             .clone()
-                            .or_else(|| message.clone())
                             .unwrap_or_else(|| "Operation completed".to_string());
                         sonner.update_success(id, title, cfg.success_options.clone());
                     } else if failed {
                         let title = cfg
                             .error_title
                             .clone()
-                            .or_else(|| message.clone())
+                            .or_else(|| error_message.clone())
                             .unwrap_or_else(|| "Operation failed".to_string());
                         sonner.update_error(id, title, cfg.error_options.clone());
                     }

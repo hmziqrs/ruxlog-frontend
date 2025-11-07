@@ -384,7 +384,7 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                 };
 
                 let is_failed = add_state.is_failed() || edit_state.as_ref().map_or(false, |s| s.is_failed());
-                let error_message = add_state.message.clone().or_else(|| edit_state.as_ref().and_then(|s| s.message.clone()));
+                let error_message = add_state.error_message().or_else(|| edit_state.as_ref().and_then(|s| s.error_message()));
 
                 if is_failed {
                     rsx! {

@@ -17,13 +17,10 @@ pub enum StateFrameStatus {
 #[derive(Debug, Clone, PartialEq)]
 pub struct StateFrame<D: Clone = (), M: Clone = ()> {
     pub status: StateFrameStatus,
-    pub message: Option<String>,
     pub data: Option<D>,
     pub meta: Option<M>,
-    // Typed server error payload captured from non-2xx responses
-    pub error: Option<ApiError>,
-    // Transport-layer failures (offline, timeout, etc.)
-    pub transport_error: Option<TransportErrorInfo>,
+    // Unified typed error for this frame
+    pub failure: Option<AppError>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -70,10 +67,8 @@ impl<T: Clone, Q: Clone> Default for StateFrame<T, Q> {
         Self {
             status: StateFrameStatus::Init,
             data: None,
-            message: None,
             meta: None,
-            error: None,
-            transport_error: None,
+            failure: None,
         }
     }
 }
@@ -87,10 +82,8 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
         Self {
             status: StateFrameStatus::Loading,
             data: None,
-            message,
             meta: None,
-            error: None,
-            transport_error: None,
+            failure: None,
         }
     }
 
@@ -98,10 +91,8 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
         Self {
             status: StateFrameStatus::Success,
             data,
-            message: None,
             meta: None,
-            error: None,
-            transport_error: None,
+            failure: None,
         }
     }
 
@@ -123,33 +114,24 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
 
     pub fn set_loading(&mut self, message: Option<String>) {
         self.status = StateFrameStatus::Loading;
-        self.message = message;
-        self.error = None;
-        self.transport_error = None;
+        self.failure = None;
     }
 
     pub fn set_loading_meta(&mut self, meta: Option<Q>, message: Option<String>) {
         self.status = StateFrameStatus::Loading;
         self.meta = meta;
-        self.message = message;
-        self.error = None;
-        self.transport_error = None;
+        self.failure = None;
     }
 
     pub fn set_success(&mut self, data: Option<T>, message: Option<String>) {
         self.status = StateFrameStatus::Success;
         self.data = data;
-        self.message = message;
-        self.error = None;
-        self.transport_error = None;
+        self.failure = None;
     }
 
     pub fn set_failed(&mut self, message: Option<String>) {
         self.status = StateFrameStatus::Failed;
-        self.message = message;
-        // Clear any previous typed server error; callers should use set_api_error
-        self.error = None;
-        self.transport_error = None;
+        self.failure = message.map(|m| AppError::Other { message: m });
     }
 
     pub fn set_meta(&mut self, meta: Option<Q>) {
@@ -162,11 +144,7 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
                 let msg = api_error.message.clone().or_else(|| {
                     Some(format!(
                         "Request failed{} (status {})",
-                        api_error
-                            .r#type
-                            .as_ref()
-                            .map(|c| format!(" with type {}", c))
-                            .unwrap_or_default(),
+                        api_error.r#type.as_deref().unwrap_or_default(),
                         api_error.status
                     ))
                 });
@@ -177,15 +155,11 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
                 }
 
                 self.status = StateFrameStatus::Failed;
-                self.message = msg;
-                self.error = Some(api_error);
-                self.transport_error = None;
+                self.failure = Some(AppError::Api(api_error));
             }
             Err(_) => {
                 self.status = StateFrameStatus::Failed;
-                self.message = Some("API error".to_string());
-                self.error = None;
-                self.transport_error = None;
+                self.failure = Some(AppError::Other { message: "API error".to_string() });
             }
         }
     }
@@ -193,23 +167,27 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
     /// Mark this frame as a transport-layer failure (network/offline/etc.)
     pub fn set_transport_error(&mut self, kind: TransportErrorKind, message: Option<String>) {
         self.status = StateFrameStatus::Failed;
-        self.message = message.clone();
-        self.transport_error = Some(TransportErrorInfo { kind, message });
-        self.error = None;
+        self.failure = Some(AppError::Transport(TransportErrorInfo { kind, message }));
+    }
+
+    /// Mark this frame as a decode/serialization error for a successful HTTP response
+    pub fn set_decode_error(&mut self, label: impl Into<String>, err: impl Into<String>, raw: Option<String>) {
+        self.status = StateFrameStatus::Failed;
+        let label_s = label.into();
+        let err_s = err.into();
+        self.failure = Some(AppError::Decode { label: label_s, error: err_s, raw });
     }
 
     /// Convenience: unified error message if any
-    pub fn error_message(&self) -> Option<&str> {
-        if let Some(msg) = self.message.as_deref() {
-            if self.is_failed() {
-                return Some(msg);
-            }
-        }
-        self.error.as_ref().and_then(|e| e.message.as_deref())
+    pub fn error_message(&self) -> Option<String> {
+        self.failure.as_ref().map(|f| f.message())
     }
 
     pub fn error_code(&self) -> Option<&str> {
-        self.error.as_ref().and_then(|e| e.r#type.as_deref())
+        match &self.failure {
+            Some(AppError::Api(api)) => api.r#type.as_deref(),
+            _ => None,
+        }
     }
 
     /// Preferred accessor naming for API error type
@@ -218,19 +196,28 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
     }
 
     pub fn error_status(&self) -> Option<u16> {
-        self.error.as_ref().map(|e| e.status)
+        match &self.failure {
+            Some(AppError::Api(api)) => Some(api.status),
+            _ => None,
+        }
     }
 
     pub fn error_details(&self) -> Option<&str> {
-        self.error.as_ref().and_then(|e| e.details.as_deref())
+        match &self.failure {
+            Some(AppError::Api(api)) => api.details.as_deref(),
+            _ => None,
+        }
     }
 
     pub fn is_offline(&self) -> bool {
-        matches!(self.transport_error.as_ref().map(|t| t.kind), Some(TransportErrorKind::Offline))
+        matches!(self.transport_error_kind(), Some(TransportErrorKind::Offline))
     }
 
     pub fn transport_error_kind(&self) -> Option<TransportErrorKind> {
-        self.transport_error.as_ref().map(|t| t.kind)
+        match &self.failure {
+            Some(AppError::Transport(t)) => Some(t.kind),
+            _ => None,
+        }
     }
 }
 
@@ -255,6 +242,21 @@ pub struct ApiError {
     /// Optional request id for tracing/correlation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub request_id: Option<String>,
+}
+
+impl ApiError {
+    /// Return a user-facing message for this error, with sensible fallbacks.
+    pub fn message(&self) -> String {
+        if let Some(m) = &self.message {
+            return m.clone();
+        }
+        let ty = self.r#type.as_deref().unwrap_or("");
+        if ty.is_empty() {
+            format!("Request failed (status {})", self.status)
+        } else {
+            format!("Request failed with type {} (status {})", ty, self.status)
+        }
+    }
 }
 
 // ApiErrorInfo removed; we keep full ApiError in state
@@ -299,34 +301,118 @@ pub fn classify_transport_error(e: &HttpError) -> (TransportErrorKind, String) {
         );
     }
 
-    let s = format!("{}", e).to_lowercase();
-    if s.contains("failed to fetch") || s.contains("networkerror") || s.contains("network error")
-    {
-        return (
-            TransportErrorKind::Network,
-            "API server is unreachable".to_string(),
-        );
-    }
-    if s.contains("cors") || s.contains("blocked by cors") {
-        return (
-            TransportErrorKind::Network,
-            "Request blocked by CORS configuration".to_string(),
-        );
-    }
-    if s.contains("timeout") || s.contains("timed out") {
-        return (
-            TransportErrorKind::Timeout,
-            "Request timed out".to_string(),
-        );
-    }
-    if s.contains("dns") || s.contains("resolve") || s.contains("name not resolved") {
-        return (
-            TransportErrorKind::Network,
-            "Could not resolve API host".to_string(),
-        );
-    }
+    match e {
+        // JSON decode errors shouldn't occur here (they happen on Response::json),
+        // but if they bubble up, treat as Unknown transport with serde's message.
+        #[cfg(feature = "json")]
+        HttpError::SerdeError(se) => {
+            return (
+                TransportErrorKind::Unknown,
+                format!("JSON error: {}", se),
+            );
+        }
+        HttpError::JsError(js) => {
+            let name = js.name.to_lowercase();
+            let msg = js.message.to_lowercase();
 
-    (TransportErrorKind::Network, format!("Network error: {}", e))
+            // Abort/Cancelled
+            if name.contains("abort") || msg.contains("abort") || msg.contains("canceled") {
+                return (TransportErrorKind::Canceled, "Request canceled".to_string());
+            }
+
+            // Timeout hints
+            if msg.contains("timeout") || msg.contains("timed out") || msg.contains("etimedout") {
+                return (TransportErrorKind::Timeout, "Request timed out".to_string());
+            }
+
+            // DNS/resolve hints
+            if msg.contains("dns") || msg.contains("resolve") || msg.contains("name not resolved") {
+                return (
+                    TransportErrorKind::Network,
+                    "Could not resolve API host".to_string(),
+                );
+            }
+
+            // CORS hints (not always available via fetch errors, but match when present)
+            if msg.contains("cors") || msg.contains("blocked by cors") {
+                return (
+                    TransportErrorKind::Network,
+                    "Request blocked by CORS configuration".to_string(),
+                );
+            }
+
+            // Generic fetch/network failures across browsers
+            if msg.contains("failed to fetch")
+                || msg.contains("networkerror")
+                || msg.contains("network error")
+                || name.contains("typeerror")
+            {
+                return (
+                    TransportErrorKind::Network,
+                    "API server is unreachable".to_string(),
+                );
+            }
+
+            // Fallback with original JS error message for context
+            return (
+                TransportErrorKind::Network,
+                format!("{}: {}", js.name, js.message),
+            );
+        }
+        HttpError::GlooError(s) => {
+            let s_l = s.to_lowercase();
+            if s_l.contains("timeout") {
+                return (TransportErrorKind::Timeout, "Request timed out".to_string());
+            }
+            (TransportErrorKind::Unknown, s.clone())
+        }
+    }
+}
+
+/// Unified error carried by StateFrame
+#[derive(Debug, Clone, PartialEq)]
+pub enum AppError {
+    Api(ApiError),
+    Transport(TransportErrorInfo),
+    Decode {
+        label: String,
+        error: String,
+        raw: Option<String>,
+    },
+    Other {
+        message: String,
+    },
+}
+
+impl AppError {
+    pub fn message(&self) -> String {
+        match self {
+            AppError::Api(api) => api.message(),
+            AppError::Transport(t) => match t.kind {
+                TransportErrorKind::Offline => "You appear to be offline".to_string(),
+                TransportErrorKind::Network => t
+                    .message
+                    .clone()
+                    .unwrap_or_else(|| "API server is unreachable".to_string()),
+                TransportErrorKind::Timeout => t
+                    .message
+                    .clone()
+                    .unwrap_or_else(|| "Request timed out".to_string()),
+                TransportErrorKind::Canceled => t
+                    .message
+                    .clone()
+                    .unwrap_or_else(|| "Request canceled".to_string()),
+                TransportErrorKind::Unknown => t
+                    .message
+                    .clone()
+                    .unwrap_or_else(|| "Network error".to_string()),
+            },
+            AppError::Decode { label, error, .. } => {
+                format!("Unexpected response format for '{}': {}", label, error)
+            }
+            AppError::Other { message } => message.clone(),
+        }
+    }
 }
 
 /// Send a request, parse JSON into `T`, and update the provided `StateFrame<T>`.
@@ -359,7 +445,7 @@ where
                         );
                         state
                             .write()
-                            .set_failed(Some(format!("Failed to parse {}: {}", parse_label, e)));
+                            .set_decode_error(parse_label, format!("{}", e), Some(response_text));
                         None
                     }
                 }
@@ -407,9 +493,10 @@ where
                         Some(parsed)
                     }
                     Err(e) => {
+                        let response_text = response.text().await.unwrap_or_default();
                         state
                             .write()
-                            .set_failed(Some(format!("Failed to parse {}: {}", parse_label, e)));
+                            .set_decode_error(parse_label, format!("{}", e), Some(response_text));
                         None
                     }
                 }
@@ -462,11 +549,12 @@ where
                         Some(parsed)
                     }
                     Err(e) => {
-                        tracing::error!("Failed to parse {}: {}", parse_label, e);
+                        let response_text = response.text().await.unwrap_or_default();
+                        tracing::error!("Failed to parse {}: {}\nResponse: {}", parse_label, e, response_text);
                         let mut map = state.write();
                         map.entry(id)
                             .or_insert_with(StateFrame::new)
-                            .set_failed(Some(format!("Failed to parse {}: {}", parse_label, e)));
+                            .set_decode_error(parse_label, format!("{}", e), Some(response_text));
                         None
                     }
                 }
@@ -556,10 +644,11 @@ where
                         Some(parsed)
                     }
                     Err(e) => {
+                        let response_text = response.text().await.unwrap_or_default();
                         let mut map = state.write();
                         map.entry(id)
                             .or_insert_with(StateFrame::new)
-                            .set_failed(Some(format!("Failed to parse {}: {}", parse_label, e)));
+                            .set_decode_error(parse_label, format!("{}", e), Some(response_text));
                         None
                     }
                 }

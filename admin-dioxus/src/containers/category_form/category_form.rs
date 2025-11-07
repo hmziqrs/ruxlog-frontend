@@ -490,7 +490,7 @@ pub fn CategoryFormContainer(props: CategoryFormContainerProps) -> Element {
                                 let list = cats.list.read();
                                 let is_loading = list.is_loading();
                                 let is_failed = list.is_failed();
-                                let message = list.message.clone();
+                                let message = list.error_message();
                                 let sub_text = message.clone().unwrap_or_else(|| "There was a problem loading categories. Please try again.".to_string());
                                 let items: Vec<ComboboxItem> = list
                                     .data

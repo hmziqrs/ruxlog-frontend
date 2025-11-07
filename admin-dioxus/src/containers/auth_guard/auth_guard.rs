@@ -70,7 +70,7 @@ pub fn AuthGuardContainer() -> Element {
     if init_status.is_failed() {
         let error_msg = init_status
             .error_message()
-            .unwrap_or("Failed to initialize user");
+            .unwrap_or_else(|| "Failed to initialize user".to_string());
         let error_type = init_status.error_type().map(|c| c.to_string());
         let error_status = init_status.error_status();
         let error_details = init_status.error_details().map(|d| d.to_string());

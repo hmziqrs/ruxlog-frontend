@@ -269,10 +269,11 @@ impl PostState {
                                 .set_success(Some(revisions), None);
                         }
                         Err(e) => {
+                            let raw = response.text().await.unwrap_or_default();
                             revisions_map
                                 .entry(post_id)
                                 .or_insert_with(StateFrame::new)
-                                .set_failed(Some(format!("Failed to parse revisions: {}", e)));
+                                .set_decode_error("revisions", format!("{}", e), Some(raw));
                         }
                     }
                 } else {

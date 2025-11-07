@@ -383,7 +383,7 @@ pub fn UsersListScreen() -> Element {
                                                             if frame.is_success() {
                                                                 toasts.update_success(toast_id, format!("{} has been verified successfully", name), ToastOptions::default());
                                                             } else if frame.is_failed() {
-                                                                let msg = frame.message.unwrap_or("Failed to verify user".to_string());
+                                                                let msg = frame.error_message().unwrap_or("Failed to verify user".to_string());
                                                                 toasts.update_error(toast_id, msg, ToastOptions::default());
                                                             }
                                                         }

@@ -81,10 +81,11 @@ impl AuthState {
                             self.init_status.write().set_success(None, None);
                         }
                         Err(e) => {
-                            tracing::error!("Failed to parse user data: {}", e);
+                            let raw = response.text().await.unwrap_or_default();
+                            tracing::error!("Failed to parse user data: {}\nResponse: {}", e, raw);
                             self.init_status
                                 .write()
-                                .set_failed(Some(format!("Failed to parse user data: {}", e)));
+                                .set_decode_error("user", format!("{}", e), Some(raw));
                         }
                     }
                 } else if response.status() == 401 {
@@ -122,10 +123,11 @@ impl AuthState {
                             self.login_status.write().set_success(None, None);
                         }
                         Err(e) => {
-                            eprintln!("Failed to parse user data: {}", e);
+                            let raw = response.text().await.unwrap_or_default();
+                            eprintln!("Failed to parse user data: {}\nResponse: {}", e, raw);
                             self.login_status
                                 .write()
-                                .set_failed(Some(format!("Failed to parse user data: {}", e)));
+                                .set_decode_error("user", format!("{}", e), Some(raw));
                         }
                     }
                 } else {
