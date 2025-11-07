@@ -40,33 +40,33 @@ pub enum Route {
     PostsEditScreen { id: i32 },
     #[route("/posts/:id")]
     PostsViewScreen { id: i32 },
-    #[route("/posts/list")]
+    #[route("/posts")]
     PostsListScreen {},
 
     #[route("/categories/add")]
     CategoriesAddScreen {},
-    #[route("/category/list")]
+    #[route("/categories")]
     CategoriesListScreen {},
     #[route("/categories/:id/edit")]
     CategoriesEditScreen { id: i32 },
 
-    #[route("/tags/new")]
+    #[route("/tags/add")]
     TagsAddScreen {},
     #[route("/tags/:id/edit")]
     TagsEditScreen { id: i32 },
-    #[route("/tags/list")]
+    #[route("/tags")]
     TagsListScreen {},
 
     #[route("/media/upload")]
     MediaUploadScreen {},
-    #[route("/media/list")]
+    #[route("/media")]
     MediaListScreen {},
 
-    #[route("/users/new")]
+    #[route("/users/add")]
     UsersAddScreen {},
     #[route("/users/:id/edit")]
     UsersEditScreen { id: i32 },
-    #[route("/users/list")]
+    #[route("/users")]
     UsersListScreen {},
 
     #[route("/analytics")]
