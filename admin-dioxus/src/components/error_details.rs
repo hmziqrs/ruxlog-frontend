@@ -22,11 +22,18 @@ pub struct ErrorDetailsProps {
     pub title: Option<String>,
     #[props(default)]
     pub class: Option<String>,
+    #[props(default)]
+    pub fallback_message: Option<String>,
 }
 
 #[component]
 pub fn ErrorDetails(props: ErrorDetailsProps) -> Element {
-    let Some(error) = props.error.clone() else {
+    let Some(error) = props.error.clone().or_else(|| {
+        props
+            .fallback_message
+            .clone()
+            .map(|msg| AppError::Other { message: msg })
+    }) else {
         return rsx! {};
     };
 

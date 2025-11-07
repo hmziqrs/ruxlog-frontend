@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use crate::{
     components::{ErrorDetails, ErrorDetailsVariant, LoadingOverlay},
     router::{Route, OPEN_ROUTES},
-    store::{use_auth, AppError},
+    store::use_auth,
     ui::shadcn::{Button, ButtonVariant},
 };
 
@@ -68,22 +68,6 @@ pub fn AuthGuardContainer() -> Element {
 
     let init_status = auth_store.init_status.read();
     if init_status.is_failed() {
-        let error_msg = init_status
-            .error_message()
-            .unwrap_or_else(|| "Failed to initialize user".to_string());
-        let transport_kind = init_status.transport_error_kind();
-        let alert_title = match transport_kind {
-            Some(crate::store::TransportErrorKind::Network)
-            | Some(crate::store::TransportErrorKind::Timeout) => "Connection Error",
-            _ => "Authentication Error",
-        }
-        .to_string();
-        let error = init_status.error.clone().or_else(|| {
-            Some(AppError::Other {
-                message: error_msg.clone(),
-            })
-        });
-
         return rsx! {
             div { class: "min-h-screen flex items-center justify-center bg-background p-4",
                 div { class: "max-w-md w-full",
@@ -97,9 +81,9 @@ pub fn AuthGuardContainer() -> Element {
                             }
                         }
                         ErrorDetails {
-                            error,
+                            error: init_status.error.clone(),
                             variant: ErrorDetailsVariant::Minimum,
-                            title: Some(alert_title),
+                            fallback_message: Some("Failed to initialize user".to_string()),
                             class: Some("w-full".to_string()),
                         }
                         div { class: "flex justify-center pt-2",

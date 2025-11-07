@@ -72,9 +72,9 @@ impl AuthState {
                     match response.json::<AuthUser>().await {
                         Ok(user) => {
                             if !user.is_verified || !user.is_admin() {
-                                self.init_status.write().set_failed(Some(
+                                self.init_status.write().set_failed(
                                     "User not allowed to access this page.".to_string(),
-                                ));
+                                );
                                 return;
                             }
                             *self.user.write() = Some(user);
@@ -116,9 +116,9 @@ impl AuthState {
                     match response.json::<AuthUser>().await {
                         Ok(user) => {
                             if !user.is_verified || !user.is_admin() {
-                                self.login_status.write().set_failed(Some(
+                                self.login_status.write().set_failed(
                                     "User not allowed to access this page.".to_string(),
-                                ));
+                                );
                                 return;
                             }
                             *self.user.write() = Some(user);

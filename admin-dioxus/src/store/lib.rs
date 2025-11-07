@@ -5,6 +5,7 @@ use crate::store::error::{
 use dioxus::logger::tracing;
 use dioxus::prelude::GlobalSignal;
 use serde::{de::DeserializeOwned, Deserialize};
+use serde_json;
 use std::collections::HashMap;
 use std::future::Future;
 use std::hash::Hash;
@@ -131,9 +132,9 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
         self.error = None;
     }
 
-    pub fn set_failed(&mut self, message: Option<String>) {
+    pub fn set_failed(&mut self, message: String) {
         self.status = StateFrameStatus::Failed;
-        self.error = message.map(|m| AppError::Other { message: m });
+        self.error = Some(AppError::Other { message });
     }
 
     pub fn set_meta(&mut self, meta: Option<Q>) {
@@ -141,28 +142,38 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
     }
 
     pub async fn set_api_error(&mut self, response: &HttpResponse) {
-        match response.json::<ApiError>().await {
-            Ok(mut api_error) => {
-                let msg = api_error.message.clone().or_else(|| {
-                    Some(format!(
-                        "Request failed{} (status {})",
-                        api_error.r#type.as_deref().unwrap_or_default(),
-                        api_error.status
-                    ))
+        self.status = StateFrameStatus::Failed;
+        let status = response.status();
+        let body = match response.text().await {
+            Ok(text) => text,
+            Err(e) => {
+                self.error = Some(AppError::Decode {
+                    label: "api_error".to_string(),
+                    error: format!("Failed to read API error body: {}", e),
+                    raw: None,
                 });
+                return;
+            }
+        };
 
-                // Ensure message populated for UI convenience
+        match serde_json::from_str::<ApiError>(&body) {
+            Ok(mut api_error) => {
                 if api_error.message.is_none() {
-                    api_error.message = msg.clone();
+                    let ty = api_error.r#type.clone().unwrap_or_default();
+                    api_error.message = Some(if ty.is_empty() {
+                        format!("Request failed (status {})", api_error.status)
+                    } else {
+                        format!("Request failed with type {} (status {})", ty, api_error.status)
+                    });
                 }
 
-                self.status = StateFrameStatus::Failed;
                 self.error = Some(AppError::Api(api_error));
             }
-            Err(_) => {
-                self.status = StateFrameStatus::Failed;
-                self.error = Some(AppError::Other {
-                    message: "API error".to_string(),
+            Err(e) => {
+                self.error = Some(AppError::Decode {
+                    label: "api_error".to_string(),
+                    error: format!("Failed to parse API error (status {}): {}", status, e),
+                    raw: if body.is_empty() { None } else { Some(body) },
                 });
             }
         }
@@ -215,6 +226,12 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
             Some(AppError::Api(api)) => api.details.as_deref(),
             _ => None,
         }
+    }
+
+    pub fn error_or_message(&self, fallback: impl Into<String>) -> AppError {
+        self.error.clone().unwrap_or_else(|| AppError::Other {
+            message: fallback.into(),
+        })
     }
 
     pub fn is_offline(&self) -> bool {
