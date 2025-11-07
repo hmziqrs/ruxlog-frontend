@@ -98,7 +98,7 @@ pub fn AuthGuardContainer() -> Element {
                         }
                         ErrorDetails {
                             error,
-                            variant: ErrorDetailsVariant::Collapsed,
+                            variant: ErrorDetailsVariant::Minimum,
                             title: Some(alert_title),
                             class: Some("w-full".to_string()),
                         }

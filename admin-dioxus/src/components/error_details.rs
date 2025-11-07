@@ -1,8 +1,5 @@
 use crate::store::AppError;
-use crate::ui::shadcn::{
-    Button, ButtonSize, ButtonVariant, Card, CardContent, CardDescription, CardHeader, CardTitle,
-    Dialog, DialogContent, DialogTrigger,
-};
+use crate::ui::shadcn::{Button, ButtonSize, ButtonVariant, Dialog, DialogContent, DialogTrigger};
 use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::{
     icons::ld_icons::{LdChevronDown, LdChevronUp, LdInfo, LdTriangleAlert},
@@ -114,7 +111,7 @@ fn ErrorDetailsCollapsed(props: ErrorDetailsVariantProps) -> Element {
 
     rsx! {
         div { class: format!("space-y-4 {}", class),
-            div { class: "flex w-full items-start gap-3 rounded-xl border border-border/70 bg-card/40 p-4 shadow-sm",
+            div { class: "flex w-full items-start gap-3 rounded-xl border border-border/70 bg-transparent p-4",
                 div { class: "flex-1 space-y-1",
                     p { class: "text-sm font-semibold text-foreground", {title.clone()} }
                     p { class: "text-sm text-muted-foreground", {message.clone()} }
@@ -185,13 +182,17 @@ fn ErrorDetailsCard(props: ErrorDetailsCardProps) -> Element {
         .unwrap_or_else(|| default_title(&props.error).to_string());
     let message = props.error.message();
     let rows = collect_detail_rows(&props.error);
-    let class = props.class.clone().unwrap_or_else(|| "border-border/70".to_string());
     let icon_is_alert = !matches!(props.error, AppError::Other { .. });
+    let mut container_classes =
+        vec!["w-full rounded-2xl border border-border/70 bg-transparent".to_string()];
+    if let Some(custom) = props.class.clone() {
+        container_classes.push(custom);
+    }
 
     rsx! {
-        Card { class: class,
-            CardHeader {
-                CardTitle { class: "flex items-center gap-2 text-base",
+        div { class: container_classes.join(" "),
+            div { class: "space-y-4 p-5 sm:p-6",
+                div { class: "flex items-center gap-2 text-base",
                     div { class: "text-destructive [&_svg]:size-5",
                         if icon_is_alert {
                             Icon { icon: LdTriangleAlert {} }
@@ -201,10 +202,10 @@ fn ErrorDetailsCard(props: ErrorDetailsCardProps) -> Element {
                     }
                     span { class: "text-base font-semibold", {title} }
                 }
-                CardDescription { {message} }
-            }
-            CardContent {
-                {render_detail_rows(&rows)}
+                p { class: "text-sm text-muted-foreground", {message} }
+                div { class: "border-t border-border/60 pt-4",
+                    {render_detail_rows(&rows)}
+                }
             }
         }
     }
@@ -302,9 +303,9 @@ fn render_detail_rows(rows: &[DetailRow]) -> Element {
         }
     } else {
         rsx! {
-            div { class: "grid gap-3 sm:grid-cols-2",
+            div { class: "grid gap-3 sm:grid-cols-2 w-full",
                 for (idx, row) in rows.iter().enumerate() {
-                    div { key: "{idx}", class: "rounded-lg border border-border/70 bg-muted/40 p-3",
+                    div { key: "{idx}", class: "rounded-lg border border-border/60 bg-transparent p-3",
                         p { class: "text-xs font-semibold uppercase tracking-wide text-muted-foreground", {row.label} }
                         if row.monospace {
                             pre { class: "mt-2 whitespace-pre-wrap break-words font-mono text-xs text-foreground/90", {row.value.clone()} }
