@@ -1,14 +1,16 @@
 # Analytics Store Plan (Frontend)
 
+**Status: ✅ COMPLETED**
+
 This document defines the plan and API contracts for the analytics store, mirroring the backend module and following existing store/service patterns. References use file path with starting line numbers.
 
 ## Plan
-- Add `src/store/analytics/` with `mod.rs`, `state.rs`, `actions.rs`.
-- Mirror shared request/response types: `AnalyticsEnvelope`, `AnalyticsInterval`, `AnalyticsMeta`, `AnalyticsEnvelopeResponse<T>`.
-- Define per-endpoint request filter types and response point types.
-- Add `AnalyticsState` with one `GlobalSignal<StateFrame<...>>` per endpoint.
-- Implement actions using `http_client::post` and `state_request_abstraction`/`list_state_abstraction` to parse `AnalyticsEnvelopeResponse<T>`.
-- Re-export analytics store in `src/store/mod.rs` and wire usage into `src/screens/analytics.rs` as needed.
+- ✅ Add `src/store/analytics/` with `mod.rs`, `state.rs`, `actions.rs`.
+- ✅ Mirror shared request/response types: `AnalyticsEnvelope`, `AnalyticsInterval`, `AnalyticsMeta`, `AnalyticsEnvelopeResponse<T>`.
+- ✅ Define per-endpoint request filter types and response point types.
+- ✅ Add `AnalyticsState` with one `GlobalSignal<StateFrame<...>>` per endpoint.
+- ✅ Implement actions using `http_client::post` and `state_request_abstraction` to parse `AnalyticsEnvelopeResponse<T>`.
+- ✅ Re-export analytics store in `src/store/mod.rs` and wire usage into `src/screens/analytics.rs` as needed.
 
 Supporting patterns:
 - Request helpers: `state_request_abstraction` and `list_state_abstraction` (src/store/lib.rs:252, src/store/lib.rs:303)
@@ -117,18 +119,31 @@ Dashboard Summary
   - Media: { total_files: i64, uploads_in_period: i64 } (docs/raw-analytics.md:1707)
 
 ## Store Wiring
-- Create `AnalyticsState` with one signal per endpoint, storing the full response to retain meta:
+- ✅ Create `AnalyticsState` with one signal per endpoint, storing the full response to retain meta:
   - Example shape: `GlobalSignal<StateFrame<AnalyticsEnvelopeResponse<Vec<Point>>, RequestType>>`.
-- Use `http_client::post` (src/services/http_client.rs:15) to send requests with body payloads above.
-- Use `state_request_abstraction` (src/store/lib.rs:303) or `list_state_abstraction` (src/store/lib.rs:252) to parse responses into the state frame. Storing the full envelope (`AnalyticsEnvelopeResponse<T>`) avoids losing `meta`.
-- Follow patterns from other stores for structure and OnceLock singletons (src/store/tags/state.rs:59, src/store/media/state.rs:247).
+- ✅ Use `http_client::post` (src/services/http_client.rs:15) to send requests with body payloads above.
+- ✅ Use `state_request_abstraction` (src/store/lib.rs:303) to parse responses into the state frame. Storing the full envelope (`AnalyticsEnvelopeResponse<T>`) avoids losing `meta`.
+- ✅ Follow patterns from other stores for structure and OnceLock singletons (src/store/analytics/state.rs:293).
 
 ## File Layout
-- `src/store/analytics/mod.rs` — re-exports state/actions
-- `src/store/analytics/state.rs` — types + `AnalyticsState`
-- `src/store/analytics/actions.rs` — API calls using helpers
-- Add `mod analytics;` and `pub use analytics::*;` in `src/store/mod.rs:1`
+- ✅ `src/store/analytics/mod.rs` — re-exports state/actions
+- ✅ `src/store/analytics/state.rs` — types + `AnalyticsState` (src/store/analytics/state.rs:1)
+- ✅ `src/store/analytics/actions.rs` — API calls using helpers (src/store/analytics/actions.rs:1)
+- ✅ Add `mod analytics;` and `pub use analytics::*;` in `src/store/mod.rs:1`
 - Page shell exists at `src/screens/analytics.rs:1` for future UI wiring
+
+### Implementation Details
+All 8 endpoints implemented with action methods:
+- ✅ fetch_registration_trends (src/store/analytics/actions.rs:6)
+- ✅ fetch_verification_rates (src/store/analytics/actions.rs:20)
+- ✅ fetch_publishing_trends (src/store/analytics/actions.rs:34)
+- ✅ fetch_page_views (src/store/analytics/actions.rs:48)
+- ✅ fetch_comment_rate (src/store/analytics/actions.rs:62)
+- ✅ fetch_newsletter_growth (src/store/analytics/actions.rs:76)
+- ✅ fetch_media_upload (src/store/analytics/actions.rs:90)
+- ✅ fetch_dashboard_summary (src/store/analytics/actions.rs:104)
+
+Compiles successfully with no errors.
 
 ## Sample Responses (for reference)
 - See examples in docs/raw-analytics.md for:
