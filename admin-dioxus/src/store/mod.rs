@@ -1,3 +1,4 @@
+mod analytics;
 mod auth;
 mod categories;
 mod error;
@@ -9,6 +10,7 @@ mod tags;
 mod traits;
 mod users;
 
+pub use analytics::*;
 pub use auth::*;
 pub use categories::*;
 pub use error::*;
