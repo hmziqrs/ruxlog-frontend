@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 use crate::components::{
     DataTableScreen, HeaderColumn, ListEmptyState, ListErrorBannerProps, ListToolbarProps,
-    MediaUsageDialog, PageHeaderProps, SkeletonCellConfig, SkeletonTableRows,
+    LoadingOverlay, MediaUsageDialog, PageHeaderProps, SkeletonCellConfig, SkeletonTableRows,
 };
 use crate::hooks::{
     use_list_screen_with_handlers, use_state_frame_map_toast, ListScreenConfig,
@@ -254,18 +254,6 @@ pub fn MediaListScreen() -> Element {
                         tr {
                             key: "{media_id}",
                             class: "relative border-b border-zinc-200 dark:border-zinc-800 hover:bg-muted/30 transition-colors",
-
-
-                            // Absolute positioned overlay
-                            div {
-                                class: if is_deleting {
-                                    "absolute inset-0 z-10 bg-background/50 backdrop-blur-[1px] flex items-center justify-center"
-                                } else {
-                                    "absolute inset-0 z-10 bg-background/50 backdrop-blur-[1px] flex items-center justify-center hidden"
-                                },
-                                div { class: "h-6 w-6 rounded-full border-2 border-zinc-300 border-t-zinc-700 animate-spin" }
-                            }
-
                             // Selection checkbox cell
                             td {
                                 class: "py-2 px-3 w-12 text-xs md:text-sm",
@@ -286,6 +274,7 @@ pub fn MediaListScreen() -> Element {
                                         }
                                     })),
                                 }
+                                LoadingOverlay { visible: is_deleting }
                             }
                             // Thumbnail cell
                             td { class: "py-2 px-3 w-16",
