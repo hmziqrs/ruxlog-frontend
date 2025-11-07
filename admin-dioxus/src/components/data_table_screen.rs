@@ -1,10 +1,10 @@
 use dioxus::prelude::*;
 
 use crate::components::{
-    ListErrorBanner, ListErrorBannerProps, ListToolbar, ListToolbarProps, LoadingOverlay,
-    PageHeader, PageHeaderProps, Pagination,
+    ErrorDetails, ErrorDetailsVariant, ListToolbar, ListToolbarProps, LoadingOverlay, PageHeader,
+    PageHeaderProps, Pagination,
 };
-use crate::store::{PaginatedList, StateFrame};
+use crate::store::{AppError, PaginatedList, StateFrame};
 use crate::ui::shadcn::{Button, ButtonVariant};
 use hmziq_dioxus_free_icons::{icons::ld_icons::LdArrowUpDown, Icon};
 
@@ -36,9 +36,25 @@ pub struct DataTableScreenProps<T: Clone + PartialEq + 'static> {
     #[props(optional)]
     pub header: Option<PageHeaderProps>,
 
-    /// Error banner configuration (spread as `ListErrorBanner { ..props }`)
-    #[props(optional)]
-    pub error_banner: Option<ListErrorBannerProps>,
+    /// Optional custom title for error details (defaults to a generic label)
+    #[props(default)]
+    pub error_title: Option<String>,
+
+    /// Variant for the error details component
+    #[props(default = ErrorDetailsVariant::Collapsed)]
+    pub error_variant: ErrorDetailsVariant,
+
+    /// Label for retry button rendered under the error details
+    #[props(default)]
+    pub error_retry_label: Option<String>,
+
+    /// Retry handler for the button
+    #[props(default)]
+    pub on_error_retry: Option<EventHandler<()>>,
+
+    /// Fallback message when the state frame does not include an AppError
+    #[props(default = "Failed to load data. Please try again.".to_string())]
+    pub error_fallback_message: String,
 
     /// Toolbar configuration (spread as `ListToolbar { ..props }`)
     #[props(optional)]
@@ -99,10 +115,31 @@ pub fn DataTableScreen<T: Clone + PartialEq + 'static>(props: DataTableScreenPro
 
             // Error banner (only when failed)
             if list_failed {
-                div { class: "container mx-auto px-4 pt-4",
-                    match props.error_banner.clone() {
-                        Some(banner_props) => rsx!{ ListErrorBanner { ..banner_props } },
-                        None => rsx!{ ListErrorBanner { message: "Failed to load data. Please try again.".to_string() } },
+                {
+                    let error = list.error.clone().or_else(|| {
+                        Some(AppError::Other {
+                            message: props.error_fallback_message.clone(),
+                        })
+                    });
+
+                    rsx! {
+                        div { class: "container mx-auto px-4 pt-4",
+                            ErrorDetails {
+                                error,
+                                variant: props.error_variant,
+                                title: props.error_title.clone(),
+                                class: Some("w-full".to_string()),
+                            }
+                            if let (Some(label), Some(on_retry)) = (props.error_retry_label.clone(), props.on_error_retry.clone()) {
+                                div { class: "mt-4",
+                                    Button {
+                                        variant: ButtonVariant::Outline,
+                                        onclick: move |_| { on_retry.call(()); },
+                                        "{label}"
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

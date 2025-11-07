@@ -2,8 +2,8 @@ use dioxus::prelude::*;
 
 use crate::components::sonner::{use_sonner, ToastOptions};
 use crate::components::{
-    DataTableScreen, HeaderColumn, ListEmptyState, ListErrorBannerProps, ListToolbarProps,
-    PageHeaderProps, SkeletonCellConfig, SkeletonTableRows, UserAvatar, UserDetailsDialog,
+    DataTableScreen, HeaderColumn, ListEmptyState, ListToolbarProps, PageHeaderProps,
+    SkeletonCellConfig, SkeletonTableRows, UserAvatar, UserDetailsDialog,
 };
 use crate::hooks::{use_list_screen_with_handlers, ListScreenConfig};
 use crate::router::Route;
@@ -150,11 +150,9 @@ pub fn UsersListScreen() -> Element {
             headers: Some(headers),
             current_sort_field: Some(list_state.sort_field()),
             on_sort: Some(handlers.handle_sort.clone()),
-            error_banner: Some(ListErrorBannerProps {
-                message: "Failed to load users. Please try again.".to_string(),
-                retry_label: Some("Retry".to_string()),
-                on_retry: Some(EventHandler::new(move |_| handlers.handle_retry.call(()))),
-            }),
+            error_title: Some("Failed to load users".to_string()),
+            error_retry_label: Some("Retry".to_string()),
+            on_error_retry: Some(EventHandler::new(move |_| handlers.handle_retry.call(()))),
             toolbar: Some(ListToolbarProps {
                 search_value: list_state.search_input(),
                 search_placeholder: "Search users by name or email".to_string(),

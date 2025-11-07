@@ -7,9 +7,7 @@ use context::{PostListContext, ViewMode};
 
 use dioxus::prelude::*;
 
-use crate::components::{
-    DataTableScreen, HeaderColumn, ListErrorBannerProps, ListToolbarProps, PageHeaderProps,
-};
+use crate::components::{DataTableScreen, HeaderColumn, ListToolbarProps, PageHeaderProps};
 use crate::hooks::{use_list_screen_with_handlers, ListScreenConfig};
 use crate::router::Route;
 use crate::store::{use_categories, use_post, use_tag, use_user, ListStore};
@@ -208,11 +206,9 @@ pub fn PostsListScreen() -> Element {
                 class: None,
                 embedded: false,
             }),
-            error_banner: Some(ListErrorBannerProps {
-                message: "Failed to load posts. Please try again.".to_string(),
-                retry_label: Some("Retry".to_string()),
-                on_retry: Some(EventHandler::new(move |_| handlers.handle_retry.call(()))),
-            }),
+            error_title: Some("Failed to load posts".to_string()),
+            error_retry_label: Some("Retry".to_string()),
+            on_error_retry: Some(EventHandler::new(move |_| handlers.handle_retry.call(()))),
             toolbar: Some(ListToolbarProps {
                 search_value: list_state.search_input(),
                 search_placeholder: "Search posts by title, content, or author".to_string(),

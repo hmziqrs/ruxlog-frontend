@@ -32,9 +32,6 @@ pub use pagination::*;
 mod loading_overlay;
 pub use loading_overlay::*;
 
-mod list_error_banner;
-pub use list_error_banner::*;
-
 mod list_empty_state;
 pub use list_empty_state::*;
 

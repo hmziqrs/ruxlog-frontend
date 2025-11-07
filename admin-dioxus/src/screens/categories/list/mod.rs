@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
 
 use crate::components::{
-    DataTableScreen, HeaderColumn, ListEmptyState, ListErrorBannerProps, ListToolbarProps,
-    PageHeaderProps, SkeletonCellConfig, SkeletonTableRows,
+    DataTableScreen, HeaderColumn, ListEmptyState, ListToolbarProps, PageHeaderProps,
+    SkeletonCellConfig, SkeletonTableRows,
 };
 use crate::hooks::{use_list_screen_with_handlers, ListScreenConfig};
 use crate::router::Route;
@@ -142,11 +142,9 @@ pub fn CategoriesListScreen() -> Element {
             headers: Some(headers),
             current_sort_field: Some(list_state.sort_field()),
             on_sort: Some(handlers.handle_sort.clone()),
-            error_banner: Some(ListErrorBannerProps {
-                message: "Failed to load categories. Please try again.".to_string(),
-                retry_label: Some("Retry".to_string()),
-                on_retry: Some(EventHandler::new(move |_| handlers.handle_retry.call(()))),
-            }),
+            error_title: Some("Failed to load categories".to_string()),
+            error_retry_label: Some("Retry".to_string()),
+            on_error_retry: Some(EventHandler::new(move |_| handlers.handle_retry.call(()))),
             toolbar: Some(ListToolbarProps {
                 search_value: list_state.search_input(),
                 search_placeholder: "Search categories by name, description, or slug".to_string(),
