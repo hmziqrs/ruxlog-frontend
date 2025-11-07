@@ -126,11 +126,10 @@ pub fn classify_transport_error(e: &HttpError) -> (TransportErrorKind, String) {
     }
 
     match e {
-        #[cfg(feature = "json")]
         HttpError::SerdeError(se) => {
             return (
                 TransportErrorKind::Unknown,
-                format!("JSON error: {}", se),
+                format!("JSON serialization error: {}", se),
             );
         }
         HttpError::JsError(js) => {

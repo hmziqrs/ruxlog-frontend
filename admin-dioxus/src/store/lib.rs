@@ -1,8 +1,10 @@
 use crate::services::http_client::{HttpError, HttpRequest, HttpResponse};
-use crate::store::error::{classify_transport_error, is_offline, AppError, ApiError, TransportErrorInfo, TransportErrorKind};
+use crate::store::error::{
+    classify_transport_error, ApiError, AppError, TransportErrorInfo, TransportErrorKind,
+};
 use dioxus::logger::tracing;
 use dioxus::prelude::GlobalSignal;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize};
 use std::collections::HashMap;
 use std::future::Future;
 use std::hash::Hash;
@@ -20,8 +22,7 @@ pub struct StateFrame<D: Clone = (), M: Clone = ()> {
     pub status: StateFrameStatus,
     pub data: Option<D>,
     pub meta: Option<M>,
-    // Unified typed error for this frame
-    pub failure: Option<AppError>,
+    pub error: Option<AppError>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -69,7 +70,7 @@ impl<T: Clone, Q: Clone> Default for StateFrame<T, Q> {
             status: StateFrameStatus::Init,
             data: None,
             meta: None,
-            failure: None,
+            error: None,
         }
     }
 }
@@ -79,12 +80,12 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
         Self::default()
     }
 
-    pub fn new_with_loading(message: Option<String>) -> Self {
+    pub fn new_with_loading(_message: Option<String>) -> Self {
         Self {
             status: StateFrameStatus::Loading,
             data: None,
             meta: None,
-            failure: None,
+            error: None,
         }
     }
 
@@ -93,7 +94,7 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
             status: StateFrameStatus::Success,
             data,
             meta: None,
-            failure: None,
+            error: None,
         }
     }
 
@@ -113,26 +114,26 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
         self.status == StateFrameStatus::Failed
     }
 
-    pub fn set_loading(&mut self, message: Option<String>) {
+    pub fn set_loading(&mut self, _message: Option<String>) {
         self.status = StateFrameStatus::Loading;
-        self.failure = None;
+        self.error = None;
     }
 
-    pub fn set_loading_meta(&mut self, meta: Option<Q>, message: Option<String>) {
+    pub fn set_loading_meta(&mut self, meta: Option<Q>, _message: Option<String>) {
         self.status = StateFrameStatus::Loading;
         self.meta = meta;
-        self.failure = None;
+        self.error = None;
     }
 
-    pub fn set_success(&mut self, data: Option<T>, message: Option<String>) {
+    pub fn set_success(&mut self, data: Option<T>, _message: Option<String>) {
         self.status = StateFrameStatus::Success;
         self.data = data;
-        self.failure = None;
+        self.error = None;
     }
 
     pub fn set_failed(&mut self, message: Option<String>) {
         self.status = StateFrameStatus::Failed;
-        self.failure = message.map(|m| AppError::Other { message: m });
+        self.error = message.map(|m| AppError::Other { message: m });
     }
 
     pub fn set_meta(&mut self, meta: Option<Q>) {
@@ -156,11 +157,13 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
                 }
 
                 self.status = StateFrameStatus::Failed;
-                self.failure = Some(AppError::Api(api_error));
+                self.error = Some(AppError::Api(api_error));
             }
             Err(_) => {
                 self.status = StateFrameStatus::Failed;
-                self.failure = Some(AppError::Other { message: "API error".to_string() });
+                self.error = Some(AppError::Other {
+                    message: "API error".to_string(),
+                });
             }
         }
     }
@@ -168,60 +171,66 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
     /// Mark this frame as a transport-layer failure (network/offline/etc.)
     pub fn set_transport_error(&mut self, kind: TransportErrorKind, message: Option<String>) {
         self.status = StateFrameStatus::Failed;
-        self.failure = Some(AppError::Transport(TransportErrorInfo { kind, message }));
+        self.error = Some(AppError::Transport(TransportErrorInfo { kind, message }));
     }
 
     /// Mark this frame as a decode/serialization error for a successful HTTP response
-    pub fn set_decode_error(&mut self, label: impl Into<String>, err: impl Into<String>, raw: Option<String>) {
+    pub fn set_decode_error(
+        &mut self,
+        label: impl Into<String>,
+        err: impl Into<String>,
+        raw: Option<String>,
+    ) {
         self.status = StateFrameStatus::Failed;
         let label_s = label.into();
         let err_s = err.into();
-        self.failure = Some(AppError::Decode { label: label_s, error: err_s, raw });
+        self.error = Some(AppError::Decode {
+            label: label_s,
+            error: err_s,
+            raw,
+        });
     }
 
     /// Convenience: unified error message if any
     pub fn error_message(&self) -> Option<String> {
-        self.failure.as_ref().map(|f| f.message())
+        self.error.as_ref().map(|f| f.message())
     }
 
-    pub fn error_code(&self) -> Option<&str> {
-        match &self.failure {
+    pub fn error_type(&self) -> Option<&str> {
+        match &self.error {
             Some(AppError::Api(api)) => api.r#type.as_deref(),
             _ => None,
         }
     }
 
-    /// Preferred accessor naming for API error type
-    pub fn error_type(&self) -> Option<&str> {
-        self.error.as_ref().and_then(|e| e.r#type.as_deref())
-    }
-
     pub fn error_status(&self) -> Option<u16> {
-        match &self.failure {
+        match &self.error {
             Some(AppError::Api(api)) => Some(api.status),
             _ => None,
         }
     }
 
     pub fn error_details(&self) -> Option<&str> {
-        match &self.failure {
+        match &self.error {
             Some(AppError::Api(api)) => api.details.as_deref(),
             _ => None,
         }
     }
 
     pub fn is_offline(&self) -> bool {
-        matches!(self.transport_error_kind(), Some(TransportErrorKind::Offline))
+        matches!(
+            self.transport_error_kind(),
+            Some(TransportErrorKind::Offline)
+        )
     }
 
     pub fn transport_error_kind(&self) -> Option<TransportErrorKind> {
-        match &self.failure {
+        match &self.error {
             Some(AppError::Transport(t)) => Some(t.kind),
             _ => None,
         }
     }
 }
-
 
 /// Send a request, parse JSON into `T`, and update the provided `StateFrame<T>`.
 /// Returns `Some(T)` on success to allow callers to perform cache-sync logic if needed.
@@ -251,9 +260,11 @@ where
                             e,
                             response_text
                         );
-                        state
-                            .write()
-                            .set_decode_error(parse_label, format!("{}", e), Some(response_text));
+                        state.write().set_decode_error(
+                            parse_label,
+                            format!("{}", e),
+                            Some(response_text),
+                        );
                         None
                     }
                 }
@@ -302,9 +313,11 @@ where
                     }
                     Err(e) => {
                         let response_text = response.text().await.unwrap_or_default();
-                        state
-                            .write()
-                            .set_decode_error(parse_label, format!("{}", e), Some(response_text));
+                        state.write().set_decode_error(
+                            parse_label,
+                            format!("{}", e),
+                            Some(response_text),
+                        );
                         None
                     }
                 }
@@ -358,7 +371,12 @@ where
                     }
                     Err(e) => {
                         let response_text = response.text().await.unwrap_or_default();
-                        tracing::error!("Failed to parse {}: {}\nResponse: {}", parse_label, e, response_text);
+                        tracing::error!(
+                            "Failed to parse {}: {}\nResponse: {}",
+                            parse_label,
+                            e,
+                            response_text
+                        );
                         let mut map = state.write();
                         map.entry(id)
                             .or_insert_with(StateFrame::new)

@@ -75,6 +75,20 @@ pub fn AuthGuardContainer() -> Element {
         let error_status = init_status.error_status();
         let error_details = init_status.error_details().map(|d| d.to_string());
         let transport_kind = init_status.transport_error_kind();
+        let alert_title = match transport_kind {
+            Some(crate::store::TransportErrorKind::Network)
+            | Some(crate::store::TransportErrorKind::Timeout) => "Connection Error",
+            _ => "Authentication Error",
+        };
+        let transport_hint = match transport_kind {
+            Some(crate::store::TransportErrorKind::Network) => Some(
+                "The API server is unreachable. Check the backend is running and CORS or proxy settings.",
+            ),
+            Some(crate::store::TransportErrorKind::Timeout) => {
+                Some("The request timed out. Please try again.")
+            }
+            _ => None,
+        };
 
         return rsx! {
             div { class: "min-h-screen flex items-center justify-center bg-background p-4",
@@ -100,31 +114,12 @@ pub fn AuthGuardContainer() -> Element {
                                 view_box: "0 0 24 24",
                                 path { d: "M12 9v4m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" }
                             }
-                        AlertTitle {
-                            if let Some(kind) = transport_kind {
-                                match kind {
-                                    crate::store::TransportErrorKind::Network | crate::store::TransportErrorKind::Timeout => {
-                                        rsx!("Connection Error")
-                                    }
-                                    _ => rsx!("Authentication Error"),
-                                }
-                            } else {
-                                rsx!("Authentication Error")
-                            }
-                        }
+                            AlertTitle { "{alert_title}" }
                             AlertDescription {
                                 class: "mt-2 space-y-1",
                                 p { class: "text-sm leading-6", {error_msg} }
-                                if let Some(kind) = transport_kind {
-                                    match kind {
-                                        crate::store::TransportErrorKind::Network => {
-                                            p { class: "text-xs text-muted-foreground", "The API server is unreachable. Check the backend is running and CORS/proxy settings." }
-                                        }
-                                        crate::store::TransportErrorKind::Timeout => {
-                                            p { class: "text-xs text-muted-foreground", "The request timed out. Please try again." }
-                                        }
-                                        _ => {}
-                                    }
+                                if let Some(hint) = transport_hint {
+                                    p { class: "text-xs text-muted-foreground", {hint} }
                                 }
                                 if let Some(t) = error_type {
                                     p { class: "text-xs text-muted-foreground", "Type: ", {t} }
