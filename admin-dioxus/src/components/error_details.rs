@@ -22,18 +22,11 @@ pub struct ErrorDetailsProps {
     pub title: Option<String>,
     #[props(default)]
     pub class: Option<String>,
-    #[props(default)]
-    pub fallback_message: Option<String>,
 }
 
 #[component]
 pub fn ErrorDetails(props: ErrorDetailsProps) -> Element {
-    let Some(error) = props.error.clone().or_else(|| {
-        props
-            .fallback_message
-            .clone()
-            .map(|msg| AppError::Other { message: msg })
-    }) else {
+    let Some(error) = props.error.clone() else {
         return rsx! {};
     };
 
@@ -83,7 +76,7 @@ fn ErrorDetailsMinimum(props: ErrorDetailsVariantProps) -> Element {
     rsx! {
         Dialog {
             div { class: format!("inline-flex items-center gap-2 rounded-xl border border-border/70 bg-transparent px-3 py-2 {}", class),
-                span { class: "text-sm text-foreground", {message.clone()} }
+                span { class: "flex-1 text-sm text-foreground", {message.clone()} }
                 DialogTrigger {
                     Button {
                         variant: ButtonVariant::Ghost,

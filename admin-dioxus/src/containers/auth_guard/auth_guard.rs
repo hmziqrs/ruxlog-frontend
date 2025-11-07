@@ -83,7 +83,6 @@ pub fn AuthGuardContainer() -> Element {
                         ErrorDetails {
                             error: init_status.error.clone(),
                             variant: ErrorDetailsVariant::Minimum,
-                            fallback_message: Some("Failed to initialize user".to_string()),
                             class: Some("w-full".to_string()),
                         }
                         div { class: "flex justify-center pt-2",
