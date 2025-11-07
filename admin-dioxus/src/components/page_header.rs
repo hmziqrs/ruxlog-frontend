@@ -22,37 +22,39 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
     let nav = use_navigator();
     let current_route = use_route::<Route>();
 
-    // Derive module name and whether this is an "add/new" screen
-    let (module, add_suffix): (&str, Option<&str>) = match current_route {
-        Route::PostsAddScreen {} => ("Posts", Some("Add")),
-        Route::PostsEditScreen { .. } => ("Posts", Some("Edit")),
-        Route::PostsViewScreen { .. } => ("Posts", Some("View")),
-        Route::PostsListScreen {} => ("Posts", None),
-        Route::CategoriesAddScreen {} => ("Categories", Some("Add")),
-        Route::CategoriesListScreen {} => ("Categories", None),
-        Route::CategoriesEditScreen { .. } => ("Categories", Some("Edit")),
-        Route::TagsAddScreen {} => ("Tags", Some("Add")),
-        Route::TagsEditScreen { .. } => ("Tags", Some("Edit")),
-        Route::TagsListScreen {} => ("Tags", None),
-        Route::MediaUploadScreen {} => ("Media", Some("Upload")),
-        Route::MediaListScreen {} => ("Media", None),
-        Route::UsersAddScreen {} => ("Users", Some("Add")),
-        Route::UsersEditScreen { .. } => ("Users", Some("Edit")),
-        Route::UsersListScreen {} => ("Users", None),
-        Route::AnalyticsScreen {} => ("Analytics", None),
-        Route::SonnerDemoScreen {} => ("Sonner Demo", None),
-        Route::HomeScreen {} | Route::LoginScreen {} => ("Dashboard", None),
+    // Derive module name and suffix to match URL paths
+    let (module, add_suffix): (String, Option<String>) = match current_route {
+        Route::PostsAddScreen {} => ("posts".to_string(), Some("add".to_string())),
+        Route::PostsEditScreen { id } => ("posts".to_string(), Some(format!("{}/edit", id))),
+        Route::PostsViewScreen { id } => ("posts".to_string(), Some(id.to_string())),
+        Route::PostsListScreen {} => ("posts".to_string(), None),
+        Route::CategoriesAddScreen {} => ("categories".to_string(), Some("add".to_string())),
+        Route::CategoriesListScreen {} => ("categories".to_string(), None),
+        Route::CategoriesEditScreen { id } => {
+            ("categories".to_string(), Some(format!("{}/edit", id)))
+        }
+        Route::TagsAddScreen {} => ("tags".to_string(), Some("add".to_string())),
+        Route::TagsEditScreen { id } => ("tags".to_string(), Some(format!("{}/edit", id))),
+        Route::TagsListScreen {} => ("tags".to_string(), None),
+        Route::MediaUploadScreen {} => ("media".to_string(), Some("upload".to_string())),
+        Route::MediaListScreen {} => ("media".to_string(), None),
+        Route::UsersAddScreen {} => ("users".to_string(), Some("add".to_string())),
+        Route::UsersEditScreen { id } => ("users".to_string(), Some(format!("{}/edit", id))),
+        Route::UsersListScreen {} => ("users".to_string(), None),
+        Route::AnalyticsScreen {} => ("analytics".to_string(), None),
+        Route::SonnerDemoScreen {} => ("demo".to_string(), Some("sonner".to_string())),
+        Route::HomeScreen {} | Route::LoginScreen {} => ("".to_string(), None),
     };
 
     // Resolve the list route for the current module, if applicable
     let list_route_for_module = |m: &str| -> Option<Route> {
         match m {
             // LIST_ROUTES_START (auto-generated)
-            "Posts" => Some(Route::PostsListScreen {}),
-            "Categories" => Some(Route::CategoriesListScreen {}),
-            "Tags" => Some(Route::TagsListScreen {}),
-            "Media" => Some(Route::MediaListScreen {}),
-            "Users" => Some(Route::UsersListScreen {}),
+            "posts" => Some(Route::PostsListScreen {}),
+            "categories" => Some(Route::CategoriesListScreen {}),
+            "tags" => Some(Route::TagsListScreen {}),
+            "media" => Some(Route::MediaListScreen {}),
+            "users" => Some(Route::UsersListScreen {}),
             // LIST_ROUTES_END
             _ => None,
         }
@@ -79,13 +81,11 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
 
                     // Middle crumbs and page
                     match add_suffix {
-                        None => {
-                            rsx!{ BreadcrumbItem { BreadcrumbPage { "{module}" } } }
-                        }
+                        None => rsx!{ if !module.is_empty() { BreadcrumbItem { BreadcrumbPage { "{module}" } } } },
                         Some(suffix) => {
                             rsx!{
                                 BreadcrumbItem {
-                                    match list_route_for_module(module) {
+                                    match list_route_for_module(&module) {
                                         Some(list_route) => rsx!{ BreadcrumbLink { onclick: Some(Callback::new(move |_| { nav.push(list_route.clone()); })), "{module}" } },
                                         None => rsx!{ BreadcrumbPage { "{module}" } }
                                     }
@@ -130,17 +130,13 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
                             // Middle crumbs and page
                             match add_suffix {
                                 // List-like screens or single-level pages
-                                None => {
-                                    rsx!{
-                                        BreadcrumbItem { BreadcrumbPage { "{module}" } }
-                                    }
-                                }
+                                None => rsx!{ if !module.is_empty() { BreadcrumbItem { BreadcrumbPage { "{module}" } } } },
                                 // Add/new screens -> Dashboard / Module / New
                                 Some(suffix) => {
                                     rsx!{
                                         // Module link back to list
                                         BreadcrumbItem {
-                                            match list_route_for_module(module) {
+                                            match list_route_for_module(&module) {
                                                 Some(list_route) => rsx!{
                                                     BreadcrumbLink { onclick: Some(Callback::new(move |_| { nav.push(list_route.clone()); })), "{module}" }
                                                 },
