@@ -91,26 +91,27 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                 "fixed inset-y-0 left-0 z-30 w-64 bg-zinc-200 dark:bg-zinc-950/95 transition-all duration-300 transform border-r border-zinc-300 dark:border-zinc-800 {}",
                 if expanded() { "translate-x-0" } else { "-translate-x-full" },
             ),
-            div { class: "flex h-16 items-center justify-between border-b border-zinc-300 dark:border-zinc-800 px-4 transition-colors duration-300",
-                div { class: "flex items-center space-x-2",
-                    img {
-                        class: "h-8 w-8",
-                        src: asset!("/assets/logo.png"),
-                        alt: "Logo",
+            div { class: "flex h-full flex-col",
+                div { class: "flex h-16 items-center justify-between border-b border-zinc-300 dark:border-zinc-800 px-4 transition-colors duration-300",
+                    div { class: "flex items-center space-x-2",
+                        img {
+                            class: "h-8 w-8",
+                            src: asset!("/assets/logo.png"),
+                            alt: "Logo",
+                        }
+                        h1 { class: "text-lg font-bold text-zinc-800 dark:text-white transition-colors duration-300",
+                            "Ruxlog Admin"
+                        }
                     }
-                    h1 { class: "text-lg font-bold text-zinc-800 dark:text-white transition-colors duration-300",
-                        "Ruxlog Admin"
+                    button {
+                        class: "rounded-md p-2 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-900/90 dark:hover:text-white transition-colors duration-200 sm:hidden",
+                        onclick: move |_| toggle.call(()),
+                        "×"
                     }
                 }
-                button {
-                    class: "rounded-md p-2 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-900/90 dark:hover:text-white transition-colors duration-200 sm:hidden",
-                    onclick: move |_| toggle.call(()),
-                    "×"
-                }
-            }
 
-            div { class: "overflow-y-auto",
-                SidebarModuleLink {
+                div { class: "flex-1 overflow-y-auto",
+                    SidebarModuleLink {
                     main_route: Route::HomeScreen {},
                     icon: rsx! {
                         Icon { icon: LdHome }
@@ -149,7 +150,7 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                     is_active: is_active(Route::TagsListScreen {}),
                     on_close: move |_| toggle.call(()),
                 }
-                SidebarModuleLink {
+                    SidebarModuleLink {
                     main_route: Route::MediaListScreen {},
                     add_route: Some(Route::MediaUploadScreen {}),
                     icon: rsx! {
@@ -169,7 +170,7 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                     is_active: is_active(Route::UsersListScreen {}),
                     on_close: move |_| toggle.call(()),
                 }
-                SidebarModuleLink {
+                            SidebarModuleLink {
                     main_route: Route::AnalyticsScreen {},
                     icon: rsx! {
                         Icon { icon: LdAreaChart }
@@ -180,12 +181,13 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                 }
             }
 
-            div { class: "absolute bottom-0 left-0 right-0 border-t border-zinc-300 dark:border-zinc-800 transition-colors duration-300",
-                button {
-                    class: "flex w-full items-center flex-1 px-3 h-15 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-900/90 dark:hover:text-white transition-colors duration-200",
-                    onclick: handle_logout_click,
-                    Icon { icon: LdLogOut, width: 18, height: 18 }
-                    span { class: "ml-3", "Logout" }
+                div { class: "border-t border-zinc-300 dark:border-zinc-800 transition-colors duration-300",
+                    button {
+                        class: "flex w-full items-center flex-1 px-3 h-15 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-900/90 dark:hover:text-white transition-colors duration-200",
+                        onclick: handle_logout_click,
+                        Icon { icon: LdLogOut, width: 18, height: 18 }
+                        span { class: "ml-3", "Logout" }
+                    }
                 }
             }
         }
