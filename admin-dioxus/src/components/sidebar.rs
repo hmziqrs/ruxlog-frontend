@@ -170,15 +170,7 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
                     is_active: is_active(Route::UsersListScreen {}),
                     on_close: move |_| toggle.call(()),
                 }
-                            SidebarModuleLink {
-                    main_route: Route::AnalyticsScreen {},
-                    icon: rsx! {
-                        Icon { icon: LdAreaChart }
-                    },
-                    label: "Analytics",
-                    is_active: is_active(Route::AnalyticsScreen {}),
-                    on_close: move |_| toggle.call(()),
-                }
+
             }
 
                 div { class: "border-t border-zinc-300 dark:border-zinc-800 transition-colors duration-300",

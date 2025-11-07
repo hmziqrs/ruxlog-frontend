@@ -79,7 +79,6 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
             ("edit".to_string(), None),
         ],
         Route::UsersListScreen {} => vec![("users".to_string(), None)],
-        Route::AnalyticsScreen {} => vec![("analytics".to_string(), None)],
         Route::SonnerDemoScreen {} => {
             vec![("demo".to_string(), None), ("sonner".to_string(), None)]
         }

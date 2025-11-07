@@ -3,7 +3,7 @@ use std::sync::LazyLock;
 
 use crate::containers::AuthGuardContainer;
 use crate::containers::NavBarContainer;
-use crate::screens::AnalyticsScreen;
+
 use crate::screens::CategoriesAddScreen;
 use crate::screens::CategoriesEditScreen;
 use crate::screens::CategoriesListScreen;
@@ -69,8 +69,7 @@ pub enum Route {
     #[route("/users")]
     UsersListScreen {},
 
-    #[route("/analytics")]
-    AnalyticsScreen {},
+
 
     #[route("/demo/sonner")]
     SonnerDemoScreen {},
