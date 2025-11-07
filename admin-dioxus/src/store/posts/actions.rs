@@ -102,7 +102,7 @@ impl PostState {
                             view_map
                                 .entry(post_id)
                                 .or_insert_with(StateFrame::new)
-                                .set_success(Some(post), None);
+                                .set_success(Some(post));
                         }
                         Err(e) => {
                             // Can't cache without knowing the ID, just log the error
@@ -155,7 +155,7 @@ impl PostState {
         autosave_map
             .entry(post_id)
             .or_insert_with(StateFrame::new)
-            .set_loading(None);
+            .set_loading();
         drop(autosave_map);
 
         let result = http_client::post("/post/v1/autosave", &payload)
@@ -169,7 +169,7 @@ impl PostState {
                     autosave_map
                         .entry(post_id)
                         .or_insert_with(StateFrame::new)
-                        .set_success(None, Some("Autosaved successfully".to_string()));
+                        .set_success(None);
                 } else {
                     autosave_map
                         .entry(post_id)
@@ -199,7 +199,7 @@ impl PostState {
         schedule_map
             .entry(post_id)
             .or_insert_with(StateFrame::new)
-            .set_loading(None);
+            .set_loading();
         drop(schedule_map);
 
         let result = http_client::post("/post/v1/schedule", &payload)
@@ -213,7 +213,7 @@ impl PostState {
                     schedule_map
                         .entry(post_id)
                         .or_insert_with(StateFrame::new)
-                        .set_success(None, Some("Post scheduled successfully".to_string()));
+                        .set_success(None);
 
                     // Refresh the post view and list
                     drop(schedule_map);
@@ -247,7 +247,7 @@ impl PostState {
         revisions_map
             .entry(post_id)
             .or_insert_with(StateFrame::new)
-            .set_loading(None);
+            .set_loading();
         drop(revisions_map);
 
         let result = http_client::post(
@@ -266,7 +266,7 @@ impl PostState {
                             revisions_map
                                 .entry(post_id)
                                 .or_insert_with(StateFrame::new)
-                                .set_success(Some(revisions), None);
+                                .set_success(Some(revisions));
                         }
                         Err(e) => {
                             let raw = response.text().await.unwrap_or_default();
@@ -301,7 +301,7 @@ impl PostState {
         restore_map
             .entry(key)
             .or_insert_with(StateFrame::new)
-            .set_loading(None);
+            .set_loading();
         drop(restore_map);
 
         let result = http_client::post(
@@ -318,7 +318,7 @@ impl PostState {
                     restore_map
                         .entry(key)
                         .or_insert_with(StateFrame::new)
-                        .set_success(None, Some("Revision restored successfully".to_string()));
+                        .set_success(None);
 
                     // Refresh the post view
                     drop(restore_map);
@@ -352,7 +352,7 @@ impl PostState {
         track_map
             .entry(post_id)
             .or_insert_with(StateFrame::new)
-            .set_loading(None);
+            .set_loading();
         drop(track_map);
 
         let result = http_client::post(&format!("/post/v1/track_view/{}", post_id), &())
@@ -366,7 +366,7 @@ impl PostState {
                     track_map
                         .entry(post_id)
                         .or_insert_with(StateFrame::new)
-                        .set_success(None, None);
+                        .set_success(None);
                 } else {
                     track_map
                         .entry(post_id)
@@ -465,7 +465,7 @@ impl PostState {
         add_map
             .entry(key)
             .or_insert_with(StateFrame::new)
-            .set_loading(None);
+            .set_loading();
         drop(add_map);
 
         let result = http_client::post(
@@ -482,7 +482,7 @@ impl PostState {
                     add_map
                         .entry(key)
                         .or_insert_with(StateFrame::new)
-                        .set_success(None, Some("Post added to series".to_string()));
+                        .set_success(None);
 
                     // Refresh the post view
                     drop(add_map);
@@ -512,7 +512,7 @@ impl PostState {
         remove_map
             .entry(key)
             .or_insert_with(StateFrame::new)
-            .set_loading(None);
+            .set_loading();
         drop(remove_map);
 
         let result = http_client::post(
@@ -529,7 +529,7 @@ impl PostState {
                     remove_map
                         .entry(key)
                         .or_insert_with(StateFrame::new)
-                        .set_success(None, Some("Post removed from series".to_string()));
+                        .set_success(None);
 
                     // Refresh the post view
                     drop(remove_map);

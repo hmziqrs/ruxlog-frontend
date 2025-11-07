@@ -36,7 +36,7 @@ impl AuthState {
     }
 
     pub async fn logout(&self) {
-        self.logout_status.write().set_loading(None);
+        self.logout_status.write().set_loading();
         let empty_body = {};
         let result = http_client::post("/auth/v1/log_out", &empty_body)
             .send()
@@ -44,7 +44,7 @@ impl AuthState {
         match result {
             Ok(response) => {
                 if (200..300).contains(&response.status()) {
-                    self.logout_status.write().set_success(None, None);
+                    self.logout_status.write().set_success(None);
                     *self.user.write() = None;
                 } else {
                     self.logout_status.write().set_api_error(&response).await;
@@ -64,7 +64,7 @@ impl AuthState {
     pub async fn init(&self) {
         // self.init_status.write().set_success(None, None);
         // *self.user.write() = Some(User::dev());
-        self.init_status.write().set_loading(None);
+        self.init_status.write().set_loading();
         let result = http_client::get("/user/v1/get").send().await;
         match result {
             Ok(response) => {
@@ -78,19 +78,21 @@ impl AuthState {
                                 return;
                             }
                             *self.user.write() = Some(user);
-                            self.init_status.write().set_success(None, None);
+                            self.init_status.write().set_success(None);
                         }
                         Err(e) => {
                             let raw = response.text().await.unwrap_or_default();
                             tracing::error!("Failed to parse user data: {}\nResponse: {}", e, raw);
-                            self.init_status
-                                .write()
-                                .set_decode_error("user", format!("{}", e), Some(raw));
+                            self.init_status.write().set_decode_error(
+                                "user",
+                                format!("{}", e),
+                                Some(raw),
+                            );
                         }
                     }
                 } else if response.status() == 401 {
                     // Unauthorized, no user logged in
-                    self.init_status.write().set_success(None, None);
+                    self.init_status.write().set_success(None);
                 } else {
                     self.init_status.write().set_api_error(&response).await;
                 }
@@ -105,7 +107,7 @@ impl AuthState {
     }
 
     pub async fn login(&self, email: String, password: String) {
-        self.login_status.write().set_loading(None);
+        self.login_status.write().set_loading();
         let payload = LoginPayload { email, password };
         let result = http_client::post("/auth/v1/log_in", &payload).send().await;
         match result {
@@ -120,14 +122,16 @@ impl AuthState {
                                 return;
                             }
                             *self.user.write() = Some(user);
-                            self.login_status.write().set_success(None, None);
+                            self.login_status.write().set_success(None);
                         }
                         Err(e) => {
                             let raw = response.text().await.unwrap_or_default();
                             eprintln!("Failed to parse user data: {}\nResponse: {}", e, raw);
-                            self.login_status
-                                .write()
-                                .set_decode_error("user", format!("{}", e), Some(raw));
+                            self.login_status.write().set_decode_error(
+                                "user",
+                                format!("{}", e),
+                                Some(raw),
+                            );
                         }
                     }
                 } else {

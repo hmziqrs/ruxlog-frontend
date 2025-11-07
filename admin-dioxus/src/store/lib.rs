@@ -80,7 +80,7 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
         Self::default()
     }
 
-    pub fn new_with_loading(_message: Option<String>) -> Self {
+    pub fn new_with_loading() -> Self {
         Self {
             status: StateFrameStatus::Loading,
             data: None,
@@ -114,18 +114,18 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
         self.status == StateFrameStatus::Failed
     }
 
-    pub fn set_loading(&mut self, _message: Option<String>) {
+    pub fn set_loading(&mut self) {
         self.status = StateFrameStatus::Loading;
         self.error = None;
     }
 
-    pub fn set_loading_meta(&mut self, meta: Option<Q>, _message: Option<String>) {
+    pub fn set_loading_meta(&mut self, meta: Option<Q>) {
         self.status = StateFrameStatus::Loading;
         self.meta = meta;
         self.error = None;
     }
 
-    pub fn set_success(&mut self, data: Option<T>, _message: Option<String>) {
+    pub fn set_success(&mut self, data: Option<T>) {
         self.status = StateFrameStatus::Success;
         self.data = data;
         self.error = None;
@@ -242,13 +242,13 @@ pub async fn list_state_abstraction<T>(
 where
     T: DeserializeOwned + Clone + 'static,
 {
-    state.write().set_loading(None);
+    state.write().set_loading();
     match req.send().await {
         Ok(response) => {
             if (200..300).contains(&response.status()) {
                 match response.json::<T>().await {
                     Ok(data) => {
-                        state.write().set_success(Some(data.clone()), None);
+                        state.write().set_success(Some(data.clone()));
                         Some(data)
                     }
                     Err(e) => {
@@ -299,7 +299,7 @@ where
 {
     {
         let mut frame = state.write();
-        frame.set_loading_meta(meta, None);
+        frame.set_loading_meta(meta);
     }
 
     match send_future.await {
@@ -308,7 +308,7 @@ where
                 match response.json::<Parsed>().await {
                     Ok(parsed) => {
                         let (data, message) = on_success(&parsed);
-                        state.write().set_success(data, message);
+                        state.write().set_success(data);
                         Some(parsed)
                     }
                     Err(e) => {
@@ -352,9 +352,7 @@ where
 {
     {
         let mut map = state.write();
-        map.entry(id)
-            .or_insert_with(StateFrame::new)
-            .set_loading(None);
+        map.entry(id).or_insert_with(StateFrame::new).set_loading();
     }
 
     match send_future.await {
@@ -366,7 +364,7 @@ where
                         let mut map = state.write();
                         map.entry(id)
                             .or_insert_with(StateFrame::new)
-                            .set_success(Some(store_value), None);
+                            .set_success(Some(store_value));
                         Some(parsed)
                     }
                     Err(e) => {
@@ -428,7 +426,7 @@ where
         let mut map = state.write();
         map.entry(id)
             .or_insert_with(StateFrame::new)
-            .set_loading_meta(Some(payload), None);
+            .set_loading_meta(Some(payload));
     }
 
     match send_future.await {
@@ -440,7 +438,7 @@ where
                             let mut map = state.write();
                             map.entry(id)
                                 .or_insert_with(StateFrame::new)
-                                .set_success(None, None);
+                                .set_success(None);
                         }
 
                         // Sync list cache if provided
@@ -459,7 +457,7 @@ where
                             view_map
                                 .entry(id)
                                 .or_insert_with(StateFrame::new)
-                                .set_success(Some(parsed.clone()), None);
+                                .set_success(Some(parsed.clone()));
                         }
 
                         // Call optional success callback for custom logic
@@ -519,9 +517,7 @@ where
 {
     {
         let mut map = state.write();
-        map.entry(id)
-            .or_insert_with(StateFrame::new)
-            .set_loading(None);
+        map.entry(id).or_insert_with(StateFrame::new).set_loading();
     }
 
     match send_future.await {
@@ -531,7 +527,7 @@ where
                     let mut map = state.write();
                     map.entry(id)
                         .or_insert_with(StateFrame::new)
-                        .set_success(None, None);
+                        .set_success(None);
                 }
 
                 // Sync list cache if provided - remove the item
@@ -599,9 +595,7 @@ where
 {
     {
         let mut map = state.write();
-        map.entry(id)
-            .or_insert_with(StateFrame::new)
-            .set_loading(None);
+        map.entry(id).or_insert_with(StateFrame::new).set_loading();
     }
 
     match send_future.await {
@@ -611,7 +605,7 @@ where
                     let mut map = state.write();
                     map.entry(id)
                         .or_insert_with(StateFrame::new)
-                        .set_success(None, None);
+                        .set_success(None);
                 }
 
                 // Sync list cache if provided - remove the item
