@@ -22,48 +22,103 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
     let nav = use_navigator();
     let current_route = use_route::<Route>();
 
-    // Derive module name and suffix to match URL paths
-    let (module, add_suffix): (String, Option<String>) = match current_route {
-        Route::PostsAddScreen {} => ("posts".to_string(), Some("add".to_string())),
-        Route::PostsEditScreen { id } => ("posts".to_string(), Some(format!("{}/edit", id))),
-        Route::PostsViewScreen { id } => ("posts".to_string(), Some(id.to_string())),
-        Route::PostsListScreen {} => ("posts".to_string(), None),
-        Route::CategoriesAddScreen {} => ("categories".to_string(), Some("add".to_string())),
-        Route::CategoriesListScreen {} => ("categories".to_string(), None),
-        Route::CategoriesEditScreen { id } => {
-            ("categories".to_string(), Some(format!("{}/edit", id)))
+    // Derive breadcrumb segments: (text, optional link route)
+    let segments: Vec<(String, Option<Route>)> = match current_route {
+        Route::PostsAddScreen {} => vec![
+            ("posts".to_string(), Some(Route::PostsListScreen {})),
+            ("add".to_string(), None),
+        ],
+        Route::PostsEditScreen { id } => vec![
+            ("posts".to_string(), Some(Route::PostsListScreen {})),
+            (id.to_string(), Some(Route::PostsViewScreen { id })),
+            ("edit".to_string(), None),
+        ],
+        Route::PostsViewScreen { id } => vec![
+            ("posts".to_string(), Some(Route::PostsListScreen {})),
+            (id.to_string(), None),
+        ],
+        Route::PostsListScreen {} => vec![("posts".to_string(), None)],
+        Route::CategoriesAddScreen {} => vec![
+            (
+                "categories".to_string(),
+                Some(Route::CategoriesListScreen {}),
+            ),
+            ("add".to_string(), None),
+        ],
+        Route::CategoriesListScreen {} => vec![("categories".to_string(), None)],
+        Route::CategoriesEditScreen { id } => vec![
+            (
+                "categories".to_string(),
+                Some(Route::CategoriesListScreen {}),
+            ),
+            (id.to_string(), None),
+            ("edit".to_string(), None),
+        ],
+        Route::TagsAddScreen {} => vec![
+            ("tags".to_string(), Some(Route::TagsListScreen {})),
+            ("add".to_string(), None),
+        ],
+        Route::TagsEditScreen { id } => vec![
+            ("tags".to_string(), Some(Route::TagsListScreen {})),
+            (id.to_string(), None),
+            ("edit".to_string(), None),
+        ],
+        Route::TagsListScreen {} => vec![("tags".to_string(), None)],
+        Route::MediaUploadScreen {} => vec![
+            ("media".to_string(), Some(Route::MediaListScreen {})),
+            ("upload".to_string(), None),
+        ],
+        Route::MediaListScreen {} => vec![("media".to_string(), None)],
+        Route::UsersAddScreen {} => vec![
+            ("users".to_string(), Some(Route::UsersListScreen {})),
+            ("add".to_string(), None),
+        ],
+        Route::UsersEditScreen { id } => vec![
+            ("users".to_string(), Some(Route::UsersListScreen {})),
+            (id.to_string(), None),
+            ("edit".to_string(), None),
+        ],
+        Route::UsersListScreen {} => vec![("users".to_string(), None)],
+        Route::AnalyticsScreen {} => vec![("analytics".to_string(), None)],
+        Route::SonnerDemoScreen {} => {
+            vec![("demo".to_string(), None), ("sonner".to_string(), None)]
         }
-        Route::TagsAddScreen {} => ("tags".to_string(), Some("add".to_string())),
-        Route::TagsEditScreen { id } => ("tags".to_string(), Some(format!("{}/edit", id))),
-        Route::TagsListScreen {} => ("tags".to_string(), None),
-        Route::MediaUploadScreen {} => ("media".to_string(), Some("upload".to_string())),
-        Route::MediaListScreen {} => ("media".to_string(), None),
-        Route::UsersAddScreen {} => ("users".to_string(), Some("add".to_string())),
-        Route::UsersEditScreen { id } => ("users".to_string(), Some(format!("{}/edit", id))),
-        Route::UsersListScreen {} => ("users".to_string(), None),
-        Route::AnalyticsScreen {} => ("analytics".to_string(), None),
-        Route::SonnerDemoScreen {} => ("demo".to_string(), Some("sonner".to_string())),
-        Route::HomeScreen {} | Route::LoginScreen {} => ("".to_string(), None),
-    };
-
-    // Resolve the list route for the current module, if applicable
-    let list_route_for_module = |m: &str| -> Option<Route> {
-        match m {
-            // LIST_ROUTES_START (auto-generated)
-            "posts" => Some(Route::PostsListScreen {}),
-            "categories" => Some(Route::CategoriesListScreen {}),
-            "tags" => Some(Route::TagsListScreen {}),
-            "media" => Some(Route::MediaListScreen {}),
-            "users" => Some(Route::UsersListScreen {}),
-            // LIST_ROUTES_END
-            _ => None,
-        }
+        Route::HomeScreen {} | Route::LoginScreen {} => vec![],
     };
 
     let container_class = props
         .class
         .clone()
         .unwrap_or_else(|| "container mx-auto px-4 py-6 md:py-8".to_string());
+
+    let segments_elements: Vec<Element> = segments
+        .iter()
+        .enumerate()
+        .map(|(i, (text, link_route))| {
+            let separator = if i < segments.len() - 1 {
+                rsx! { BreadcrumbSeparator {} }
+            } else {
+                rsx! {}
+            };
+            if let Some(route_ref) = link_route {
+                let r = route_ref.clone();
+                rsx! {
+                    BreadcrumbItem {
+                        BreadcrumbLink {
+                            onclick: Some(Callback::new(move |_| { let _ = nav.push(r.clone()); })),
+                            "{text}"
+                        }
+                    }
+                    {separator}
+                }
+            } else {
+                rsx! {
+                    BreadcrumbItem { BreadcrumbPage { "{text}" } }
+                    {separator}
+                }
+            }
+        })
+        .collect();
 
     if props.embedded {
         rsx! {
@@ -79,22 +134,8 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
                     }
                     BreadcrumbSeparator {}
 
-                    // Middle crumbs and page
-                    match add_suffix {
-                        None => rsx!{ if !module.is_empty() { BreadcrumbItem { BreadcrumbPage { "{module}" } } } },
-                        Some(suffix) => {
-                            rsx!{
-                                BreadcrumbItem {
-                                    match list_route_for_module(&module) {
-                                        Some(list_route) => rsx!{ BreadcrumbLink { onclick: Some(Callback::new(move |_| { nav.push(list_route.clone()); })), "{module}" } },
-                                        None => rsx!{ BreadcrumbPage { "{module}" } }
-                                    }
-                                }
-                                BreadcrumbSeparator {}
-                                BreadcrumbItem { BreadcrumbPage { "{suffix}" } }
-                            }
-                        }
-                    }
+                    // Segments
+                    for element in &segments_elements { {element} }
                 }
             }
 
@@ -127,27 +168,8 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
                             }
                             BreadcrumbSeparator {}
 
-                            // Middle crumbs and page
-                            match add_suffix {
-                                // List-like screens or single-level pages
-                                None => rsx!{ if !module.is_empty() { BreadcrumbItem { BreadcrumbPage { "{module}" } } } },
-                                // Add/new screens -> Dashboard / Module / New
-                                Some(suffix) => {
-                                    rsx!{
-                                        // Module link back to list
-                                        BreadcrumbItem {
-                                            match list_route_for_module(&module) {
-                                                Some(list_route) => rsx!{
-                                                    BreadcrumbLink { onclick: Some(Callback::new(move |_| { nav.push(list_route.clone()); })), "{module}" }
-                                                },
-                                                None => rsx!{ BreadcrumbPage { "{module}" } }
-                                            }
-                                        }
-                                        BreadcrumbSeparator {}
-                                        BreadcrumbItem { BreadcrumbPage { "{suffix}" } }
-                                    }
-                                }
-                            }
+                            // Segments
+                            for element in &segments_elements { {element} }
                         }
                     }
 
