@@ -24,7 +24,7 @@ pub fn SidebarModuleLink(props: SidebarModuleLinkProps) -> Element {
         div { class: "flex flex-row w-full",
             div {
                 class: format_args!(
-                    "flex items-center flex-1 pl-5 pr-3 h-12 text-sm font-medium {} transition-colors duration-200",
+                    "flex items-center flex-1 pl-5 pr-3 h-12 text-sm font-medium cursor-pointer {} transition-colors duration-200",
                     if props.is_active {
                         "bg-zinc-300 text-zinc-800 dark:bg-zinc-700 dark:text-white"
                     } else {
@@ -40,7 +40,7 @@ pub fn SidebarModuleLink(props: SidebarModuleLinkProps) -> Element {
                 div { class: "flex-1" }
                 if let Some(add_route) = props.add_route {
                     div {
-                        class: "hover:bg-zinc-300 dark:hover:bg-zinc-800/90",
+                        class: "cursor-pointer hover:bg-zinc-300 dark:hover:bg-zinc-800/90",
                         onclick: move |e| {
                             e.stop_propagation();
                             nav.push(add_route.clone());
@@ -183,7 +183,7 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
 
                 div { class: "border-t border-zinc-300 dark:border-zinc-800 transition-colors duration-300",
                     button {
-                        class: "flex w-full items-center flex-1 pl-5 pr-3 h-15 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-900/90 dark:hover:text-white transition-colors duration-200",
+                        class: "flex w-full items-center flex-1 pl-5 pr-3 h-15 text-sm font-medium cursor-pointer text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-900/90 dark:hover:text-white transition-colors duration-200",
                         onclick: handle_logout_click,
                         Icon { icon: LdLogOut, width: 18, height: 18 }
                         span { class: "ml-3", "Logout" }
