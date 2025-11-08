@@ -433,7 +433,7 @@ fn ChartBody(points: Vec<PageViewPoint>, height: String, compact: bool) -> Eleme
                                     area.push_str(&format!("{:.3},{:.3} ", x, y));
                                 }
                                 // Close down to baseline
-                                if let Some(last) = points.last() {
+                                if let Some(_last) = points.last() {
                                     let x_last = pad_x + (points.len() - 1) as f32 * scale_x;
                                     let baseline = scale_y(0);
                                     area.push_str(&format!("{:.3},{:.3} ", x_last, baseline));

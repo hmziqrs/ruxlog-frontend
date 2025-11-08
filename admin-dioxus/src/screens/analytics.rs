@@ -65,7 +65,7 @@ pub fn AnalyticsScreen() -> Element {
     //
 
     // Summary period selector (7d/30d/90d)
-    let mut summary_period = use_signal(|| "7d".to_string());
+    let summary_period = use_signal(|| "7d".to_string());
 
     // Page views chart filters
     let mut pv_interval = use_signal(|| AnalyticsInterval::Day);
@@ -74,32 +74,29 @@ pub fn AnalyticsScreen() -> Element {
     let mut pv_only_unique = use_signal(|| false);
 
     // Publishing trends filters
-    let mut publishing_interval = use_signal(|| AnalyticsInterval::Day);
+    let publishing_interval = use_signal(|| AnalyticsInterval::Day);
 
     // Registration trends interval
-    let mut registration_interval = use_signal(|| AnalyticsInterval::Day);
+    let registration_interval = use_signal(|| AnalyticsInterval::Day);
 
     // Verification rates interval
     let mut verification_interval = use_signal(|| AnalyticsInterval::Day);
 
-    // Comment rate filters
-    // Plan calls for sort (comment_rate vs comments) and min_views if supported.
-    // Keep minimal/agnostic here; wire a simple sort key.
-    let mut comment_sort_by_rate = use_signal(|| true);
+    // Comment rate filters (placeholder for future enhancements using min_views/sort, currently unused)
 
     // Newsletter growth interval
-    let mut newsletter_interval = use_signal(|| AnalyticsInterval::Day);
+    let newsletter_interval = use_signal(|| AnalyticsInterval::Day);
 
     // Media upload trends interval
-    let mut media_interval = use_signal(|| AnalyticsInterval::Day);
+    let media_interval = use_signal(|| AnalyticsInterval::Day);
 
     //
     // Initial fetch on mount:
     // Fetch all analytics series so the screen loads with data.
     //
     use_future({
-        let analytics = analytics.clone();
-        let filters = filters.clone();
+        let analytics = analytics;
+        let filters = filters;
         move || async move {
             let envelope = filters.build_envelope();
 
@@ -188,8 +185,6 @@ pub fn AnalyticsScreen() -> Element {
     let publishing_frame = analytics.publishing_trends.read();
     let registration_frame = analytics.registration_trends.read();
     let verification_frame = analytics.verification_rates.read();
-    let comment_rate_frame = analytics.comment_rate.read();
-    let newsletter_frame = analytics.newsletter_growth.read();
     let media_upload_frame = analytics.media_upload.read();
 
     rsx! {
@@ -204,8 +199,8 @@ pub fn AnalyticsScreen() -> Element {
             // On change: rebuild envelope and refetch relevant frames.
             AnalyticsFilterToolbar {
                 on_filter_change: move |_| {
-                    let analytics = analytics.clone();
-                    let filters = filters.clone();
+                    let analytics = analytics;
+                    let filters = filters;
                     spawn(async move {
                         let envelope = filters.build_envelope();
 
@@ -304,12 +299,12 @@ pub fn AnalyticsScreen() -> Element {
                         compact: false,
                         current_interval: *pv_interval.read(),
                         on_interval_change: Some(EventHandler::new({
-                            let analytics = analytics.clone();
-                            let filters = filters.clone();
+                            let analytics = analytics;
+                            let filters = filters;
                             move |interval: AnalyticsInterval| {
                                 *pv_interval.write() = interval;
-                                let analytics = analytics.clone();
-                                let filters = filters.clone();
+                                let analytics = analytics;
+                                let filters = filters;
                                 spawn(async move {
                                     let envelope = filters.build_envelope();
                                     let req = PageViewsRequest {
@@ -327,12 +322,12 @@ pub fn AnalyticsScreen() -> Element {
                         })),
                         current_post_id: *pv_post_id.read(),
                         on_post_id_change: Some(EventHandler::new({
-                            let analytics = analytics.clone();
-                            let filters = filters.clone();
+                            let analytics = analytics;
+                            let filters = filters;
                             move |post_id: Option<i32>| {
                                 *pv_post_id.write() = post_id;
-                                let analytics = analytics.clone();
-                                let filters = filters.clone();
+                                let analytics = analytics;
+                                let filters = filters;
                                 spawn(async move {
                                     let envelope = filters.build_envelope();
                                     let req = PageViewsRequest {
@@ -350,12 +345,12 @@ pub fn AnalyticsScreen() -> Element {
                         })),
                         current_author_id: *pv_author_id.read(),
                         on_author_id_change: Some(EventHandler::new({
-                            let analytics = analytics.clone();
-                            let filters = filters.clone();
+                            let analytics = analytics;
+                            let filters = filters;
                             move |author_id: Option<i32>| {
                                 *pv_author_id.write() = author_id;
-                                let analytics = analytics.clone();
-                                let filters = filters.clone();
+                                let analytics = analytics;
+                                let filters = filters;
                                 spawn(async move {
                                     let envelope = filters.build_envelope();
                                     let req = PageViewsRequest {
@@ -373,12 +368,12 @@ pub fn AnalyticsScreen() -> Element {
                         })),
                         current_only_unique: *pv_only_unique.read(),
                         on_only_unique_change: Some(EventHandler::new({
-                            let analytics = analytics.clone();
-                            let filters = filters.clone();
+                            let analytics = analytics;
+                            let filters = filters;
                             move |only_unique: bool| {
                                 *pv_only_unique.write() = only_unique;
-                                let analytics = analytics.clone();
-                                let filters = filters.clone();
+                                let analytics = analytics;
+                                let filters = filters;
                                 spawn(async move {
                                     let envelope = filters.build_envelope();
                                     let req = PageViewsRequest {
@@ -418,12 +413,12 @@ pub fn AnalyticsScreen() -> Element {
                         height: "h-72".to_string(),
                         show_success_rate: true,
                         on_interval_change: Some(EventHandler::new({
-                            let analytics = analytics.clone();
-                            let filters = filters.clone();
+                            let analytics = analytics;
+                            let filters = filters;
                             move |interval: AnalyticsInterval| {
                                 *verification_interval.write() = interval;
-                                let analytics = analytics.clone();
-                                let filters = filters.clone();
+                                let analytics = analytics;
+                                let filters = filters;
                                 spawn(async move {
                                     let envelope = filters.build_envelope();
                                     let req = VerificationRatesRequest {

@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use super::interval_selector::IntervalSelector;
 use crate::store::{
     AnalyticsEnvelopeResponse, AnalyticsInterval, StateFrame, StateFrameStatus,
-    VerificationRatePoint, VerificationRatesFilters, VerificationRatesRequest,
+    VerificationRatePoint, VerificationRatesRequest,
 };
 
 /// Props for `VerificationRatesChart`.
@@ -75,7 +75,7 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
         .max(1.0);
 
     // Helper to map enum to label.
-    fn interval_label(interval: &AnalyticsInterval) -> &'static str {
+    fn _interval_label(interval: &AnalyticsInterval) -> &'static str {
         match interval {
             AnalyticsInterval::Hour => "Hourly",
             AnalyticsInterval::Day => "Daily",

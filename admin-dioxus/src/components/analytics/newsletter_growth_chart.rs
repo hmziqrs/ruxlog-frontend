@@ -3,8 +3,7 @@ use dioxus::prelude::*;
 use crate::hooks::use_state_frame_toast::{use_state_frame_toast, StateFrameToastConfig};
 use crate::store::{
     use_analytics, AnalyticsEnvelope, AnalyticsEnvelopeResponse, AnalyticsInterval,
-    NewsletterGrowthFilters, NewsletterGrowthPoint, NewsletterGrowthRequest, StateFrame,
-    StateFrameStatus,
+    NewsletterGrowthFilters, NewsletterGrowthPoint, NewsletterGrowthRequest, StateFrameStatus,
 };
 
 /// Props for `NewsletterGrowthChart`.
@@ -52,14 +51,7 @@ pub fn NewsletterGrowthChart(props: NewsletterGrowthChartProps) -> Element {
         let interval = interval.read().clone();
 
         async move {
-            // Map enum to backend interval string if needed.
-            let group_by = match interval {
-                AnalyticsInterval::Hour => "hour",
-                AnalyticsInterval::Day => "day",
-                AnalyticsInterval::Week => "week",
-                AnalyticsInterval::Month => "month",
-            }
-            .to_string();
+            // Map enum to backend interval if needed (we pass the enum directly below).
 
             let request = NewsletterGrowthRequest {
                 envelope: AnalyticsEnvelope {
@@ -272,7 +264,7 @@ fn NewsletterGrowthChartInner(props: NewsletterGrowthChartInnerProps) -> Element
         }
     }
 
-    let max_bar = max_bar.max(1);
+    let _max_bar = max_bar.max(1);
     let max_abs_net = max_net.abs().max(min_net.abs()).max(1);
 
     let width = 1000.0;
@@ -375,7 +367,7 @@ fn LegendDot(class_name: String) -> Element {
 
 // Helpers kept private to this module.
 
-fn truncate_label(label: &str, max_len: usize) -> String {
+fn _truncate_label(label: &str, max_len: usize) -> String {
     if label.chars().count() <= max_len {
         label.to_string()
     } else {

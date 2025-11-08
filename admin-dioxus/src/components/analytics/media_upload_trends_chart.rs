@@ -185,18 +185,18 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
 
                         // Compute max for normalization (avoid division by zero).
                         {
-                            let max_uploads = data
+                            let _max_uploads = data
                                 .iter()
                                 .map(|p| p.upload_count.max(0))
                                 .max()
                                 .unwrap_or(1) as f64;
-                            let max_avg = data
+                            let _max_avg = data
                                 .iter()
                                 .map(|p| p.avg_size_mb.max(0.0))
                                 .fold(0.0_f64, f64::max)
                                 .max(1.0);
 
-                            // TODO: restore full chart rendering with proper for loop pattern
+                            // TODO: restore full chart rendering with proper chart primitives
                             rsx! { div { class: "text-center text-[10px] text-zinc-500", "{data.len()} uploads" } }
                         }
                     }
