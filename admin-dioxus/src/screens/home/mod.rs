@@ -1,10 +1,8 @@
 use dioxus::prelude::*;
 
 use crate::components::analytics::{
-    dashboard_summary_cards::DashboardSummaryCards,
-    filter_toolbar::AnalyticsFilterToolbar,
-    page_views_chart::PageViewsChart,
-    publishing_trends_chart::PublishingTrendsChart,
+    dashboard_summary_cards::DashboardSummaryCards, filter_toolbar::AnalyticsFilterToolbar,
+    page_views_chart::PageViewsChart, publishing_trends_chart::PublishingTrendsChart,
     registration_trend_chart::RegistrationTrendChart,
     verification_rates_chart::VerificationRatesChart,
 };
@@ -135,7 +133,7 @@ pub fn HomeScreen() -> Element {
                 },
             }
 
-            div { class: "container mx-auto px-4 pb-10 space-y-6",
+            div { class: "container mx-auto px-4 my-6 space-y-6",
 
                 // Summary KPI cards row
                 DashboardSummaryCards {
