@@ -1,3 +1,4 @@
+mod analytics;
 mod categories;
 mod home;
 mod login;
@@ -7,6 +8,7 @@ mod sonner_demo;
 mod tags;
 mod users;
 
+pub use analytics::*;
 pub use categories::*;
 pub use home::*;
 pub use login::*;

@@ -112,14 +112,23 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
 
                 div { class: "flex-1 overflow-y-auto",
                     SidebarModuleLink {
-                    main_route: Route::HomeScreen {},
-                    icon: rsx! {
-                        Icon { icon: LdHome }
-                    },
-                    label: "Dashboard",
-                    is_active: is_active(Route::HomeScreen {}),
-                    on_close: move |_| toggle.call(()),
-                }
+                        main_route: Route::HomeScreen {},
+                        icon: rsx! {
+                            Icon { icon: LdHome }
+                        },
+                        label: "Dashboard",
+                        is_active: is_active(Route::HomeScreen {}),
+                        on_close: move |_| toggle.call(()),
+                    }
+                    SidebarModuleLink {
+                        main_route: Route::AnalyticsScreen {},
+                        icon: rsx! {
+                            Icon { icon: LdAreaChart }
+                        },
+                        label: "Analytics",
+                        is_active: is_active(Route::AnalyticsScreen {}),
+                        on_close: move |_| toggle.call(()),
+                    }
                 SidebarModuleLink {
                     main_route: Route::PostsListScreen {},
                     add_route: Some(Route::PostsAddScreen {}),
