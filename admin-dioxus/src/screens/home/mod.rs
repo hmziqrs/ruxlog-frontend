@@ -22,6 +22,12 @@ pub fn HomeScreen() -> Element {
     let analytics = use_analytics();
     let filters = use_analytics_filters();
 
+    // Local state for page views chart-specific filters
+    let mut page_views_interval = use_signal(|| AnalyticsInterval::Day);
+    let mut page_views_post_id = use_signal(|| None::<i32>);
+    let mut page_views_author_id = use_signal(|| None::<i32>);
+    let mut page_views_only_unique = use_signal(|| false);
+
     // Wire toast helpers for key frames so dashboard surfaces API issues.
     let _summary_toast = use_state_frame_toast(
         &analytics.dashboard_summary,
@@ -140,9 +146,77 @@ pub fn HomeScreen() -> Element {
                 div { class: "grid grid-cols-1 lg:grid-cols-2 gap-4",
                     PageViewsChart {
                         frame: page_views_frame.clone(),
-                        title: "Traffic & views (last 7 days)".to_string(),
+                        title: "Traffic & views".to_string(),
                         height: "h-72".to_string(),
                         compact: false,
+                        current_interval: *page_views_interval.read(),
+                        on_interval_change: Some(EventHandler::new(move |interval: AnalyticsInterval| {
+                            *page_views_interval.write() = interval;
+                            spawn(async move {
+                                let envelope = filters.build_envelope();
+                                let req = PageViewsRequest {
+                                    envelope,
+                                    filters: PageViewsFilters {
+                                        group_by: interval,
+                                        post_id: *page_views_post_id.read(),
+                                        author_id: *page_views_author_id.read(),
+                                        only_unique: *page_views_only_unique.read(),
+                                    },
+                                };
+                                analytics.fetch_page_views(req).await;
+                            });
+                        })),
+                        current_post_id: *page_views_post_id.read(),
+                        on_post_id_change: Some(EventHandler::new(move |post_id: Option<i32>| {
+                            *page_views_post_id.write() = post_id;
+                            spawn(async move {
+                                let envelope = filters.build_envelope();
+                                let req = PageViewsRequest {
+                                    envelope,
+                                    filters: PageViewsFilters {
+                                        group_by: *page_views_interval.read(),
+                                        post_id,
+                                        author_id: *page_views_author_id.read(),
+                                        only_unique: *page_views_only_unique.read(),
+                                    },
+                                };
+                                analytics.fetch_page_views(req).await;
+                            });
+                        })),
+                        current_author_id: *page_views_author_id.read(),
+                        on_author_id_change: Some(EventHandler::new(move |author_id: Option<i32>| {
+                            *page_views_author_id.write() = author_id;
+                            spawn(async move {
+                                let envelope = filters.build_envelope();
+                                let req = PageViewsRequest {
+                                    envelope,
+                                    filters: PageViewsFilters {
+                                        group_by: *page_views_interval.read(),
+                                        post_id: *page_views_post_id.read(),
+                                        author_id,
+                                        only_unique: *page_views_only_unique.read(),
+                                    },
+                                };
+                                analytics.fetch_page_views(req).await;
+                            });
+                        })),
+                        current_only_unique: *page_views_only_unique.read(),
+                        on_only_unique_change: Some(EventHandler::new(move |only_unique: bool| {
+                            *page_views_only_unique.write() = only_unique;
+                            spawn(async move {
+                                let envelope = filters.build_envelope();
+                                let req = PageViewsRequest {
+                                    envelope,
+                                    filters: PageViewsFilters {
+                                        group_by: *page_views_interval.read(),
+                                        post_id: *page_views_post_id.read(),
+                                        author_id: *page_views_author_id.read(),
+                                        only_unique,
+                                    },
+                                };
+                                analytics.fetch_page_views(req).await;
+                            });
+                        })),
                     }
 
                     PublishingTrendsChart {
@@ -163,9 +237,21 @@ pub fn HomeScreen() -> Element {
 
                     VerificationRatesChart {
                         frame: verification_frame.clone(),
-                        title: "Verification funnel (last 7 days)".to_string(),
+                        title: "Verification funnel".to_string(),
                         height: "260px".to_string(),
                         show_success_rate: true,
+                        on_interval_change: Some(EventHandler::new(move |interval: AnalyticsInterval| {
+                            spawn(async move {
+                                let envelope = filters.build_envelope();
+                                let req = VerificationRatesRequest {
+                                    envelope,
+                                    filters: VerificationRatesFilters {
+                                        group_by: interval,
+                                    },
+                                };
+                                analytics.fetch_verification_rates(req).await;
+                            });
+                        })),
                     }
                 }
             }

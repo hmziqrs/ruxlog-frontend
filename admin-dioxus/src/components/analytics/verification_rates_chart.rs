@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 
+use super::interval_selector::IntervalSelector;
 use crate::store::{
     AnalyticsEnvelopeResponse, AnalyticsInterval, StateFrame, StateFrameStatus,
     VerificationRatePoint, VerificationRatesFilters, VerificationRatesRequest,
@@ -82,9 +83,6 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
             AnalyticsInterval::Month => "Monthly",
         }
     }
-
-    // Suppress unused warnings (TODO: implement interval controls properly)
-    let _ = (on_interval_change, current_interval); // Interval selector button helper.
 
     // Render loading, error, and empty states.
     let content: Element = match status {
@@ -237,6 +235,15 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
                     span {
                         class: "text-[10px] text-zinc-500",
                         "Verification requests vs. verified accounts over time."
+                    }
+                }
+
+                // Interval selector (if callback provided)
+                if let Some(handler) = on_interval_change {
+                    IntervalSelector {
+                        current: current_interval,
+                        on_change: handler,
+                        label: "".to_string(),
                     }
                 }
             }

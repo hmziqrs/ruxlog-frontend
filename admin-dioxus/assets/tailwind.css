@@ -1955,6 +1955,12 @@
   .border-zinc-200 {
     border-color: var(--color-zinc-200);
   }
+  .border-zinc-200\/50 {
+    border-color: color-mix(in srgb, oklch(92% 0.004 286.32) 50%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-zinc-200) 50%, transparent);
+    }
+  }
   .border-zinc-200\/60 {
     border-color: color-mix(in srgb, oklch(92% 0.004 286.32) 60%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -2857,6 +2863,9 @@
   }
   .text-red-800 {
     color: var(--color-red-800);
+  }
+  .text-ring {
+    color: var(--ring);
   }
   .text-rose-500 {
     color: var(--color-rose-500);
@@ -4483,6 +4492,14 @@
   .dark\:border-zinc-800 {
     &:is(.dark *) {
       border-color: var(--color-zinc-800);
+    }
+  }
+  .dark\:border-zinc-800\/50 {
+    &:is(.dark *) {
+      border-color: color-mix(in srgb, oklch(27.4% 0.006 286.033) 50%, transparent);
+      @supports (color: color-mix(in lab, red, red)) {
+        border-color: color-mix(in oklab, var(--color-zinc-800) 50%, transparent);
+      }
     }
   }
   .dark\:border-zinc-800\/60 {

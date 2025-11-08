@@ -1,6 +1,9 @@
 use dioxus::prelude::*;
 
-use crate::store::{AnalyticsEnvelopeResponse, PageViewPoint, StateFrame, StateFrameStatus};
+use super::interval_selector::IntervalSelector;
+use crate::store::{
+    AnalyticsEnvelopeResponse, AnalyticsInterval, PageViewPoint, StateFrame, StateFrameStatus,
+};
 
 /// Simple typed props for the page views chart.
 ///
@@ -9,6 +12,7 @@ use crate::store::{AnalyticsEnvelopeResponse, PageViewPoint, StateFrame, StateFr
 /// - `title`: optional title for the card
 /// - `height`: optional height (Tailwind class, default "h-72")
 /// - `compact`: optional flag to tweak padding/typography for dense layouts
+/// - Filter callbacks for interval, post_id, author_id, only_unique
 #[derive(Props, PartialEq, Clone)]
 pub struct PageViewsChartProps {
     /// State frame wrapping `AnalyticsEnvelopeResponse<Vec<PageViewPoint>>`.
@@ -23,6 +27,32 @@ pub struct PageViewsChartProps {
     /// Render with slightly more compact paddings.
     #[props(default = false)]
     pub compact: bool,
+
+    // Filter-related props
+    /// Current interval grouping
+    #[props(default = AnalyticsInterval::Day)]
+    pub current_interval: AnalyticsInterval,
+    /// Callback when interval changes
+    #[props(default)]
+    pub on_interval_change: Option<EventHandler<AnalyticsInterval>>,
+    /// Current post ID filter (None = all posts)
+    #[props(default)]
+    pub current_post_id: Option<i32>,
+    /// Callback when post ID filter changes
+    #[props(default)]
+    pub on_post_id_change: Option<EventHandler<Option<i32>>>,
+    /// Current author ID filter (None = all authors)
+    #[props(default)]
+    pub current_author_id: Option<i32>,
+    /// Callback when author ID filter changes
+    #[props(default)]
+    pub on_author_id_change: Option<EventHandler<Option<i32>>>,
+    /// Current "only unique" toggle state
+    #[props(default = false)]
+    pub current_only_unique: bool,
+    /// Callback when "only unique" toggle changes
+    #[props(default)]
+    pub on_only_unique_change: Option<EventHandler<bool>>,
 }
 
 /// High-level page views chart wrapper.
@@ -101,9 +131,111 @@ pub fn PageViewsChart(props: PageViewsChartProps) -> Element {
                         "Views vs unique visitors"
                     }
                 }
-                // Placeholder for future interval/filter controls
-                // (hooked into PageViewsRequest in Analytics page)
-                // div { class: "text-[10px] text-zinc-500", "Last 7 days" }
+
+                // Interval selector
+                if let Some(handler) = props.on_interval_change {
+                    IntervalSelector {
+                        current: props.current_interval,
+                        on_change: handler,
+                        label: "".to_string(),
+                    }
+                }
+            }
+
+            // Chart-specific filters panel
+            {
+                let has_filters = props.on_post_id_change.is_some()
+                    || props.on_author_id_change.is_some()
+                    || props.on_only_unique_change.is_some();
+
+                if has_filters {
+                    rsx! {
+                        div {
+                            class: "flex flex-wrap items-center gap-3 pt-2 pb-1 border-t border-zinc-200/50 dark:border-zinc-800/50",
+
+                            // Post ID filter
+                            if let Some(post_handler) = props.on_post_id_change {
+                                div {
+                                    class: "flex items-center gap-1.5",
+                                    label {
+                                        class: "text-[9px] font-medium text-zinc-500 whitespace-nowrap",
+                                        "Post ID:"
+                                    }
+                                    input {
+                                        r#type: "number",
+                                        value: props.current_post_id.map(|id| id.to_string()).unwrap_or_default(),
+                                        placeholder: "All",
+                                        oninput: move |evt: Event<FormData>| {
+                                            let value = evt.value();
+                                            let parsed = if value.is_empty() {
+                                                None
+                                            } else {
+                                                value.parse::<i32>().ok()
+                                            };
+                                            post_handler.call(parsed);
+                                        },
+                                        class: "w-20 px-2 py-1 text-[10px] rounded border border-zinc-200 \
+                                               dark:border-zinc-800 bg-transparent focus:border-ring \
+                                               focus:ring-1 focus:ring-ring/40",
+                                    }
+                                }
+                            }
+
+                            // Author ID filter
+                            if let Some(author_handler) = props.on_author_id_change {
+                                div {
+                                    class: "flex items-center gap-1.5",
+                                    label {
+                                        class: "text-[9px] font-medium text-zinc-500 whitespace-nowrap",
+                                        "Author ID:"
+                                    }
+                                    input {
+                                        r#type: "number",
+                                        value: props.current_author_id.map(|id| id.to_string()).unwrap_or_default(),
+                                        placeholder: "All",
+                                        oninput: move |evt: Event<FormData>| {
+                                            let value = evt.value();
+                                            let parsed = if value.is_empty() {
+                                                None
+                                            } else {
+                                                value.parse::<i32>().ok()
+                                            };
+                                            author_handler.call(parsed);
+                                        },
+                                        class: "w-20 px-2 py-1 text-[10px] rounded border border-zinc-200 \
+                                               dark:border-zinc-800 bg-transparent focus:border-ring \
+                                               focus:ring-1 focus:ring-ring/40",
+                                    }
+                                }
+                            }
+
+                            // Only unique toggle
+                            if let Some(unique_handler) = props.on_only_unique_change {
+                                div {
+                                    class: "flex items-center gap-1.5",
+                                    input {
+                                        r#type: "checkbox",
+                                        id: "only-unique-toggle",
+                                        checked: props.current_only_unique,
+                                        onchange: move |evt: Event<FormData>| {
+                                            unique_handler.call(evt.checked());
+                                        },
+                                        class: "w-3 h-3 rounded border-zinc-300 dark:border-zinc-700 \
+                                               text-ring focus:ring-2 focus:ring-ring/40",
+                                    }
+                                    label {
+                                        r#for: "only-unique-toggle",
+                                        class: "text-[9px] font-medium text-zinc-600 dark:text-zinc-400 \
+                                               cursor-pointer select-none",
+                                        "Only unique visitors"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    rsx! {}
+                }
             }
 
             // Body (loading/error/chart)
