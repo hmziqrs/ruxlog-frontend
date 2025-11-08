@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::store::analytics::{AnalyticsEnvelopeResponse, MediaUploadPoint};
-use crate::store::{StateFrame, StateStatus};
+use crate::store::{AnalyticsEnvelopeResponse, MediaUploadPoint, StateFrame, StateFrameStatus};
 
 /// Props for `MediaUploadTrendsChart`.
 ///
@@ -12,7 +11,10 @@ use crate::store::{StateFrame, StateStatus};
 #[derive(Props, PartialEq, Clone)]
 pub struct MediaUploadTrendsChartProps {
     /// Frame containing media upload trend points.
-    pub frame: StateFrame<AnalyticsEnvelopeResponse<Vec<MediaUploadPoint>>, crate::store::analytics::MediaUploadRequest>,
+    pub frame: StateFrame<
+        AnalyticsEnvelopeResponse<Vec<MediaUploadPoint>>,
+        crate::store::MediaUploadRequest,
+    >,
     /// Optional title for the chart card.
     #[props(default = "Media Upload Trends".to_string())]
     pub title: String,
@@ -38,12 +40,9 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
 
     let status = frame.status();
     let error = frame.error();
-    let data = frame
-        .data()
-        .map(|env| env.data.clone())
-        .unwrap_or_default();
+    let data = frame.data().map(|env| env.data.clone()).unwrap_or_default();
 
-    let is_loading = matches!(status, StateStatus::Idle | StateStatus::Loading);
+    let is_loading = matches!(status, StateFrameStatus::Init | StateFrameStatus::Loading);
     let has_error = error.is_some();
     let is_empty = !is_loading && !has_error && data.is_empty();
 
@@ -91,7 +90,7 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
                             class: "px-2 py-0.5 rounded-full bg-emerald-100/80 text-emerald-700 \
                                     dark:bg-emerald-500/10 dark:text-emerald-300 border border-emerald-100/60 \
                                     dark:border-emerald-500/20",
-                            "Last bucket avg size: {format!("{avg:.1} MB")}"
+                            "Last bucket avg size: {avg:.1} MB"
                         }
                     }
                 }

@@ -19,6 +19,14 @@ pub enum StateFrameStatus {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum StateStatus {
+    Idle,
+    Loading,
+    Error(String),
+    Loaded,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct StateFrame<D: Clone = (), M: Clone = ()> {
     pub status: StateFrameStatus,
     pub data: Option<D>,
@@ -163,7 +171,10 @@ impl<T: Clone, Q: Clone> StateFrame<T, Q> {
                     api_error.message = Some(if ty.is_empty() {
                         format!("Request failed (status {})", api_error.status)
                     } else {
-                        format!("Request failed with type {} (status {})", ty, api_error.status)
+                        format!(
+                            "Request failed with type {} (status {})",
+                            ty, api_error.status
+                        )
                     });
                 }
 

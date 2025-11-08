@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::store::analytics::{AnalyticsEnvelopeResponse, RegistrationTrendPoint};
-use crate::store::StateFrame;
+use crate::store::{AnalyticsEnvelopeResponse, RegistrationTrendPoint, StateFrame};
 
 /// Props for `RegistrationTrendChart`.
 ///
@@ -9,10 +8,13 @@ use crate::store::StateFrame;
 /// - `frame` is the state wrapper produced by `use_analytics().registration_trends`
 /// - `title` and `height` customize the card shell.
 /// - `on_retry` lets the parent trigger a refetch when errors occur.
-#[derive(Props, PartialEq)]
-pub struct RegistrationTrendChartProps<'a> {
+#[derive(Props, PartialEq, Clone)]
+pub struct RegistrationTrendChartProps {
     /// State frame containing analytics envelope response for registration trends.
-    pub frame: &'a StateFrame<AnalyticsEnvelopeResponse<Vec<RegistrationTrendPoint>>, crate::store::analytics::RegistrationTrendsRequest>,
+    pub frame: StateFrame<
+        AnalyticsEnvelopeResponse<Vec<RegistrationTrendPoint>>,
+        crate::store::RegistrationTrendsRequest,
+    >,
     /// Optional title for the chart card.
     #[props(default = "New user registrations".to_string())]
     pub title: String,
@@ -21,7 +23,7 @@ pub struct RegistrationTrendChartProps<'a> {
     pub height: String,
     /// Retry callback invoked from error state UI.
     #[props(default = None)]
-    pub on_retry: Option<EventHandler<'a, ()>>,
+    pub on_retry: Option<EventHandler<()>>,
 }
 
 /// Registration trend chart card.
@@ -33,7 +35,7 @@ pub struct RegistrationTrendChartProps<'a> {
 ///   For now this scaffolds a consistent layout and basic SVG-based line visualization so the screen
 ///   can already integrate this component.
 #[component]
-pub fn RegistrationTrendChart<'a>(props: RegistrationTrendChartProps<'a>) -> Element {
+pub fn RegistrationTrendChart(props: RegistrationTrendChartProps) -> Element {
     let RegistrationTrendChartProps {
         frame,
         title,
@@ -44,8 +46,8 @@ pub fn RegistrationTrendChart<'a>(props: RegistrationTrendChartProps<'a>) -> Ele
     // Basic state helpers. These mirror the typical `StateFrame` API pattern:
     // adjust if the actual implementation differs.
     let is_loading = frame.is_loading();
-    let has_error = frame.error().is_some();
-    let data_opt = frame.data().map(|env| &env.data);
+    let has_error = frame.error.is_some();
+    let data_opt = frame.data.as_ref().map(|env| &env.data);
 
     let content = if is_loading {
         rsx! {

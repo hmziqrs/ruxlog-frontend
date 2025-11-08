@@ -1,10 +1,9 @@
 use dioxus::prelude::*;
 
-use crate::store::analytics::{
-    AnalyticsEnvelopeResponse, AnalyticsInterval, VerificationRatePoint, VerificationRatesFilters,
-    VerificationRatesRequest,
+use crate::store::{
+    AnalyticsEnvelopeResponse, AnalyticsInterval, StateFrame, StateFrameStatus,
+    VerificationRatePoint, VerificationRatesFilters, VerificationRatesRequest,
 };
-use crate::store::{StateFrame, StateStatus};
 
 /// Props for `VerificationRatesChart`.
 ///
@@ -51,12 +50,17 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
         on_interval_change,
     } = props;
 
-    let status = frame.status();
-    let data = frame.data().map(|env| env.data.clone()).unwrap_or_default();
+    let status = frame.status;
+    let data = frame
+        .data
+        .as_ref()
+        .map(|env| env.data.clone())
+        .unwrap_or_default();
 
     // Try to read current interval from request if present; fall back to Day.
     let current_interval = frame
-        .request()
+        .meta
+        .as_ref()
         .map(|req| req.filters.group_by.clone())
         .unwrap_or(AnalyticsInterval::Day);
 
@@ -87,6 +91,7 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
         let base = "px-2 py-1 rounded-md text-xs font-medium transition-colors";
         let active = "bg-sky-500 text-white shadow-sm";
         let inactive = "bg-zinc-900/5 dark:bg-zinc-50/5 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-900/10 dark:hover:bg-zinc-50/10";
+        let class = format!("{} {}", base, if is_active { active } else { inactive });
 
         let onclick = on_interval_change.as_ref().map(|cb| {
             let interval = interval.clone();
@@ -97,7 +102,7 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
 
         rsx! {
             button {
-                class: "{base} {if is_active { active } else { inactive }}",
+                class: "{class}",
                 onclick: move |evt| {
                     if let Some(handler) = &onclick {
                         handler(evt);
@@ -110,7 +115,7 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
 
     // Render loading, error, and empty states.
     let content: Element = match status {
-        StateStatus::Loading => {
+        StateFrameStatus::Loading => {
             rsx! {
                 div {
                     class: "flex items-center justify-center h-full text-xs text-zinc-500",
@@ -118,8 +123,13 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
                 }
             }
         }
-        StateStatus::Error(err) => {
+        StateFrameStatus::Failed => {
             // Render a compact error state inside the card.
+            let err = frame
+                .error
+                .as_ref()
+                .map(|e| e.message())
+                .unwrap_or_else(|| "Unknown error".to_string());
             rsx! {
                 div {
                     class: "flex flex-col items-start justify-center h-full gap-1 text-xs",
@@ -128,7 +138,7 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
                 }
             }
         }
-        StateStatus::Idle | StateStatus::Success => {
+        StateFrameStatus::Init | StateFrameStatus::Success => {
             if data.is_empty() {
                 rsx! {
                     div {

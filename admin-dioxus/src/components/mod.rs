@@ -82,3 +82,6 @@ pub use media_picker_dialog::*;
 
 mod media_usage_dialog;
 pub use media_usage_dialog::*;
+
+pub mod analytics;
+pub use analytics;

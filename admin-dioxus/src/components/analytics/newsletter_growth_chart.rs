@@ -1,12 +1,11 @@
 use dioxus::prelude::*;
 
-use crate::store::analytics::{
-    use_analytics, AnalyticsEnvelope, AnalyticsEnvelopeResponse, AnalyticsInterval,
-    DashboardSummaryRequest, NewsletterGrowthPoint, NewsletterGrowthRequest,
-    NewsletterGrowthFilters,
-};
-use crate::store::{StateFrame, StateStatus};
 use crate::hooks::use_state_frame_toast::use_state_frame_toast;
+use crate::store::{
+    use_analytics, AnalyticsEnvelope, AnalyticsEnvelopeResponse, AnalyticsInterval,
+    NewsletterGrowthFilters, NewsletterGrowthPoint, NewsletterGrowthRequest, StateFrame,
+    StateFrameStatus,
+};
 
 /// Props for `NewsletterGrowthChart`.
 /// Minimal: takes a title and height override if you want to embed it differently.
@@ -85,32 +84,32 @@ pub fn NewsletterGrowthChart(props: NewsletterGrowthChartProps) -> Element {
 
     let frame = frame_signal.read();
 
-    let (status, body) = match &*frame {
-        StateFrame {
-            status: StateStatus::Loading,
-            ..
-        } => (
+    let status = frame.status;
+    let error = frame.error;
+    let data = frame.data;
+
+    let (status_str, body) = if status == StateFrameStatus::Loading {
+        (
             "Loading",
             rsx! {
                 LoadingSkeleton { }
             },
-        ),
-        StateFrame {
-            status: StateStatus::Error(err),
-            ..
-        } => (
+        )
+    } else if status == StateFrameStatus::Failed {
+        let err_msg = error
+            .as_ref()
+            .map(|e| e.message())
+            .unwrap_or_else(|| "Failed to load newsletter growth data".to_string());
+        (
             "Error",
             rsx! {
                 ErrorState {
-                    message: err.user_message.clone().unwrap_or_else(|| "Failed to load newsletter growth data".to_string()),
+                    message: err_msg,
                 }
             },
-        ),
-        StateFrame {
-            status: StateStatus::Loaded,
-            data: Some(AnalyticsEnvelopeResponse { data, .. }),
-            ..
-        } => {
+        )
+    } else if status == StateFrameStatus::Success {
+        if let Some(AnalyticsEnvelopeResponse { data, .. }) = data {
             if data.is_empty() {
                 (
                     "Empty",
@@ -128,15 +127,25 @@ pub fn NewsletterGrowthChart(props: NewsletterGrowthChartProps) -> Element {
                     },
                 )
             }
+        } else {
+            (
+                "Idle",
+                rsx! {
+                    EmptyState {
+                        message: "Newsletter growth data will appear here once available.".to_string(),
+                    }
+                },
+            )
         }
-        _ => (
+    } else {
+        (
             "Idle",
             rsx! {
                 EmptyState {
                     message: "Newsletter growth data will appear here once available.".to_string(),
                 }
             },
-        ),
+        )
     };
 
     rsx! {
@@ -155,7 +164,7 @@ pub fn NewsletterGrowthChart(props: NewsletterGrowthChartProps) -> Element {
                     class: "text-[10px] px-2 py-0.5 rounded-full \
                             bg-zinc-100/90 dark:bg-zinc-900/80 \
                             text-zinc-500 dark:text-zinc-400",
-                    "{status}"
+                    "{status_str}"
                 }
             }
 
@@ -253,11 +262,7 @@ fn NewsletterGrowthChartInner(props: NewsletterGrowthChartInnerProps) -> Element
     let mut min_net = 0_i64;
 
     for p in points.iter() {
-        let bar_total = p
-            .new_subscribers
-            .max(0)
-            + p.confirmed.max(0)
-            + p.unsubscribed.max(0);
+        let bar_total = p.new_subscribers.max(0) + p.confirmed.max(0) + p.unsubscribed.max(0);
         if bar_total > max_bar {
             max_bar = bar_total;
         }
@@ -461,7 +466,10 @@ fn truncate_label(label: &str, max_len: usize) -> String {
     if label.chars().count() <= max_len {
         label.to_string()
     } else {
-        let mut s = label.chars().take(max_len.saturating_sub(1)).collect::<String>();
+        let mut s = label
+            .chars()
+            .take(max_len.saturating_sub(1))
+            .collect::<String>();
         s.push('…');
         s
     }

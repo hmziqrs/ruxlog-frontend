@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::store::analytics::{AnalyticsEnvelopeResponse, PageViewPoint};
-use crate::store::{StateFrame, StateStatus};
+use crate::store::{AnalyticsEnvelopeResponse, PageViewPoint, StateFrame, StateFrameStatus};
 
 /// Simple typed props for the page views chart.
 ///
@@ -10,13 +9,11 @@ use crate::store::{StateFrame, StateStatus};
 /// - `title`: optional title for the card
 /// - `height`: optional height (Tailwind class, default "h-72")
 /// - `compact`: optional flag to tweak padding/typography for dense layouts
-#[derive(Props, PartialEq)]
-pub struct PageViewsChartProps<'a> {
+#[derive(Props, PartialEq, Clone)]
+pub struct PageViewsChartProps {
     /// State frame wrapping `AnalyticsEnvelopeResponse<Vec<PageViewPoint>>`.
-    pub frame: &'a StateFrame<
-        AnalyticsEnvelopeResponse<Vec<PageViewPoint>>,
-        crate::store::analytics::PageViewsRequest,
-    >,
+    pub frame:
+        StateFrame<AnalyticsEnvelopeResponse<Vec<PageViewPoint>>, crate::store::PageViewsRequest>,
     /// Optional chart title.
     #[props(default = "Page views".to_string())]
     pub title: String,
@@ -37,51 +34,51 @@ pub struct PageViewsChartProps<'a> {
 /// - For now, includes a minimal SVG-based placeholder chart until `dioxus-charts`
 ///   is wired into the workspace (see analytics-dashboard-charts-plan.md).
 #[component]
-pub fn PageViewsChart<'a>(props: PageViewsChartProps<'a>) -> Element {
-    let status = props.frame.status();
-    let body = match status {
-        StateStatus::Idle | StateStatus::Loading => {
-            rsx! {
-                LoadingState {
-                    height: props.height.clone(),
-                    compact: props.compact,
-                }
+pub fn PageViewsChart(props: PageViewsChartProps) -> Element {
+    let status = props.frame.status;
+    let body = if status == StateFrameStatus::Init || status == StateFrameStatus::Loading {
+        rsx! {
+            LoadingState {
+                height: props.height.clone(),
+                compact: props.compact,
             }
         }
-        StateStatus::Error => {
-            rsx! {
-                ErrorState {
-                    message: props
-                        .frame
-                        .error_message()
-                        .unwrap_or_else(|| "Unable to load page views data.".to_string()),
-                    compact: props.compact,
-                }
+    } else if status == StateFrameStatus::Failed {
+        rsx! {
+            ErrorState {
+                message: props
+                    .frame
+                    .error_message()
+                    .unwrap_or_else(|| "Unable to load page views data.".to_string()),
+                compact: props.compact,
             }
         }
-        StateStatus::Loaded => {
-            let response_opt = props.frame.data();
-            match response_opt {
-                None => rsx! {
-                    EmptyState { compact: props.compact }
-                },
-                Some(envelope) => {
-                    let points = &envelope.data;
-                    if points.is_empty() {
-                        rsx! {
-                            EmptyState { compact: props.compact }
-                        }
-                    } else {
-                        rsx! {
-                            ChartBody {
-                                points: points,
-                                height: props.height.clone(),
-                                compact: props.compact,
-                            }
+    } else if status == StateFrameStatus::Success {
+        let response_opt = props.frame.data;
+        match response_opt {
+            None => rsx! {
+                EmptyState { compact: props.compact }
+            },
+            Some(envelope) => {
+                let points = &envelope.data;
+                if points.is_empty() {
+                    rsx! {
+                        EmptyState { compact: props.compact }
+                    }
+                } else {
+                    rsx! {
+                        ChartBody {
+                            points: points,
+                            height: props.height.clone(),
+                            compact: props.compact,
                         }
                     }
                 }
             }
+        }
+    } else {
+        rsx! {
+            EmptyState { compact: props.compact }
         }
     };
 
@@ -203,7 +200,7 @@ fn EmptyState(compact: bool) -> Element {
 /// Once `dioxus-charts` is added to `Cargo.toml`, this function can be
 /// refactored to use its primitives without changing the public API.
 #[component]
-fn ChartBody<'a>(points: &'a [PageViewPoint], height: String, compact: bool) -> Element {
+fn ChartBody(points: &[PageViewPoint], height: String, compact: bool) -> Element {
     if points.is_empty() {
         return rsx! { EmptyState { compact: compact } };
     }

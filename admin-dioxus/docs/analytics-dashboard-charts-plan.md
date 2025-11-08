@@ -2,18 +2,23 @@
 
 This plan connects the existing analytics store (src/store/analytics/) to the Dashboard (Home) and full Analytics screens with chart visualizations using dioxus-charts. Paths include starting line numbers for quick navigation.
 
+Progress legend:
+- [x] Completed
+- [~] In progress
+- [ ] Not started
+
 ## Scope
-- Use existing analytics store types and actions
+- Use existing analytics store types and actions [x]
   - src/store/analytics/mod.rs:1
   - src/store/analytics/state.rs:1 (shared types), 53 (registration), 72 (verification), 98 (publishing), 124 (page views), 153 (comment rate), 176 (newsletter growth), 200 (media upload), 224 (dashboard summary), 247 (AnalyticsState), 259 (use_analytics)
   - src/store/analytics/actions.rs:1 (all fetch_* actions)
 - Render charts on:
-  - Dashboard/Home: src/screens/home/mod.rs:1
-  - Analytics page: src/screens/analytics.rs:1
+  - Dashboard/Home: src/screens/home/mod.rs:1 [~] (components scaffolded, wiring in progress)
+  - Analytics page: src/screens/analytics.rs:1 [ ]
 
 ## Dependencies
-- Add dioxus-charts to Cargo
-  - Cargo.toml:1 — add `dioxus-charts = "<latest>"`
+- Add dioxus-charts to Cargo [x]
+  - Cargo.toml:1 — added `dioxus-charts = "0.1.0"` (confirm version alignment with crate API)
 
 ## Data → Chart Mapping
 - Registration Trends (time-series line)
@@ -53,16 +58,16 @@ This plan connects the existing analytics store (src/store/analytics/) to the Da
   - dashboard_summary_cards.rs:1 — KPI cards grid for summary
 
 All chart components:
-- Accept minimal typed props (Vec<Point> or DashboardSummaryData) and optional title/height.
-- Render with dioxus-charts primitives (axes, grid, legend, tooltip) and Tailwind wrappers for consistent styling.
+- Accept minimal typed props (Vec<Point> or DashboardSummaryData) and optional title/height. [x]
+- Currently render using lightweight SVG/div scaffolds within Tailwind-styled cards; to be upgraded to dioxus-charts primitives (axes, grid, legend, tooltip) once API is finalized. [~]
 
 ## Screen Wiring
 - Home (Dashboard): src/screens/home/mod.rs:1
-  - Replace placeholder cards with DashboardSummaryCards
-  - Panels: PageViewsChart and PublishingTrendsChart
-  - Secondary row: RegistrationTrendChart and VerificationRatesChart (or CommentRateChart)
+  - Replace placeholder cards with DashboardSummaryCards [~]
+  - Panels: PageViewsChart and PublishingTrendsChart wired to `use_analytics` [~]
+  - Secondary row: RegistrationTrendChart and VerificationRatesChart (or CommentRateChart) [ ]
 - Analytics page: src/screens/analytics.rs:1
-  - Full grid with all charts, each with compact filter controls (interval, sort, etc.)
+  - Full grid with all charts, each with compact filter controls (interval, sort, etc.) [ ]
 
 ## Fetch Semantics
 - On mount for Dashboard/Home:
@@ -91,19 +96,19 @@ All chart components:
 - Light/dark-aware series colors (e.g., sky, emerald, amber, rose) with Tailwind classes
 - Responsive grid: 1-col on small, 2-col on lg, 3–4-col on xl+ as in current layout
 
-## File Changes (planned)
-- Cargo.toml:1 — add dioxus-charts dependency
-- src/components/analytics/
-  - registration_trend_chart.rs:1
-  - verification_rates_chart.rs:1
-  - publishing_trends_chart.rs:1
-  - page_views_chart.rs:1
-  - comment_rate_chart.rs:1
-  - newsletter_growth_chart.rs:1
-  - media_upload_trends_chart.rs:1
-  - dashboard_summary_cards.rs:1
-- src/screens/home/mod.rs:1 — render summary + 2–3 charts
-- src/screens/analytics.rs:1 — render full chart grid with filters
+## File Changes (planned → progress)
+- Cargo.toml:1 — add dioxus-charts dependency [x]
+- src/components/analytics/ [x scaffolded]
+  - registration_trend_chart.rs:1 [x scaffolded card + basic SVG line]
+  - verification_rates_chart.rs:1 [x scaffolded grouped bars + interval controls]
+  - publishing_trends_chart.rs:1 [x scaffolded stacked pseudo-bars]
+  - page_views_chart.rs:1 [x scaffolded two-line SVG chart]
+  - comment_rate_chart.rs:1 [x scaffolded horizontal ranking bars + store-bound variant]
+  - newsletter_growth_chart.rs:1 [x scaffolded stacked bars + line placeholder]
+  - media_upload_trends_chart.rs:1 [x scaffolded bars + line placeholder]
+  - dashboard_summary_cards.rs:1 [x scaffolded KPI cards grid]
+- src/screens/home/mod.rs:1 — render summary + 2–3 charts [~ wiring to new components in progress]
+- src/screens/analytics.rs:1 — render full chart grid with filters [ ]
 
 ## Notes
 - The analytics store already exists and matches backend contracts: src/store/analytics/

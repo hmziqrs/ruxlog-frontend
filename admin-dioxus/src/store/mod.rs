@@ -1,4 +1,4 @@
-mod analytics;
+pub mod analytics;
 mod auth;
 mod categories;
 mod error;

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::store::analytics::DashboardSummaryData;
+use crate::store::DashboardSummaryData;
 use crate::store::StateStatus;
 
 /// Props:

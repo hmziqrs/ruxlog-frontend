@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
 
-use crate::hooks::use_state_frame_toast::use_state_frame_toast;
-use crate::store::analytics::{use_analytics, CommentRatePoint};
+use crate::hooks::use_state_frame_toast;
 use crate::store::StateFrame;
+use crate::store::{use_analytics, CommentRatePoint};
 
 /// Props for `CommentRateChart`.
 ///

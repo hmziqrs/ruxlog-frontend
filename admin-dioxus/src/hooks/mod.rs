@@ -16,7 +16,7 @@ pub use use_user_view::{use_user_view, UserViewState};
 mod use_media_view;
 pub use use_media_view::{use_media_view, MediaViewState};
 
-mod use_state_frame_toast;
+pub mod use_state_frame_toast;
 pub use use_state_frame_toast::{
     use_state_frame_map_toast, use_state_frame_toast, StateFrameToastConfig,
 };
