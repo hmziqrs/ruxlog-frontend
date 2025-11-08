@@ -65,7 +65,7 @@ pub fn PublishingTrendsChart(props: PublishingTrendsChartProps) -> Element {
         div {
             class: "rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 \
                     bg-zinc-100/40 dark:bg-zinc-950/40 \
-                    shadow-sm backdrop-blur-sm flex flex-col",
+                    shadow-none backdrop-blur-sm flex flex-col",
 
             // Header
             div {
@@ -285,7 +285,10 @@ fn LegendDot(class_name: &'static str) -> Element {
 /// ```
 fn from_state_frame(
     title: String,
-    frame: &StateFrame<AnalyticsEnvelopeResponse<Vec<PublishingTrendPoint>>, crate::store::PublishingTrendsRequest>,
+    frame: &StateFrame<
+        AnalyticsEnvelopeResponse<Vec<PublishingTrendPoint>>,
+        crate::store::PublishingTrendsRequest,
+    >,
 ) -> PublishingTrendsChartProps {
     PublishingTrendsChartProps {
         frame: frame.clone(),

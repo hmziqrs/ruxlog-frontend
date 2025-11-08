@@ -157,10 +157,9 @@ fn SummaryCard(props: SummaryCardProps) -> Element {
                 group relative flex flex-col justify-between gap-1.5 \
                 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 \
                 bg-zinc-50/60 dark:bg-zinc-950/40 \
-                px-3 py-2.5 shadow-sm backdrop-blur-sm \
+                px-3 py-2.5 shadow-none backdrop-blur-sm \
                 transition-all duration-200 \
-                hover:border-zinc-300/80 dark:hover:border-zinc-700/80 \
-                hover:shadow-md",
+                hover:border-zinc-300/80 dark:hover:border-zinc-700/80",
             div {
                 class: "flex items-center justify-between gap-2",
                 span {

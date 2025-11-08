@@ -112,7 +112,7 @@ pub fn RegistrationTrendChart(props: RegistrationTrendChartProps) -> Element {
     rsx! {
         div {
             class: "rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 \
-                    bg-zinc-50/70 dark:bg-zinc-950/60 shadow-sm backdrop-blur-sm \
+                    bg-zinc-50/70 dark:bg-zinc-950/60 shadow-none backdrop-blur-sm \
                     p-4 flex flex-col gap-2 {height}",
             // Header
             div { class: "flex items-center justify-between gap-2",

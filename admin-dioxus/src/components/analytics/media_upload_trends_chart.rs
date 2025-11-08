@@ -62,7 +62,7 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
     rsx! {
         div {
             class: "rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 \
-                    bg-zinc-100/40 dark:bg-zinc-950/40 shadow-sm backdrop-blur-sm \
+                    bg-zinc-100/40 dark:bg-zinc-950/40 shadow-none backdrop-blur-sm \
                     flex flex-col gap-3 p-4",
 
             // Header

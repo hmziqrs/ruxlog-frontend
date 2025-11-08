@@ -181,7 +181,7 @@ pub fn CommentRateChartFromStore(
                 div {
                     class: "rounded-2xl border border-rose-300/80 dark:border-rose-900/80 \
                             bg-rose-50/80 dark:bg-rose-950/40 \
-                            shadow-sm backdrop-blur-sm p-4 flex flex-col gap-2 h-48",
+                            shadow-none backdrop-blur-sm p-4 flex flex-col gap-2 h-48",
                     h2 {
                         class: "text-sm font-semibold text-rose-900 dark:text-rose-200",
                         "{title}"
@@ -234,7 +234,7 @@ fn SkeletonCommentRateCard(title: String, #[props(optional)] height: Option<Stri
         div {
             class: "rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 \
                     bg-zinc-50/70 dark:bg-zinc-950/60 \
-                    shadow-sm backdrop-blur-sm p-4 flex flex-col gap-3 {height_class}",
+                    shadow-none backdrop-blur-sm p-4 flex flex-col gap-3 {height_class}",
             div { class: "flex items-center justify-between gap-3",
                 div { class: "flex flex-col gap-1",
                     h2 {

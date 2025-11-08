@@ -37,7 +37,10 @@ pub fn NewsletterGrowthChart(props: NewsletterGrowthChartProps) -> Element {
     let analytics = use_analytics();
 
     // Hook that observes the state frame and shows toasts on failures.
-    use_state_frame_toast(&analytics.newsletter_growth, StateFrameToastConfig::default());
+    use_state_frame_toast(
+        &analytics.newsletter_growth,
+        StateFrameToastConfig::default(),
+    );
 
     // Local interval state (for future filter controls).
     let interval = use_signal(|| props.default_interval.clone());
@@ -151,7 +154,7 @@ pub fn NewsletterGrowthChart(props: NewsletterGrowthChartProps) -> Element {
         div {
             class: "rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 \
                     bg-zinc-50/70 dark:bg-zinc-950/40 \
-                    shadow-sm backdrop-blur-sm flex flex-col gap-3 p-4 {props.height_class}",
+                    shadow-none backdrop-blur-sm flex flex-col gap-3 p-4 {props.height_class}",
             // Header
             div {
                 class: "flex items-center justify-between gap-2",

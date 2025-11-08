@@ -84,7 +84,7 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
     }
 
     // Suppress unused warnings (TODO: implement interval controls properly)
-    let _ = (on_interval_change, current_interval);    // Interval selector button helper.
+    let _ = (on_interval_change, current_interval); // Interval selector button helper.
 
     // Render loading, error, and empty states.
     let content: Element = match status {
@@ -167,7 +167,7 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
                                                     class: "absolute",
                                                     style: "transform: translateY(-{rate_y}%);",
                                                     span {
-                                                        class: "block w-1.5 h-1.5 rounded-full bg-amber-400 shadow-sm",
+                                                        class: "block w-1.5 h-1.5 rounded-full bg-amber-400 shadow-none",
                                                     }
                                                 }
                                             }
@@ -225,7 +225,7 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
             class: "\
                 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 \
                 bg-zinc-50/70 dark:bg-zinc-950/40 \
-                backdrop-blur-sm shadow-sm \
+                backdrop-blur-sm shadow-none \
                 flex flex-col gap-2 p-4 h-full\
             ",
             // Header
