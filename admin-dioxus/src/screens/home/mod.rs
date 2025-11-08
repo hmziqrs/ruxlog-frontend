@@ -1,7 +1,9 @@
 use dioxus::prelude::*;
 
 use crate::components::analytics::{
-    dashboard_summary_cards::DashboardSummaryCards, page_views_chart::PageViewsChart,
+    dashboard_summary_cards::DashboardSummaryCards,
+    filter_toolbar::AnalyticsFilterToolbar,
+    page_views_chart::PageViewsChart,
     publishing_trends_chart::PublishingTrendsChart,
     registration_trend_chart::RegistrationTrendChart,
     verification_rates_chart::VerificationRatesChart,
@@ -9,15 +11,16 @@ use crate::components::analytics::{
 use crate::components::PageHeader;
 use crate::hooks::use_state_frame_toast::{use_state_frame_toast, StateFrameToastConfig};
 use crate::store::analytics::{
-    use_analytics, AnalyticsEnvelope, AnalyticsInterval, DashboardSummaryFilters,
-    DashboardSummaryRequest, PageViewsFilters, PageViewsRequest, PublishingTrendsFilters,
-    PublishingTrendsRequest, RegistrationTrendsFilters, RegistrationTrendsRequest,
-    VerificationRatesFilters, VerificationRatesRequest,
+    use_analytics, use_analytics_filters, AnalyticsEnvelope, AnalyticsInterval,
+    DashboardSummaryFilters, DashboardSummaryRequest, PageViewsFilters, PageViewsRequest,
+    PublishingTrendsFilters, PublishingTrendsRequest, RegistrationTrendsFilters,
+    RegistrationTrendsRequest, VerificationRatesFilters, VerificationRatesRequest,
 };
 
 #[component]
 pub fn HomeScreen() -> Element {
     let analytics = use_analytics();
+    let filters = use_analytics_filters();
 
     // Wire toast helpers for key frames so dashboard surfaces API issues.
     let _summary_toast = use_state_frame_toast(
@@ -39,35 +42,27 @@ pub fn HomeScreen() -> Element {
         StateFrameToastConfig::default(),
     );
 
-    // Kick off initial dashboard analytics fetches on mount.
-    use_future(move || {
-        async move {
-            // Dashboard summary: last 7 days
+    // Refetch all analytics data using current filter state
+    let refetch_all = move || {
+        spawn(async move {
+            let envelope = filters.build_envelope();
+
+            // Dashboard summary
             let summary_req = DashboardSummaryRequest {
-                envelope: Some(AnalyticsEnvelope {
-                    date_from: None,
-                    date_to: None,
-                    page: None,
-                    per_page: None,
-                    sort_by: None,
-                    sort_order: None,
-                }),
+                envelope: Some(envelope.clone()),
                 filters: DashboardSummaryFilters {
-                    period: "7d".to_string(),
+                    period: filters
+                        .period_preset
+                        .read()
+                        .clone()
+                        .unwrap_or_else(|| "7d".to_string()),
                 },
             };
             analytics.fetch_dashboard_summary(summary_req).await;
 
-            // Page views: default to last 7 days, grouped daily, all views
+            // Page views
             let page_views_req = PageViewsRequest {
-                envelope: AnalyticsEnvelope {
-                    date_from: None,
-                    date_to: None,
-                    page: None,
-                    per_page: None,
-                    sort_by: None,
-                    sort_order: None,
-                },
+                envelope: envelope.clone(),
                 filters: PageViewsFilters {
                     group_by: AnalyticsInterval::Day,
                     post_id: None,
@@ -77,16 +72,9 @@ pub fn HomeScreen() -> Element {
             };
             analytics.fetch_page_views(page_views_req).await;
 
-            // Publishing trends: last 7 days, grouped daily
+            // Publishing trends
             let publishing_req = PublishingTrendsRequest {
-                envelope: AnalyticsEnvelope {
-                    date_from: None,
-                    date_to: None,
-                    page: None,
-                    per_page: None,
-                    sort_by: None,
-                    sort_order: None,
-                },
+                envelope: envelope.clone(),
                 filters: PublishingTrendsFilters {
                     group_by: AnalyticsInterval::Day,
                     status: None,
@@ -94,38 +82,29 @@ pub fn HomeScreen() -> Element {
             };
             analytics.fetch_publishing_trends(publishing_req).await;
 
-            // Registration trends: last 7 days, grouped daily
+            // Registration trends
             let registration_req = RegistrationTrendsRequest {
-                envelope: AnalyticsEnvelope {
-                    date_from: None,
-                    date_to: None,
-                    page: None,
-                    per_page: None,
-                    sort_by: None,
-                    sort_order: None,
-                },
+                envelope: envelope.clone(),
                 filters: RegistrationTrendsFilters {
                     group_by: AnalyticsInterval::Day,
                 },
             };
             analytics.fetch_registration_trends(registration_req).await;
 
-            // Verification rates: last 7 days, grouped daily
+            // Verification rates
             let verification_req = VerificationRatesRequest {
-                envelope: AnalyticsEnvelope {
-                    date_from: None,
-                    date_to: None,
-                    page: None,
-                    per_page: None,
-                    sort_by: None,
-                    sort_order: None,
-                },
+                envelope: envelope.clone(),
                 filters: VerificationRatesFilters {
                     group_by: AnalyticsInterval::Day,
                 },
             };
             analytics.fetch_verification_rates(verification_req).await;
-        }
+        });
+    };
+
+    // Kick off initial dashboard analytics fetches on mount.
+    use_future(move || async move {
+        refetch_all();
     });
 
     // Read frames once for rendering; the inner components handle states.
@@ -139,8 +118,15 @@ pub fn HomeScreen() -> Element {
         div { class: "min-h-screen bg-transparent text-foreground",
             // Page header
             PageHeader {
-                title: "Dashboard".to_string(),
-                description: "Overview of your blog performance, content, and activity.".to_string(),
+                title: "Analytics overview".to_string(),
+                description: "Key metrics for users, content, engagement, and media.".to_string(),
+            }
+
+            // Filter toolbar
+            AnalyticsFilterToolbar {
+                on_filter_change: move |_| {
+                    refetch_all();
+                },
             }
 
             div { class: "container mx-auto px-4 pb-10 space-y-6",
@@ -148,8 +134,6 @@ pub fn HomeScreen() -> Element {
                 // Summary KPI cards row
                 DashboardSummaryCards {
                     frame: summary_frame.clone(),
-                    title: "Analytics overview",
-                    description: "Key metrics for users, content, engagement, and media in the last 7 days.",
                 }
 
                 // Primary charts row: traffic and publishing

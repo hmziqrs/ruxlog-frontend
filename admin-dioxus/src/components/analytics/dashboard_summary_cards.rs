@@ -52,16 +52,18 @@ pub fn DashboardSummaryCards(props: DashboardSummaryCardsProps) -> Element {
     rsx! {
         section {
             class: "w-full space-y-3",
-            // Header
-            div {
-                class: "flex flex-col gap-1",
-                h2 {
-                    class: "text-lg font-semibold text-zinc-900 dark:text-zinc-50",
-                    "{title}"
-                }
-                p {
-                    class: "text-xs text-zinc-500 dark:text-zinc-400",
-                    "{description}"
+            // Header (only show if title was explicitly provided)
+            if props.title.is_some() {
+                div {
+                    class: "flex flex-col gap-1",
+                    h2 {
+                        class: "text-lg font-semibold text-zinc-900 dark:text-zinc-50",
+                        "{title}"
+                    }
+                    p {
+                        class: "text-xs text-zinc-500 dark:text-zinc-400",
+                        "{description}"
+                    }
                 }
             }
 
