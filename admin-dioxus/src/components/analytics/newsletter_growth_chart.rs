@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::hooks::use_state_frame_toast::use_state_frame_toast;
+use crate::hooks::use_state_frame_toast::{use_state_frame_toast, StateFrameToastConfig};
 use crate::store::{
     use_analytics, AnalyticsEnvelope, AnalyticsEnvelopeResponse, AnalyticsInterval,
     NewsletterGrowthFilters, NewsletterGrowthPoint, NewsletterGrowthRequest, StateFrame,
@@ -35,10 +35,9 @@ pub struct NewsletterGrowthChartProps {
 #[component]
 pub fn NewsletterGrowthChart(props: NewsletterGrowthChartProps) -> Element {
     let analytics = use_analytics();
-    let frame_signal = analytics.newsletter_growth;
 
     // Hook that observes the state frame and shows toasts on failures.
-    let _toast_guard = use_state_frame_toast(frame_signal);
+    use_state_frame_toast(&analytics.newsletter_growth, StateFrameToastConfig::default());
 
     // Local interval state (for future filter controls).
     let interval = use_signal(|| props.default_interval.clone());
@@ -82,11 +81,11 @@ pub fn NewsletterGrowthChart(props: NewsletterGrowthChartProps) -> Element {
         }
     });
 
-    let frame = frame_signal.read();
+    let frame = analytics.newsletter_growth.read();
 
     let status = frame.status;
-    let error = frame.error;
-    let data = frame.data;
+    let error = frame.error.clone();
+    let data = frame.data.clone();
 
     let (status_str, body) = if status == StateFrameStatus::Loading {
         (
@@ -191,7 +190,7 @@ fn LoadingSkeleton() -> Element {
             class: "w-full h-full flex flex-col justify-between animate-pulse",
             div { class: "h-4 w-24 bg-zinc-200/80 dark:bg-zinc-800/80 rounded-md mb-2" }
             div { class: "flex-1 flex items-end gap-1",
-                (0..10).map(|i| {
+                {(0..10).map(|i| {
                     let h = 20 + (i * 4);
                     rsx! {
                         div {
@@ -200,7 +199,7 @@ fn LoadingSkeleton() -> Element {
                             style: "height: {h}px;",
                         }
                     }
-                })
+                })}
             }
         }
     }
@@ -284,8 +283,8 @@ fn NewsletterGrowthChartInner(props: NewsletterGrowthChartInnerProps) -> Element
     let padding_top = 10.0;
     let padding_bottom = 22.0;
 
-    let chart_width = (width - padding_left - padding_right).max(1.0);
-    let chart_height = (height - padding_top - padding_bottom).max(1.0);
+    let chart_width = f64::max(width - padding_left - padding_right, 1.0);
+    let chart_height = f64::max(height - padding_top - padding_bottom, 1.0);
 
     let n = points.len().max(1);
     let step = chart_width / n as f64;
@@ -443,6 +442,8 @@ fn NewsletterGrowthChartInner(props: NewsletterGrowthChartInnerProps) -> Element
                                     class: "fill-amber-400/90",
                                 }
                             }
+                        } else {
+                            rsx! {}
                         }
                     }
                 }

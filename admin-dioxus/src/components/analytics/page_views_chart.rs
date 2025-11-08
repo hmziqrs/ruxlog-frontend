@@ -68,7 +68,7 @@ pub fn PageViewsChart(props: PageViewsChartProps) -> Element {
                 } else {
                     rsx! {
                         ChartBody {
-                            points: points,
+                            points: points.to_vec(),
                             height: props.height.clone(),
                             compact: props.compact,
                         }
@@ -107,7 +107,7 @@ pub fn PageViewsChart(props: PageViewsChartProps) -> Element {
             }
 
             // Body (loading/error/chart)
-            body
+            {body}
         }
     }
 }
@@ -124,16 +124,18 @@ fn LoadingState(height: String, compact: bool) -> Element {
                 class: "w-full {height} rounded-xl bg-zinc-200/60 dark:bg-zinc-900/60 \
                         animate-pulse flex items-end gap-1 px-3 pb-3",
                 // Bars skeleton
-                (0..18).map(|i| {
-                    let h = 20 + (i * 3) % 60;
-                    rsx! {
-                        div {
-                            key: "{i}",
-                            class: "flex-1 bg-zinc-300/70 dark:bg-zinc-800/80 rounded-t-md",
-                            style: "height: {h}%;"
+                for i in 0..18 {
+                    {
+                        let h = 20 + (i * 3) % 60;
+                        rsx! {
+                            div {
+                                key: "{i}",
+                                class: "flex-1 bg-zinc-300/70 dark:bg-zinc-800/80 rounded-t-md",
+                                style: "height: {h}%;"
+                            }
                         }
                     }
-                })
+                }
             }
 
             // Legend skeleton
@@ -200,14 +202,14 @@ fn EmptyState(compact: bool) -> Element {
 /// Once `dioxus-charts` is added to `Cargo.toml`, this function can be
 /// refactored to use its primitives without changing the public API.
 #[component]
-fn ChartBody(points: &[PageViewPoint], height: String, compact: bool) -> Element {
+fn ChartBody(points: Vec<PageViewPoint>, height: String, compact: bool) -> Element {
     if points.is_empty() {
         return rsx! { EmptyState { compact: compact } };
     }
 
     // Compute min/max for scaling
     let mut max_value: i64 = 0;
-    for p in points {
+    for p in &points {
         if p.views > max_value {
             max_value = p.views;
         }
@@ -315,7 +317,11 @@ fn ChartBody(points: &[PageViewPoint], height: String, compact: bool) -> Element
                                         "fill-opacity": "0.18",
                                     }
                                 }
+                            } else {
+                                rsx! {}
                             }
+                        } else {
+                            rsx! {}
                         }
                     }
 

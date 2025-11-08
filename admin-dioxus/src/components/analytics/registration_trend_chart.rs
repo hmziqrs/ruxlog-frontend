@@ -134,7 +134,9 @@ pub fn RegistrationTrendChart(props: RegistrationTrendChartProps) -> Element {
             }
 
             // Chart body
-            div { class: "mt-1 flex-1 min-h-0", content }
+            div { class: "mt-1 flex-1 min-h-0",
+                {content}
+            }
         }
     }
 }
@@ -217,14 +219,16 @@ fn render_trend_chart(points: &[RegistrationTrendPoint]) -> Element {
 
                 // Dots
                 for (idx, p) in points.iter().enumerate() {
-                    let x = (idx as f32 / (count - 1.0)) * width;
-                    let y_ratio = p.new_users as f32 / max_y as f32;
-                    let y = height - (y_ratio * (height - 4.0)) - 2.0;
-                    circle {
-                        cx: format!("{:.2}", x),
-                        cy: format!("{:.2}", y),
-                        r: "1.1",
-                        class: "fill-sky-500",
+                    {
+                        let x = (idx as f32 / (count - 1.0)) * width;
+                        let y_ratio = p.new_users as f32 / max_y as f32;
+                        let y = height - (y_ratio * (height - 4.0)) - 2.0;
+                        rsx! { circle {
+                            cx: format!("{:.2}", x),
+                            cy: format!("{:.2}", y),
+                            r: "1.1",
+                            class: "fill-sky-500",
+                        }}
                     }
                 }
             }

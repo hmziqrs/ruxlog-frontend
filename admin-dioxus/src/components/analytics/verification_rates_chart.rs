@@ -162,15 +162,16 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
                         div {
                             class: "absolute left-10 right-0 top-0 bottom-16 flex items-end gap-2 overflow-x-auto",
                             for point in data.iter() {
-                                let requested_height = (point.requested as f64 / max_requested as f64) * 100.0;
-                                let verified_height = (point.verified as f64 / max_verified as f64) * 100.0;
-                                let rate_y = if show_success_rate {
-                                    (point.success_rate / max_success_rate) * 100.0
-                                } else {
-                                    0.0
-                                };
+                                {
+                                    let requested_height = (point.requested as f64 / max_requested as f64) * 100.0;
+                                    let verified_height = (point.verified as f64 / max_verified as f64) * 100.0;
+                                    let rate_y = if show_success_rate {
+                                        (point.success_rate / max_success_rate) * 100.0
+                                    } else {
+                                        0.0
+                                    };
 
-                                rsx! {
+                                    rsx! {
                                     div {
                                         class: "flex flex-col items-center gap-1 min-w-[40px]",
                                         // Bars wrapper
@@ -209,11 +210,14 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
                                             span { "Req: {point.requested}" }
                                             span { "Ver: {point.verified}" }
                                             if show_success_rate {
-                                                span { "Rate: {format!("{:.0}%", point.success_rate * 100.0)}" }
+                                                {
+                                                    let rate_pct = format!("{:.0}%", point.success_rate * 100.0);
+                                                    rsx! { span { "Rate: {rate_pct}" } }
+                                                }
                                             }
                                         }
                                     }
-                                }
+                                }}
                             }
                         }
 
@@ -231,12 +235,10 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
                                     span { "Success rate" }
                                 }
                             }
-                            // Interval selector
+                            // Interval selector (TODO: implement interval controls)
                             div {
-                                class: "flex items-center gap-1",
-                                render_interval_button(AnalyticsInterval::Day)
-                                render_interval_button(AnalyticsInterval::Week)
-                                render_interval_button(AnalyticsInterval::Month)
+                                class: "flex items-center gap-1 text-[9px] text-zinc-400",
+                                span { "Day/Week/Month" }
                             }
                         }
                     }

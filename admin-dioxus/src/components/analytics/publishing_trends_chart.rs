@@ -6,41 +6,28 @@ use crate::store::StateFrame;
 /// Props for `PublishingTrendsChart`.
 ///
 /// This component is intentionally minimal and focused:
-/// - Receives prepared `PublishingTrendPoint` data (already aligned with filters).
+/// - Receives a `StateFrame` for publishing trends data.
 /// - Does not own/filter state itself; higher-level screens manage requests.
-/// - Intended to be driven by `StateFrame<AnalyticsEnvelopeResponse<Vec<PublishingTrendPoint>>, _>`.
-#[derive(Props, PartialEq)]
+/// - Extracts data, loading, and error from the frame internally.
+#[derive(Props, PartialEq, Clone)]
 pub struct PublishingTrendsChartProps {
+    /// State frame containing publishing trend points.
+    pub frame: StateFrame<
+        AnalyticsEnvelopeResponse<Vec<PublishingTrendPoint>>,
+        crate::store::PublishingTrendsRequest,
+    >,
+
     /// Chart title shown in the card header.
     #[props(default = "Publishing Trends".to_string())]
     pub title: String,
 
     /// Optional explicit height (Tailwind class). Defaults to `h-72`.
     #[props(default = "h-72".to_string())]
-    pub height: String,
+    pub height_class: String,
 
     /// Optional description or subtitle beneath the title.
     #[props(default)]
     pub description: Option<String>,
-
-    /// When present, this data will be rendered (non-empty takes precedence).
-    ///
-    /// Typical usage:
-    /// - Pass `state_frame.data.as_ref().map(|env| &env.data)` from `AnalyticsEnvelopeResponse`.
-    /// - Map request metadata to surrounding filter UI in the parent.
-    pub points: Option<Vec<PublishingTrendPoint>>,
-
-    /// Indicates whether the chart should show a loading state.
-    ///
-    /// Wire this from `state_frame.is_loading()` or similar helper.
-    #[props(default = false)]
-    pub loading: bool,
-
-    /// Optional error message to display inside the card instead of the chart.
-    ///
-    /// Set this when `state_frame.error()` or equivalent is populated.
-    #[props(default)]
-    pub error: Option<String>,
 }
 
 /// Card wrapper for stacked publishing trends bar chart.
@@ -57,17 +44,21 @@ pub struct PublishingTrendsChartProps {
 #[component]
 pub fn PublishingTrendsChart(props: PublishingTrendsChartProps) -> Element {
     let PublishingTrendsChartProps {
+        frame,
         title,
-        height,
+        height_class,
         description,
-        points,
-        loading,
-        error,
     } = props;
 
-    // Determine view state.
-    let has_error = error.as_ref().map(|e| !e.is_empty()).unwrap_or(false);
-    let data = points.unwrap_or_default();
+    // Extract state from frame.
+    let loading = frame.is_loading();
+    let has_error = frame.error.is_some();
+    let error = frame.error_message();
+    let data = frame
+        .data
+        .as_ref()
+        .map(|env| env.data.clone())
+        .unwrap_or_default();
     let is_empty = !loading && !has_error && data.is_empty();
 
     rsx! {
@@ -112,25 +103,27 @@ pub fn PublishingTrendsChart(props: PublishingTrendsChartProps) -> Element {
 
             // Body: different states
             div {
-                class: format!("relative px-3 pb-3 {}", height),
+                class: format!("relative px-3 pb-3 {}", height_class),
 
                 // Loading state: skeleton bars
                 if loading {
                     div {
                         class: "absolute inset-0 flex items-end justify-between gap-1 px-1",
-                        { (0..10).map(|i| {
-                            let h = 20 + (i * 5) % 60;
-                            rsx! {
-                                div {
-                                    key: "{i}",
-                                    class: "flex-1 flex items-end",
+                        for i in 0..10 {
+                            {
+                                let h = 20 + (i * 5) % 60;
+                                rsx! {
                                     div {
-                                        class: "w-full rounded-t bg-zinc-200/80 dark:bg-zinc-800/80 animate-pulse",
-                                        style: "height: {h}%;",
+                                        key: "{i}",
+                                        class: "flex-1 flex items-end",
+                                        div {
+                                            class: "w-full rounded-t bg-zinc-200/80 dark:bg-zinc-800/80 animate-pulse",
+                                            style: "height: {h}%;",
+                                        }
                                     }
                                 }
                             }
-                        })}
+                        }
                     }
                 // Error state
                 } else if has_error {
@@ -167,14 +160,15 @@ pub fn PublishingTrendsChart(props: PublishingTrendsChartProps) -> Element {
                 } else {
                     // Until `dioxus-charts` is wired, show a simple proportional bar layout
                     // so the component is still informative and testable.
-                    let max_total = data
-                        .iter()
-                        .map(|p| p.counts.values().sum::<i64>())
-                        .max()
-                        .unwrap_or(1)
-                        .max(1) as f64;
+                    {
+                        let max_total = data
+                            .iter()
+                            .map(|p| p.counts.values().sum::<i64>())
+                            .max()
+                            .unwrap_or(1)
+                            .max(1) as f64;
 
-                    div {
+                        rsx! { div {
                         class: "flex flex-col gap-1 h-full",
 
                         // Buckets row (scrollable for many buckets)
@@ -253,6 +247,7 @@ pub fn PublishingTrendsChart(props: PublishingTrendsChartProps) -> Element {
                                 "Upgraded to full dioxus-charts stacked bars in the next step."
                             }
                         }
+                    }}
                     }
                 }
             }
@@ -280,38 +275,22 @@ fn LegendDot(class_name: &'static str) -> Element {
 ///
 /// Usage from a screen (conceptual):
 ///
-/// ```/dev/null/example.rs#L1-12
+/// ```ignore
 /// let analytics = use_analytics();
 /// let frame = analytics.publishing_trends.read();
 ///
 /// rsx! {
-///     PublishingTrendsChart::from_state_frame(title: "Publishing Trends".into(), frame: &frame)
+///     PublishingTrendsChart { frame: frame.clone(), title: "Publishing Trends".into() }
 /// }
 /// ```
-impl PublishingTrendsChart {
-    pub fn from_state_frame<R>(
-        title: String,
-        frame: &StateFrame<AnalyticsEnvelopeResponse<Vec<PublishingTrendPoint>>, R>,
-    ) -> Self {
-        let loading = frame.is_loading();
-        let error = frame
-            .error()
-            .map(|e| e.to_string())
-            .filter(|s| !s.is_empty());
-
-        let points = frame
-            .data()
-            .map(|env| env.data.clone())
-            .filter(|v| !v.is_empty());
-
-        PublishingTrendsChartProps {
-            title,
-            height: "h-72".to_string(),
-            description: Some("Posts by status across the selected interval.".to_string()),
-            points,
-            loading,
-            error,
-        }
-        .into()
+fn from_state_frame(
+    title: String,
+    frame: &StateFrame<AnalyticsEnvelopeResponse<Vec<PublishingTrendPoint>>, crate::store::PublishingTrendsRequest>,
+) -> PublishingTrendsChartProps {
+    PublishingTrendsChartProps {
+        frame: frame.clone(),
+        title,
+        height_class: "h-72".to_string(),
+        description: Some("Posts by status across the selected interval.".to_string()),
     }
 }

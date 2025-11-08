@@ -38,9 +38,13 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
         height_class,
     } = props;
 
-    let status = frame.status();
-    let error = frame.error();
-    let data = frame.data().map(|env| env.data.clone()).unwrap_or_default();
+    let status = frame.status;
+    let error = frame.error;
+    let data = frame
+        .data
+        .as_ref()
+        .map(|env| env.data.clone())
+        .unwrap_or_default();
 
     let is_loading = matches!(status, StateFrameStatus::Init | StateFrameStatus::Loading);
     let has_error = error.is_some();
@@ -113,12 +117,13 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
                 }
             } else if has_error {
                 // Error state
-                let err = error
-                    .as_ref()
-                    .map(|e| e.to_string())
-                    .unwrap_or_else(|| "Unable to load media upload trends.".to_string());
+                {
+                    let err = error
+                        .as_ref()
+                        .map(|e| e.message())
+                        .unwrap_or_else(|| "Unable to load media upload trends.".to_string());
 
-                div {
+                    rsx! { div {
                     class: "flex flex-col gap-2 mt-1",
                     div {
                         class: "text-[11px] px-2 py-1.5 rounded-lg bg-rose-100/80 text-rose-700 \
@@ -135,6 +140,7 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
                             "Chart unavailable due to an error."
                         }
                     }
+                }}
                 }
             } else if is_empty {
                 // Empty state
@@ -203,28 +209,29 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
                                 .fold(0.0_f64, f64::max)
                                 .max(1.0);
 
-                            data.iter().enumerate().map(|(idx, point)| {
-                                let uploads = point.upload_count.max(0) as f64;
-                                let avg_mb = point.avg_size_mb.max(0.0);
+                            for (idx, point) in data.iter().enumerate() {
+                                {
+                                    let uploads = point.upload_count.max(0) as f64;
+                                    let avg_mb = point.avg_size_mb.max(0.0);
 
-                                // Bar height normalized to 70% of container.
-                                let bar_ratio = if max_uploads > 0.0 {
-                                    (uploads / max_uploads).clamp(0.05, 1.0)
-                                } else {
-                                    0.05
-                                };
+                                    // Bar height normalized to 70% of container.
+                                    let bar_ratio = if max_uploads > 0.0 {
+                                        (uploads / max_uploads).clamp(0.05, 1.0)
+                                    } else {
+                                        0.05
+                                    };
 
-                                // Line marker height normalized to remaining 30% offset.
-                                let line_ratio = if max_avg > 0.0 {
-                                    (avg_mb / max_avg).clamp(0.0, 1.0)
-                                } else {
-                                    0.0
-                                };
+                                    // Line marker height normalized to remaining 30% offset.
+                                    let line_ratio = if max_avg > 0.0 {
+                                        (avg_mb / max_avg).clamp(0.0, 1.0)
+                                    } else {
+                                        0.0
+                                    };
 
-                                // A tiny label every few buckets to avoid clutter.
-                                let show_label = idx % 3 == 0 || idx == data.len().saturating_sub(1);
+                                    // A tiny label every few buckets to avoid clutter.
+                                    let show_label = idx % 3 == 0 || idx == data.len().saturating_sub(1);
 
-                                rsx! {
+                                    rsx! {
                                     div {
                                         key: "{idx}",
                                         class: "flex-1 flex flex-col-reverse items-center gap-1",
@@ -262,8 +269,8 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
                                             }
                                         }
                                     }
-                                }
-                            })
+                                }}
+                            }
                         }
                     }
 

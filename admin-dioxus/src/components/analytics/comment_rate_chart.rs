@@ -1,8 +1,7 @@
 use dioxus::prelude::*;
 
-use crate::hooks::use_state_frame_toast;
-use crate::store::StateFrame;
-use crate::store::{use_analytics, CommentRatePoint};
+use crate::hooks::{use_state_frame_toast, StateFrameToastConfig};
+use crate::store::{use_analytics, CommentRatePoint, StateFrameStatus};
 
 /// Props for `CommentRateChart`.
 ///
@@ -84,7 +83,7 @@ pub fn CommentRateChart(props: CommentRateChartProps) -> Element {
             } else {
                 div {
                     class: "mt-1 flex-1 flex flex-col gap-1.5 overflow-y-auto pr-1",
-                    props.points.iter().enumerate().map(|(idx, p)| {
+                    {props.points.iter().enumerate().map(|(idx, p)| {
                         // Compute proportional width; avoid division by zero.
                         let ratio = if max_value > 0.0 {
                             (p.comment_rate.max(0.0) / max_value).clamp(0.05, 1.0)
@@ -130,7 +129,7 @@ pub fn CommentRateChart(props: CommentRateChartProps) -> Element {
                                 }
                             }
                         }
-                    })
+                    })}
                 }
             }
         }
@@ -154,24 +153,30 @@ pub fn CommentRateChartFromStore(
 ) -> Element {
     let analytics = use_analytics();
     let state_signal = &analytics.comment_rate;
-    let (frame, _toast) = use_state_frame_toast(state_signal);
+    let frame = state_signal.read().clone();
+    use_state_frame_toast(&state_signal, StateFrameToastConfig::default());
 
     let title = title.unwrap_or_else(|| "Top posts by comment engagement".to_string());
     let height = height.or_else(|| Some("h-80".to_string()));
     let max_items = max_items.unwrap_or(10);
 
-    match &frame {
-        StateFrame::Idle => {
+    match frame.status {
+        StateFrameStatus::Init => {
             rsx! {
                 SkeletonCommentRateCard { title, height }
             }
         }
-        StateFrame::Loading { .. } => {
+        StateFrameStatus::Loading => {
             rsx! {
                 SkeletonCommentRateCard { title, height }
             }
         }
-        StateFrame::Error { error, .. } => {
+        StateFrameStatus::Failed => {
+            let error_msg = frame
+                .error
+                .as_ref()
+                .map(|e| e.message())
+                .unwrap_or_else(|| "Unknown error".to_string());
             rsx! {
                 div {
                     class: "rounded-2xl border border-rose-300/80 dark:border-rose-900/80 \
@@ -187,27 +192,33 @@ pub fn CommentRateChartFromStore(
                     }
                     span {
                         class: "text-[9px] text-rose-500/90 dark:text-rose-400/90 line-clamp-2",
-                        "{error}"
+                        "{error_msg}"
                     }
                 }
             }
         }
-        StateFrame::Loaded { data, .. } => {
-            let mut points = data.data.clone();
-            // Sort descending by comment_rate, then comments
-            points.sort_by(|a, b| {
-                b.comment_rate
-                    .partial_cmp(&a.comment_rate)
-                    .unwrap_or(std::cmp::Ordering::Equal)
-                    .then_with(|| b.comments.cmp(&a.comments))
-            });
-            points.truncate(max_items);
+        StateFrameStatus::Success => {
+            if let Some(data) = &frame.data {
+                let mut points = data.data.clone();
+                // Sort descending by comment_rate, then comments
+                points.sort_by(|a, b| {
+                    b.comment_rate
+                        .partial_cmp(&a.comment_rate)
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                        .then_with(|| b.comments.cmp(&a.comments))
+                });
+                points.truncate(max_items);
 
-            rsx! {
-                CommentRateChart {
-                    points,
-                    title: Some(title),
-                    height
+                rsx! {
+                    CommentRateChart {
+                        points,
+                        title: Some(title),
+                        height
+                    }
+                }
+            } else {
+                rsx! {
+                    SkeletonCommentRateCard { title, height }
                 }
             }
         }
@@ -240,7 +251,7 @@ fn SkeletonCommentRateCard(title: String, #[props(optional)] height: Option<Stri
             }
             div {
                 class: "mt-2 flex-1 flex flex-col gap-2",
-                (0..6).map(|i| {
+                {(0..6).map(|i| {
                     rsx! {
                         div {
                             key: "{i}",
@@ -253,7 +264,7 @@ fn SkeletonCommentRateCard(title: String, #[props(optional)] height: Option<Stri
                             }
                         }
                     }
-                })
+                })}
             }
         }
     }

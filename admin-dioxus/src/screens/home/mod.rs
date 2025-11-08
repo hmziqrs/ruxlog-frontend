@@ -7,7 +7,7 @@ use crate::components::analytics::{
     verification_rates_chart::VerificationRatesChart,
 };
 use crate::components::PageHeader;
-use crate::hooks::use_state_frame_toast::use_state_frame_toast;
+use crate::hooks::use_state_frame_toast::{use_state_frame_toast, StateFrameToastConfig};
 use crate::store::analytics::{
     use_analytics, AnalyticsEnvelope, AnalyticsInterval, DashboardSummaryFilters,
     DashboardSummaryRequest, PageViewsFilters, PageViewsRequest, PublishingTrendsFilters,
@@ -20,11 +20,24 @@ pub fn HomeScreen() -> Element {
     let analytics = use_analytics();
 
     // Wire toast helpers for key frames so dashboard surfaces API issues.
-    let _summary_toast = use_state_frame_toast(&analytics.dashboard_summary);
-    let _views_toast = use_state_frame_toast(&analytics.page_views);
-    let _publishing_toast = use_state_frame_toast(&analytics.publishing_trends);
-    let _registration_toast = use_state_frame_toast(&analytics.registration_trends);
-    let _verification_toast = use_state_frame_toast(&analytics.verification_rates);
+    let _summary_toast = use_state_frame_toast(
+        &analytics.dashboard_summary,
+        StateFrameToastConfig::default(),
+    );
+    let _views_toast =
+        use_state_frame_toast(&analytics.page_views, StateFrameToastConfig::default());
+    let _publishing_toast = use_state_frame_toast(
+        &analytics.publishing_trends,
+        StateFrameToastConfig::default(),
+    );
+    let _registration_toast = use_state_frame_toast(
+        &analytics.registration_trends,
+        StateFrameToastConfig::default(),
+    );
+    let _verification_toast = use_state_frame_toast(
+        &analytics.verification_rates,
+        StateFrameToastConfig::default(),
+    );
 
     // Kick off initial dashboard analytics fetches on mount.
     use_future(move || {
@@ -134,8 +147,7 @@ pub fn HomeScreen() -> Element {
 
                 // Summary KPI cards row
                 DashboardSummaryCards {
-                    summary: summary_frame.data().map(|env| env.data.clone()),
-                    status: Some(summary_frame.status().clone()),
+                    frame: summary_frame.clone(),
                     title: "Analytics overview",
                     description: "Key metrics for users, content, engagement, and media in the last 7 days.",
                 }
@@ -143,28 +155,24 @@ pub fn HomeScreen() -> Element {
                 // Primary charts row: traffic and publishing
                 div { class: "grid grid-cols-1 lg:grid-cols-2 gap-4",
                     PageViewsChart {
-                        frame: &page_views_frame,
+                        frame: page_views_frame.clone(),
                         title: "Traffic & views (last 7 days)".to_string(),
                         height: "h-72".to_string(),
                         compact: false,
                     }
 
                     PublishingTrendsChart {
+                        frame: publishing_frame.clone(),
                         title: "Publishing activity".to_string(),
-                        height: "h-72".to_string(),
+                        height_class: "h-72".to_string(),
                         description: Some("Posts by status across recent days.".to_string()),
-                        points: publishing_frame
-                            .data()
-                            .map(|env| env.data.clone()),
-                        loading: publishing_frame.is_loading(),
-                        error: publishing_frame.error_message(),
                     }
                 }
 
                 // Secondary charts row: registrations & verifications
                 div { class: "grid grid-cols-1 lg:grid-cols-2 gap-4",
                     RegistrationTrendChart {
-                        frame: &registration_frame,
+                        frame: registration_frame.clone(),
                         title: "New user registrations (last 7 days)".to_string(),
                         height: "h-64".to_string(),
                     }

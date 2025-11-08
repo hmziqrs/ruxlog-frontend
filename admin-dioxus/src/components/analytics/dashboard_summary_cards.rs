@@ -1,19 +1,17 @@
 use dioxus::prelude::*;
 
-use crate::store::DashboardSummaryData;
-use crate::store::StateStatus;
+use crate::store::{AnalyticsEnvelopeResponse, DashboardSummaryData, StateFrame, StateFrameStatus};
 
 /// Props:
-/// - `summary`: optional summary data for the dashboard cards
-/// - `status`: loading/error/ready state to drive skeletons and errors
+/// - `frame`: state frame for the dashboard summary analytics request
 /// - `title`: optional header title
 /// - `description`: optional header description
 #[derive(Props, PartialEq, Clone)]
 pub struct DashboardSummaryCardsProps {
-    #[props(into)]
-    pub summary: Option<DashboardSummaryData>,
-    #[props(optional)]
-    pub status: Option<StateStatus>,
+    pub frame: StateFrame<
+        AnalyticsEnvelopeResponse<DashboardSummaryData>,
+        crate::store::DashboardSummaryRequest,
+    >,
     #[props(optional, into)]
     pub title: Option<String>,
     #[props(optional, into)]
@@ -34,15 +32,21 @@ pub fn DashboardSummaryCards(props: DashboardSummaryCardsProps) -> Element {
         .clone()
         .unwrap_or_else(|| "Key metrics for users, content, engagement, and media.".to_string());
 
-    let status = props.status.unwrap_or(StateStatus::Idle);
-    let is_loading = matches!(status, StateStatus::Loading);
-    let is_error = matches!(status, StateStatus::Error(_));
-    let has_data = props.summary.is_some();
+    let status = props.frame.status;
+    let is_loading = matches!(status, StateFrameStatus::Init | StateFrameStatus::Loading);
+    let is_error = matches!(status, StateFrameStatus::Failed);
+    let has_data = props.frame.data.is_some();
 
     // Basic error banner – parent can choose to hide component when errored instead.
-    let error_message = match status {
-        StateStatus::Error(err) => Some(format!("Unable to load dashboard summary: {err}")),
-        _ => None,
+    let error_message = if is_error {
+        Some(
+            props
+                .frame
+                .error_message()
+                .unwrap_or_else(|| "Unable to load dashboard summary.".to_string()),
+        )
+    } else {
+        None
     };
 
     rsx! {
@@ -75,8 +79,8 @@ pub fn DashboardSummaryCards(props: DashboardSummaryCardsProps) -> Element {
             // Cards grid: loading skeletons, data, or neutral empty state.
             if is_loading && !has_data {
                 SummarySkeletonGrid {}
-            } else if let Some(summary) = props.summary.clone() {
-                SummaryCardsGrid { summary }
+            } else if let Some(envelope) = &props.frame.data {
+                SummaryCardsGrid { summary: envelope.data.clone() }
             } else if !is_error {
                 // Empty but not error/loading; show soft hint.
                 div {
@@ -195,11 +199,9 @@ fn SummarySkeletonGrid() -> Element {
     rsx! {
         div {
             class: "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3",
-            (0..4).map(|_| {
-                rsx! {
-                    SkeletonCard {}
-                }
-            })
+            for _ in 0..4 {
+                SkeletonCard {}
+            }
         }
     }
 }
