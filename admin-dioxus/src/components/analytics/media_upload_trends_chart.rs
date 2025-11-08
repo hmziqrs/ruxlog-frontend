@@ -61,8 +61,7 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
 
     rsx! {
         div {
-            class: "rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 \
-                    bg-zinc-100/40 dark:bg-zinc-950/40 shadow-none backdrop-blur-sm \
+            class: "rounded-2xl border border-border bg-background shadow-none \
                     flex flex-col gap-3 p-4",
 
             // Header
@@ -84,16 +83,12 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
                 div {
                     class: "flex flex-col items-end gap-0.5 text-[10px]",
                     span {
-                        class: "px-2 py-0.5 rounded-full bg-sky-100/80 text-sky-700 \
-                                dark:bg-sky-500/10 dark:text-sky-300 border border-sky-100/60 \
-                                dark:border-sky-500/20",
+                        class: "px-2 py-0.5 rounded-full bg-background border border-border text-foreground",
                         "Total uploads: {total_uploads}"
                     }
                     if let Some(avg) = last_avg_size_mb {
                         span {
-                            class: "px-2 py-0.5 rounded-full bg-emerald-100/80 text-emerald-700 \
-                                    dark:bg-emerald-500/10 dark:text-emerald-300 border border-emerald-100/60 \
-                                    dark:border-emerald-500/20",
+                            class: "px-2 py-0.5 rounded-full bg-background border border-border text-foreground",
                             "Last bucket avg size: {avg:.1} MB"
                         }
                     }
@@ -106,13 +101,13 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
                 div {
                     class: "animate-pulse flex-1 flex flex-col gap-3 mt-1",
                     div {
-                        class: "h-4 w-32 bg-zinc-200/80 dark:bg-zinc-800/80 rounded-full"
+                        class: "h-4 w-32 bg-muted rounded-full"
                     }
                     div {
-                        class: "h-3 w-24 bg-zinc-200/80 dark:bg-zinc-800/80 rounded-full"
+                        class: "h-3 w-24 bg-muted rounded-full"
                     }
                     div {
-                        class: "{height_class} mt-1 rounded-xl bg-zinc-200/60 dark:bg-zinc-900/80"
+                        class: "{height_class} mt-1 rounded-xl bg-muted"
                     }
                 }
             } else if has_error {
@@ -126,17 +121,14 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
                     rsx! { div {
                     class: "flex flex-col gap-2 mt-1",
                     div {
-                        class: "text-[11px] px-2 py-1.5 rounded-lg bg-rose-100/80 text-rose-700 \
-                                dark:bg-rose-500/10 dark:text-rose-300 border border-rose-200/80 \
-                                dark:border-rose-500/30",
+                        class: "text-[11px] px-2 py-1.5 rounded-lg bg-background border border-destructive/40 text-destructive",
                         span { class: "font-semibold mr-1", "Error:" }
                         span { "{err}" }
                     }
                     div {
-                        class: "{height_class} rounded-xl border border-dashed border-rose-200/70 \
-                                dark:border-rose-500/20 flex items-center justify-center",
+                        class: "{height_class} rounded-xl border border-dashed border-destructive/40 flex items-center justify-center bg-background",
                         span {
-                            class: "text-[10px] text-rose-500/90 dark:text-rose-300/90",
+                            class: "text-[10px] text-destructive",
                             "Chart unavailable due to an error."
                         }
                     }
@@ -147,17 +139,13 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
                 div {
                     class: "flex flex-col gap-2 mt-1",
                     div {
-                        class: "text-[11px] px-2 py-1.5 rounded-lg bg-zinc-100/80 text-zinc-600 \
-                                dark:bg-zinc-900/80 dark:text-zinc-400 border border-dashed \
-                                border-zinc-200/80 dark:border-zinc-800/80",
+                        class: "text-[11px] px-2 py-1.5 rounded-lg bg-background border border-dashed border-border text-muted-foreground",
                         "No media upload data available for the selected period."
                     }
                     div {
-                        class: "{height_class} rounded-xl flex items-center justify-center \
-                                bg-gradient-to-br from-zinc-100/60 via-zinc-100/20 to-zinc-50/0 \
-                                dark:from-zinc-900/70 dark:via-zinc-900/20 dark:to-zinc-950/0",
+                        class: "{height_class} rounded-xl flex items-center justify-center bg-background",
                         span {
-                            class: "text-[10px] text-zinc-400",
+                            class: "text-[10px] text-muted-foreground",
                             "Uploads activity will appear here once there is data."
                         }
                     }
@@ -175,15 +163,15 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
                     class: "flex flex-col gap-2 mt-1",
                     // Legend
                     div {
-                        class: "flex items-center gap-3 text-[9px] text-zinc-500",
+                        class: "flex items-center gap-3 text-[9px] text-muted-foreground",
                         div {
                             class: "flex items-center gap-1",
-                            span { class: "w-3 h-1.5 rounded-full bg-sky-500" }
+                            span { class: "w-3 h-1.5 rounded-full bg-primary" }
                             span { "Uploads" }
                         }
                         div {
                             class: "flex items-center gap-1",
-                            span { class: "w-3 h-[2px] rounded-full bg-emerald-500" }
+                            span { class: "w-3 h-[2px] rounded-full bg-primary" }
                             span { "Avg size (MB)" }
                         }
                     }
@@ -191,9 +179,8 @@ pub fn MediaUploadTrendsChart(props: MediaUploadTrendsChartProps) -> Element {
                     // Simple SVG-ish bars/line style scaffold using divs
                     div {
                         class: format!(
-                            "relative {height_class} mt-1 rounded-xl border border-zinc-200/70 \
-                             dark:border-zinc-800/80 bg-zinc-50/40 dark:bg-zinc-950/40 \
-                             overflow-hidden px-3 pt-3 pb-4 flex items-end gap-1.5"
+                            "relative {height_class} mt-1 rounded-xl border border-border \
+                             bg-background overflow-hidden px-3 pt-3 pb-4 flex items-end gap-1.5"
                         ),
 
                         // Compute max for normalization (avoid division by zero).

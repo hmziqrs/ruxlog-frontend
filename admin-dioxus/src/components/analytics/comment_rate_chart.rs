@@ -43,9 +43,7 @@ pub fn CommentRateChart(props: CommentRateChartProps) -> Element {
 
     rsx! {
         div {
-            class: "rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 \
-                    bg-zinc-50/70 dark:bg-zinc-950/60 \
-                    shadow-sm backdrop-blur-sm p-4 flex flex-col gap-3 {height_class}",
+            class: "rounded-2xl border border-border bg-background shadow-sm p-4 flex flex-col gap-3 {height_class}",
             // Header
             div { class: "flex items-center justify-between gap-3",
                 div { class: "flex flex-col",
@@ -58,12 +56,9 @@ pub fn CommentRateChart(props: CommentRateChartProps) -> Element {
                         "Ranking posts by comments relative to views."
                     }
                 }
-                // Placeholder for future filter controls (sort, min_views, etc.)
-                // Keep small so chart remains focused.
+                // Placeholder for future filter controls
                 div {
-                    class: "inline-flex items-center gap-1 px-2 py-1 rounded-full \
-                            bg-zinc-100/70 dark:bg-zinc-900/70 \
-                            border border-zinc-200/80 dark:border-zinc-800/80",
+                    class: "inline-flex items-center gap-1 px-2 py-1 rounded-full border border-border bg-background",
                     span {
                         class: "text-[9px] font-medium text-zinc-600 dark:text-zinc-400",
                         "comment_rate = comments / views"
@@ -116,14 +111,11 @@ pub fn CommentRateChart(props: CommentRateChartProps) -> Element {
                                         "{p.comments} comments · {p.views} views · {format_rate(p.comment_rate)}"
                                     }
                                 }
-                                // Bar
+                                // Bar track
                                 div {
-                                    class: "w-full h-4 rounded-md bg-zinc-100/70 dark:bg-zinc-900/70 \
-                                            border border-zinc-200/60 dark:border-zinc-900",
+                                    class: "w-full h-4 rounded-md border border-border bg-background",
                                     div {
-                                        // bar fill
-                                        class: "h-full rounded-md bg-emerald-400/80 dark:bg-emerald-500/90 \
-                                                transition-all duration-300 ease-out",
+                                        class: "h-full rounded-md bg-emerald-500 transition-all duration-300 ease-out",
                                         style: "{width_style}",
                                     }
                                 }
@@ -179,19 +171,17 @@ pub fn CommentRateChartFromStore(
                 .unwrap_or_else(|| "Unknown error".to_string());
             rsx! {
                 div {
-                    class: "rounded-2xl border border-rose-300/80 dark:border-rose-900/80 \
-                            bg-rose-50/80 dark:bg-rose-950/40 \
-                            shadow-none backdrop-blur-sm p-4 flex flex-col gap-2 h-48",
+                    class: "rounded-2xl border border-destructive bg-background shadow-none p-4 flex flex-col gap-2 h-48",
                     h2 {
-                        class: "text-sm font-semibold text-rose-900 dark:text-rose-200",
+                        class: "text-sm font-semibold text-destructive",
                         "{title}"
                     }
                     span {
-                        class: "text-[10px] text-rose-700 dark:text-rose-300",
+                        class: "text-[10px] text-destructive",
                         "Unable to load comment rate analytics."
                     }
                     span {
-                        class: "text-[9px] text-rose-500/90 dark:text-rose-400/90 line-clamp-2",
+                        class: "text-[9px] text-destructive line-clamp-2",
                         "{error_msg}"
                     }
                 }
@@ -232,9 +222,7 @@ fn SkeletonCommentRateCard(title: String, #[props(optional)] height: Option<Stri
 
     rsx! {
         div {
-            class: "rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 \
-                    bg-zinc-50/70 dark:bg-zinc-950/60 \
-                    shadow-none backdrop-blur-sm p-4 flex flex-col gap-3 {height_class}",
+            class: "rounded-2xl border border-border bg-background shadow-none p-4 flex flex-col gap-3 {height_class}",
             div { class: "flex items-center justify-between gap-3",
                 div { class: "flex flex-col gap-1",
                     h2 {
@@ -242,11 +230,11 @@ fn SkeletonCommentRateCard(title: String, #[props(optional)] height: Option<Stri
                         "{title}"
                     }
                     div {
-                        class: "w-40 h-2 rounded-full bg-zinc-200/70 dark:bg-zinc-800/70 animate-pulse",
+                        class: "w-40 h-2 rounded-full bg-muted animate-pulse",
                     }
                 }
                 div {
-                    class: "w-24 h-5 rounded-full bg-zinc-200/70 dark:bg-zinc-800/70 animate-pulse",
+                    class: "w-24 h-5 rounded-full bg-muted animate-pulse",
                 }
             }
             div {
@@ -257,10 +245,10 @@ fn SkeletonCommentRateCard(title: String, #[props(optional)] height: Option<Stri
                             key: "{i}",
                             class: "flex flex-col gap-1",
                             div {
-                                class: "w-32 h-2 rounded-full bg-zinc-200/70 dark:bg-zinc-800/70 animate-pulse",
+                                class: "w-32 h-2 rounded-full bg-muted animate-pulse",
                             }
                             div {
-                                class: "w-full h-4 rounded-md bg-zinc-100/80 dark:bg-zinc-900/80 animate-pulse",
+                                class: "w-full h-4 rounded-md bg-muted animate-pulse",
                             }
                         }
                     }

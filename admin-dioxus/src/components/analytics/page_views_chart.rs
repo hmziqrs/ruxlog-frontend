@@ -116,8 +116,7 @@ pub fn PageViewsChart(props: PageViewsChartProps) -> Element {
 
     rsx! {
         div {
-            class: "rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 \
-                    bg-zinc-100/40 dark:bg-zinc-950/40 shadow-none backdrop-blur-sm \
+            class: "rounded-2xl border border-border bg-background shadow-none \
                     flex flex-col gap-2 {padding}",
             // Header
             div { class: "flex items-center justify-between gap-2",
@@ -253,8 +252,7 @@ fn LoadingState(height: String, compact: bool) -> Element {
         div { class: "flex-1 flex flex-col justify-end gap-2 {padding_top}",
             // "Chart" skeleton
             div {
-                class: "w-full {height} rounded-xl bg-zinc-200/60 dark:bg-zinc-900/60 \
-                        animate-pulse flex items-end gap-1 px-3 pb-3",
+                class: "w-full {height} rounded-xl bg-muted animate-pulse flex items-end gap-1 px-3 pb-3",
                 // Bars skeleton
                 for i in 0..18 {
                     {
@@ -262,7 +260,7 @@ fn LoadingState(height: String, compact: bool) -> Element {
                         rsx! {
                             div {
                                 key: "{i}",
-                                class: "flex-1 bg-zinc-300/70 dark:bg-zinc-800/80 rounded-t-md",
+                                class: "flex-1 bg-muted rounded-t-md",
                                 style: "height: {h}%;"
                             }
                         }
@@ -283,8 +281,8 @@ fn LoadingState(height: String, compact: bool) -> Element {
 fn LegendPillSkeleton(label: &'static str) -> Element {
     rsx! {
         div { class: "flex items-center gap-1",
-            span { class: "inline-block w-2 h-2 rounded-full bg-zinc-300/80 dark:bg-zinc-700/80" }
-            span { class: "h-2 w-10 rounded-full bg-zinc-200/80 dark:bg-zinc-800/80" }
+            span { class: "inline-block w-2 h-2 rounded-full bg-muted" }
+            span { class: "h-2 w-10 rounded-full bg-muted" }
             span { class: "sr-only", "{label}" }
         }
     }

@@ -70,9 +70,9 @@ pub fn DashboardSummaryCards(props: DashboardSummaryCardsProps) -> Element {
             // Error state
             if let Some(msg) = error_message {
                 div {
-                    class: "rounded-xl border border-rose-300/40 bg-rose-50/80 dark:bg-rose-950/20 text-rose-800 dark:text-rose-200 text-xs px-3 py-2 flex items-start gap-2",
+                    class: "rounded-xl border border-destructive/40 bg-background text-destructive text-xs px-3 py-2 flex items-start gap-2",
                     span {
-                        class: "mt-0.5 h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse",
+                        class: "mt-0.5 h-1.5 w-1.5 rounded-full bg-destructive animate-pulse",
                     }
                     span { "{msg}" }
                 }
@@ -86,7 +86,7 @@ pub fn DashboardSummaryCards(props: DashboardSummaryCardsProps) -> Element {
             } else if !is_error {
                 // Empty but not error/loading; show soft hint.
                 div {
-                    class: "rounded-xl border border-dashed border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/30 px-3 py-2 text-[10px] text-zinc-500 dark:text-zinc-400",
+                    class: "rounded-xl border border-dashed border-border bg-background px-3 py-2 text-[10px] text-muted-foreground",
                     "No summary data yet. Once analytics events flow in, key metrics will appear here."
                 }
             }
@@ -157,11 +157,11 @@ fn SummaryCard(props: SummaryCardProps) -> Element {
         div {
             class: "\
                 group relative flex flex-col justify-between gap-1.5 \
-                rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 \
-                bg-zinc-50/60 dark:bg-zinc-950/40 \
-                px-3 py-2.5 shadow-none backdrop-blur-sm \
+                rounded-xl border border-border \
+                bg-background \
+                px-3 py-2.5 shadow-none \
                 transition-all duration-200 \
-                hover:border-zinc-300/80 dark:hover:border-zinc-700/80",
+                hover:border-muted",
             div {
                 class: "flex items-center justify-between gap-2",
                 span {
@@ -213,12 +213,12 @@ fn SkeletonCard() -> Element {
         div {
             class: "\
                 animate-pulse rounded-xl \
-                border border-zinc-200/60 dark:border-zinc-800/60 \
-                bg-zinc-100/40 dark:bg-zinc-900/40 \
+                border border-border \
+                bg-background \
                 px-3 py-2.5 space-y-2",
-            div { class: "h-2 w-14 rounded-full bg-zinc-200 dark:bg-zinc-800" }
-            div { class: "h-4 w-16 rounded-full bg-zinc-200 dark:bg-zinc-800" }
-            div { class: "h-2 w-20 rounded-full bg-zinc-200 dark:bg-zinc-800" }
+            div { class: "h-2 w-14 rounded-full bg-muted" }
+            div { class: "h-4 w-16 rounded-full bg-muted" }
+            div { class: "h-2 w-20 rounded-full bg-muted" }
         }
     }
 }

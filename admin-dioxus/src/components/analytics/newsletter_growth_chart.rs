@@ -152,9 +152,7 @@ pub fn NewsletterGrowthChart(props: NewsletterGrowthChartProps) -> Element {
 
     rsx! {
         div {
-            class: "rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 \
-                    bg-zinc-50/70 dark:bg-zinc-950/40 \
-                    shadow-none backdrop-blur-sm flex flex-col gap-3 p-4 {props.height_class}",
+            class: "rounded-2xl border border-border bg-background shadow-none flex flex-col gap-3 p-4 {props.height_class}",
             // Header
             div {
                 class: "flex items-center justify-between gap-2",
@@ -163,9 +161,7 @@ pub fn NewsletterGrowthChart(props: NewsletterGrowthChartProps) -> Element {
                     "{props.title}"
                 }
                 span {
-                    class: "text-[10px] px-2 py-0.5 rounded-full \
-                            bg-zinc-100/90 dark:bg-zinc-900/80 \
-                            text-zinc-500 dark:text-zinc-400",
+                    class: "text-[10px] px-2 py-0.5 rounded-full bg-background border border-border text-muted-foreground",
                     "{status_str}"
                 }
             }
@@ -191,14 +187,14 @@ fn LoadingSkeleton() -> Element {
     rsx! {
         div {
             class: "w-full h-full flex flex-col justify-between animate-pulse",
-            div { class: "h-4 w-24 bg-zinc-200/80 dark:bg-zinc-800/80 rounded-md mb-2" }
+            div { class: "h-4 w-24 bg-muted rounded-md mb-2" }
             div { class: "flex-1 flex items-end gap-1",
                 {(0..10).map(|i| {
                     let h = 20 + (i * 4);
                     rsx! {
                         div {
                             key: "{i}",
-                            class: "flex-1 bg-zinc-200/80 dark:bg-zinc-800/80 rounded-t-md",
+                            class: "flex-1 bg-muted rounded-t-md",
                             style: "height: {h}px;",
                         }
                     }
@@ -220,9 +216,9 @@ fn ErrorState(props: ErrorStateProps) -> Element {
             class: "w-full h-full flex flex-col items-start justify-center gap-1 \
                     text-[11px] text-red-600 dark:text-red-400",
             div {
-                class: "px-2 py-1 rounded-md bg-red-50/90 dark:bg-red-950/40 border border-red-100/80 dark:border-red-900/80",
-                span { class: "font-medium", "Unable to load newsletter growth" }
-                span { class: "ml-1 text-[10px] text-red-500/90", "{props.message}" }
+                class: "px-2 py-1 rounded-md bg-background border border-destructive/40",
+                span { class: "font-medium text-destructive", "Unable to load newsletter growth" }
+                span { class: "ml-1 text-[10px] text-destructive", "{props.message}" }
             }
         }
     }
@@ -296,7 +292,7 @@ fn NewsletterGrowthChartInner(props: NewsletterGrowthChartInnerProps) -> Element
         div { class: "w-full h-full flex flex-col gap-1",
             // Legend
             div {
-                class: "flex flex-wrap items-center gap-3 text-[9px] text-zinc-500",
+                class: "flex flex-wrap items-center gap-3 text-[9px] text-muted-foreground",
                 LegendDot { class_name: "bg-emerald-500/90" }
                 span { "New subscribers" }
                 LegendDot { class_name: "bg-sky-500/90" }

@@ -63,9 +63,7 @@ pub fn PublishingTrendsChart(props: PublishingTrendsChartProps) -> Element {
 
     rsx! {
         div {
-            class: "rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 \
-                    bg-zinc-100/40 dark:bg-zinc-950/40 \
-                    shadow-none backdrop-blur-sm flex flex-col",
+            class: "rounded-2xl border border-border bg-background shadow-none flex flex-col",
 
             // Header
             div {
@@ -117,7 +115,7 @@ pub fn PublishingTrendsChart(props: PublishingTrendsChartProps) -> Element {
                                         key: "{i}",
                                         class: "flex-1 flex items-end",
                                         div {
-                                            class: "w-full rounded-t bg-zinc-200/80 dark:bg-zinc-800/80 animate-pulse",
+                                            class: "w-full rounded-t bg-muted animate-pulse",
                                             style: "height: {h}%;",
                                         }
                                     }
@@ -129,10 +127,9 @@ pub fn PublishingTrendsChart(props: PublishingTrendsChartProps) -> Element {
                 } else if has_error {
                     div {
                         class: "flex flex-col items-start justify-center gap-1 h-full \
-                                rounded-xl border border-rose-200/70 dark:border-rose-900/60 \
-                                bg-rose-50/60 dark:bg-rose-950/20 px-3 py-2",
+                                rounded-xl border border-destructive bg-background px-3 py-2",
                         span {
-                            class: "text-[11px] font-semibold text-rose-700 dark:text-rose-300",
+                            class: "text-[11px] font-semibold text-destructive",
                             "Unable to load publishing trends"
                         }
                         if let Some(msg) = error {
@@ -196,13 +193,13 @@ pub fn PublishingTrendsChart(props: PublishingTrendsChartProps) -> Element {
                                         // Stacked pseudo-bar
                                         div {
                                             class: "w-full rounded-t-md overflow-hidden flex flex-col-reverse \
-                                                    bg-zinc-100/60 dark:bg-zinc-900/40 border border-zinc-200/80 dark:border-zinc-800/80",
+                                                    bg-background border border-border",
                                             style: "height: {height_pct}%; min-height: 28px;",
 
                                             if total > 0 {
                                                 if other_total > 0 {
                                                     div {
-                                                        class: "w-full bg-zinc-400/70",
+                                                        class: "w-full bg-muted",
                                                         style: format!("height: {}%;", (other_total as f64 / total as f64) * 100.0),
                                                     }
                                                 }

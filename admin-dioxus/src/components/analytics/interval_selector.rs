@@ -35,8 +35,7 @@ pub fn IntervalSelector(props: IntervalSelectorProps) -> Element {
                 }
             }
             div {
-                class: "inline-flex rounded-md border border-zinc-200 dark:border-zinc-800 \
-                       bg-zinc-50/50 dark:bg-zinc-950/50 p-0.5",
+                class: "inline-flex rounded-md border border-border bg-background p-0.5",
                 for (interval, label) in intervals {
                     {
                         let is_active = props.current == interval;
@@ -48,14 +47,13 @@ pub fn IntervalSelector(props: IntervalSelectorProps) -> Element {
                                 onclick: move |_| props.on_change.call(interval_clone),
                                 class: if is_active {
                                     "px-2 py-0.5 text-[9px] font-medium rounded \
-                                     bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 \
-                                     shadow-sm border border-zinc-200 dark:border-zinc-700 \
+                                     bg-background text-foreground \
+                                     shadow-sm border border-border \
                                      transition-all"
                                 } else {
                                     "px-2 py-0.5 text-[9px] font-medium rounded \
-                                     text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 \
-                                     dark:hover:text-zinc-100 hover:bg-white/50 \
-                                     dark:hover:bg-zinc-900/50 transition-colors"
+                                     text-muted-foreground hover:text-foreground \
+                                     hover:bg-background transition-colors"
                                 },
                                 "{label}"
                             }
