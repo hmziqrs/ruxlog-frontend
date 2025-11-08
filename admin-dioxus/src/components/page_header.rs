@@ -82,6 +82,7 @@ pub fn PageHeader(props: PageHeaderProps) -> Element {
         Route::SonnerDemoScreen {} => {
             vec![("demo".to_string(), None), ("sonner".to_string(), None)]
         }
+        Route::AnalyticsScreen {} => vec![("analytics".to_string(), None)],
         Route::HomeScreen {} | Route::LoginScreen {} => vec![],
     };
 

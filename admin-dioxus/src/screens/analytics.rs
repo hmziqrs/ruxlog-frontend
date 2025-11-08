@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::components::analytics::{
-    comment_rate_chart::CommentRateChart, dashboard_summary_cards::DashboardSummaryCards,
+    comment_rate_chart::CommentRateChartFromStore, dashboard_summary_cards::DashboardSummaryCards,
     filter_toolbar::AnalyticsFilterToolbar, media_upload_trends_chart::MediaUploadTrendsChart,
     newsletter_growth_chart::NewsletterGrowthChart, page_views_chart::PageViewsChart,
     publishing_trends_chart::PublishingTrendsChart,
@@ -56,10 +56,8 @@ pub fn AnalyticsScreen() -> Element {
         &analytics.newsletter_growth,
         StateFrameToastConfig::default(),
     );
-    let _media_upload_toast = use_state_frame_toast(
-        &analytics.media_upload_trends,
-        StateFrameToastConfig::default(),
-    );
+    let _media_upload_toast =
+        use_state_frame_toast(&analytics.media_upload, StateFrameToastConfig::default());
 
     //
     // Local UI state for per-chart filters.
@@ -157,11 +155,7 @@ pub fn AnalyticsScreen() -> Element {
             // Comment rate
             let comment_req = CommentRateRequest {
                 envelope: envelope.clone(),
-                filters: CommentRateFilters {
-                    // Conservative/default mapping; adjust to state.rs contract:
-                    sort_by_comment_rate: Some(true),
-                    min_views: None,
-                },
+                filters: CommentRateFilters { min_views: None },
             };
             analytics.fetch_comment_rate(comment_req).await;
 
@@ -181,7 +175,7 @@ pub fn AnalyticsScreen() -> Element {
                     group_by: *media_interval.read(),
                 },
             };
-            analytics.fetch_media_upload_trends(media_req).await;
+            analytics.fetch_media_upload(media_req).await;
         }
     });
 
@@ -196,7 +190,7 @@ pub fn AnalyticsScreen() -> Element {
     let verification_frame = analytics.verification_rates.read();
     let comment_rate_frame = analytics.comment_rate.read();
     let newsletter_frame = analytics.newsletter_growth.read();
-    let media_upload_frame = analytics.media_upload_trends.read();
+    let media_upload_frame = analytics.media_upload.read();
 
     rsx! {
         div { class: "min-h-screen bg-transparent text-foreground",
@@ -268,7 +262,6 @@ pub fn AnalyticsScreen() -> Element {
                         let comment_req = CommentRateRequest {
                             envelope: envelope.clone(),
                             filters: CommentRateFilters {
-                                sort_by_comment_rate: Some(comment_sort_by_rate.read().clone()),
                                 min_views: None,
                             },
                         };
@@ -290,7 +283,7 @@ pub fn AnalyticsScreen() -> Element {
                                 group_by: *media_interval.read(),
                             },
                         };
-                        analytics.fetch_media_upload_trends(media_req).await;
+                        analytics.fetch_media_upload(media_req).await;
                     });
                 },
             }
@@ -417,26 +410,6 @@ pub fn AnalyticsScreen() -> Element {
                         frame: registration_frame.clone(),
                         title: "User registrations over time".to_string(),
                         height: "h-72".to_string(),
-                        // Interval control: use simple callbacks matching store shape.
-                        on_interval_change: Some(EventHandler::new({
-                            let analytics = analytics.clone();
-                            let filters = filters.clone();
-                            move |interval: AnalyticsInterval| {
-                                *registration_interval.write() = interval;
-                                let analytics = analytics.clone();
-                                let filters = filters.clone();
-                                spawn(async move {
-                                    let envelope = filters.build_envelope();
-                                    let req = RegistrationTrendsRequest {
-                                        envelope,
-                                        filters: RegistrationTrendsFilters {
-                                            group_by: interval,
-                                        },
-                                    };
-                                    analytics.fetch_registration_trends(req).await;
-                                });
-                            }
-                        })),
                     }
 
                     VerificationRatesChart {
@@ -468,56 +441,16 @@ pub fn AnalyticsScreen() -> Element {
 
                 // Row 3: Engagement ranking & newsletter growth
                 div { class: "grid grid-cols-1 xl:grid-cols-2 gap-4",
-                    CommentRateChart {
-                        frame: comment_rate_frame.clone(),
-                        title: "Top posts by comment activity".to_string(),
-                        height: "h-72".to_string(),
-                        sort_by_comment_rate: comment_sort_by_rate.read().clone(),
-                        on_sort_toggle: Some(EventHandler::new({
-                            let analytics = analytics.clone();
-                            let filters = filters.clone();
-                            move |sort_by_rate: bool| {
-                                *comment_sort_by_rate.write() = sort_by_rate;
-                                let analytics = analytics.clone();
-                                let filters = filters.clone();
-                                spawn(async move {
-                                    let envelope = filters.build_envelope();
-                                    let req = CommentRateRequest {
-                                        envelope,
-                                        filters: CommentRateFilters {
-                                            sort_by_comment_rate: Some(sort_by_rate),
-                                            min_views: None,
-                                        },
-                                    };
-                                    analytics.fetch_comment_rate(req).await;
-                                });
-                            }
-                        })),
+                    CommentRateChartFromStore {
+                        title: Some("Top posts by comment activity".to_string()),
+                        height: Some("h-72".to_string()),
+                        max_items: Some(10),
                     }
 
                     NewsletterGrowthChart {
-                        frame: newsletter_frame.clone(),
                         title: "Newsletter growth & churn".to_string(),
-                        height: "h-72".to_string(),
-                        on_interval_change: Some(EventHandler::new({
-                            let analytics = analytics.clone();
-                            let filters = filters.clone();
-                            move |interval: AnalyticsInterval| {
-                                *newsletter_interval.write() = interval;
-                                let analytics = analytics.clone();
-                                let filters = filters.clone();
-                                spawn(async move {
-                                    let envelope = filters.build_envelope();
-                                    let req = NewsletterGrowthRequest {
-                                        envelope,
-                                        filters: NewsletterGrowthFilters {
-                                            group_by: interval,
-                                        },
-                                    };
-                                    analytics.fetch_newsletter_growth(req).await;
-                                });
-                            }
-                        })),
+                        height_class: "h-72".to_string(),
+                        default_interval: AnalyticsInterval::Day,
                     }
                 }
 
@@ -526,26 +459,7 @@ pub fn AnalyticsScreen() -> Element {
                     MediaUploadTrendsChart {
                         frame: media_upload_frame.clone(),
                         title: "Media upload trends".to_string(),
-                        height: "h-72".to_string(),
-                        on_interval_change: Some(EventHandler::new({
-                            let analytics = analytics.clone();
-                            let filters = filters.clone();
-                            move |interval: AnalyticsInterval| {
-                                *media_interval.write() = interval;
-                                let analytics = analytics.clone();
-                                let filters = filters.clone();
-                                spawn(async move {
-                                    let envelope = filters.build_envelope();
-                                    let req = MediaUploadRequest {
-                                        envelope,
-                                        filters: MediaUploadFilters {
-                                            group_by: interval,
-                                        },
-                                    };
-                                    analytics.fetch_media_upload_trends(req).await;
-                                });
-                            }
-                        })),
+                        height_class: "h-72".to_string(),
                     }
                 }
             }
