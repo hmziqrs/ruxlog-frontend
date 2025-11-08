@@ -83,8 +83,35 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
         }
     }
 
-    // Suppress unused warnings (TODO: implement interval controls properly)
-    let _ = (on_interval_change, current_interval);    // Interval selector button helper.
+    // Interval selector button helper.
+    let _render_interval_button = |interval: AnalyticsInterval| {
+        let is_active = current_interval == interval;
+        let label = interval_label(&interval);
+
+        let base = "px-2 py-1 rounded-md text-xs font-medium transition-colors";
+        let active = "bg-sky-500 text-white shadow-sm";
+        let inactive = "bg-zinc-900/5 dark:bg-zinc-50/5 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-900/10 dark:hover:bg-zinc-50/10";
+        let class = format!("{} {}", base, if is_active { active } else { inactive });
+
+        let onclick = on_interval_change.as_ref().map(|cb| {
+            let interval = interval.clone();
+            move |_| {
+                cb.call(interval.clone());
+            }
+        });
+
+        rsx! {
+            button {
+                class: "{class}",
+                onclick: move |evt| {
+                    if let Some(handler) = &onclick {
+                        handler(evt);
+                    }
+                },
+                "{label}"
+            }
+        }
+    };
 
     // Render loading, error, and empty states.
     let content: Element = match status {

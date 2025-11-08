@@ -253,7 +253,10 @@ pub struct DashboardSummaryData {
 
 pub struct AnalyticsState {
     pub registration_trends: GlobalSignal<
-        StateFrame<AnalyticsEnvelopeResponse<Vec<RegistrationTrendPoint>>, RegistrationTrendsRequest>,
+        StateFrame<
+            AnalyticsEnvelopeResponse<Vec<RegistrationTrendPoint>>,
+            RegistrationTrendsRequest,
+        >,
     >,
     pub verification_rates: GlobalSignal<
         StateFrame<AnalyticsEnvelopeResponse<Vec<VerificationRatePoint>>, VerificationRatesRequest>,
@@ -263,13 +266,15 @@ pub struct AnalyticsState {
     >,
     pub page_views:
         GlobalSignal<StateFrame<AnalyticsEnvelopeResponse<Vec<PageViewPoint>>, PageViewsRequest>>,
-    pub comment_rate:
-        GlobalSignal<StateFrame<AnalyticsEnvelopeResponse<Vec<CommentRatePoint>>, CommentRateRequest>>,
+    pub comment_rate: GlobalSignal<
+        StateFrame<AnalyticsEnvelopeResponse<Vec<CommentRatePoint>>, CommentRateRequest>,
+    >,
     pub newsletter_growth: GlobalSignal<
         StateFrame<AnalyticsEnvelopeResponse<Vec<NewsletterGrowthPoint>>, NewsletterGrowthRequest>,
     >,
-    pub media_upload:
-        GlobalSignal<StateFrame<AnalyticsEnvelopeResponse<Vec<MediaUploadPoint>>, MediaUploadRequest>>,
+    pub media_upload: GlobalSignal<
+        StateFrame<AnalyticsEnvelopeResponse<Vec<MediaUploadPoint>>, MediaUploadRequest>,
+    >,
     pub dashboard_summary: GlobalSignal<
         StateFrame<AnalyticsEnvelopeResponse<DashboardSummaryData>, DashboardSummaryRequest>,
     >,

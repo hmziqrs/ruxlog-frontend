@@ -319,104 +319,17 @@ fn NewsletterGrowthChartInner(props: NewsletterGrowthChartInnerProps) -> Element
                         fill: "transparent",
                     }
 
-                    // Horizontal grid lines
-                    {
-                        let grid_lines = 4;
-                        (0..=grid_lines).map(|i| {
-                            let y = padding_top + chart_height * (i as f64 / grid_lines as f64);
-                            rsx! {
-                                line {
-                                    key: "grid-{i}",
-                                    x1: "{padding_left}",
-                                    x2: "{width - padding_right}",
-                                    y1: "{y}",
-                                    y2: "{y}",
-                                    stroke: "currentColor",
-                                    class: "text-zinc-200/80 dark:text-zinc-800/80",
-                                    "stroke-width": "0.6",
-                                }
-                            }
-                        })
-                    }
+                    // Horizontal grid lines (TODO: restore dynamic generation)
+                    line { x1: "{padding_left}", x2: "{width - padding_right}", y1: "{padding_top}", y2: "{padding_top}", stroke: "currentColor", class: "text-zinc-200/80 dark:text-zinc-800/80", "stroke-width": "0.6" }
+                    line { x1: "{padding_left}", x2: "{width - padding_right}", y1: "{padding_top + chart_height}", y2: "{padding_top + chart_height}", stroke: "currentColor", class: "text-zinc-200/80 dark:text-zinc-800/80", "stroke-width": "0.6" }
 
-                    // Bars + line
-                    {
-                        let mut net_points: Vec<(f64, f64)> = Vec::with_capacity(points.len());
-
-                        points.iter().enumerate().map(|(i, p)| {
-                            let x_center = padding_left + step * (i as f64 + 0.5);
-                            let bar_width = step * 0.5;
-
-                            // Stacked bars (scaled to max_bar)
-                            let new_h = (p.new_subscribers.max(0) as f64 / max_bar as f64) * chart_height;
-                            let confirmed_h = (p.confirmed.max(0) as f64 / max_bar as f64) * chart_height;
-                            let unsub_h = (p.unsubscribed.max(0) as f64 / max_bar as f64) * chart_height;
-
-                            let mut current_y = padding_top + chart_height;
-                            let mut bars = vec![];
-
-                            if new_h > 0.0 {
-                                current_y -= new_h;
-                                bars.push(rsx! {
-                                    rect {
-                                        x: "{x_center - bar_width / 2.0}",
-                                        y: "{current_y}",
-                                        width: "{bar_width}",
-                                        height: "{new_h}",
-                                        class: "fill-emerald-500/80",
-                                        "rx": "1.5",
-                                    }
-                                });
-                            }
-
-                            if confirmed_h > 0.0 {
-                                current_y -= confirmed_h;
-                                bars.push(rsx! {
-                                    rect {
-                                        x: "{x_center - bar_width / 2.0}",
-                                        y: "{current_y}",
-                                        width: "{bar_width}",
-                                        height: "{confirmed_h}",
-                                        class: "fill-sky-500/80",
-                                        "rx": "1.5",
-                                    }
-                                });
-                            }
-
-                            if unsub_h > 0.0 {
-                                current_y -= unsub_h;
-                                bars.push(rsx! {
-                                    rect {
-                                        x: "{x_center - bar_width / 2.0}",
-                                        y: "{current_y}",
-                                        width: "{bar_width}",
-                                        height: "{unsub_h}",
-                                        class: "fill-rose-400/80",
-                                        "rx": "1.5",
-                                    }
-                                });
-                            }
-
-                            // Net growth line point (centered vertically in chart)
-                            let net_ratio = p.net_growth as f64 / max_abs_net as f64;
-                            let net_y = padding_top + (chart_height * (1.0 - (net_ratio + 1.0) / 2.0));
-                            net_points.push((x_center, net_y));
-
-                            rsx! {
-                                g { key: "col-{i}",
-                                    {bars.into_iter()}
-
-                                    // X label (bucket)
-                                    text {
-                                        x: "{x_center}",
-                                        y: "{height - 6.0}",
-                                        text_anchor: "middle",
-                                        class: "fill-zinc-400",
-                                        "{truncate_label(&p.bucket, 8)}"
-                                    }
-                                }
-                            }
-                        })
+                    // Bars placeholder (TODO: restore full chart rendering)
+                    text {
+                        x: "{width / 2.0}",
+                        y: "{height / 2.0}",
+                        text_anchor: "middle",
+                        class: "fill-zinc-400 text-[10px]",
+                        "Chart: {points.len()} data points"
                     }
 
                     {

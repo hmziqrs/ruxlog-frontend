@@ -83,8 +83,7 @@ pub fn VerificationRatesChart(props: VerificationRatesChartProps) -> Element {
         }
     }
 
-    // Suppress unused warnings (TODO: implement interval controls properly)
-    let _ = (on_interval_change, current_interval);    // Interval selector button helper.
+    // Interval selector button helper.
 
     // Render loading, error, and empty states.
     let content: Element = match status {
