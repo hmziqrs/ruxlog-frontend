@@ -103,6 +103,9 @@ pub fn LoginScreen() -> Element {
                             "Admin Login"
                         }
                         form { class: "space-y-5",
+                            onsubmit: |e: Event<MouseData>| {
+                                e.prevent_default();
+                            },
                             // oninput: move |_| {
                             //     if login_status.is_failed() {
                             //         auth_store.login_status.write().error = None;
