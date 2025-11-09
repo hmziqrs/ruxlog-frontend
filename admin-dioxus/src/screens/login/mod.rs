@@ -117,14 +117,7 @@ pub fn LoginScreen() -> Element {
                                 placeholder: "Enter your password",
                                 r#type: "password",
                             }
-                            div { class: "flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400 transition-colors duration-300",
-                                label { class: "flex items-center gap-2 select-none cursor-pointer",
-                                    input {
-                                        class: "checkbox checkbox-primary",
-                                        r#type: "checkbox",
-                                    }
-                                    span { "Remember me" }
-                                }
+                            div { class: "flex justify-end text-xs text-zinc-600 dark:text-zinc-400 transition-colors duration-300",
                                 a {
                                     class: "hover:underline text-zinc-700 dark:text-zinc-300 font-medium hover:text-zinc-900 dark:hover:text-white transition-colors duration-150",
                                     href: "#",
