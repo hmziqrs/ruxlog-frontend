@@ -67,56 +67,37 @@ pub fn AuthGuardContainer() -> Element {
     }));
 
     let init_status = auth_store.init_status.read();
-    if init_status.is_failed() {
-        return rsx! {
-            AuthGuardError {
-                on_retry: move |_| {
-                    spawn(async move {
-                        auth_store.init().await;
-                    });
-                }
-            }
-        };
-    }
-
-    if *render_blocked.read() {
-        let login_status = auth_store.login_status.read();
-        let logout_status = auth_store.logout_status.read();
-
-        let (loader_title, loader_copy) = if init_status.is_loading() {
-            (
-                "Checking your workspace…",
-                "Hold tight while we verify your session and load the dashboard.",
-            )
-        } else if login_status.is_loading() {
-            (
-                "Signing you in…",
-                "Validating your credentials and preparing your workspace.",
-            )
-        } else if logout_status.is_loading() {
-            (
-                "Signing you out…",
-                "Wrapping up and clearing your session securely.",
-            )
-        } else {
-            (
-                "Preparing dashboard…",
-                "Bringing everything online for your next task.",
-            )
-        };
-
-        return rsx! {
-            AuthGuardLoader {
-                title: loader_title.to_string(),
-                copy: loader_copy.to_string(),
-            }
-        };
-    }
-
     let login_status = auth_store.login_status.read();
     let logout_status = auth_store.logout_status.read();
 
-    let show_overlay = login_status.is_loading() || logout_status.is_loading();
+    let (loader_title, loader_copy) = if init_status.is_loading() {
+        (
+            "Checking your workspace…",
+            "Hold tight while we verify your session and load the dashboard.",
+        )
+    } else if login_status.is_loading() {
+        (
+            "Signing you in…",
+            "Validating your credentials and preparing your workspace.",
+        )
+    } else if logout_status.is_loading() {
+        (
+            "Signing you out…",
+            "Wrapping up and clearing your session securely.",
+        )
+    } else {
+        (
+            "Preparing dashboard…",
+            "Bringing everything online for your next task.",
+        )
+    };
+
+    let show_overlay = use_memo(move || {
+        let login = auth_store.login_status.read();
+        let logout = auth_store.logout_status.read();
+        login.is_loading() || logout.is_loading()
+    });
+
     let (overlay_title, overlay_copy) = if login_status.is_loading() {
         (
             "Signing you in…",
@@ -131,12 +112,32 @@ pub fn AuthGuardContainer() -> Element {
         ("", "")
     };
 
+    if init_status.is_failed() {
+        return rsx! {
+            AuthGuardError {
+                on_retry: move |_| {
+                    spawn(async move {
+                        auth_store.init().await;
+                    });
+                }
+            }
+        };
+    }
+
     rsx! {
-        Outlet::<Route> {}
         AuthGuardLoader {
-            title: overlay_title.to_string(),
-            copy: overlay_copy.to_string(),
-            overlay: true,
+            title: loader_title.to_string(),
+            copy: loader_copy.to_string(),
+            show: render_blocked,
+        }
+        if !render_blocked() {
+            Outlet::<Route> {}
+            AuthGuardLoader {
+                title: overlay_title.to_string(),
+                copy: overlay_copy.to_string(),
+                overlay: true,
+                show: show_overlay,
+            }
         }
     }
 }
