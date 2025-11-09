@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 
 use crate::components::sonner::SonnerToaster;
-use crate::components::ToastProvider;
 use crate::utils::persist;
 
 pub mod components;
@@ -60,10 +59,8 @@ fn App() -> Element {
             href: "https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400..600&family=Geist:wght@400..600&display=swap",
         }
         // document::Link { rel: "stylesheet", href: asset!("/assets/tailwind.css") }
-        ToastProvider {
-            SonnerToaster {
-                Router::<crate::router::Route> {}
-            }
+        SonnerToaster {
+            Router::<crate::router::Route> {}
         }
     }
 }
