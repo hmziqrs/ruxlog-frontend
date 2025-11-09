@@ -8,20 +8,28 @@ use dioxus::{logger::tracing, prelude::*};
 use crate::config::DarkMode;
 use crate::screens::login::form::{use_login_form, LoginForm};
 use crate::ui::shadcn::Button;
-use crate::{components::{AppInput, ErrorDetails, ErrorDetailsVariant}, store::use_auth};
+use crate::{
+    components::{AppInput, ErrorDetails, ErrorDetailsVariant},
+    store::use_auth,
+};
 
 #[component]
 pub fn LoginScreen() -> Element {
     let mut ox_form = use_login_form(LoginForm::dev());
     let auth_store = use_auth();
     let login_status = auth_store.login_status.read();
-    let is_loading = login_status.is_loading();
     let mut mouse_pos = use_signal(|| (0, 0)); // Initialize at 0,0
     let mut card_ref = use_signal(|| None as Option<Rc<MountedData>>);
     let mut card_dimensions = use_signal(Rect::zero);
 
     let dark_mode = use_context::<Signal<DarkMode>>();
     let is_dark = dark_mode.read().0;
+
+    tracing::info!(
+        "failed: {} | error: {:?}",
+        login_status.is_failed(),
+        login_status.error,
+    );
 
     let calculate = use_callback(move |_: ()| {
         spawn(async move {
@@ -101,11 +109,11 @@ pub fn LoginScreen() -> Element {
                             "Admin Login"
                         }
                         form { class: "space-y-5",
-                            oninput: move |_| {
-                                if login_status.read().error.is_some() {
-                                    auth_store.login_status.write().error = None;
-                                }
-                            },
+                            // oninput: move |_| {
+                            //     if login_status.is_failed() {
+                            //         auth_store.login_status.write().error = None;
+                            //     }
+                            // },
                             AppInput {
                                 name: "email",
                                 form: ox_form,
@@ -120,9 +128,9 @@ pub fn LoginScreen() -> Element {
                                 r#type: "password",
                             }
                             // Error display
-                            if !login_status.is_loading() && login_status.read().error.is_some() {
+                            if  login_status.is_failed() {
                                 ErrorDetails {
-                                    error: login_status.read().error.clone(),
+                                    error: login_status.error.clone(),
                                     variant: ErrorDetailsVariant::Minimum,
                                     class: "mb-2",
                                 }
