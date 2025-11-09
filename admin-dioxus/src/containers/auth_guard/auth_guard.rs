@@ -103,21 +103,45 @@ pub fn AuthGuardContainer() -> Element {
     }
 
     if *render_blocked.read() {
+        let login_status = auth_store.login_status.read();
+        let logout_status = auth_store.logout_status.read();
+
+        let (loader_title, loader_copy) = if init_status.is_loading() {
+            (
+                "Checking your workspace…",
+                "Hold tight while we verify your session and load the dashboard.",
+            )
+        } else if login_status.is_loading() {
+            (
+                "Signing you in…",
+                "Validating your credentials and preparing your workspace.",
+            )
+        } else if logout_status.is_loading() {
+            (
+                "Signing you out…",
+                "Wrapping up and clearing your session securely.",
+            )
+        } else {
+            (
+                "Preparing dashboard…",
+                "Bringing everything online for your next task.",
+            )
+        };
+
         return rsx! {
             div { class: "min-h-screen bg-background flex items-center justify-center px-4",
                 div { class: "w-full max-w-sm text-center space-y-6",
-                    div { class: "inline-flex items-center justify-center rounded-2xl bg-muted/40 p-6 mx-auto animate-pulse",
+                    div { class: "relative mx-auto h-24 w-24 flex items-center justify-center",
+                        div { class: "absolute inset-0 rounded-full border-4 border-primary/20 border-t-primary animate-spin" }
                         img {
-                            class: "h-16 w-16",
+                            class: "h-12 w-12 relative",
                             src: asset!("/assets/logo.png"),
                             alt: "Ruxlog",
                         }
                     }
                     div { class: "space-y-2",
-                        p { class: "text-lg font-semibold text-foreground", "Checking your workspace…" }
-                        p { class: "text-sm text-muted-foreground",
-                            "Hold tight while we verify your session and load the dashboard."
-                        }
+                        p { class: "text-lg font-semibold text-foreground", "{loader_title}" }
+                        p { class: "text-sm text-muted-foreground", "{loader_copy}" }
                     }
                 }
             }
