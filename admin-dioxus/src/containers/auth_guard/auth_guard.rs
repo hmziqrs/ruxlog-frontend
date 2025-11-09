@@ -1,11 +1,11 @@
 use dioxus::prelude::*;
 
 use crate::{
-    components::{ErrorDetails, ErrorDetailsVariant},
     router::{Route, OPEN_ROUTES},
     store::use_auth,
-    ui::shadcn::{Button, ButtonVariant},
 };
+
+use super::{AuthGuardError, AuthGuardLoader};
 
 #[component]
 pub fn AuthGuardContainer() -> Element {
@@ -69,34 +69,11 @@ pub fn AuthGuardContainer() -> Element {
     let init_status = auth_store.init_status.read();
     if init_status.is_failed() {
         return rsx! {
-            div { class: "min-h-screen flex items-center justify-center bg-background p-4",
-                div { class: "max-w-md w-full",
-                    div { class: "rounded-xl border border-border/60 bg-background p-8 shadow-lg space-y-6",
-                        // Logo
-                        div { class: "flex justify-center mb-2",
-                            img {
-                                class: "h-24 w-24",
-                                src: asset!("/assets/logo.png"),
-                                alt: "Logo",
-                            }
-                        }
-                        ErrorDetails {
-                            error: init_status.error.clone(),
-                            variant: ErrorDetailsVariant::Minimum,
-                            class: Some("w-full".to_string()),
-                        }
-                        div { class: "flex justify-center pt-2",
-                            Button {
-                                variant: ButtonVariant::Outline,
-                                onclick: move |_| {
-                                    spawn(async move {
-                                        auth_store.init().await;
-                                    });
-                                },
-                                "Try Again"
-                            }
-                        }
-                    }
+            AuthGuardError {
+                on_retry: move |_| {
+                    spawn(async move {
+                        auth_store.init().await;
+                    });
                 }
             }
         };
@@ -129,21 +106,9 @@ pub fn AuthGuardContainer() -> Element {
         };
 
         return rsx! {
-            div { class: "min-h-screen bg-background flex items-center justify-center px-4",
-                div { class: "w-full max-w-sm text-center space-y-6",
-                    div { class: "relative mx-auto h-24 w-24 flex items-center justify-center",
-                        div { class: "absolute inset-0 rounded-full border-4 border-primary/20 border-t-primary animate-spin" }
-                        img {
-                            class: "h-12 w-12 relative",
-                            src: asset!("/assets/logo.png"),
-                            alt: "Ruxlog",
-                        }
-                    }
-                    div { class: "space-y-2",
-                        p { class: "text-lg font-semibold text-foreground", "{loader_title}" }
-                        p { class: "text-sm text-muted-foreground", "{loader_copy}" }
-                    }
-                }
+            AuthGuardLoader {
+                title: loader_title.to_string(),
+                copy: loader_copy.to_string(),
             }
         };
     }
