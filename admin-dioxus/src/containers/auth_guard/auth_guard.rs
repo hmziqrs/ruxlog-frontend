@@ -113,7 +113,30 @@ pub fn AuthGuardContainer() -> Element {
         };
     }
 
+    let login_status = auth_store.login_status.read();
+    let logout_status = auth_store.logout_status.read();
+
+    let show_overlay = login_status.is_loading() || logout_status.is_loading();
+    let (overlay_title, overlay_copy) = if login_status.is_loading() {
+        (
+            "Signing you in…",
+            "Validating your credentials and preparing your workspace.",
+        )
+    } else if logout_status.is_loading() {
+        (
+            "Signing you out…",
+            "Wrapping up and clearing your session securely.",
+        )
+    } else {
+        ("", "")
+    };
+
     rsx! {
         Outlet::<Route> {}
+        AuthGuardLoader {
+            title: overlay_title.to_string(),
+            copy: overlay_copy.to_string(),
+            overlay: true,
+        }
     }
 }
