@@ -7,12 +7,11 @@ use crate::components::analytics::{
     verification_rates_chart::VerificationRatesChart,
 };
 use crate::components::PageHeader;
-use crate::hooks::use_state_frame_toast::{use_state_frame_toast, StateFrameToastConfig};
 use crate::store::analytics::{
-    use_analytics, use_analytics_filters, AnalyticsEnvelope, AnalyticsInterval,
-    DashboardSummaryFilters, DashboardSummaryRequest, PageViewsFilters, PageViewsRequest,
-    PublishingTrendsFilters, PublishingTrendsRequest, RegistrationTrendsFilters,
-    RegistrationTrendsRequest, VerificationRatesFilters, VerificationRatesRequest,
+    use_analytics, use_analytics_filters, AnalyticsInterval, DashboardSummaryFilters,
+    DashboardSummaryRequest, PageViewsFilters, PageViewsRequest, PublishingTrendsFilters,
+    PublishingTrendsRequest, RegistrationTrendsFilters, RegistrationTrendsRequest,
+    VerificationRatesFilters, VerificationRatesRequest,
 };
 
 #[component]
@@ -25,26 +24,6 @@ pub fn HomeScreen() -> Element {
     let mut page_views_post_id = use_signal(|| None::<i32>);
     let mut page_views_author_id = use_signal(|| None::<i32>);
     let mut page_views_only_unique = use_signal(|| false);
-
-    // Wire toast helpers for key frames so dashboard surfaces API issues.
-    let _summary_toast = use_state_frame_toast(
-        &analytics.dashboard_summary,
-        StateFrameToastConfig::default(),
-    );
-    let _views_toast =
-        use_state_frame_toast(&analytics.page_views, StateFrameToastConfig::default());
-    let _publishing_toast = use_state_frame_toast(
-        &analytics.publishing_trends,
-        StateFrameToastConfig::default(),
-    );
-    let _registration_toast = use_state_frame_toast(
-        &analytics.registration_trends,
-        StateFrameToastConfig::default(),
-    );
-    let _verification_toast = use_state_frame_toast(
-        &analytics.verification_rates,
-        StateFrameToastConfig::default(),
-    );
 
     // Refetch all analytics data using current filter state
     let refetch_all = move || {
