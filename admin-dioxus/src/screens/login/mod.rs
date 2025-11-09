@@ -8,7 +8,7 @@ use dioxus::{logger::tracing, prelude::*};
 use crate::config::DarkMode;
 use crate::screens::login::form::{use_login_form, LoginForm};
 use crate::ui::shadcn::Button;
-use crate::{components::AppInput, store::use_auth};
+use crate::{components::{AppInput, ErrorDetails, ErrorDetailsVariant}, store::use_auth};
 
 #[component]
 pub fn LoginScreen() -> Element {
@@ -101,6 +101,11 @@ pub fn LoginScreen() -> Element {
                             "Admin Login"
                         }
                         form { class: "space-y-5",
+                            oninput: move |_| {
+                                if login_status.read().error.is_some() {
+                                    auth_store.login_status.write().error = None;
+                                }
+                            },
                             AppInput {
                                 name: "email",
                                 form: ox_form,
@@ -113,6 +118,14 @@ pub fn LoginScreen() -> Element {
                                 label: "Password",
                                 placeholder: "Enter your password",
                                 r#type: "password",
+                            }
+                            // Error display
+                            if !login_status.is_loading() && login_status.read().error.is_some() {
+                                ErrorDetails {
+                                    error: login_status.read().error.clone(),
+                                    variant: ErrorDetailsVariant::Minimum,
+                                    class: "mb-2",
+                                }
                             }
                             div { class: "flex justify-end text-xs text-zinc-600 dark:text-zinc-400 transition-colors duration-300",
                                 a {
