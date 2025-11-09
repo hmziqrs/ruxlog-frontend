@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 
 use crate::components::sonner::SonnerToaster;
 use crate::components::ToastProvider;
+use crate::utils::persist;
 
 pub mod components;
 mod config;
@@ -28,6 +29,22 @@ const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 #[component]
 fn App() -> Element {
     // let toast = use_context_provider(|| Signal::new(ToastManager::default()));
+
+    // Initialize document theme from persistent storage on app mount.
+    use_effect(|| {
+        let stored = persist::get_theme();
+        spawn(async move {
+            match stored.as_deref() {
+                Some("dark") => {
+                    let _ = document::eval("document.documentElement.classList.add('dark');").await;
+                }
+                Some("light") => {
+                    let _ = document::eval("document.documentElement.classList.remove('dark');").await;
+                }
+                _ => {}
+            }
+        });
+    });
 
     rsx! {
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }

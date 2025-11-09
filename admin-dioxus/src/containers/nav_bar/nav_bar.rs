@@ -4,7 +4,7 @@ use hmziq_dioxus_free_icons::Icon;
 
 use crate::components::{Sidebar, UserAvatar};
 use crate::config::DarkMode;
-use crate::{router::Route, store::use_auth};
+use crate::{router::Route, store::use_auth, utils::persist};
 
 #[component]
 pub fn NavBarContainer() -> Element {
@@ -26,10 +26,12 @@ pub fn NavBarContainer() -> Element {
 
     let toggle_dark_mode = move |_: MouseEvent| {
         dark_theme.write().toggle();
+        let is_dark = (*dark_theme.read()).0;
+        // Update DOM immediately and persist preference via bevy_pkv
         spawn(async move {
             _ = document::eval("document.documentElement.classList.toggle('dark');").await;
-            _ = document::eval("localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');").await;
         });
+        persist::set_theme(if is_dark { "dark" } else { "light" });
     };
 
     let toggle_sidebar = move |_: MouseEvent| {
