@@ -41,7 +41,7 @@ pub fn AnalyticsFilterToolbar(props: AnalyticsFilterToolbarProps) -> Element {
 
     rsx! {
         div {
-            class: "sticky top-0 z-40 backdrop-blur-sm bg-background \
+            class: "sticky top-0 backdrop-blur-sm bg-background \
                    border-b border-border/60 transition-colors",
             div {
                 class: "container mx-auto px-4 py-3",
