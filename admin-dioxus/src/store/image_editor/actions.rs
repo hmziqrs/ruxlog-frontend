@@ -1,4 +1,7 @@
-use super::{EditSession, EditorTool, ImageEditorState};
+use super::{
+    CompressParams, CropRegion, EditSession, EditorTool, ImageEditorState, ResizeParams,
+    RotateParams,
+};
 use gloo_console;
 use photon_rs::native::open_image_from_bytes;
 use photon_rs::transform::{resize, rotate};
@@ -634,5 +637,18 @@ impl ImageEditorState {
     async fn get_blob_size(&self, blob_url: &str) -> Result<usize, String> {
         let blob = self.fetch_blob(blob_url).await?;
         Ok(blob.size() as usize)
+    }
+
+    pub fn reset(&self) {
+        *self.is_open.write() = false;
+        *self.current_session.write() = None;
+        *self.active_tool.write() = EditorTool::None;
+        *self.crop_region.write() = CropRegion::default();
+        *self.resize_params.write() = ResizeParams::default();
+        *self.rotate_params.write() = RotateParams::default();
+        *self.compress_params.write() = CompressParams::default();
+        *self.is_processing.write() = false;
+        *self.error_message.write() = None;
+        *self.compression_savings.write() = None;
     }
 }

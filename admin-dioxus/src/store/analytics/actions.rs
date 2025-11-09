@@ -1,6 +1,6 @@
 use crate::services::http_client;
 use crate::store::analytics::*;
-use crate::store::state_request_abstraction;
+use crate::store::{state_request_abstraction, StateFrame};
 
 impl AnalyticsState {
     pub async fn fetch_registration_trends(&self, request: RegistrationTrendsRequest) {
@@ -121,5 +121,16 @@ impl AnalyticsState {
             },
         )
         .await;
+    }
+
+    pub fn reset(&self) {
+        *self.registration_trends.write() = StateFrame::new();
+        *self.verification_rates.write() = StateFrame::new();
+        *self.publishing_trends.write() = StateFrame::new();
+        *self.page_views.write() = StateFrame::new();
+        *self.comment_rate.write() = StateFrame::new();
+        *self.newsletter_growth.write() = StateFrame::new();
+        *self.media_upload.write() = StateFrame::new();
+        *self.dashboard_summary.write() = StateFrame::new();
     }
 }

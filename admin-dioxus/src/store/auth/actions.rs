@@ -46,6 +46,7 @@ impl AuthState {
                 if (200..300).contains(&response.status()) {
                     self.logout_status.write().set_success(None);
                     *self.user.write() = None;
+                    self.reset_all_stores();
                 } else {
                     self.logout_status.write().set_api_error(&response).await;
                     *self.user.write() = None;
@@ -59,6 +60,21 @@ impl AuthState {
                 *self.user.write() = None;
             }
         }
+    }
+
+    fn reset_all_stores(&self) {
+        use crate::store::{
+            analytics::use_analytics, categories::use_categories, image_editor::use_image_editor,
+            media::use_media, posts::use_post, tags::use_tag, users::use_user,
+        };
+
+        use_categories().reset();
+        use_tag().reset();
+        use_user().reset();
+        use_media().reset();
+        use_post().reset();
+        use_analytics().reset();
+        use_image_editor().reset();
     }
 
     pub async fn init(&self) {
