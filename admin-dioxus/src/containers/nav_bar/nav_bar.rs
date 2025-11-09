@@ -27,7 +27,7 @@ pub fn NavBarContainer() -> Element {
     let toggle_dark_mode = move |_: MouseEvent| {
         dark_theme.write().toggle();
         let is_dark = (*dark_theme.read()).0;
-        // Update DOM immediately and persist preference via bevy_pkv
+        // Update DOM immediately and persist preference via bevy_pkv and localStorage (handled in persist)
         spawn(async move {
             _ = document::eval("document.documentElement.classList.toggle('dark');").await;
         });
