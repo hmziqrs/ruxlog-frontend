@@ -100,9 +100,6 @@ pub fn LoginScreen() -> Element {
                         h1 { class: "text-3xl font-extrabold text-center text-zinc-800 dark:text-zinc-100 tracking-tight transition-colors duration-300",
                             "Admin Login"
                         }
-                        p { class: "text-center text-zinc-600 dark:text-zinc-400 text-sm mb-4 transition-colors duration-300",
-                            "Sign in to your admin dashboard"
-                        }
                         form { class: "space-y-5",
                             AppInput {
                                 name: "email",
