@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::{
-    components::{ErrorDetails, ErrorDetailsVariant, LoadingOverlay},
+    components::{ErrorDetails, ErrorDetailsVariant},
     router::{Route, OPEN_ROUTES},
     store::use_auth,
     ui::shadcn::{Button, ButtonVariant},
@@ -104,9 +104,21 @@ pub fn AuthGuardContainer() -> Element {
 
     if *render_blocked.read() {
         return rsx! {
-            div { class: "min-h-screen bg-background",
-                LoadingOverlay {
-                    visible: render_blocked
+            div { class: "min-h-screen bg-background flex items-center justify-center px-4",
+                div { class: "w-full max-w-sm text-center space-y-6",
+                    div { class: "inline-flex items-center justify-center rounded-2xl bg-muted/40 p-6 mx-auto animate-pulse",
+                        img {
+                            class: "h-16 w-16",
+                            src: asset!("/assets/logo.png"),
+                            alt: "Ruxlog",
+                        }
+                    }
+                    div { class: "space-y-2",
+                        p { class: "text-lg font-semibold text-foreground", "Checking your workspace…" }
+                        p { class: "text-sm text-muted-foreground",
+                            "Hold tight while we verify your session and load the dashboard."
+                        }
+                    }
                 }
             }
         };
