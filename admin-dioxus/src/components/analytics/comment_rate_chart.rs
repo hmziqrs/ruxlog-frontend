@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::hooks::{use_state_frame_toast, StateFrameToastConfig};
+use crate::components::{ErrorDetails, ErrorDetailsVariant, LoadingOverlay};
 use crate::store::{use_analytics, CommentRatePoint, StateFrameStatus};
 
 /// Props for `CommentRateChart`.
@@ -146,11 +146,11 @@ pub fn CommentRateChartFromStore(
     let analytics = use_analytics();
     let state_signal = &analytics.comment_rate;
     let frame = state_signal.read().clone();
-    use_state_frame_toast(&state_signal, StateFrameToastConfig::default());
 
     let title = title.unwrap_or_else(|| "Top posts by comment engagement".to_string());
     let height = height.or_else(|| Some("h-80".to_string()));
     let max_items = max_items.unwrap_or(10);
+    let is_loading = matches!(frame.status, StateFrameStatus::Init | StateFrameStatus::Loading);
 
     match frame.status {
         StateFrameStatus::Init => {
@@ -164,26 +164,20 @@ pub fn CommentRateChartFromStore(
             }
         }
         StateFrameStatus::Failed => {
-            let error_msg = frame
-                .error
-                .as_ref()
-                .map(|e| e.message())
-                .unwrap_or_else(|| "Unknown error".to_string());
             rsx! {
                 div {
-                    class: "rounded-2xl border border-destructive bg-background shadow-none p-4 flex flex-col gap-2 h-48",
+                    class: "rounded-2xl border border-border bg-background shadow-none p-4 flex flex-col gap-2 h-48 relative",
                     h2 {
-                        class: "text-sm font-semibold text-destructive",
+                        class: "text-sm font-semibold text-foreground",
                         "{title}"
                     }
-                    span {
-                        class: "text-[10px] text-destructive",
-                        "Unable to load comment rate analytics."
+                    ErrorDetails {
+                        error: frame.error.clone(),
+                        variant: ErrorDetailsVariant::Collapsed,
+                        title: Some("Failed to load comment rate analytics".to_string()),
                     }
-                    span {
-                        class: "text-[9px] text-destructive line-clamp-2",
-                        "{error_msg}"
-                    }
+
+                    LoadingOverlay { visible: is_loading }
                 }
             }
         }

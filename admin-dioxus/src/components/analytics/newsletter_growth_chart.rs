@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::hooks::use_state_frame_toast::{use_state_frame_toast, StateFrameToastConfig};
+use crate::components::{ErrorDetails, ErrorDetailsVariant, LoadingOverlay};
 use crate::store::{
     use_analytics, AnalyticsEnvelope, AnalyticsEnvelopeResponse, AnalyticsInterval,
     NewsletterGrowthFilters, NewsletterGrowthPoint, NewsletterGrowthRequest, StateFrameStatus,
@@ -34,12 +34,6 @@ pub struct NewsletterGrowthChartProps {
 #[component]
 pub fn NewsletterGrowthChart(props: NewsletterGrowthChartProps) -> Element {
     let analytics = use_analytics();
-
-    // Hook that observes the state frame and shows toasts on failures.
-    use_state_frame_toast(
-        &analytics.newsletter_growth,
-        StateFrameToastConfig::default(),
-    );
 
     // Local interval state (for future filter controls).
     let interval = use_signal(|| props.default_interval.clone());
@@ -81,6 +75,7 @@ pub fn NewsletterGrowthChart(props: NewsletterGrowthChartProps) -> Element {
     let status = frame.status;
     let error = frame.error.clone();
     let data = frame.data.clone();
+    let is_loading = status == StateFrameStatus::Loading;
 
     let (status_str, body) = if status == StateFrameStatus::Loading {
         (
@@ -90,15 +85,13 @@ pub fn NewsletterGrowthChart(props: NewsletterGrowthChartProps) -> Element {
             },
         )
     } else if status == StateFrameStatus::Failed {
-        let err_msg = error
-            .as_ref()
-            .map(|e| e.message())
-            .unwrap_or_else(|| "Failed to load newsletter growth data".to_string());
         (
             "Error",
             rsx! {
-                ErrorState {
-                    message: err_msg,
+                ErrorDetails {
+                    error: error.clone(),
+                    variant: ErrorDetailsVariant::Collapsed,
+                    title: Some("Failed to load newsletter growth data".to_string()),
                 }
             },
         )
@@ -144,7 +137,7 @@ pub fn NewsletterGrowthChart(props: NewsletterGrowthChartProps) -> Element {
 
     rsx! {
         div {
-            class: "rounded-2xl border border-border bg-background shadow-none flex flex-col gap-3 p-4 {props.height_class}",
+            class: "rounded-2xl border border-border bg-background shadow-none flex flex-col gap-3 p-4 {props.height_class} relative",
             // Header
             div {
                 class: "flex items-center justify-between gap-2",
@@ -170,6 +163,8 @@ pub fn NewsletterGrowthChart(props: NewsletterGrowthChartProps) -> Element {
                 class: "flex-1 mt-1",
                 {body}
             }
+
+            LoadingOverlay { visible: is_loading }
         }
     }
 }
@@ -191,26 +186,6 @@ fn LoadingSkeleton() -> Element {
                         }
                     }
                 })}
-            }
-        }
-    }
-}
-
-#[derive(Props, Clone, PartialEq)]
-struct ErrorStateProps {
-    message: String,
-}
-
-#[component]
-fn ErrorState(props: ErrorStateProps) -> Element {
-    rsx! {
-        div {
-            class: "w-full h-full flex flex-col items-start justify-center gap-1 \
-                    text-[11px] text-red-600 dark:text-red-400",
-            div {
-                class: "px-2 py-1 rounded-md bg-background border border-destructive/40",
-                span { class: "font-medium text-destructive", "Unable to load newsletter growth" }
-                span { class: "ml-1 text-[10px] text-destructive", "{props.message}" }
             }
         }
     }

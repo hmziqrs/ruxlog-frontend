@@ -9,7 +9,6 @@ use crate::components::analytics::{
     verification_rates_chart::VerificationRatesChart,
 };
 use crate::components::PageHeader;
-use crate::hooks::use_state_frame_toast::{use_state_frame_toast, StateFrameToastConfig};
 use crate::store::analytics::{
     use_analytics, use_analytics_filters, AnalyticsInterval, CommentRateFilters,
     CommentRateRequest, DashboardSummaryFilters, DashboardSummaryRequest, MediaUploadFilters,
@@ -28,36 +27,6 @@ use crate::store::analytics::{
 pub fn AnalyticsScreen() -> Element {
     let analytics = use_analytics();
     let filters = use_analytics_filters();
-
-    //
-    // Toasts for surfaced API errors / statuses
-    //
-    let _summary_toast = use_state_frame_toast(
-        &analytics.dashboard_summary,
-        StateFrameToastConfig::default(),
-    );
-    let _views_toast =
-        use_state_frame_toast(&analytics.page_views, StateFrameToastConfig::default());
-    let _publishing_toast = use_state_frame_toast(
-        &analytics.publishing_trends,
-        StateFrameToastConfig::default(),
-    );
-    let _registration_toast = use_state_frame_toast(
-        &analytics.registration_trends,
-        StateFrameToastConfig::default(),
-    );
-    let _verification_toast = use_state_frame_toast(
-        &analytics.verification_rates,
-        StateFrameToastConfig::default(),
-    );
-    let _comment_rate_toast =
-        use_state_frame_toast(&analytics.comment_rate, StateFrameToastConfig::default());
-    let _newsletter_toast = use_state_frame_toast(
-        &analytics.newsletter_growth,
-        StateFrameToastConfig::default(),
-    );
-    let _media_upload_toast =
-        use_state_frame_toast(&analytics.media_upload, StateFrameToastConfig::default());
 
     //
     // Local UI state for per-chart filters.
