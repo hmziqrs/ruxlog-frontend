@@ -1,6 +1,6 @@
 use crate::services::http_client;
-use crate::store::state_request_abstraction;
 use crate::store::analytics::*;
+use crate::store::state_request_abstraction;
 
 impl AnalyticsState {
     pub async fn fetch_registration_trends(&self, request: RegistrationTrendsRequest) {

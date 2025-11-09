@@ -428,13 +428,6 @@ impl ListQuery for PostListQuery {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct PostAutosavePayload {
-    pub post_id: i32,
-    pub content: String,
-    pub updated_at: DateTime<Utc>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PostSchedulePayload {
     pub post_id: i32,
     pub publish_at: DateTime<Utc>,
@@ -540,9 +533,6 @@ pub struct PostState {
     pub edit: GlobalSignal<HashMap<i32, StateFrame<(), PostEditPayload>>>,
     pub remove: GlobalSignal<HashMap<i32, StateFrame>>,
 
-    // Autosave
-    pub autosave: GlobalSignal<HashMap<i32, StateFrame>>,
-
     // Scheduling
     pub schedule: GlobalSignal<HashMap<i32, StateFrame>>,
 
@@ -571,7 +561,6 @@ impl PostState {
             add: GlobalSignal::new(|| StateFrame::new()),
             edit: GlobalSignal::new(|| HashMap::new()),
             remove: GlobalSignal::new(|| HashMap::new()),
-            autosave: GlobalSignal::new(|| HashMap::new()),
             schedule: GlobalSignal::new(|| HashMap::new()),
             revisions_list: GlobalSignal::new(|| HashMap::new()),
             revisions_restore: GlobalSignal::new(|| HashMap::new()),

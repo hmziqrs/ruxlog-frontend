@@ -39,7 +39,8 @@ fn App() -> Element {
                     let _ = document::eval("document.documentElement.classList.add('dark');").await;
                 }
                 Some("light") => {
-                    let _ = document::eval("document.documentElement.classList.remove('dark');").await;
+                    let _ =
+                        document::eval("document.documentElement.classList.remove('dark');").await;
                 }
                 _ => {}
             }

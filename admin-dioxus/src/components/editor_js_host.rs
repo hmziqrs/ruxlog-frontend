@@ -29,7 +29,8 @@ pub fn EditorJsHost(initial_json: Option<String>) -> Element {
                 wasm_bindgen_futures::future_to_promise(async move {
                     crate::utils::js_bridge::editorjs_upload_file(file).await
                 })
-            }) as Box<dyn Fn(web_sys::File) -> js_sys::Promise>);
+            })
+                as Box<dyn Fn(web_sys::File) -> js_sys::Promise>);
 
             let key = JsValue::from_str("editorjs_upload_file");
             if let Err(err) = js_sys::Reflect::set(&window_js, &key, upload_fn.as_ref()) {

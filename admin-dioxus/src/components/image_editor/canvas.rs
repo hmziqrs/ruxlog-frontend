@@ -61,40 +61,66 @@ pub fn EditorCanvas(props: EditorCanvasProps) -> Element {
         match *drag_mode.read() {
             DragMode::Move => {
                 // Move the crop region
-                let new_x = (initial.x as f64 + dx / scale_x).max(0.0).min((props.width - initial.width) as f64);
-                let new_y = (initial.y as f64 + dy / scale_y).max(0.0).min((props.height - initial.height) as f64);
+                let new_x = (initial.x as f64 + dx / scale_x)
+                    .max(0.0)
+                    .min((props.width - initial.width) as f64);
+                let new_y = (initial.y as f64 + dy / scale_y)
+                    .max(0.0)
+                    .min((props.height - initial.height) as f64);
                 new_crop.x = new_x as u32;
                 new_crop.y = new_y as u32;
             }
             DragMode::ResizeNW => {
                 // Resize from top-left corner
-                let new_x = (initial.x as f64 + dx / scale_x).max(0.0).min((initial.x + initial.width - 10) as f64);
-                let new_y = (initial.y as f64 + dy / scale_y).max(0.0).min((initial.y + initial.height - 10) as f64);
+                let new_x = (initial.x as f64 + dx / scale_x)
+                    .max(0.0)
+                    .min((initial.x + initial.width - 10) as f64);
+                let new_y = (initial.y as f64 + dy / scale_y)
+                    .max(0.0)
+                    .min((initial.y + initial.height - 10) as f64);
                 new_crop.x = new_x as u32;
                 new_crop.y = new_y as u32;
-                new_crop.width = ((initial.x + initial.width) as i32 - new_crop.x as i32).max(10) as u32;
-                new_crop.height = ((initial.y + initial.height) as i32 - new_crop.y as i32).max(10) as u32;
+                new_crop.width =
+                    ((initial.x + initial.width) as i32 - new_crop.x as i32).max(10) as u32;
+                new_crop.height =
+                    ((initial.y + initial.height) as i32 - new_crop.y as i32).max(10) as u32;
             }
             DragMode::ResizeNE => {
                 // Resize from top-right corner
-                let new_y = (initial.y as f64 + dy / scale_y).max(0.0).min((initial.y + initial.height - 10) as f64);
-                let new_width = ((initial.width as f64 + dx / scale_x).max(10.0).min((props.width - initial.x) as f64)) as u32;
+                let new_y = (initial.y as f64 + dy / scale_y)
+                    .max(0.0)
+                    .min((initial.y + initial.height - 10) as f64);
+                let new_width = ((initial.width as f64 + dx / scale_x)
+                    .max(10.0)
+                    .min((props.width - initial.x) as f64)) as u32;
                 new_crop.y = new_y as u32;
                 new_crop.width = new_width;
-                new_crop.height = ((initial.y + initial.height) as i32 - new_crop.y as i32).max(10) as u32;
+                new_crop.height =
+                    ((initial.y + initial.height) as i32 - new_crop.y as i32).max(10) as u32;
             }
             DragMode::ResizeSW => {
                 // Resize from bottom-left corner
-                let new_x = (initial.x as f64 + dx / scale_x).max(0.0).min((initial.x + initial.width - 10) as f64);
-                let new_height = ((initial.height as f64 + dy / scale_y).max(10.0).min((props.height - initial.y) as f64)) as u32;
+                let new_x = (initial.x as f64 + dx / scale_x)
+                    .max(0.0)
+                    .min((initial.x + initial.width - 10) as f64);
+                let new_height = ((initial.height as f64 + dy / scale_y)
+                    .max(10.0)
+                    .min((props.height - initial.y) as f64))
+                    as u32;
                 new_crop.x = new_x as u32;
-                new_crop.width = ((initial.x + initial.width) as i32 - new_crop.x as i32).max(10) as u32;
+                new_crop.width =
+                    ((initial.x + initial.width) as i32 - new_crop.x as i32).max(10) as u32;
                 new_crop.height = new_height;
             }
             DragMode::ResizeSE => {
                 // Resize from bottom-right corner
-                let new_width = ((initial.width as f64 + dx / scale_x).max(10.0).min((props.width - initial.x) as f64)) as u32;
-                let new_height = ((initial.height as f64 + dy / scale_y).max(10.0).min((props.height - initial.y) as f64)) as u32;
+                let new_width = ((initial.width as f64 + dx / scale_x)
+                    .max(10.0)
+                    .min((props.width - initial.x) as f64)) as u32;
+                let new_height = ((initial.height as f64 + dy / scale_y)
+                    .max(10.0)
+                    .min((props.height - initial.y) as f64))
+                    as u32;
                 new_crop.width = new_width;
                 new_crop.height = new_height;
             }

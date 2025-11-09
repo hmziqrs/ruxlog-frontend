@@ -11,16 +11,12 @@ use crate::hooks::use_previous;
 use crate::router::Route;
 use crate::store::{
     use_categories, use_image_editor, use_media, use_post, use_tag, MediaReference,
-    MediaUploadPayload, PostAutosavePayload, PostContent, PostCreatePayload, PostEditPayload,
-    PostStatus,
+    MediaUploadPayload, PostContent, PostCreatePayload, PostEditPayload, PostStatus,
 };
 use crate::ui::shadcn::{
     Badge, BadgeVariant, Button, ButtonVariant, Checkbox, Combobox, ComboboxItem, Skeleton,
 };
-use chrono::Utc;
-use dioxus_time::sleep;
 use serde_json;
-use std::time::Duration;
 use wasm_bindgen::{closure::Closure, JsCast};
 use web_sys::{Blob, Url};
 
@@ -115,19 +111,12 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
     let blog_form_hook = use_blog_form(form_data.clone().unwrap());
     let mut form = blog_form_hook.form;
     let mut auto_slug = blog_form_hook.auto_slug;
-    let autosave_gen = use_signal(|| 0u64);
     // Use coroutine to handle editor changes from JavaScript
     let editor_change_handler = {
         let form_signal = form;
-        let autosave_signal = autosave_gen;
-        let posts_store = posts;
-        let post_id_value = post_id;
 
         use_coroutine(move |mut rx: UnboundedReceiver<String>| async move {
             let mut form_signal = form_signal;
-            let mut autosave_signal = autosave_signal;
-            let posts_store = posts_store;
-            let post_id_value = post_id_value;
 
             while let Some(detail) = rx.next().await {
                 form_signal.write().update_field("content", detail.clone());
@@ -136,28 +125,6 @@ pub fn BlogFormContainer(post_id: Option<i32>) -> Element {
                     if let Ok(Some(storage)) = window.local_storage() {
                         let _ = storage.set_item("blog_form_draft_content", &detail);
                     }
-                }
-
-                if let Some(edit_id) = post_id_value {
-                    let this_tick = autosave_signal() + 1;
-                    autosave_signal.set(this_tick);
-                    let posts_ref = posts_store;
-                    let debounce_signal = autosave_signal;
-                    let content_for_save = detail.clone();
-
-                    spawn(async move {
-                        sleep(Duration::from_millis(1500)).await;
-                        if debounce_signal() != this_tick {
-                            return;
-                        }
-                        posts_ref
-                            .autosave(PostAutosavePayload {
-                                post_id: edit_id,
-                                content: content_for_save,
-                                updated_at: Utc::now(),
-                            })
-                            .await;
-                    });
                 }
             }
         })

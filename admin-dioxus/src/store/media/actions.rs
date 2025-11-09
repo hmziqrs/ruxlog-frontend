@@ -1,4 +1,7 @@
-use super::{Media, MediaListQuery, MediaState, MediaUploadPayload, MediaUsageDetails, MediaUsageDetailsRequest, MediaUsageDetailsResponse, UploadStatus};
+use super::{
+    Media, MediaListQuery, MediaState, MediaUploadPayload, MediaUsageDetails,
+    MediaUsageDetailsRequest, MediaUsageDetailsResponse, UploadStatus,
+};
 use crate::services::http_client;
 use crate::store::{
     list_state_abstraction, remove_state_abstraction, view_state_abstraction, PaginatedList,
@@ -286,18 +289,24 @@ impl MediaState {
             id,
             http_client::post(
                 "/media/v1/usage/details",
-                &MediaUsageDetailsRequest { media_ids: vec![id] },
+                &MediaUsageDetailsRequest {
+                    media_ids: vec![id],
+                },
             )
             .send(),
             "media usage details",
             |response: &MediaUsageDetailsResponse| {
-                response.data.first().cloned().unwrap_or_else(|| MediaUsageDetails {
-                    media_id: id,
-                    media: Media::default(),
-                    posts: Vec::new(),
-                    categories: Vec::new(),
-                    users: Vec::new(),
-                })
+                response
+                    .data
+                    .first()
+                    .cloned()
+                    .unwrap_or_else(|| MediaUsageDetails {
+                        media_id: id,
+                        media: Media::default(),
+                        posts: Vec::new(),
+                        categories: Vec::new(),
+                        users: Vec::new(),
+                    })
             },
         )
         .await;

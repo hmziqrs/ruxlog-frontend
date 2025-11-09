@@ -5,13 +5,13 @@ use dioxus::prelude::*;
 #[derive(Clone, Copy, PartialEq)]
 enum AspectRatio {
     Free,
-    Square,      // 1:1
-    Landscape,   // 16:9
-    Portrait,    // 9:16
-    FourThree,   // 4:3
-    ThreeFour,   // 3:4
-    ThreeTwo,    // 3:2
-    TwoThree,    // 2:3
+    Square,    // 1:1
+    Landscape, // 16:9
+    Portrait,  // 9:16
+    FourThree, // 4:3
+    ThreeFour, // 3:4
+    ThreeTwo,  // 3:2
+    TwoThree,  // 2:3
 }
 
 impl AspectRatio {

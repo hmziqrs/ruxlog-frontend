@@ -1,8 +1,8 @@
-use dioxus::prelude::*;
 use crate::components::PageHeader;
 use crate::router::Route;
-use crate::store::{use_post, PostContent, EditorJsBlock};
+use crate::store::{use_post, EditorJsBlock, PostContent};
 use crate::ui::shadcn::{Button, ButtonVariant};
+use dioxus::prelude::*;
 
 // ============================================================================
 // EditorJS Block Renderers
@@ -30,7 +30,8 @@ fn render_header_block(block: &EditorJsBlock) -> Element {
 fn render_paragraph_block(block: &EditorJsBlock) -> Element {
     if let EditorJsBlock::Paragraph { data, .. } = block {
         // Simple HTML entity decode for &nbsp; etc.
-        let text = data.text
+        let text = data
+            .text
             .replace("&nbsp;", " ")
             .replace("&lt;", "<")
             .replace("&gt;", ">")
@@ -339,7 +340,9 @@ fn render_button_block(block: &EditorJsBlock) -> Element {
 
         let button_class = match style {
             "secondary" => "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-            "outline" => "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+            "outline" => {
+                "border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+            }
             "ghost" => "hover:bg-accent hover:text-accent-foreground",
             _ => "bg-primary text-primary-foreground hover:bg-primary/90", // primary
         };
@@ -432,7 +435,8 @@ pub fn PostsViewScreen(id: i32) -> Element {
     });
 
     if let Some(post) = post() {
-        let published_date = post.published_at
+        let published_date = post
+            .published_at
             .map(|dt| dt.format("%B %d, %Y").to_string())
             .unwrap_or_else(|| post.created_at.format("%B %d, %Y").to_string());
 

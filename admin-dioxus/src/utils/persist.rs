@@ -1,12 +1,13 @@
 use bevy_pkv::PkvStore;
-use once_cell::sync::Lazy;
-use std::sync::Mutex;
 #[cfg(target_arch = "wasm32")]
 use gloo_storage::{LocalStorage, Storage};
+use once_cell::sync::Lazy;
+use std::sync::Mutex;
 
 // Global persistent key-value store. On web, this uses localStorage under the hood.
 // For desktop/native, bevy_pkv uses a lightweight embedded store.
-pub static PKV: Lazy<Mutex<PkvStore>> = Lazy::new(|| Mutex::new(PkvStore::new("Ruxlog", "AdminDioxus")));
+pub static PKV: Lazy<Mutex<PkvStore>> =
+    Lazy::new(|| Mutex::new(PkvStore::new("Ruxlog", "AdminDioxus")));
 
 const THEME_KEY: &str = "theme"; // values: "dark" | "light"
 

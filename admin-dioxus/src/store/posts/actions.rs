@@ -1,7 +1,6 @@
 use super::{
-    Post, PostAutosavePayload, PostCreatePayload, PostEditPayload, PostListQuery, PostRevision,
-    PostSchedulePayload, PostState, Series, SeriesCreatePayload, SeriesEditPayload,
-    SeriesListQuery,
+    Post, PostCreatePayload, PostEditPayload, PostListQuery, PostRevision, PostSchedulePayload,
+    PostState, Series, SeriesCreatePayload, SeriesEditPayload, SeriesListQuery,
 };
 use crate::services::http_client;
 use crate::store::{
@@ -142,50 +141,6 @@ impl PostState {
             "published posts",
         )
         .await;
-    }
-
-    // ============================================================================
-    // Autosave Functionality
-    // ============================================================================
-
-    /// Autosave post content
-    pub async fn autosave(&self, payload: PostAutosavePayload) {
-        let post_id = payload.post_id;
-        let mut autosave_map = self.autosave.write();
-        autosave_map
-            .entry(post_id)
-            .or_insert_with(StateFrame::new)
-            .set_loading();
-        drop(autosave_map);
-
-        let result = http_client::post("/post/v1/autosave", &payload)
-            .send()
-            .await;
-
-        let mut autosave_map = self.autosave.write();
-        match result {
-            Ok(response) => {
-                if (200..300).contains(&response.status()) {
-                    autosave_map
-                        .entry(post_id)
-                        .or_insert_with(StateFrame::new)
-                        .set_success(None);
-                } else {
-                    autosave_map
-                        .entry(post_id)
-                        .or_insert_with(StateFrame::new)
-                        .set_api_error(&response)
-                        .await;
-                }
-            }
-            Err(e) => {
-                let (kind, msg) = crate::store::classify_transport_error(&e);
-                autosave_map
-                    .entry(post_id)
-                    .or_insert_with(StateFrame::new)
-                    .set_transport_error(kind, Some(msg));
-            }
-        }
     }
 
     // ============================================================================
@@ -585,7 +540,6 @@ impl PostState {
         *self.add.write() = StateFrame::new();
         *self.edit.write() = HashMap::new();
         *self.remove.write() = HashMap::new();
-        *self.autosave.write() = HashMap::new();
         *self.schedule.write() = HashMap::new();
         *self.revisions_list.write() = HashMap::new();
         *self.revisions_restore.write() = HashMap::new();

@@ -6,10 +6,7 @@ use dioxus::prelude::*;
 use hmziq_dioxus_free_icons::{icons::ld_icons::LdX, Icon};
 
 #[component]
-pub fn MediaUsageDialog(
-    is_open: Signal<bool>,
-    media: Media,
-) -> Element {
+pub fn MediaUsageDialog(is_open: Signal<bool>, media: Media) -> Element {
     let media_state = use_media();
 
     use_effect({
