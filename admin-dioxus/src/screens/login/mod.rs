@@ -25,12 +25,6 @@ pub fn LoginScreen() -> Element {
     let dark_mode = use_context::<Signal<DarkMode>>();
     let is_dark = dark_mode.read().0;
 
-    tracing::info!(
-        "failed: {} | error: {:?}",
-        login_status.is_failed(),
-        login_status.error,
-    );
-
     let calculate = use_callback(move |_: ()| {
         spawn(async move {
             let read = card_ref.read();
@@ -127,7 +121,6 @@ pub fn LoginScreen() -> Element {
                                 placeholder: "Enter your password",
                                 r#type: "password",
                             }
-                            // Error display
                             if  login_status.is_failed() {
                                 ErrorDetails {
                                     error: login_status.error.clone(),
