@@ -32,8 +32,6 @@ pub enum Route {
     #[route("/")]
     HomeScreen {},
 
-    #[layout(AuthGuardContainer)]
-    #[layout(NavBarContainer)]
     #[route("/analytics")]
     AnalyticsScreen {},
 
