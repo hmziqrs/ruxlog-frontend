@@ -1,4 +1,4 @@
-use dioxus::prelude::*;
+use dioxus::{core::SpawnIfAsync, prelude::*};
 
 use super::provider::use_grid_context;
 
@@ -20,6 +20,11 @@ enum GridCircleDirection {
     RIGHT,
 }
 
+enum GridCircleAxis {
+    X,
+    Y,
+}
+
 impl GridCircleDirection {
     fn reverse(&self) -> Self {
         match self {
@@ -27,6 +32,13 @@ impl GridCircleDirection {
             GridCircleDirection::BOTTOM => GridCircleDirection::TOP,
             GridCircleDirection::LEFT => GridCircleDirection::RIGHT,
             GridCircleDirection::RIGHT => GridCircleDirection::LEFT,
+        }
+    }
+
+    fn axis(&self) -> GridCircleAxis {
+        match self {
+            GridCircleDirection::TOP | GridCircleDirection::BOTTOM => GridCircleAxis::Y,
+            GridCircleDirection::LEFT | GridCircleDirection::RIGHT => GridCircleAxis::X,
         }
     }
 }
