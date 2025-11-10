@@ -129,11 +129,11 @@ pub fn AnimatedGridBackground() -> Element {
                 div {
                     class: "absolute pointer-events-none",
                     style: format!(
-                        "top: {}px; animation: gridCircleMove 25s linear infinite;",
+                        "top: {}px;",
                         middle_line
                     ),
                     div {
-                        class: "bg-primary size-[25px] rounded-full -translate-x-1/2 -translate-y-1/2 shadow-[0_0_12px_hsl(--primary)]",
+                        class: "bg-primary size-[6px] rounded-full -translate-x-1/2 -translate-y-1/2  ml-18 shadow-[0_0_7px_1px_var(--primary)]",
                     }
                 }
             }
