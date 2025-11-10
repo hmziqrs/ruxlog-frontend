@@ -1,8 +1,10 @@
 mod circle;
 mod provider;
+mod utils;
 
 pub use circle::*;
 pub use provider::*;
+pub use utils::*;
 
 use dioxus::prelude::*;
 
@@ -11,6 +13,8 @@ pub fn AnimatedGridBackground() -> Element {
     let ctx = use_grid_context();
     let mount_ctx = ctx.clone();
     let resize_ctx = ctx.clone();
+
+    info!("render");
 
     rsx! {
         div {

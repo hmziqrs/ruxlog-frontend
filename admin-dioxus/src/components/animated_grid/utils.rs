@@ -3,12 +3,7 @@ pub struct GridCalculator;
 impl GridCalculator {
     /// Find optimal cell size that maximizes coverage
     /// Searches from max_size down to min_size
-    pub fn find_optimal_cell_size(
-        width: f64,
-        height: f64,
-        min_size: f64,
-        max_size: f64,
-    ) -> f64 {
+    pub fn find_optimal_cell_size(width: f64, height: f64, min_size: f64, max_size: f64) -> f64 {
         if width <= 0.0 || height <= 0.0 {
             return min_size;
         }
@@ -40,11 +35,7 @@ impl GridCalculator {
 
     /// Calculate grid lines for given dimensions and cell size
     /// Returns (vertical_lines, horizontal_lines)
-    pub fn calculate_grid_lines(
-        width: f64,
-        height: f64,
-        cell_size: f64,
-    ) -> (Vec<f64>, Vec<f64>) {
+    pub fn calculate_grid_lines(width: f64, height: f64, cell_size: f64) -> (Vec<f64>, Vec<f64>) {
         if width <= 0.0 || height <= 0.0 || cell_size <= 0.0 {
             return (Vec::new(), Vec::new());
         }
@@ -52,13 +43,9 @@ impl GridCalculator {
         let num_cols = (width / cell_size).ceil() as usize;
         let num_rows = (height / cell_size).ceil() as usize;
 
-        let vertical_lines: Vec<f64> = (0..=num_cols)
-            .map(|i| i as f64 * cell_size)
-            .collect();
+        let vertical_lines: Vec<f64> = (0..=num_cols).map(|i| i as f64 * cell_size).collect();
 
-        let horizontal_lines: Vec<f64> = (0..=num_rows)
-            .map(|i| i as f64 * cell_size)
-            .collect();
+        let horizontal_lines: Vec<f64> = (0..=num_rows).map(|i| i as f64 * cell_size).collect();
 
         (vertical_lines, horizontal_lines)
     }
@@ -71,7 +58,8 @@ impl GridCalculator {
         max_size: f64,
     ) -> (f64, Vec<f64>, Vec<f64>) {
         let cell_size = Self::find_optimal_cell_size(width, height, min_size, max_size);
-        let (vertical_lines, horizontal_lines) = Self::calculate_grid_lines(width, height, cell_size);
+        let (vertical_lines, horizontal_lines) =
+            Self::calculate_grid_lines(width, height, cell_size);
         (cell_size, vertical_lines, horizontal_lines)
     }
 }

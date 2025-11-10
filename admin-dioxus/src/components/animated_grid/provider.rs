@@ -2,9 +2,9 @@ use dioxus::prelude::*;
 use dioxus_time::sleep;
 use std::time::Duration;
 
-use crate::utils::grid_calculator::GridCalculator;
+use super::GridCalculator;
 
-const MIN_CELL_SIZE: f64 = 60.0;
+const MIN_CELL_SIZE: f64 = 30.0;
 const MAX_CELL_SIZE: f64 = 80.0;
 
 #[derive(Clone, Debug, PartialEq)]

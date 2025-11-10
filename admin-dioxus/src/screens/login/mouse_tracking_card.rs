@@ -69,7 +69,7 @@ pub fn MouseTrackingCard(children: Element) -> Element {
                         mouse_pos.set((clamped_x, clamped_y));
                     });
                 },
-                class: "relative w-full overflow-visible rounded-2xl bg-zinc-200/40 dark:bg-zinc-950/60 backdrop-blur-md shadow-xl transition-colors duration-300",
+                class: "relative w-full overflow-visible rounded-2xl backdrop-blur-sm transition-colors duration-300",
                 // Base border - always visible but subtle
                 div {
                     class: "absolute inset-0 rounded-2xl pointer-events-none",
