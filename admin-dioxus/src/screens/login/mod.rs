@@ -23,7 +23,6 @@ pub fn LoginScreen() -> Element {
     // Setup grid context provider
     let ctx = GridContext::new();
     use_context_provider(|| ctx.clone());
-    ctx.setup_resize_listener();
 
     rsx! {
         div { class: "relative flex items-center justify-center min-h-screen overflow-hidden transition-colors duration-300",

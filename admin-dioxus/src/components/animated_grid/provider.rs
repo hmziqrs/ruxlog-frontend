@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_time::sleep;
 use std::time::Duration;
-use wasm_bindgen::JsCast;
 
 use crate::utils::grid_calculator::GridCalculator;
 
@@ -43,13 +42,13 @@ impl GridContext {
         }
     }
 
-    pub fn update_dimensions(&mut self) {
-        let timer_id = (self.debounce_timer)() + 1;
-        self.debounce_timer.set(timer_id);
+    pub fn update_dimensions(&self) {
+        let mut debounce_timer = self.debounce_timer;
+        let timer_id = debounce_timer() + 1;
+        debounce_timer.set(timer_id);
 
         let mut grid_data = self.grid_data;
         let container_ref = self.container_ref;
-        let debounce_timer = self.debounce_timer;
 
         spawn(async move {
             sleep(Duration::from_millis(50)).await;
@@ -93,25 +92,14 @@ impl GridContext {
         });
     }
 
-    pub fn setup_resize_listener(&self) {
-        let mut ctx = self.clone();
+    pub fn handle_mount(&self, data: std::rc::Rc<MountedData>) {
+        let mut container_ref = self.container_ref;
+        container_ref.set(Some(data));
+        self.update_dimensions();
+    }
 
-        let window = web_sys::window();
-        if window.is_none() {
-            return;
-        }
-        let window = window.unwrap();
-
-        let closure = {
-            wasm_bindgen::closure::Closure::wrap(Box::new(move |_: web_sys::Event| {
-                ctx.update_dimensions();
-            }) as Box<dyn FnMut(_)>)
-        };
-
-        let _ = window.add_event_listener_with_callback("resize", closure.as_ref().unchecked_ref());
-
-        // Keep closure alive
-        closure.forget();
+    pub fn handle_resize(&self) {
+        self.update_dimensions();
     }
 }
 

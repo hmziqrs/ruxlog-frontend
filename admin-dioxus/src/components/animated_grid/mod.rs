@@ -4,24 +4,23 @@ mod provider;
 pub use circle::*;
 pub use provider::*;
 
-use provider::use_grid_context;
-
 use dioxus::prelude::*;
 
 #[component]
 pub fn AnimatedGridBackground() -> Element {
-    let mut ctx = use_grid_context();
+    let ctx = use_grid_context();
+    let mount_ctx = ctx.clone();
+    let resize_ctx = ctx.clone();
 
     rsx! {
         div {
-            onresize: move |e| {
-                //
-            },
             class: "pointer-events-none absolute inset-0 -z-10 bg-transparent",
             aria_hidden: "true",
             onmount: move |event| {
-                ctx.container_ref.set(Some(event.data()));
-                ctx.update_dimensions();
+                mount_ctx.handle_mount(event.data());
+            },
+            onresize: move |_| {
+                resize_ctx.handle_resize();
             },
 
             // Vertical lines
