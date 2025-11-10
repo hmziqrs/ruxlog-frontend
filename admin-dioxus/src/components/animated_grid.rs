@@ -133,7 +133,7 @@ pub fn AnimatedGridBackground() -> Element {
                         middle_line
                     ),
                     div {
-                        class: "bg-primary size-[6px] rounded-full -translate-x-1/2 -translate-y-1/2  ml-18 shadow-[0_0_7px_1px_var(--primary)]",
+                        class: "bg-primary size-[6px] rounded-full -translate-x-1/2 -translate-y-1/2 shadow-[0_0_7px_1px_var(--primary)]",
                     }
                 }
             }
