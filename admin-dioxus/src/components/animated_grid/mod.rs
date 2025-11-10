@@ -29,8 +29,8 @@ pub fn AnimatedGridBackground() -> Element {
                 rsx! {
                     div {
                         key: "v-{pos}",
-                        class: "absolute inset-y-0 border-l border-border",
-                        style: format!("left: {offset}; opacity: 0.15;"),
+                        class: "absolute inset-y-0 border-l border-border transition-[left] duration-200",
+                        style: format!("left: {offset}; opacity: 1.0;"),
                     }
                 }
             })},
@@ -41,8 +41,8 @@ pub fn AnimatedGridBackground() -> Element {
                 rsx! {
                     div {
                         key: "h-{pos}",
-                        class: "absolute inset-x-0 border-t border-border",
-                        style: format!("top: {offset}; opacity: 0.15;"),
+                        class: "absolute inset-x-0 border-t border-border transition-[top] duration-200",
+                        style: format!("top: {offset}; opacity: 1.0;"),
                     }
                 }
             })},

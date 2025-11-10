@@ -19,7 +19,7 @@ pub fn AnimatedGridCircle() -> Element {
                 dangerous_inner_html: CIRCLE_KEYFRAMES,
             }
             div {
-                class: "absolute pointer-events-none",
+                class: "absolute pointer-events-none transition-[top] duration-400",
                 style: format!(
                     "top: {}px; animation: gridCircleMove 25s linear infinite;",
                     ctx.grid_data.read().middle_line
