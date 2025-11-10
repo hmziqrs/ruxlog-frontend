@@ -2140,6 +2140,9 @@
   .bg-emerald-600 {
     background-color: var(--color-emerald-600);
   }
+  .bg-foreground {
+    background-color: var(--foreground);
+  }
   .bg-gray-50 {
     background-color: var(--color-gray-50);
   }

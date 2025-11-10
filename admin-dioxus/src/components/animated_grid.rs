@@ -8,6 +8,15 @@ use crate::utils::grid_calculator::GridCalculator;
 const MIN_CELL_SIZE: f64 = 60.0;
 const MAX_CELL_SIZE: f64 = 80.0;
 
+const CIRCLE_KEYFRAMES: &str = r#"
+    @keyframes gridCircleMove {
+        from { left: -32px; opacity: 0; }
+        5% { opacity: 0.85; }
+        95% { opacity: 0.85; }
+        to { left: calc(100vw + 32px); opacity: 0; }
+    }
+"#;
+
 #[component]
 pub fn AnimatedGridBackground() -> Element {
     let mut container_ref = use_signal(|| None as Option<std::rc::Rc<MountedData>>);
@@ -19,7 +28,16 @@ pub fn AnimatedGridBackground() -> Element {
         let (width, height) = dimensions();
         let (_cell_size, vertical_lines, horizontal_lines) =
             GridCalculator::calculate_optimal_grid(width, height, MIN_CELL_SIZE, MAX_CELL_SIZE);
-        (vertical_lines, horizontal_lines)
+
+        // Find middle horizontal line
+        let middle_line = if !horizontal_lines.is_empty() {
+            let mid_idx = horizontal_lines.len() / 2;
+            horizontal_lines[mid_idx]
+        } else {
+            height / 2.0
+        };
+
+        (vertical_lines, horizontal_lines, middle_line)
     };
 
     // Update dimensions helper
@@ -70,36 +88,54 @@ pub fn AnimatedGridBackground() -> Element {
         closure.forget();
     });
 
-    let (vertical_lines, horizontal_lines) = calculate_grid();
+    let (vertical_lines, horizontal_lines, middle_line) = calculate_grid();
 
     rsx! {
-        div {
-            class: "pointer-events-none absolute inset-0 -z-10 bg-transparent",
-            aria_hidden: "true",
-            onmount: move |event| {
-                container_ref.set(Some(event.data()));
-                update_dimensions();
-            },
-            {vertical_lines.iter().map(|pos| {
-                let offset = format!("{pos:.2}px");
-                rsx! {
-                    div {
-                        key: "v-{pos}",
-                        class: "absolute inset-y-0 border-l border-border",
-                        style: format!("left: {offset}; opacity: 0.15;"),
+        Fragment {
+            style {
+                dangerous_inner_html: CIRCLE_KEYFRAMES,
+            }
+            div {
+                class: "pointer-events-none absolute inset-0 -z-10 bg-transparent",
+                aria_hidden: "true",
+                onmount: move |event| {
+                    container_ref.set(Some(event.data()));
+                    update_dimensions();
+                },
+
+                // Vertical lines
+                {vertical_lines.iter().map(|pos| {
+                    let offset = format!("{pos:.2}px");
+                    rsx! {
+                        div {
+                            key: "v-{pos}",
+                            class: "absolute inset-y-0 border-l border-border",
+                            style: format!("left: {offset}; opacity: 0.15;"),
+                        }
                     }
-                }
-            })},
-            {horizontal_lines.iter().map(|pos| {
-                let offset = format!("{pos:.2}px");
-                rsx! {
-                    div {
-                        key: "h-{pos}",
-                        class: "absolute inset-x-0 border-t border-border",
-                        style: format!("top: {offset}; opacity: 0.15;"),
+                })},
+
+                // Horizontal lines
+                {horizontal_lines.iter().map(|pos| {
+                    let offset = format!("{pos:.2}px");
+                    rsx! {
+                        div {
+                            key: "h-{pos}",
+                            class: "absolute inset-x-0 border-t border-border",
+                            style: format!("top: {offset}; opacity: 0.15;"),
+                        }
                     }
+                })},
+
+                // Animated circle with glow
+                div {
+                    class: "absolute pointer-events-none bg-foreground",
+                    style: format!(
+                        "top: {}px; width: 5px; height: 5px; border-radius: 50%; transform: translate(-50%, -50%); animation: gridCircleMove 25s linear infinite; box-shadow: 0 0 8px 2px hsl(var(--foreground) / 0.6), 0 0 16px 4px hsl(var(--foreground) / 0.4), 0 0 24px 6px hsl(var(--foreground) / 0.2);",
+                        middle_line
+                    ),
                 }
-            })},
+            }
         }
     }
 }
