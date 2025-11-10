@@ -1,4 +1,4 @@
-use dioxus::html::geometry::euclid::Rect;
+use dioxus::html::geometry::{euclid::Rect, Pixels};
 use dioxus::prelude::*;
 
 use crate::config::DarkMode;
@@ -6,17 +6,15 @@ use crate::config::DarkMode;
 #[component]
 pub fn MouseTrackingCard(children: Element) -> Element {
     let mut mouse_pos = use_signal(|| (0.0, 0.0));
+    // let mut card_rect: Signal<Rect<f64, Pixels>> = use_signal(|| Rect::default());
     let mut card_ref = use_signal(|| None as Option<std::rc::Rc<MountedData>>);
-    let mut card_rect = use_signal(|| Rect::zero());
 
     let dark_mode = use_context::<Signal<DarkMode>>();
     let is_dark = dark_mode.read().0;
 
     rsx! {
-        // Container for the card with visible overflow for the moving blob effect
         div {
             class: "relative w-full max-w-md",
-            // Blob that follows mouse position using div with radial gradient
             div {
                 class: "absolute pointer-events-none transition-all duration-300 ease-out opacity-50",
                 style: format!(
@@ -29,45 +27,37 @@ pub fn MouseTrackingCard(children: Element) -> Element {
             }
             // Card with proper mouse tracking
             div {
-                onmounted: move |_| {
-                    info!("MOUNTED");
-                },
                 onmount: move |event| {
                     info!("MOUNT");
                     card_ref.set(Some(event.data()));
-                    spawn(async move {
-                        if let Ok(r) = event.get_client_rect().await {
-                            card_rect.set(r);
-                        }
-                    });
-                },
-                onresize: move |_| {
-                    info!("RESIZE");
-                    if let Some(card) = card_ref.peek().as_ref().cloned() {
-                        spawn(async move {
-                            if let Ok(r) = card.get_client_rect().await {
-                                card_rect.set(r);
-                            }
-                        });
-                    }
                 },
                 onmousemove: move |evt| {
-                    if card_ref.peek().is_some() {
-                        let rect = card_rect.peek();
+                    spawn(async move {
+                        let rect = card_ref.peek();
+                        if rect.is_none() {
+                            info!("No rect available yet");
+                            return;
+                        }
+                        let data = rect.as_ref().unwrap();
+                        let rect = data.get_client_rect().await;
+                        if rect.is_err() {
+                            info!("No rect available");
+                            return;
+                        }
+                        let rect = rect.unwrap();
                         let client = evt.client_coordinates();
 
-
-                        // Calculate mouse position relative to the card
                         let x = client.x - rect.origin.x;
                         let y = client.y - rect.origin.y;
 
                         // Clamp to card boundaries
                         let clamped_x = x.clamp(0.0, rect.size.width);
                         let clamped_y = y.clamp(0.0, rect.size.height);
-                        info!("rect: {:#?} | client: {:#?}", rect, client);
+
+                        info!("Calculated pos: x={}, y={}, clamped: ({}, {})", x, y, clamped_x, clamped_y);
 
                         mouse_pos.set((clamped_x, clamped_y));
-                    }
+                    });
                 },
                 class: "relative w-full overflow-visible rounded-2xl bg-zinc-200/40 dark:bg-zinc-950/60 backdrop-blur-md shadow-xl transition-colors duration-300",
                 // Base border - always visible but subtle
