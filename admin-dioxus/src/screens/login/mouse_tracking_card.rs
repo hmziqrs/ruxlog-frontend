@@ -1,3 +1,4 @@
+use dioxus::html::geometry::euclid::{Rect, Size2D};
 use dioxus::logger::tracing;
 use dioxus::prelude::*;
 
@@ -9,19 +10,48 @@ pub fn MouseTrackingCard(children: Element) -> Element {
 
     let dark_mode = use_context::<Signal<DarkMode>>();
     let is_dark = dark_mode.read().0;
+    let mut mount_ref = use_signal(|| None as Option<std::rc::Rc<MountedData>>);
+    let mut rect = use_signal(|| Rect::zero());
+    let mut dimensions = use_signal(|| Size2D::zero());
 
     rsx! {
         // Container for the card with visible overflow for the moving blob effect
         div {
             class: "relative w-full max-w-md",
+            onmount: move |event| {
+                mount_ref.set(Some(event.data()));
+                spawn(async move {
+                    if let Ok(r) = event.get_client_rect().await {
+                        rect.set(r);
+                    }
+                });
+
+            },
+            onresize: move |data| {
+                if let Ok(size) = data.get_content_box_size() {
+                    dimensions.set(size);
+                }
+            },
             onmousemove: move |evt| {
                 let coords = evt.element_coordinates();
+                evt.client_coordinates();
                 let c = evt.coordinates();
 
-                tracing::debug!("Element el: {:?} cords {:?}", coords, c);
+                if let Some(mount) = &*mount_ref.peek() {
+                    let rect = &rect.peek();
+                    let dimensions = &dimensions.peek();
 
-                mouse_pos.set((coords.x, coords.y));
-                evt.stop_propagation();
+                    let offset_x = coords.x - rect.origin.x;
+                    let offset_y = coords.y - rect.origin.y;
+
+                    // Ensure the coordinates are within the element's bounds
+                    let clamped_x = offset_x.clamp(0.0, dimensions.width );
+                    let clamped_y = offset_y.clamp(0.0, dimensions.height );
+
+                    // tracing::debug!("Element mount: {:?} offset_x: {} offset_y: {} clamped_x: {} clamped_y: {}", mount, offset_x, offset_y, clamped_x, clamped_y);
+
+                    mouse_pos.set((clamped_x, clamped_y));
+                }
             },
             // Blob that follows mouse position using div with radial gradient
             div {
