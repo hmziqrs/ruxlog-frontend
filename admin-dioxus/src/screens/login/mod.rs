@@ -23,7 +23,12 @@ pub fn LoginScreen() -> Element {
     rsx! {
         div { class: "relative flex items-center justify-center min-h-screen overflow-hidden transition-colors duration-300",
             // Container for the card with visible overflow for the moving blob effect
-            div { class: "relative w-full max-w-md",
+            div {
+                class: "relative w-full max-w-md",
+                onmousemove: move |evt| {
+                    let coords = evt.element_coordinates();
+                    mouse_pos.set((coords.x, coords.y));
+                },
                 // Blob that follows mouse position using div with radial gradient
                 div {
                     class: "absolute pointer-events-none transition-all duration-300 ease-out opacity-50",
@@ -38,10 +43,6 @@ pub fn LoginScreen() -> Element {
                 // Card with proper mouse tracking
                 div {
                     class: "relative w-full overflow-visible rounded-2xl bg-zinc-200/40 dark:bg-zinc-950/60 backdrop-blur-md shadow-xl transition-colors duration-300",
-                    onmousemove: move |evt| {
-                        let coords = evt.element_coordinates();
-                        mouse_pos.set((coords.x, coords.y));
-                    },
                     // Base border - always visible but subtle
                     div {
                         class: "absolute inset-0 rounded-2xl pointer-events-none",
