@@ -3,7 +3,10 @@ use dioxus_time::sleep;
 use std::time::Duration;
 use wasm_bindgen::JsCast;
 
-const TARGET_CELL_SIZE: f64 = 60.0; // Target size for square cells
+use crate::utils::grid_calculator::GridCalculator;
+
+const MIN_CELL_SIZE: f64 = 60.0;
+const MAX_CELL_SIZE: f64 = 80.0;
 
 #[component]
 pub fn AnimatedGridBackground() -> Element {
@@ -11,24 +14,11 @@ pub fn AnimatedGridBackground() -> Element {
     let mut dimensions = use_signal(|| (0.0, 0.0)); // (width, height)
     let mut debounce_timer = use_signal(|| 0u64);
 
-    // Calculate grid lines based on current dimensions
+    // Calculate optimal grid based on current dimensions
     let calculate_grid = move || {
         let (width, height) = dimensions();
-        if width == 0.0 || height == 0.0 {
-            return (Vec::new(), Vec::new());
-        }
-
-        let num_cols = (width / TARGET_CELL_SIZE).ceil() as usize;
-        let num_rows = (height / TARGET_CELL_SIZE).ceil() as usize;
-
-        let vertical_lines: Vec<f64> = (0..=num_cols)
-            .map(|i| (i as f64 * width) / num_cols as f64)
-            .collect();
-
-        let horizontal_lines: Vec<f64> = (0..=num_rows)
-            .map(|i| (i as f64 * height) / num_rows as f64)
-            .collect();
-
+        let (_cell_size, vertical_lines, horizontal_lines) =
+            GridCalculator::calculate_optimal_grid(width, height, MIN_CELL_SIZE, MAX_CELL_SIZE);
         (vertical_lines, horizontal_lines)
     };
 
