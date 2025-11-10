@@ -14,6 +14,9 @@ pub fn AnimatedGridBackground() -> Element {
 
     rsx! {
         div {
+            onresize: move |e| {
+                //
+            },
             class: "pointer-events-none absolute inset-0 -z-10 bg-transparent",
             aria_hidden: "true",
             onmount: move |event| {
