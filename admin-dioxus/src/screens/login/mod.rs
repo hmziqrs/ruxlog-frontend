@@ -1,9 +1,6 @@
 mod form;
 
-use std::rc::Rc;
-
-use dioxus::html::geometry::euclid::Rect;
-use dioxus::{logger::tracing, prelude::*};
+use dioxus::prelude::*;
 
 use crate::config::DarkMode;
 use crate::screens::login::form::{use_login_form, LoginForm};
@@ -18,40 +15,10 @@ pub fn LoginScreen() -> Element {
     let mut ox_form = use_login_form(LoginForm::dev());
     let auth_store = use_auth();
     let login_status = auth_store.login_status.read();
-    let mut mouse_pos = use_signal(|| (0, 0)); // Initialize at 0,0
-    let mut card_ref = use_signal(|| None as Option<Rc<MountedData>>);
-    let mut card_dimensions = use_signal(Rect::zero);
-    tracing::info!(
-        "INIT: mouse_pos={:?}, card_dimensions={:?}",
-        mouse_pos(),
-        card_dimensions()
-    );
+    let mut mouse_pos = use_signal(|| (0.0, 0.0));
 
     let dark_mode = use_context::<Signal<DarkMode>>();
     let is_dark = dark_mode.read().0;
-
-    let calculate = use_callback(move |_: ()| {
-        spawn(async move {
-            let read = card_ref.read();
-            tracing::info!(
-                "CALCULATE: Starting dimension calculation, card_ref exists: {}",
-                read.is_some()
-            );
-            let client_rect = read.as_ref().map(|el| el.get_client_rect());
-            if let Some(client_rect) = client_rect {
-                if let Ok(rect) = client_rect.await {
-                    card_dimensions.set(rect);
-                    tracing::info!(
-                        "CALCULATE: Updated card_dimensions - origin: {:?}, size: {:?}",
-                        rect.origin,
-                        rect.size
-                    );
-                }
-            } else {
-                tracing::warn!("CALCULATE: Failed to get client_rect - card_ref unavailable");
-            }
-        });
-    });
 
     rsx! {
         div { class: "relative flex items-center justify-center min-h-screen overflow-hidden transition-colors duration-300",
@@ -60,43 +27,20 @@ pub fn LoginScreen() -> Element {
                 // Blob that follows mouse position using div with radial gradient
                 div {
                     class: "absolute pointer-events-none transition-all duration-300 ease-out opacity-50",
-                    style: {
-                        tracing::trace!("BLOB RENDER: mouse_pos=({}, {}), card_dimensions={:?}", mouse_pos().0, mouse_pos().1, card_dimensions());
-                        format!(
-                            "left: {}px; top: {}px; transform: translate(-50%, -50%); width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, {} 0%, {} 70%); filter: blur(20px); z-index: 0;",
-                            mouse_pos().0,
-                            mouse_pos().1,
-                            if is_dark { "rgba(244,244,245,0.3)" } else { "rgba(39,39,42,0.5)" },
-                            if is_dark { "rgba(113,113,122,0)" } else { "rgba(212,212,216,0)" },
-                        )
-                    },
+                    style: format!(
+                        "left: {}px; top: {}px; transform: translate(-50%, -50%); width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, {} 0%, {} 70%); filter: blur(20px); z-index: 0;",
+                        mouse_pos().0,
+                        mouse_pos().1,
+                        if is_dark { "rgba(244,244,245,0.3)" } else { "rgba(39,39,42,0.5)" },
+                        if is_dark { "rgba(113,113,122,0)" } else { "rgba(212,212,216,0)" },
+                    ),
                 }
                 // Card with proper mouse tracking
                 div {
-                    onmounted: move |cx| {
-                        card_ref.set(Some(cx.data()));
-                        tracing::info!("MOUNTED: Card mounted, triggering dimension calculation");
-                        calculate.call(());
-                    },
-                    onresize: move |_| {
-                        calculate.call(());
-                    },
                     class: "relative w-full overflow-visible rounded-2xl bg-zinc-200/40 dark:bg-zinc-950/60 backdrop-blur-md shadow-xl transition-colors duration-300",
                     onmousemove: move |evt| {
-                        tracing::debug!(
-                            "MOUSE: card_ref exists: {}, dimensions: {:?}, client coords: ({}, {})",
-                            card_ref.read().is_some(),
-                            card_dimensions.peek(),
-                            evt.data.client_coordinates().x,
-                            evt.data.client_coordinates().y
-                        );
-                        if let Some(_) = &*card_ref.read() {
-                            let d = card_dimensions.peek().origin;
-                            let x = evt.data.client_coordinates().x as f64 - d.x;
-                            let y = evt.data.client_coordinates().y as f64 - d.y;
-                            tracing::debug!("MOUSE: Calculated relative position - x: {}, y: {}", x, y);
-                            mouse_pos.set((x as i32, y as i32));
-                        }
+                        let coords = evt.element_coordinates();
+                        mouse_pos.set((coords.x, coords.y));
                     },
                     // Base border - always visible but subtle
                     div {
@@ -113,7 +57,7 @@ pub fn LoginScreen() -> Element {
                             mouse_pos().0,
                             mouse_pos().1,
                             if is_dark { "rgba(244,244,244,0.5)" } else { "rgba(39,39,42,0.4)" },
-                            if mouse_pos().0 > 0 { "1" } else { "0" },
+                            if mouse_pos().0 > 0.0 { "1" } else { "0" },
                         ),
                     }
                     // Card content
