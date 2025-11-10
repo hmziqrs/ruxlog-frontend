@@ -130,7 +130,7 @@ pub fn LoginScreen() -> Element {
                             "Admin Login"
                         }
                         form { class: "space-y-5",
-                            onsubmit: |e: Event<MouseData>| {
+                            onsubmit: |e: Event<FormData>| {
                                 e.prevent_default();
                             },
                             // oninput: move |_| {
