@@ -8,7 +8,7 @@ use crate::screens::login::mouse_tracking_card::MouseTrackingCard;
 use crate::ui::shadcn::Button;
 use crate::{
     components::{
-        AnimatedGridBackground, AnimatedGridCircle, AppInput, ErrorDetails, ErrorDetailsVariant,
+        AnimatedGridBackground, AnimatedGridCircles, AppInput, ErrorDetails, ErrorDetailsVariant,
         GridContext,
     },
     store::use_auth,

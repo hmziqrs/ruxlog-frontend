@@ -11,6 +11,10 @@ const CIRCLE_KEYFRAMES: &str = r#"
 
 pub struct GridCircle {
     spawn: GridCircleDirection,
+    next_turn: GridCircleDirection,
+
+    top: i32,  // This will go + & - based on next_turn
+    left: i32, //
 }
 
 enum GridCircleDirection {
