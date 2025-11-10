@@ -20,82 +20,80 @@ pub fn LoginScreen() -> Element {
     rsx! {
         div { class: "relative flex items-center justify-center min-h-screen overflow-hidden transition-colors duration-300",
             MouseTrackingCard {
-                div { class: "relative z-20 p-8 space-y-6",
-                    // Logo or icon placeholder
-                    div { class: "flex justify-center mb-2",
-                        img {
-                            class: "h-26 w-26",
-                            src: asset!("/assets/logo.png"),
-                            alt: "Logo",
+                // Logo or icon placeholder
+                div { class: "flex justify-center mb-2",
+                    img {
+                        class: "h-26 w-26",
+                        src: asset!("/assets/logo.png"),
+                        alt: "Logo",
+                    }
+                }
+                h1 { class: "text-3xl font-extrabold text-center text-zinc-800 dark:text-zinc-100 tracking-tight transition-colors duration-300",
+                    "Admin Login"
+                }
+                form { class: "space-y-5",
+                    onsubmit: |e: Event<FormData>| {
+                        e.prevent_default();
+                    },
+                    // oninput: move |_| {
+                    //     if login_status.is_failed() {
+                    //         auth_store.login_status.write().error = None;
+                    //     }
+                    // },
+                    AppInput {
+                        name: "email",
+                        form: ox_form,
+                        label: "Email",
+                        placeholder: "Enter your email",
+                    }
+                    AppInput {
+                        name: "password",
+                        form: ox_form,
+                        label: "Password",
+                        placeholder: "Enter your password",
+                        r#type: "password",
+                    }
+                    if  login_status.is_failed() {
+                        ErrorDetails {
+                            error: login_status.error.clone(),
+                            variant: ErrorDetailsVariant::Minimum,
+                            class: "mb-2",
                         }
                     }
-                    h1 { class: "text-3xl font-extrabold text-center text-zinc-800 dark:text-zinc-100 tracking-tight transition-colors duration-300",
-                        "Admin Login"
-                    }
-                    form { class: "space-y-5",
-                        onsubmit: |e: Event<FormData>| {
-                            e.prevent_default();
-                        },
-                        // oninput: move |_| {
-                        //     if login_status.is_failed() {
-                        //         auth_store.login_status.write().error = None;
-                        //     }
-                        // },
-                        AppInput {
-                            name: "email",
-                            form: ox_form,
-                            label: "Email",
-                            placeholder: "Enter your email",
-                        }
-                        AppInput {
-                            name: "password",
-                            form: ox_form,
-                            label: "Password",
-                            placeholder: "Enter your password",
-                            r#type: "password",
-                        }
-                        if  login_status.is_failed() {
-                            ErrorDetails {
-                                error: login_status.error.clone(),
-                                variant: ErrorDetailsVariant::Minimum,
-                                class: "mb-2",
-                            }
-                        }
-                        div { class: "flex justify-end text-xs text-zinc-600 dark:text-zinc-400 transition-colors duration-300",
-                            a {
-                                class: "hover:underline text-zinc-700 dark:text-zinc-300 font-medium hover:text-zinc-900 dark:hover:text-white transition-colors duration-150",
-                                href: "#",
-                                "Forgot password?"
-                            }
-                        }
-                        Button {
-                            class: "w-full",
-                            disabled: login_status.is_loading(),
-                            onclick: move |e: Event<MouseData>| {
-                                e.prevent_default();
-                                ox_form
-                                    .write()
-                                    .on_submit(move |val| {
-                                        spawn(async move {
-                                            let email = val.email.clone();
-                                            let password = val.password.clone();
-                                            auth_store.login(email, password).await;
-                                        });
-                                    });
-                            },
-                            if login_status.is_loading() {
-                                div { class: "loading loading-spinner loading-xs" }
-                            }
-                            span { "Login" }
-                        }
-                    }
-                    p { class: "text-sm text-center text-zinc-600 dark:text-zinc-400 mt-4 transition-colors duration-300",
-                        "Don't have an account? "
+                    div { class: "flex justify-end text-xs text-zinc-600 dark:text-zinc-400 transition-colors duration-300",
                         a {
-                            class: "text-zinc-700 dark:text-zinc-300 font-semibold hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors duration-150",
+                            class: "hover:underline text-zinc-700 dark:text-zinc-300 font-medium hover:text-zinc-900 dark:hover:text-white transition-colors duration-150",
                             href: "#",
-                            "Sign up"
+                            "Forgot password?"
                         }
+                    }
+                    Button {
+                        class: "w-full",
+                        disabled: login_status.is_loading(),
+                        onclick: move |e: Event<MouseData>| {
+                            e.prevent_default();
+                            ox_form
+                                .write()
+                                .on_submit(move |val| {
+                                    spawn(async move {
+                                        let email = val.email.clone();
+                                        let password = val.password.clone();
+                                        auth_store.login(email, password).await;
+                                    });
+                                });
+                        },
+                        if login_status.is_loading() {
+                            div { class: "loading loading-spinner loading-xs" }
+                        }
+                        span { "Login" }
+                    }
+                }
+                p { class: "text-sm text-center text-zinc-600 dark:text-zinc-400 mt-4 transition-colors duration-300",
+                    "Don't have an account? "
+                    a {
+                        class: "text-zinc-700 dark:text-zinc-300 font-semibold hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors duration-150",
+                        href: "#",
+                        "Sign up"
                     }
                 }
             }
