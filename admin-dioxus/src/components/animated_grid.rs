@@ -129,9 +129,9 @@ pub fn AnimatedGridBackground() -> Element {
 
                 // Animated circle with glow
                 div {
-                    class: "absolute pointer-events-none bg-foreground",
+                    class: "absolute pointer-events-none bg-primary size-[5px] rounded-full -translate-x-1/2 -translate-y-1/2 shadow-lg shadow-primary/50",
                     style: format!(
-                        "top: {}px; width: 5px; height: 5px; border-radius: 50%; transform: translate(-50%, -50%); animation: gridCircleMove 25s linear infinite; box-shadow: 0 0 8px 2px hsl(var(--foreground) / 0.6), 0 0 16px 4px hsl(var(--foreground) / 0.4), 0 0 24px 6px hsl(var(--foreground) / 0.2);",
+                        "top: {}px; animation: gridCircleMove 25s linear infinite;",
                         middle_line
                     ),
                 }
