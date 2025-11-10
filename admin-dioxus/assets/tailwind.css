@@ -363,6 +363,9 @@
   .inset-4 {
     inset: calc(0.25rem * 4);
   }
+  .inset-x-0 {
+    inset-inline: calc(0.25rem * 0);
+  }
   .inset-y-0 {
     inset-block: calc(0.25rem * 0);
   }
@@ -428,6 +431,9 @@
   }
   .left-\[50\%\] {
     left: 50%;
+  }
+  .-z-10 {
+    z-index: calc(10 * -1);
   }
   .z-10 {
     z-index: 10;
@@ -1868,6 +1874,10 @@
   .border-b-2 {
     border-bottom-style: var(--tw-border-style);
     border-bottom-width: 2px;
+  }
+  .border-l {
+    border-left-style: var(--tw-border-style);
+    border-left-width: 1px;
   }
   .border-l-4 {
     border-left-style: var(--tw-border-style);

@@ -150,7 +150,10 @@ pub fn CommentRateChartFromStore(
     let title = title.unwrap_or_else(|| "Top posts by comment engagement".to_string());
     let height = height.or_else(|| Some("h-80".to_string()));
     let max_items = max_items.unwrap_or(10);
-    let is_loading = matches!(frame.status, StateFrameStatus::Init | StateFrameStatus::Loading);
+    let is_loading = matches!(
+        frame.status,
+        StateFrameStatus::Init | StateFrameStatus::Loading
+    );
 
     match frame.status {
         StateFrameStatus::Init => {
