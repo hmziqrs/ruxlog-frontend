@@ -10,10 +10,8 @@ const MAX_CELL_SIZE: f64 = 80.0;
 
 const CIRCLE_KEYFRAMES: &str = r#"
     @keyframes gridCircleMove {
-        from { left: -32px; opacity: 0; }
-        5% { opacity: 0.85; }
-        95% { opacity: 0.85; }
-        to { left: calc(100vw + 32px); opacity: 0; }
+        from { left: -32px; }
+        to { left: calc(100vw + 32px); }
     }
 "#;
 
@@ -135,7 +133,7 @@ pub fn AnimatedGridBackground() -> Element {
                         middle_line
                     ),
                     div {
-                        class: "bg-primary size-[25px] rounded-full -translate-x-1/2 -translate-y-1/2 shadow-lg shadow-primary",
+                        class: "bg-primary size-[25px] rounded-full -translate-x-1/2 -translate-y-1/2 shadow-[0_0_12px_hsl(--primary)]",
                     }
                 }
             }
