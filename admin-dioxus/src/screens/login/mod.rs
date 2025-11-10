@@ -35,11 +35,6 @@ pub fn LoginScreen() -> Element {
                     onsubmit: |e: Event<FormData>| {
                         e.prevent_default();
                     },
-                    // oninput: move |_| {
-                    //     if login_status.is_failed() {
-                    //         auth_store.login_status.write().error = None;
-                    //     }
-                    // },
                     AppInput {
                         name: "email",
                         form: ox_form,

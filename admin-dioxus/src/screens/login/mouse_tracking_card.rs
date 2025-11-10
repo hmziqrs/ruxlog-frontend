@@ -66,8 +66,6 @@ pub fn MouseTrackingCard(children: Element) -> Element {
                         let clamped_x = x.clamp(0.0, rect.size.width);
                         let clamped_y = y.clamp(0.0, rect.size.height);
 
-                        info!("Calculated pos: x={}, y={}, clamped: ({}, {})", x, y, clamped_x, clamped_y);
-
                         mouse_pos.set((clamped_x, clamped_y));
                     });
                 },
