@@ -1,5 +1,6 @@
 mod form;
 
+use dioxus::logger::tracing;
 use dioxus::prelude::*;
 
 use crate::config::DarkMode;
@@ -27,7 +28,12 @@ pub fn LoginScreen() -> Element {
                 class: "relative w-full max-w-md",
                 onmousemove: move |evt| {
                     let coords = evt.element_coordinates();
+                    let c = evt.coordinates();
+
+                    tracing::debug!("Element el: {:?} cords {:?}", coords, c);
+
                     mouse_pos.set((coords.x, coords.y));
+                    evt.stop_propagation();
                 },
                 // Blob that follows mouse position using div with radial gradient
                 div {
