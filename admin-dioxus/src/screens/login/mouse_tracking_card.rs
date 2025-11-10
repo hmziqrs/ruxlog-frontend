@@ -1,5 +1,6 @@
-use dioxus::html::geometry::{euclid::Rect, Pixels};
 use dioxus::prelude::*;
+use dioxus_time::sleep;
+use std::time::Duration;
 
 use crate::config::DarkMode;
 
@@ -8,6 +9,7 @@ pub fn MouseTrackingCard(children: Element) -> Element {
     let mut mouse_pos = use_signal(|| (0.0, 0.0));
     // let mut card_rect: Signal<Rect<f64, Pixels>> = use_signal(|| Rect::default());
     let mut card_ref = use_signal(|| None as Option<std::rc::Rc<MountedData>>);
+    let mut debounce_timer = use_signal(|| 0u64);
 
     let dark_mode = use_context::<Signal<DarkMode>>();
     let is_dark = dark_mode.read().0;
@@ -28,11 +30,21 @@ pub fn MouseTrackingCard(children: Element) -> Element {
             // Card with proper mouse tracking
             div {
                 onmount: move |event| {
-                    info!("MOUNT");
                     card_ref.set(Some(event.data()));
                 },
                 onmousemove: move |evt| {
+                    let timer_id = debounce_timer() + 1;
+                    debounce_timer.set(timer_id);
+
                     spawn(async move {
+                        // Debounce: wait 100ms
+                        sleep(Duration::from_millis(10)).await;
+
+                        // Check if this is still the latest event
+                        if debounce_timer() != timer_id {
+                            return;
+                        }
+
                         let rect = card_ref.peek();
                         if rect.is_none() {
                             info!("No rect available yet");
