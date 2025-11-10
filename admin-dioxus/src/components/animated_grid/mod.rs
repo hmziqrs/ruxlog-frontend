@@ -1,16 +1,16 @@
-pub mod circle;
-pub mod provider;
+mod circle;
+mod provider;
 
-pub use circle::AnimatedGridCircle;
-pub use provider::{GridContext, GridData, use_grid_context};
+pub use circle::*;
+pub use provider::*;
+
+use provider::use_grid_context;
 
 use dioxus::prelude::*;
 
 #[component]
 pub fn AnimatedGridBackground() -> Element {
     let mut ctx = use_grid_context();
-    let grid_data_signal = ctx.grid_data;
-    let grid_data = grid_data_signal.read();
 
     rsx! {
         div {
@@ -22,7 +22,7 @@ pub fn AnimatedGridBackground() -> Element {
             },
 
             // Vertical lines
-            {grid_data.vertical_lines.iter().map(|pos| {
+            {ctx.grid_data.read().vertical_lines.iter().map(|pos| {
                 let offset = format!("{pos:.2}px");
                 rsx! {
                     div {
@@ -34,7 +34,7 @@ pub fn AnimatedGridBackground() -> Element {
             })},
 
             // Horizontal lines
-            {grid_data.horizontal_lines.iter().map(|pos| {
+            {ctx.grid_data.read().horizontal_lines.iter().map(|pos| {
                 let offset = format!("{pos:.2}px");
                 rsx! {
                     div {

@@ -12,8 +12,6 @@ const CIRCLE_KEYFRAMES: &str = r#"
 #[component]
 pub fn AnimatedGridCircle() -> Element {
     let ctx = use_grid_context();
-    let grid_data = ctx.grid_data.read();
-    let middle_line = grid_data.middle_line;
 
     rsx! {
         Fragment {
@@ -24,7 +22,7 @@ pub fn AnimatedGridCircle() -> Element {
                 class: "absolute pointer-events-none",
                 style: format!(
                     "top: {}px; animation: gridCircleMove 25s linear infinite;",
-                    middle_line
+                    ctx.grid_data.read().middle_line
                 ),
                 div {
                     class: "bg-primary size-[6px] rounded-full -translate-x-1/2 -translate-y-1/2 shadow-[0_0_7px_1px_var(--primary)]",

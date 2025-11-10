@@ -96,24 +96,22 @@ impl GridContext {
     pub fn setup_resize_listener(&self) {
         let mut ctx = self.clone();
 
-        spawn(async move {
-            let window = web_sys::window();
-            if window.is_none() {
-                return;
-            }
-            let window = window.unwrap();
+        let window = web_sys::window();
+        if window.is_none() {
+            return;
+        }
+        let window = window.unwrap();
 
-            let closure = {
-                wasm_bindgen::closure::Closure::wrap(Box::new(move |_: web_sys::Event| {
-                    ctx.update_dimensions();
-                }) as Box<dyn FnMut(_)>)
-            };
+        let closure = {
+            wasm_bindgen::closure::Closure::wrap(Box::new(move |_: web_sys::Event| {
+                ctx.update_dimensions();
+            }) as Box<dyn FnMut(_)>)
+        };
 
-            let _ = window.add_event_listener_with_callback("resize", closure.as_ref().unchecked_ref());
+        let _ = window.add_event_listener_with_callback("resize", closure.as_ref().unchecked_ref());
 
-            // Keep closure alive
-            closure.forget();
-        });
+        // Keep closure alive
+        closure.forget();
     }
 }
 
