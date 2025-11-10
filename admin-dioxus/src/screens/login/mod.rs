@@ -7,7 +7,7 @@ use crate::screens::login::form::{use_login_form, LoginForm};
 use crate::screens::login::mouse_tracking_card::MouseTrackingCard;
 use crate::ui::shadcn::Button;
 use crate::{
-    components::{AnimatedGridBackground, AppInput, ErrorDetails, ErrorDetailsVariant},
+    components::{AnimatedGridBackground, AnimatedGridCircle, GridContext, AppInput, ErrorDetails, ErrorDetailsVariant},
     store::use_auth,
 };
 
@@ -17,9 +17,15 @@ pub fn LoginScreen() -> Element {
     let auth_store = use_auth();
     let login_status = auth_store.login_status.read();
 
+    // Setup grid context provider
+    let ctx = GridContext::new();
+    use_context_provider(|| ctx.clone());
+    ctx.setup_resize_listener();
+
     rsx! {
         div { class: "relative flex items-center justify-center min-h-screen overflow-hidden transition-colors duration-300",
             AnimatedGridBackground {}
+            AnimatedGridCircle {}
             div { class: "relative z-10 flex w-full justify-center",
                 MouseTrackingCard {
                     // Logo or icon placeholder
