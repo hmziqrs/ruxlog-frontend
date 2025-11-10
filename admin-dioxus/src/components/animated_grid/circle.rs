@@ -9,8 +9,30 @@ const CIRCLE_KEYFRAMES: &str = r#"
     }
 "#;
 
+pub struct GridCircle {
+    spawn: GridCircleDirection,
+}
+
+enum GridCircleDirection {
+    TOP,
+    LEFT,
+    BOTTOM,
+    RIGHT,
+}
+
+impl GridCircleDirection {
+    fn reverse(&self) -> Self {
+        match self {
+            GridCircleDirection::TOP => GridCircleDirection::BOTTOM,
+            GridCircleDirection::BOTTOM => GridCircleDirection::TOP,
+            GridCircleDirection::LEFT => GridCircleDirection::RIGHT,
+            GridCircleDirection::RIGHT => GridCircleDirection::LEFT,
+        }
+    }
+}
+
 #[component]
-pub fn AnimatedGridCircle() -> Element {
+pub fn AnimatedGridCircles() -> Element {
     let ctx = use_grid_context();
 
     rsx! {

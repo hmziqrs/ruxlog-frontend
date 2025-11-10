@@ -27,7 +27,7 @@ pub fn LoginScreen() -> Element {
     rsx! {
         div { class: "relative flex items-center justify-center min-h-screen overflow-hidden transition-colors duration-300",
             AnimatedGridBackground {}
-            AnimatedGridCircle {}
+            AnimatedGridCircles {}
             div { class: "relative z-10 flex w-full justify-center",
                 MouseTrackingCard {
                     // Logo or icon placeholder
