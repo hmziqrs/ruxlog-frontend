@@ -24,8 +24,8 @@ Goal: Replace keyframe-based single circle with a pool of independently animated
     col: i32,
     row: i32,
     travel_dir: Direction,
-    pending_turn: Option<Direction>,    // optional side step to chain next
     moving: bool,                       // suppress overlapping transitions
+    respawning: bool,                   // render without transition when snapping
     step_ms: u32,                       // duration per cell
     diameter_px: f64,
     spawn_edge: SpawnEdge,
@@ -37,7 +37,8 @@ Goal: Replace keyframe-based single circle with a pool of independently animated
 ## Integration Points
 - Grid context: `GridData { vertical_lines, horizontal_lines, dimensions }` already exists (`src/components/animated_grid/provider.rs`).
   - Compute `cols = vertical_lines.len() - 1`, `rows = horizontal_lines.len() - 1`.
-  - Compute `cell_w = vertical_lines.get(1).unwrap_or(&width).min(width) - vertical_lines[0]`, similarly `cell_h` from horizontal lines. With square grid, `cell_w ≈ cell_h`.
+  - Require at least two lines per axis before spawning (`vertical_lines.len() >= 2 && horizontal_lines.len() >= 2`).
+  - Compute `cell_w = vertical_lines[1] - vertical_lines[0]` and `cell_h = horizontal_lines[1] - horizontal_lines[0]` (skip if non-positive). With square grids they should be approximately equal.
   - Convert `(col,row)` → `(x,y)` pixels:
     - `x = vertical_lines[col as usize]`
     - `y = horizontal_lines[row as usize]`
@@ -51,32 +52,31 @@ Goal: Replace keyframe-based single circle with a pool of independently animated
 
 - Child: `AnimatedGridCircle { circle: CircleSig }`
   - Renders a small absolutely-positioned div:
-    - `class: "absolute pointer-events-none will-change-transform transition-transform"`
-    - `style: format!("transform: translate({x}px, {y}px); transition-duration: {}ms; width: {}px; height: {}px; border-radius: 9999px;", step_ms, d, d)`
+    - `class: "absolute pointer-events-none will-change-transform"` plus `transition-transform` only when `!respawning` to avoid flicker on snap
+    - `style: format!("transform: translate({x}px, {y}px);{} width: {}px; height: {}px; border-radius: 9999px;",
+        if respawning { "" } else { format!(" transition-duration: {}ms;", step_ms) }, d, d)`
   - Event: `ontransitionend: move |_| circle_step(circle.clone(), grid_ctx.clone())`
   - On first mount: kick off initial step by calling `circle_step` if not moving.
 
 ## Movement Algorithm (per circle)
 1. Preconditions: require grid lines present (non-empty). If grid isn’t ready, delay/retry.
 2. If `moving == true`, ignore requests to step.
-3. Determine next move:
+3. Determine next move (evaluate every step):
    - Primary move is one cell in `travel_dir` (`delta_col, delta_row`).
-   - If `pending_turn.is_some()`, the next move is that direction; otherwise roll a 20% chance when the axis is horizontal (for horizontal travel) or vertical (for vertical travel) to insert a perpendicular side step:
-     - Horizontal travel (Left/Right): optional `Up` or `Down` by 1.
-     - Vertical travel (Up/Down): optional `Left` or `Right` by 1.
-     - If chosen side step would exit bounds, discard it.
-   - If we insert a side step, we set `pending_turn = Some(side_dir)` and do that move first. After finishing, clear `pending_turn` and schedule the primary move on the following transition end.
-4. Bounds check: ensure `0 <= next_col <= cols` and `0 <= next_row <= rows`. If the primary move would exit bounds, mark `alive = false` and respawn.
+   - Roll a 20% chance each step to choose a perpendicular side step while keeping overall direction:
+     - If `travel_dir` is `Left` or `Right`: consider `Up` or `Down` by 1.
+     - If `travel_dir` is `Up` or `Down`: consider `Left` or `Right` by 1.
+     - If the candidate side step would exit bounds, ignore it and use the primary move.
+   - Only a single cell is moved per transition; no queued multi-step moves.
+4. Bounds check: ensure `0 <= next_col < cols` and `0 <= next_row < rows`. If the move would exit bounds, mark `alive = false` and respawn.
 5. Update state: set `moving = true`, update `col/row` to next indices, compute new `(x,y)` pixels, and update style. The CSS transition will animate from current transform to the new transform.
 6. `ontransitionend` handler:
-   - If `pending_turn` is set, immediately call `circle_step` again to execute the primary move.
-   - Else, schedule the next step (e.g., via `spawn(async move { sleep(Duration::from_millis(0)).await; circle_step(..) })`) to keep the loop going without blocking.
-   - Always set `moving = false` before deciding the next move.
+   - Set `moving = false` and call `circle_step` directly to choose and perform the next one-cell move.
 
 ## Respawn Logic
 - When a circle attempts to move out of bounds:
   - Pick a new `spawn_edge` (random among 4), set `(col,row)` to a valid index on that edge (random along axis), set `travel_dir = edge.reverse()`.
-  - Reset `pending_turn = None`, `moving = false`, and set transform immediately to spawn position with no transition (e.g., temporarily set `transition-duration: 0ms;`, then restore).
+  - Reset `moving = false`, set `respawning = true`, snap transform immediately to spawn position, then set `respawning = false` so subsequent moves transition normally.
   - After re-positioning, trigger the first step in the new direction.
 
 ## Randomness Strategy
@@ -99,7 +99,7 @@ Goal: Replace keyframe-based single circle with a pool of independently animated
 ## Edge Cases & Safeguards
 - If grid changes mid-transition, finish current step then snap to nearest valid indices and continue; if indices out of range, respawn.
 - Prevent back-to-back `ontransitionend` loops by checking `moving` and ensuring target changed.
-- Clamp side steps that would leave bounds; don’t set `pending_turn` if it’s invalid.
+- Clamp side steps that would leave bounds; ignore invalid side steps.
 
 ## Work Plan
 1. Types and utilities
@@ -117,12 +117,10 @@ Goal: Replace keyframe-based single circle with a pool of independently animated
 7. Polish
    - Tweak durations, sizes, and shadow to match visuals; add comments and docs.
 
-## Testing/Verification
-- Manual: resize window, confirm circles continue moving; watch edge respawns; verify side steps occur infrequently and never leave bounds.
-- Logging hooks behind a feature flag for debugging transitions and decisions.
+## Capacity
+- Default to a modest circle count (e.g., 12–24) to ensure smooth rendering when using `GlobalSignal` updates per step. Make the count configurable.
 
 ## Files to Add/Change (proposal)
 - `src/components/animated_grid/circles.rs` (parent + child components)
 - `src/components/animated_grid/types.rs` (Direction, SpawnEdge, GridCircle)
 - Integrate from `src/components/animated_grid/mod.rs`
-
