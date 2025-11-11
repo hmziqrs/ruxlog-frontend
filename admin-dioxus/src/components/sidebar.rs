@@ -75,6 +75,7 @@ pub fn Sidebar(expanded: Signal<bool>, toggle: EventHandler<()>) -> Element {
         spawn(async move {
             auth_store.logout().await;
         });
+        toggle.call(());
     };
 
     rsx! {
