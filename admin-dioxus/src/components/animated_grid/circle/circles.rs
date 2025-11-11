@@ -189,16 +189,15 @@ pub fn handle_transition_end(mut circle_sig: CircleSignal, grid_ctx: GridContext
 
     // Phase detection using existing flags:
     // - respawning=true -> ignore (in instant position change)
-    // - respawning=false, moving=false, scale>1.5 -> just spawned, scaling in (ignore, wait for scale=1.0)
-    // - respawning=false, moving=false, scale<1.5 -> just finished scaling in
-    // - respawning=false, moving=true, scale<1.5 -> just finished moving
-    // - respawning=false, moving=true, scale>1.5 -> just finished scaling out
+    // - respawning=false, moving=false, scale==1.0 -> just finished scaling in
+    // - respawning=false, moving=true, scale==1.0 -> just finished moving
+    // - respawning=false, moving=true, scale==3.0 -> just finished scaling out
 
     if circle.respawning {
         return; // Still in respawn phase, ignore
     }
 
-    if circle.scale > 1.5 && circle.moving {
+    if circle.scale == 3.0 && circle.moving {
         // Just finished scaling out -> respawn
         circle.moving = false;
         drop(circle);
@@ -211,11 +210,11 @@ pub fn handle_transition_end(mut circle_sig: CircleSignal, grid_ctx: GridContext
         }
 
         schedule_post_respawn(circle_sig, grid_ctx);
-    } else if circle.scale < 1.5 && !circle.moving {
+    } else if circle.scale == 1.0 && !circle.moving {
         // Just finished scaling in -> start moving
         drop(circle);
         circle_step(circle_sig, grid_ctx);
-    } else if circle.moving && circle.scale < 1.5 {
+    } else if circle.moving && circle.scale == 1.0 {
         // Just finished moving -> continue to next step
         circle.moving = false;
         drop(circle);
