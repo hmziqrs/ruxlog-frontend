@@ -10,7 +10,7 @@ use super::circle::AnimatedGridCircle;
 use super::state::{Direction, GridCircle, SpawnEdge};
 use crate::components::animated_grid::provider::{use_grid_context, GridContext, GridData};
 
-const DEFAULT_CIRCLE_COUNT: usize = 2;
+const DEFAULT_CIRCLE_COUNT: usize = 1;
 const SIDE_STEP_PERCENT: u8 = 20;
 pub const DIAMETER_PX: f64 = 6.0;
 pub const STEP_DURATION_MS: u32 = 1200;
