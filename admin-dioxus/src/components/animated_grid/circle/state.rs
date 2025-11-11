@@ -94,7 +94,7 @@ impl GridCircle {
 
     /// Circle just finished scaling out (1x→3x) at goal edge
     pub fn is_scale_out_complete(&self) -> bool {
-        !self.respawning && self.moving && self.scale == 3.0
+        !self.respawning && self.moving && self.scale >= super::config::MAX_SCALE
     }
 
     /// Circle is actively scaling in after spawn (should use scale transition)

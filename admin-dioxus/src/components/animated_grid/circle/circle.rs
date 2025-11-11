@@ -10,12 +10,21 @@ pub fn AnimatedGridCircle(circle: CircleSignal) -> Element {
     let grid_ctx = use_grid_context();
     let grid_ctx_clone = grid_ctx.clone();
 
+    // Track if we've already triggered the initial spawn
+    let mut spawn_triggered = use_signal(|| false);
+
     // Trigger initial scale-in animation when circle is first created
     use_effect(move || {
+        if *spawn_triggered.read() {
+            return; // Already triggered
+        }
+        
         let is_respawning = circle.read().respawning;
         if !is_respawning {
             return;
         }
+        
+        spawn_triggered.set(true);
         
         spawn({
             let circle_sig = circle;
@@ -83,11 +92,59 @@ pub fn AnimatedGridCircle(circle: CircleSignal) -> Element {
 
     info!("state: {:?}", circle_state);
 
+    // Track last transition to prevent duplicate handler calls
+    // Store (id, col, row, scale, is_scaling_in, is_moving) to distinguish different transition types
+    let mut last_transition = use_signal(|| (0u64, 0, 0, 0.0, false, false));
+    let current_id = circle_state.id;
+    let current_col = circle_state.col;
+    let current_row = circle_state.row;
+    let current_scale = circle_state.scale;
+    let current_scaling_in = circle_state.scaling_in;
+    let current_moving = circle_state.moving;
+
     rsx! {
         div {
             class: "absolute will-change-transform pointer-events-none bg-primary shadow-[0_0_8px_1px_var(--primary)]",
             style: "{style}",
             ontransitionend: move |_| {
+                web_sys::console::log_1(
+                    &format!(
+                        "Circle {} ontransitionend triggered at col={}, row={}, scale={:.2}, scaling_in={}, moving={}",
+                        current_id,
+                        current_col,
+                        current_row,
+                        current_scale,
+                        current_scaling_in,
+                        current_moving,
+                    )
+                        .into(),
+                );
+                let mut last = last_transition.write();
+                if last.0 == current_id
+                    && last.1 == current_col
+                    && last.2 == current_row
+                    && (last.3 - current_scale).abs() < 0.01
+                    && last.4 == current_scaling_in
+                    && last.5 == current_moving
+                {
+                    web_sys::console::log_1(
+                        &format!("Circle {} ontransitionend SKIPPED (duplicate)", current_id)
+                            .into(),
+                    );
+                    return;
+                }
+                *last = (
+                    current_id,
+                    current_col,
+                    current_row,
+                    current_scale,
+                    current_scaling_in,
+                    current_moving,
+                );
+                drop(last);
+                web_sys::console::log_1(
+                    &format!("Circle {} ontransitionend HANDLING", current_id).into(),
+                );
                 handle_transition_end(circle, grid_ctx.clone());
             },
         }

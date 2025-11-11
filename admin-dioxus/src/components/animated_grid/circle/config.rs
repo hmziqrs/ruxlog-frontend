@@ -132,7 +132,7 @@ pub fn schedule_post_respawn(mut circle_sig: CircleSignal, _grid_ctx: GridContex
                 let mut circle = circle_sig.write();
                 circle.respawning = false;
                 circle.scaling_in = true;
-                // Keep scale at 3.0 and opacity at 0.0 for this frame
+                // Keep scale at MAX_SCALE and opacity at 0.0 for this frame
             }
             
             // Step 2: Wait for next frame so browser paints with transition CSS applied
@@ -141,7 +141,7 @@ pub fn schedule_post_respawn(mut circle_sig: CircleSignal, _grid_ctx: GridContex
                 let mut circle = circle_sig.write();
                 circle.scale = 1.0;
                 circle.opacity = 1.0;
-                // Now transition animates from 3.0→1.0 over 200ms
+                // Now transition animates from MAX_SCALE→1.0 over 200ms
             }
         }
     });
