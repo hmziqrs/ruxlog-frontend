@@ -5,7 +5,6 @@ use std::{
 
 use dioxus::prelude::*;
 use dioxus_time::sleep;
-use getrandom::getrandom;
 
 use super::provider::{use_grid_context, GridContext, GridData};
 
@@ -16,15 +15,9 @@ const DIAMETER_RANGE: (f64, f64) = (5.0, 8.0);
 const RESPAWN_DELAY_MS: u64 = 48;
 
 static NEXT_CIRCLE_ID: AtomicU64 = AtomicU64::new(0);
-static FALLBACK_RNG_SEED: AtomicU64 = AtomicU64::new(0x9e3779b97f4a7c15);
+static RNG_STATE: AtomicU64 = AtomicU64::new(0x9e3779b97f4a7c15);
 
-type CircleSignal = GlobalSignal<GridCircle>;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Axis {
-    Horizontal,
-    Vertical,
-}
+type CirclesSignal = Signal<Vec<GridCircle>>;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Direction {
@@ -35,22 +28,6 @@ enum Direction {
 }
 
 impl Direction {
-    fn reverse(self) -> Self {
-        match self {
-            Direction::Left => Direction::Right,
-            Direction::Right => Direction::Left,
-            Direction::Up => Direction::Down,
-            Direction::Down => Direction::Up,
-        }
-    }
-
-    fn axis(self) -> Axis {
-        match self {
-            Direction::Left | Direction::Right => Axis::Horizontal,
-            Direction::Up | Direction::Down => Axis::Vertical,
-        }
-    }
-
     fn delta(self) -> (i32, i32) {
         match self {
             Direction::Left => (-1, 0),
@@ -68,7 +45,7 @@ impl Direction {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum SpawnEdge {
     Left,
     Right,
@@ -98,26 +75,24 @@ impl From<SpawnEdge> for Direction {
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct GridCircle {
-    pub id: u64,
-    pub col: i32,
-    pub row: i32,
-    pub travel_dir: Direction,
-    pub moving: bool,
-    pub respawning: bool,
-    pub step_ms: u32,
-    pub diameter_px: f64,
-    pub spawn_edge: SpawnEdge,
-    pub alive: bool,
+#[derive(Clone, Debug, PartialEq)]
+struct GridCircle {
+    id: u64,
+    col: i32,
+    row: i32,
+    travel_dir: Direction,
+    moving: bool,
+    respawning: bool,
+    step_ms: u32,
+    diameter_px: f64,
+    spawn_edge: SpawnEdge,
+    alive: bool,
 }
 
 #[derive(Clone, Debug)]
 struct GridMetrics {
     cols: i32,
     rows: i32,
-    cell_w: f64,
-    cell_h: f64,
 }
 
 impl GridMetrics {
@@ -125,17 +100,15 @@ impl GridMetrics {
         if grid.vertical_lines.len() < 2 || grid.horizontal_lines.len() < 2 {
             return None;
         }
-        let cell_w = grid.vertical_lines[1] - grid.vertical_lines[0];
-        let cell_h = grid.horizontal_lines[1] - grid.horizontal_lines[0];
-        if cell_w <= 0.0 || cell_h <= 0.0 {
+        if grid.vertical_lines[1] - grid.vertical_lines[0] <= 0.0
+            || grid.horizontal_lines[1] - grid.horizontal_lines[0] <= 0.0
+        {
             return None;
         }
 
         Some(Self {
             cols: (grid.vertical_lines.len() - 1) as i32,
             rows: (grid.horizontal_lines.len() - 1) as i32,
-            cell_w,
-            cell_h,
         })
     }
 
@@ -148,12 +121,13 @@ impl GridMetrics {
 pub fn AnimatedGridCircles(#[props(optional)] count: Option<usize>) -> Element {
     let ctx = use_grid_context();
     let circle_count = count.unwrap_or(DEFAULT_CIRCLE_COUNT);
-    let mut circles = use_signal(|| Vec::<CircleSignal>::new());
+    let circles: CirclesSignal = use_signal(|| Vec::new());
 
     use_effect({
         let ctx = ctx.clone();
-        let circles = circles.clone();
+        let circles_signal = circles.clone();
         move || {
+            let mut circles = circles_signal;
             let grid = ctx.grid_data.read().clone();
             let Some(metrics) = GridMetrics::from(&grid) else {
                 return;
@@ -167,86 +141,105 @@ pub fn AnimatedGridCircles(#[props(optional)] count: Option<usize>) -> Element {
 
                 while stored.len() < circle_count {
                     let id = NEXT_CIRCLE_ID.fetch_add(1, Ordering::Relaxed);
-                    let circle_state = spawn_circle_state(id, &metrics);
-                    stored.push(GlobalSignal::new(move || circle_state.clone()));
+                    stored.push(spawn_circle_state(id, &metrics));
                 }
             }
 
-            let existing = circles.read().clone();
-            for circle in existing {
-                enforce_circle_bounds(&circle, ctx.clone(), &metrics);
-                circle_step(circle, ctx.clone());
+            let len = circles.read().len();
+            for index in 0..len {
+                enforce_circle_bounds(index, circles, ctx.clone(), &metrics);
+                circle_step(index, circles, ctx.clone());
             }
         }
     });
 
-    let rendered_circles = circles.read().clone();
+    let circles_snapshot = circles.read().clone();
 
     rsx! {
         div {
             class: "absolute inset-0 pointer-events-none",
-            {rendered_circles.into_iter().map(|circle| {
-                let id = {
-                    let data = circle.read();
-                    data.id
-                };
-                rsx! {
-                    AnimatedGridCircle {
-                        key: "animated-circle-{id}",
-                        circle: circle.clone(),
-                        grid_ctx: ctx.clone(),
+            {circles_snapshot
+                .into_iter()
+                .enumerate()
+                .map(|(index, circle_state)| {
+                    rsx! {
+                        AnimatedGridCircle {
+                            key: "animated-circle-{circle_state.id}",
+                            index,
+                            circle: circle_state,
+                            circles: circles.clone(),
+                            grid_ctx: ctx.clone(),
+                        }
                     }
-                }
-            })}
+                })}
         }
     }
 }
 
+#[derive(Props, Clone)]
+struct AnimatedGridCircleProps {
+    index: usize,
+    circle: GridCircle,
+    circles: CirclesSignal,
+    grid_ctx: GridContext,
+}
+
+impl PartialEq for AnimatedGridCircleProps {
+    fn eq(&self, other: &Self) -> bool {
+        self.index == other.index && self.circle == other.circle
+    }
+}
+
 #[component]
-fn AnimatedGridCircle(circle: CircleSignal, grid_ctx: GridContext) -> Element {
+fn AnimatedGridCircle(props: AnimatedGridCircleProps) -> Element {
+    let AnimatedGridCircleProps {
+        index,
+        circle,
+        circles,
+        grid_ctx,
+    } = props;
+
     let grid = grid_ctx.grid_data.read().clone();
-    let circle_state = circle.read().clone();
-    let Some((x, y)) = indices_to_px(
-        circle_state.col,
-        circle_state.row,
-        &grid,
-        circle_state.diameter_px,
-    ) else {
+    let Some((x, y)) = indices_to_px(circle.col, circle.row, &grid, circle.diameter_px) else {
         return rsx! {};
     };
 
-    let transition_style = if circle_state.respawning {
+    let transition_style = if circle.respawning {
         "transition: none;".to_string()
     } else {
-        format!("transition: transform linear {}ms;", circle_state.step_ms)
+        format!("transition: transform linear {}ms;", circle.step_ms)
     };
 
     let style = format!(
         "transform: translate({x:.2}px, {y:.2}px); width: {d:.2}px; height: {d:.2}px; border-radius: 9999px; {transition_style}",
-        d = circle_state.diameter_px,
+        d = circle.diameter_px,
     );
-
-    let circle_for_event = circle.clone();
-    let ctx_for_event = grid_ctx.clone();
 
     rsx! {
         div {
             class: "absolute will-change-transform pointer-events-none bg-primary shadow-[0_0_8px_1px_var(--primary)]",
             style: "{style}",
-            ontransitionend: move |_| handle_transition_end(circle_for_event.clone(), ctx_for_event.clone()),
+            ontransitionend: move |_| {
+                handle_transition_end(index, circles.clone(), grid_ctx.clone());
+            },
         }
     }
 }
 
-fn handle_transition_end(circle: CircleSignal, grid_ctx: GridContext) {
+fn handle_transition_end(index: usize, mut circles: CirclesSignal, grid_ctx: GridContext) {
     {
-        let mut state = circle.write();
-        state.moving = false;
+        let mut all = circles.write();
+        if let Some(circle) = all.get_mut(index) {
+            circle.moving = false;
+        } else {
+            return;
+        }
     }
-    circle_step(circle, grid_ctx);
+
+    circle_step(index, circles, grid_ctx);
 }
 
-fn circle_step(circle: CircleSignal, grid_ctx: GridContext) {
+fn circle_step(index: usize, mut circles: CirclesSignal, grid_ctx: GridContext) {
     let grid = grid_ctx.grid_data.read().clone();
     let Some(metrics) = GridMetrics::from(&grid) else {
         return;
@@ -255,28 +248,27 @@ fn circle_step(circle: CircleSignal, grid_ctx: GridContext) {
     let mut schedule_respawn = false;
 
     {
-        let mut state = circle.write();
+        let mut all = circles.write();
+        let Some(circle) = all.get_mut(index) else {
+            return;
+        };
 
-        if state.respawning {
+        if circle.respawning || circle.moving {
             return;
         }
 
-        if state.moving {
-            return;
-        }
-
-        if let Some((next_col, next_row)) = decide_next_move(&state, &metrics) {
-            state.col = next_col;
-            state.row = next_row;
-            state.moving = true;
+        if let Some((next_col, next_row)) = decide_next_move(circle, &metrics) {
+            circle.col = next_col;
+            circle.row = next_row;
+            circle.moving = true;
         } else {
-            respawn_circle_state(&mut state, &metrics);
+            respawn_circle_state(circle, &metrics);
             schedule_respawn = true;
         }
     }
 
     if schedule_respawn {
-        schedule_post_respawn(circle, grid_ctx);
+        schedule_post_respawn(index, circles, grid_ctx);
     }
 }
 
@@ -326,31 +318,44 @@ fn respawn_circle_state(state: &mut GridCircle, metrics: &GridMetrics) {
     state.alive = true;
 }
 
-fn enforce_circle_bounds(circle: &CircleSignal, grid_ctx: GridContext, metrics: &GridMetrics) {
+fn enforce_circle_bounds(
+    index: usize,
+    mut circles: CirclesSignal,
+    grid_ctx: GridContext,
+    metrics: &GridMetrics,
+) {
     let mut needs_respawn = false;
 
     {
-        let mut state = circle.write();
+        let mut all = circles.write();
+        let Some(state) = all.get_mut(index) else {
+            return;
+        };
+
         if !metrics.in_bounds(state.col, state.row) {
-            respawn_circle_state(&mut state, metrics);
+            respawn_circle_state(state, metrics);
             needs_respawn = true;
         }
     }
 
     if needs_respawn {
-        schedule_post_respawn(circle.clone(), grid_ctx);
+        schedule_post_respawn(index, circles, grid_ctx);
     }
 }
 
-fn schedule_post_respawn(circle: CircleSignal, grid_ctx: GridContext) {
+fn schedule_post_respawn(index: usize, mut circles: CirclesSignal, grid_ctx: GridContext) {
     spawn({
         async move {
             sleep(Duration::from_millis(RESPAWN_DELAY_MS)).await;
             {
-                let mut state = circle.write();
-                state.respawning = false;
+                let mut all = circles.write();
+                if let Some(circle) = all.get_mut(index) {
+                    circle.respawning = false;
+                } else {
+                    return;
+                }
             }
-            circle_step(circle, grid_ctx);
+            circle_step(index, circles, grid_ctx);
         }
     });
 }
@@ -452,13 +457,7 @@ fn random_chance(percent: u8) -> bool {
 }
 
 fn random_u64() -> u64 {
-    let mut buf = [0u8; 8];
-    if getrandom(&mut buf).is_ok() {
-        return u64::from_le_bytes(buf);
-    }
-
-    // Fallback to a simple LCG if the platform RNG is unavailable.
-    FALLBACK_RNG_SEED
+    RNG_STATE
         .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |prev| {
             Some(prev.wrapping_mul(6364136223846793005).wrapping_add(1))
         })

@@ -101,21 +101,21 @@ Goal: Replace keyframe-based single circle with a pool of independently animated
 - Prevent back-to-back `ontransitionend` loops by checking `moving` and ensuring target changed.
 - Clamp side steps that would leave bounds; ignore invalid side steps.
 
-## Work Plan
-1. Types and utilities
-   - Add `Direction`, `SpawnEdge`, `GridCircle`, RNG abstraction.
-2. Parent container
-   - Implement `AnimatedGridCircles` to create and render `count` circles from signals.
-3. Child component
-   - Implement `AnimatedGridCircle` with CSS transform transitions and `ontransitionend` chaining.
-4. Grid integration
-   - Read `GridData`, compute cell size and bounds, and convert indices to pixels.
-5. Respawn + randomness
-   - Implement edge spawn and 20% side-step logic with bounds checks.
-6. Resize behavior
-   - Watch grid changes, snap or respawn circles cleanly.
-7. Polish
-   - Tweak durations, sizes, and shadow to match visuals; add comments and docs.
+## Work Plan (progress as of current branch)
+1. ✅ Types and utilities  
+   `Direction`, `SpawnEdge`, `GridCircle`, and RNG helpers now live in `src/components/animated_grid/circle.rs`, covering the foundational data model.
+2. ✅ Parent container  
+   `AnimatedGridCircles` instantiates the pool, clamps the count, and drives each circle’s loop, satisfying the parent orchestration requirement.
+3. ✅ Child component  
+   `AnimatedGridCircle` renders absolutely-positioned circles, applies per-step transforms, and uses `ontransitionend` to trigger the next move.
+4. ✅ Grid integration  
+   Movement now derives from `GridData` cell metrics and pixel conversions, ensuring circles stay aligned with the grid layout.
+5. ✅ Respawn + randomness  
+   Edge spawning, 20 % perpendicular side steps, and per-circle duration/size variance are implemented with bounds enforcement.
+6. ⏳ Resize behavior  
+   Still need to re-sync or respawn circles automatically when grid lines change; the current effect only runs on mount.
+7. ⏳ Polish  
+   Shadows and motion basics exist, but there’s no per-circle signal isolation, feature flagging, or extra styling tweaks yet.
 
 ## Capacity
 - Default to a modest circle count (e.g., 12–24) to ensure smooth rendering when using `GlobalSignal` updates per step. Make the count configurable.
