@@ -128,7 +128,7 @@ pub fn AnimatedGridCircles(#[props(optional)] count: Option<usize>) -> Element {
         let circles_signal = circles.clone();
         move || {
             let mut circles = circles_signal;
-            let grid = ctx.grid_data.read().clone();
+            let grid = ctx.grid_data.peek().clone();
             let Some(metrics) = GridMetrics::from(&grid) else {
                 return;
             };
@@ -153,12 +153,10 @@ pub fn AnimatedGridCircles(#[props(optional)] count: Option<usize>) -> Element {
         }
     });
 
-    let circles_snapshot = circles.read().clone();
-
     rsx! {
         div {
             class: "absolute inset-0 pointer-events-none",
-            {circles_snapshot
+            {circles()
                 .into_iter()
                 .enumerate()
                 .map(|(index, circle_state)| {
