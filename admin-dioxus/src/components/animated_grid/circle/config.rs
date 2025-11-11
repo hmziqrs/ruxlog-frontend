@@ -203,6 +203,16 @@ pub fn handle_transition_end(mut circle_sig: CircleSignal, grid_ctx: GridContext
 
 pub fn spawn_circle_state(id: u64, grid: &GridData) -> GridCircle {
     let edge = SpawnEdge::random();
+    spawn_circle_state_with_edge(id, grid, edge as u8)
+}
+
+pub fn spawn_circle_state_with_edge(id: u64, grid: &GridData, edge_index: u8) -> GridCircle {
+    let edge = match edge_index % 4 {
+        0 => SpawnEdge::Left,
+        1 => SpawnEdge::Right,
+        2 => SpawnEdge::Top,
+        _ => SpawnEdge::Bottom,
+    };
     let travel_dir: Direction = edge.into();
     let (col, row) = match edge {
         SpawnEdge::Left => (0, random_i32(grid.rows())),

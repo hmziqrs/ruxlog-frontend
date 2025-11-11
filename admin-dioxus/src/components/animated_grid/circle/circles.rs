@@ -24,10 +24,13 @@ pub fn AnimatedGridCircles(#[props(optional)] count: Option<usize>) -> Element {
             return;
         }
 
+        // Distribute circles evenly across all 4 edges
         let new_circles = (0..circle_count)
-            .map(|_| {
+            .map(|i| {
                 let id = NEXT_CIRCLE_ID.fetch_add(1, Ordering::Relaxed);
-                Signal::new(spawn_circle_state(id, &grid))
+                // Cycle through edges to ensure even distribution
+                let edge_index = (i % 4) as u8;
+                Signal::new(spawn_circle_state_with_edge(id, &grid, edge_index))
             })
             .collect::<Vec<_>>();
 
