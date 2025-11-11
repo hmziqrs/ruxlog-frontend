@@ -56,7 +56,7 @@ pub fn AnimatedGridCircles(#[props(optional)] count: Option<usize>) -> Element {
                 let grid_ctx = grid_ctx.clone();
                 async move {
                     sleep(Duration::from_millis(random_u64() % 200)).await;
-                    circle_step(circle_sig, grid_ctx);
+                    schedule_post_respawn(circle_sig, grid_ctx);
                 }
             });
         }
@@ -85,7 +85,7 @@ pub fn circle_step(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
         return;
     }
 
-    let mut schedule_respawn = false;
+    let mut scale_out = false;
 
     {
         let mut circle = circle_sig.write();
@@ -100,14 +100,31 @@ pub fn circle_step(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
             circle.moving = true;
             circle.just_side_stepped = did_side_step;
         } else {
-            respawn_circle_state(&mut circle, &grid);
-            schedule_respawn = true;
+            // At goal edge - scale out before respawning
+            circle.scale = 3.0;
+            circle.moving = true;
+            scale_out = true;
         }
     }
 
-    if schedule_respawn {
-        schedule_post_respawn(circle_sig, grid_ctx);
+    if scale_out {
+        schedule_post_scale_out(circle_sig, grid_ctx);
     }
+}
+
+fn schedule_post_scale_out(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
+    spawn({
+        async move {
+            // Wait for scale-out transition to complete
+            sleep(Duration::from_millis(STEP_DURATION_MS as u64)).await;
+            {
+                let grid = grid_ctx.grid_data.read();
+                let mut circle = circle_sig.write();
+                respawn_circle_state(&mut circle, &grid);
+            }
+            schedule_post_respawn(circle_sig, grid_ctx);
+        }
+    });
 }
 
 fn decide_next_move(circle: &GridCircle, grid: &GridData) -> Option<(i32, i32, bool)> {
@@ -168,13 +185,20 @@ fn respawn_circle_state(state: &mut GridCircle, grid: &GridData) {
     state.respawning = true;
     state.alive = true;
     state.just_side_stepped = false;
+    state.scale = 3.0;
 }
 
 fn schedule_post_respawn(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
     spawn({
         async move {
             sleep(Duration::from_millis(RESPAWN_DELAY_MS)).await;
-            circle_sig.write().respawning = false;
+            {
+                let mut circle = circle_sig.write();
+                circle.respawning = false;
+                circle.scale = 1.0;
+            }
+            // Wait for scale-in transition to complete, then start movement
+            sleep(Duration::from_millis(STEP_DURATION_MS as u64)).await;
             circle_step(circle_sig, grid_ctx);
         }
     });
@@ -196,10 +220,11 @@ fn spawn_circle_state(id: u64, grid: &GridData) -> GridCircle {
         row: row.clamp(0, grid.rows().saturating_sub(1)),
         travel_dir,
         moving: false,
-        respawning: false,
+        respawning: true,
         spawn_edge: edge,
         alive: true,
         just_side_stepped: false,
+        scale: 3.0,
     }
 }
 

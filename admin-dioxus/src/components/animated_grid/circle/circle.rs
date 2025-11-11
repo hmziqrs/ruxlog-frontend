@@ -7,14 +7,14 @@ use crate::components::animated_grid::provider::use_grid_context;
 pub fn AnimatedGridCircle(circle: CircleSignal) -> Element {
     let grid_ctx = use_grid_context();
 
-    let (x, y, respawning) = {
+    let (x, y, respawning, scale) = {
         let circle_state = circle.read();
         let grid = grid_ctx.grid_data.read();
 
         let Some((x, y)) = indices_to_px(circle_state.col, circle_state.row, &grid) else {
             return rsx! {};
         };
-        (x, y, circle_state.respawning)
+        (x, y, circle_state.respawning, circle_state.scale)
     };
 
     let transition_style = if respawning {
@@ -24,7 +24,7 @@ pub fn AnimatedGridCircle(circle: CircleSignal) -> Element {
     };
 
     let style = format!(
-        "transform: translate({x:.2}px, {y:.2}px); width: {DIAMETER_PX}px; height: {DIAMETER_PX}px; border-radius: 9999px; {transition_style} transition-duration: {STEP_DURATION_MS}ms;",
+        "transform: translate({x:.2}px, {y:.2}px) scale({scale:.2}); width: {DIAMETER_PX}px; height: {DIAMETER_PX}px; border-radius: 9999px; {transition_style} transition-duration: {STEP_DURATION_MS}ms;",
     );
 
     rsx! {

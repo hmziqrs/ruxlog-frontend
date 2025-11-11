@@ -66,4 +66,5 @@ pub struct GridCircle {
     pub spawn_edge: SpawnEdge,
     pub alive: bool,
     pub just_side_stepped: bool,
+    pub scale: f64,
 }
