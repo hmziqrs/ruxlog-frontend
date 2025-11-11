@@ -21,7 +21,9 @@ pub fn AnimatedGridCircle(circle: CircleSignal) -> Element {
             let circle_sig = circle;
             let grid_ctx = grid_ctx_clone.clone();
             async move {
-                sleep(Duration::from_millis(random_u64() % 200)).await;
+                // Random delay between 100ms and 1000ms before spawning
+                let delay = 100 + (random_u64() % 1600);
+                sleep(Duration::from_millis(delay)).await;
                 schedule_post_respawn(circle_sig, grid_ctx);
             }
         });
