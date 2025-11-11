@@ -50,47 +50,47 @@ pub fn AnimatedGridCircle(circle: CircleSignal) -> Element {
     };
 
     let style = if circle_state.is_respawning() {
-        web_sys::console::log_1(
-            &format!(
-                "Circle {} RESPAWNING: scale={:.2}, opacity={:.2}, transition=NONE [respawning=true, scaling_in={}, moving={}]",
-                circle_state.id, circle_state.scale, circle_state.opacity, circle_state.scaling_in, circle_state.moving
-            )
-            .into(),
-        );
+        // web_sys::console::log_1(
+        //     &format!(
+        //         "Circle {} RESPAWNING: scale={:.2}, opacity={:.2}, transition=NONE [respawning=true, scaling_in={}, moving={}]",
+        //         circle_state.id, circle_state.scale, circle_state.opacity, circle_state.scaling_in, circle_state.moving
+        //     )
+        //     .into(),
+        // );
         format!(
             "transform: translate({x:.2}px, {y:.2}px) scale({:.2}); width: {DIAMETER_PX}px; height: {DIAMETER_PX}px; border-radius: 9999px; opacity: {:.2}; transition: none;",
             circle_state.scale, circle_state.opacity
         )
     } else if is_scaling_in || circle_state.is_scaling_out_active() {
-        let phase = if is_scaling_in { "SCALING_IN" } else { "SCALING_OUT" };
-        web_sys::console::log_1(
-            &format!(
-                "Circle {} {}: scale={:.2}, opacity={:.2}, duration={}ms [respawning={}, scaling_in={}, moving={}]",
-                circle_state.id, phase, circle_state.scale, circle_state.opacity, SCALE_DURATION_MS,
-                circle_state.respawning, circle_state.scaling_in, circle_state.moving
-            )
-            .into(),
-        );
+        // let phase = if is_scaling_in { "SCALING_IN" } else { "SCALING_OUT" };
+        // web_sys::console::log_1(
+        //     &format!(
+        //         "Circle {} {}: scale={:.2}, opacity={:.2}, duration={}ms [respawning={}, scaling_in={}, moving={}]",
+        //         circle_state.id, phase, circle_state.scale, circle_state.opacity, SCALE_DURATION_MS,
+        //         circle_state.respawning, circle_state.scaling_in, circle_state.moving
+        //     )
+        //     .into(),
+        // );
         format!(
             "transform: translate({x:.2}px, {y:.2}px) scale({:.2}); width: {DIAMETER_PX}px; height: {DIAMETER_PX}px; border-radius: 9999px; opacity: {:.2}; transition: transform {SCALE_DURATION_MS}ms ease-in, opacity {SCALE_DURATION_MS}ms ease-in;",
             circle_state.scale, circle_state.opacity
         )
     } else {
-        web_sys::console::log_1(
-            &format!(
-                "Circle {} MOVING: scale={:.2}, opacity={:.2}, duration={}ms [respawning={}, scaling_in={}, moving={}]",
-                circle_state.id, circle_state.scale, circle_state.opacity, STEP_DURATION_MS,
-                circle_state.respawning, circle_state.scaling_in, circle_state.moving
-            )
-            .into(),
-        );
+        // web_sys::console::log_1(
+        //     &format!(
+        //         "Circle {} MOVING: scale={:.2}, opacity={:.2}, duration={}ms [respawning={}, scaling_in={}, moving={}]",
+        //         circle_state.id, circle_state.scale, circle_state.opacity, STEP_DURATION_MS,
+        //         circle_state.respawning, circle_state.scaling_in, circle_state.moving
+        //     )
+        //     .into(),
+        // );
         format!(
             "transform: translate({x:.2}px, {y:.2}px) scale({:.2}); width: {DIAMETER_PX}px; height: {DIAMETER_PX}px; border-radius: 9999px; opacity: {:.2}; transition: transform {STEP_DURATION_MS}ms linear;",
             circle_state.scale, circle_state.opacity
         )
     };
 
-    info!("state: {:?}", circle_state);
+    // info!("state: {:?}", circle_state);
 
     rsx! {
         div {
