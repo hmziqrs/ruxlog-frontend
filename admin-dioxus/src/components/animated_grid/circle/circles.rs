@@ -93,6 +93,11 @@ pub fn circle_step(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
             return;
         }
 
+        // Don't start moving if still scaling in
+        if circle.scale != 1.0 || circle.opacity != 1.0 {
+            return;
+        }
+
         if let Some((next_col, next_row, did_side_step)) = decide_next_move(&circle, &grid) {
             circle.col = next_col;
             circle.row = next_row;
