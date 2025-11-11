@@ -63,8 +63,6 @@ pub struct GridCircle {
     pub travel_dir: Direction,
     pub moving: bool,
     pub respawning: bool,
-    pub step_ms: u32,
-    pub diameter_px: f64,
     pub spawn_edge: SpawnEdge,
     pub alive: bool,
 }

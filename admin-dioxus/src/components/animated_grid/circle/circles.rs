@@ -12,74 +12,73 @@ use crate::components::animated_grid::provider::{use_grid_context, GridContext, 
 
 const DEFAULT_CIRCLE_COUNT: usize = 16;
 const SIDE_STEP_PERCENT: u8 = 20;
-const STEP_DURATION_RANGE: (u32, u32) = (320, 640);
-const DIAMETER_RANGE: (f64, f64) = (5.0, 8.0);
+pub const DIAMETER_PX: f64 = 6.0;
+pub const STEP_DURATION_MS: u32 = 400;
 const RESPAWN_DELAY_MS: u64 = 48;
 
 static NEXT_CIRCLE_ID: AtomicU64 = AtomicU64::new(0);
 static RNG_STATE: AtomicU64 = AtomicU64::new(0x9e3779b97f4a7c15);
 
-pub type CirclesSignal = Signal<Vec<GridCircle>>;
+pub type CircleSignal = Signal<GridCircle>;
 
 #[component]
 pub fn AnimatedGridCircles(#[props(optional)] count: Option<usize>) -> Element {
-    let ctx = use_grid_context();
+    let grid_ctx = use_grid_context();
     let circle_count = count.unwrap_or(DEFAULT_CIRCLE_COUNT);
-    let circles: CirclesSignal = use_signal(|| Vec::new());
 
-    use_effect({
-        let ctx = ctx.clone();
-        let circles_signal = circles.clone();
-        move || {
-            let mut circles = circles_signal;
-            let grid = ctx.grid_data.peek().clone();
+    let mut circles = use_signal(|| Vec::new());
 
-            if grid.vertical_lines.len() < 2 || grid.horizontal_lines.len() < 2 {
-                return;
-            }
+    use_effect(move || {
+        if !circles.read().is_empty() {
+            return;
+        }
 
-            {
-                let mut stored = circles.write();
-                if stored.len() > circle_count {
-                    stored.truncate(circle_count);
+        let grid = grid_ctx.grid_data.read();
+        if grid.vertical_lines.len() < 2 || grid.horizontal_lines.len() < 2 {
+            return;
+        }
+
+        let new_circles = (0..circle_count)
+            .map(|_| {
+                let id = NEXT_CIRCLE_ID.fetch_add(1, Ordering::Relaxed);
+                Signal::new(spawn_circle_state(id, &grid))
+            })
+            .collect::<Vec<_>>();
+
+        circles.set(new_circles);
+    });
+
+    use_effect(move || {
+        let circle_list = circles.read();
+        for circle_sig in circle_list.iter() {
+            spawn({
+                let circle_sig = *circle_sig;
+                let grid_ctx = grid_ctx.clone();
+                async move {
+                    sleep(Duration::from_millis(random_u64() % 200)).await;
+                    circle_step(circle_sig, grid_ctx);
                 }
-
-                while stored.len() < circle_count {
-                    let id = NEXT_CIRCLE_ID.fetch_add(1, Ordering::Relaxed);
-                    stored.push(spawn_circle_state(id, &grid));
-                }
-            }
-
-            let len = circles.read().len();
-            for index in 0..len {
-                enforce_circle_bounds(index, circles, ctx.clone(), &grid);
-                circle_step(index, circles, ctx.clone());
-            }
+            });
         }
     });
 
     rsx! {
         div {
             class: "absolute inset-0 pointer-events-none",
-            {circles()
-                .into_iter()
-                .enumerate()
-                .map(|(index, circle_state)| {
-                    rsx! {
-                        AnimatedGridCircle {
-                            key: "animated-circle-{circle_state.id}",
-                            index,
-                            circle: circle_state,
-                            circles: circles.clone(),
-                            grid_ctx: ctx.clone(),
-                        }
+            {circles.read().iter().map(|circle_sig| {
+                let id = circle_sig.read().id;
+                rsx! {
+                    AnimatedGridCircle {
+                        key: "{id}",
+                        circle: *circle_sig,
                     }
-                })}
+                }
+            })}
         }
     }
 }
 
-pub fn circle_step(index: usize, mut circles: CirclesSignal, grid_ctx: GridContext) {
+pub fn circle_step(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
     let grid = grid_ctx.grid_data.read().clone();
 
     if grid.vertical_lines.len() < 2 || grid.horizontal_lines.len() < 2 {
@@ -89,27 +88,24 @@ pub fn circle_step(index: usize, mut circles: CirclesSignal, grid_ctx: GridConte
     let mut schedule_respawn = false;
 
     {
-        let mut all = circles.write();
-        let Some(circle) = all.get_mut(index) else {
-            return;
-        };
+        let mut circle = circle_sig.write();
 
         if circle.respawning || circle.moving {
             return;
         }
 
-        if let Some((next_col, next_row)) = decide_next_move(circle, &grid) {
+        if let Some((next_col, next_row)) = decide_next_move(&circle, &grid) {
             circle.col = next_col;
             circle.row = next_row;
             circle.moving = true;
         } else {
-            respawn_circle_state(circle, &grid);
+            respawn_circle_state(&mut circle, &grid);
             schedule_respawn = true;
         }
     }
 
     if schedule_respawn {
-        schedule_post_respawn(index, circles, grid_ctx);
+        schedule_post_respawn(circle_sig, grid_ctx);
     }
 }
 
@@ -152,51 +148,17 @@ fn respawn_circle_state(state: &mut GridCircle, grid: &GridData) {
     state.row = row.clamp(0, grid.rows().saturating_sub(1));
     state.travel_dir = travel_dir;
     state.spawn_edge = edge;
-    state.step_ms = random_step_duration();
-    state.diameter_px = random_diameter();
     state.moving = false;
     state.respawning = true;
     state.alive = true;
 }
 
-fn enforce_circle_bounds(
-    index: usize,
-    mut circles: CirclesSignal,
-    grid_ctx: GridContext,
-    grid: &GridData,
-) {
-    let mut needs_respawn = false;
-
-    {
-        let mut all = circles.write();
-        let Some(state) = all.get_mut(index) else {
-            return;
-        };
-
-        if !grid.in_bounds(state.col, state.row) {
-            respawn_circle_state(state, grid);
-            needs_respawn = true;
-        }
-    }
-
-    if needs_respawn {
-        schedule_post_respawn(index, circles, grid_ctx);
-    }
-}
-
-fn schedule_post_respawn(index: usize, mut circles: CirclesSignal, grid_ctx: GridContext) {
+fn schedule_post_respawn(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
     spawn({
         async move {
             sleep(Duration::from_millis(RESPAWN_DELAY_MS)).await;
-            {
-                let mut all = circles.write();
-                if let Some(circle) = all.get_mut(index) {
-                    circle.respawning = false;
-                } else {
-                    return;
-                }
-            }
-            circle_step(index, circles, grid_ctx);
+            circle_sig.write().respawning = false;
+            circle_step(circle_sig, grid_ctx);
         }
     });
 }
@@ -218,14 +180,12 @@ fn spawn_circle_state(id: u64, grid: &GridData) -> GridCircle {
         travel_dir,
         moving: false,
         respawning: false,
-        step_ms: random_step_duration(),
-        diameter_px: random_diameter(),
         spawn_edge: edge,
         alive: true,
     }
 }
 
-pub fn indices_to_px(col: i32, row: i32, grid: &GridData, diameter: f64) -> Option<(f64, f64)> {
+pub fn indices_to_px(col: i32, row: i32, grid: &GridData) -> Option<(f64, f64)> {
     let col_idx = usize::try_from(col).ok()?;
     let row_idx = usize::try_from(row).ok()?;
     let x = *grid.vertical_lines.get(col_idx)?;
@@ -242,31 +202,10 @@ pub fn indices_to_px(col: i32, row: i32, grid: &GridData, diameter: f64) -> Opti
         0.0
     };
 
-    Some((x + (cell_w - diameter) / 2.0, y + (cell_h - diameter) / 2.0))
-}
-
-fn random_step_duration() -> u32 {
-    random_between_u32(STEP_DURATION_RANGE.0, STEP_DURATION_RANGE.1)
-}
-
-fn random_diameter() -> f64 {
-    random_between_f64(DIAMETER_RANGE.0, DIAMETER_RANGE.1)
-}
-
-fn random_between_u32(min: u32, max: u32) -> u32 {
-    if max <= min {
-        return min;
-    }
-    let spread = max - min;
-    min + (random_u64() as u32 % (spread + 1))
-}
-
-fn random_between_f64(min: f64, max: f64) -> f64 {
-    if max <= min {
-        return min;
-    }
-    let ratio = (random_u64() >> 11) as f64 / ((1u64 << 53) as f64);
-    min + (max - min) * ratio
+    Some((
+        x + (cell_w - DIAMETER_PX) / 2.0,
+        y + (cell_h - DIAMETER_PX) / 2.0,
+    ))
 }
 
 fn random_i32(max: i32) -> i32 {
