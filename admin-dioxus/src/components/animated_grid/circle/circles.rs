@@ -93,11 +93,6 @@ pub fn circle_step(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
             return;
         }
 
-        // Don't start moving if still scaling in
-        if circle.scale != 1.0 || circle.opacity != 1.0 {
-            return;
-        }
-
         if let Some((next_col, next_row, did_side_step)) = decide_next_move(&circle, &grid) {
             circle.col = next_col;
             circle.row = next_row;
@@ -190,16 +185,27 @@ fn schedule_post_respawn(mut circle_sig: CircleSignal, _grid_ctx: GridContext) {
 }
 
 pub fn handle_transition_end(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
-    let mut circle = circle_sig.write();
+    let (is_respawning, is_scale_out, is_scale_in, is_movement) = {
+        let grid = grid_ctx.grid_data.read();
+        let circle = circle_sig.read();
+        (
+            circle.respawning,
+            circle.is_scale_out_complete(),
+            circle.is_scale_in_complete(&grid),
+            circle.is_movement_complete(),
+        )
+    };
 
-    if circle.respawning {
+    if is_respawning {
         return; // Ignore transitions during instant position changes
     }
 
-    if circle.is_scale_out_complete() {
+    if is_scale_out {
         // Just finished scaling out at goal edge → respawn
-        circle.moving = false;
-        drop(circle);
+        {
+            let mut circle = circle_sig.write();
+            circle.moving = false;
+        }
 
         {
             let grid = grid_ctx.grid_data.read();
@@ -208,14 +214,15 @@ pub fn handle_transition_end(mut circle_sig: CircleSignal, grid_ctx: GridContext
         }
 
         schedule_post_respawn(circle_sig, grid_ctx);
-    } else if circle.is_scale_in_complete() {
+    } else if is_scale_in {
         // Just finished scaling in after spawn → start moving
-        drop(circle);
         circle_step(circle_sig, grid_ctx);
-    } else if circle.is_movement_complete() {
+    } else if is_movement {
         // Just finished moving to next cell → continue
-        circle.moving = false;
-        drop(circle);
+        {
+            let mut circle = circle_sig.write();
+            circle.moving = false;
+        }
         circle_step(circle_sig, grid_ctx);
     }
 }

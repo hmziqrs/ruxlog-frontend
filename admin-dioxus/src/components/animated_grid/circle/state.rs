@@ -63,7 +63,6 @@ pub struct GridCircle {
     pub travel_dir: Direction,
     pub moving: bool,
     pub respawning: bool,
-    pub scaling_in: bool,
     pub spawn_edge: SpawnEdge,
     pub alive: bool,
     pub just_side_stepped: bool,
@@ -72,9 +71,19 @@ pub struct GridCircle {
 }
 
 impl GridCircle {
+    /// Check if circle is at spawn position
+    pub fn is_at_spawn_position(&self, grid: &super::super::provider::GridData) -> bool {
+        match self.spawn_edge {
+            SpawnEdge::Left => self.col == 0,
+            SpawnEdge::Right => self.col >= grid.cols() - 1,
+            SpawnEdge::Top => self.row == 0,
+            SpawnEdge::Bottom => self.row >= grid.rows() - 1,
+        }
+    }
+
     /// Circle just finished scaling in (3x→1x) after spawn/respawn
-    pub fn is_scale_in_complete(&self) -> bool {
-        !self.respawning && !self.moving && self.scale == 1.0
+    pub fn is_scale_in_complete(&self, grid: &super::super::provider::GridData) -> bool {
+        !self.respawning && !self.moving && self.is_at_spawn_position(grid) && self.scale == 1.0 && self.opacity == 1.0
     }
 
     /// Circle just finished moving to next cell
@@ -88,18 +97,18 @@ impl GridCircle {
     }
 
     /// Circle is actively scaling in after spawn (should use scale transition)
-    pub fn is_scaling_in(&self) -> bool {
-        !self.respawning && !self.moving && self.scale != 1.0
+    pub fn is_scaling_in_active(&self, grid: &super::super::provider::GridData) -> bool {
+        !self.respawning && !self.moving && self.is_at_spawn_position(grid) && self.scale != 1.0
     }
 
     /// Circle is actively scaling out at goal (should use scale transition)
-    pub fn is_scaling_out(&self) -> bool {
+    pub fn is_scaling_out_active(&self) -> bool {
         !self.respawning && self.moving && self.scale != 1.0
     }
 
     /// Circle is actively moving between cells (should use movement transition)
-    pub fn is_moving(&self) -> bool {
-        !self.respawning && self.moving && self.scale == 1.0
+    pub fn is_moving_active(&self) -> bool {
+        !self.respawning && self.moving
     }
 
     /// Circle is respawning (no transition)
