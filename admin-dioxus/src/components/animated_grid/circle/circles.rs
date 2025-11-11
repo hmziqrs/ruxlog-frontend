@@ -115,8 +115,11 @@ fn decide_next_move(circle: &GridCircle, grid: &GridData) -> Option<(i32, i32, b
     let mut target = (circle.col + dc, circle.row + dr);
     let mut did_side_step = false;
 
-    // Only allow side-step if we didn't just side-step on previous turn
-    if !circle.just_side_stepped && random_chance(SIDE_STEP_PERCENT) {
+    // Only allow side-step if:
+    // 1. We didn't just side-step on previous turn
+    // 2. We haven't reached the goal edge
+    // 3. Random chance triggers
+    if !circle.just_side_stepped && !is_at_goal_edge(circle, grid) && random_chance(SIDE_STEP_PERCENT) {
         let options = circle.travel_dir.perpendicular();
         let side_choice = if random_bool() {
             options[0]
@@ -135,6 +138,15 @@ fn decide_next_move(circle: &GridCircle, grid: &GridData) -> Option<(i32, i32, b
         Some((target.0, target.1, did_side_step))
     } else {
         None
+    }
+}
+
+fn is_at_goal_edge(circle: &GridCircle, grid: &GridData) -> bool {
+    match circle.spawn_edge {
+        SpawnEdge::Left => circle.col >= grid.cols() - 1,
+        SpawnEdge::Right => circle.col <= 0,
+        SpawnEdge::Top => circle.row >= grid.rows() - 1,
+        SpawnEdge::Bottom => circle.row <= 0,
     }
 }
 
