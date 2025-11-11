@@ -14,6 +14,7 @@ const DEFAULT_CIRCLE_COUNT: usize = 16;
 const SIDE_STEP_PERCENT: u8 = 20;
 pub const DIAMETER_PX: f64 = 6.0;
 pub const STEP_DURATION_MS: u32 = 1200;
+pub const SCALE_DURATION_MS: u32 = 300;
 const RESPAWN_DELAY_MS: u64 = 48;
 
 static NEXT_CIRCLE_ID: AtomicU64 = AtomicU64::new(0);
@@ -85,8 +86,6 @@ pub fn circle_step(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
         return;
     }
 
-    let mut scale_out = false;
-
     {
         let mut circle = circle_sig.write();
 
@@ -100,32 +99,15 @@ pub fn circle_step(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
             circle.moving = true;
             circle.just_side_stepped = did_side_step;
         } else {
-            // At goal edge - scale out before respawning
+            // At goal edge - scale out and fade before respawning
             circle.scale = 3.0;
+            circle.opacity = 0.0;
             circle.moving = true;
-            scale_out = true;
+            // ontransitionend will handle respawn after scale-out
         }
-    }
-
-    if scale_out {
-        schedule_post_scale_out(circle_sig, grid_ctx);
     }
 }
 
-fn schedule_post_scale_out(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
-    spawn({
-        async move {
-            // Wait for scale-out transition to complete
-            sleep(Duration::from_millis(STEP_DURATION_MS as u64)).await;
-            {
-                let grid = grid_ctx.grid_data.read();
-                let mut circle = circle_sig.write();
-                respawn_circle_state(&mut circle, &grid);
-            }
-            schedule_post_respawn(circle_sig, grid_ctx);
-        }
-    });
-}
 
 fn decide_next_move(circle: &GridCircle, grid: &GridData) -> Option<(i32, i32, bool)> {
     let (dc, dr) = circle.travel_dir.delta();
@@ -186,22 +168,59 @@ fn respawn_circle_state(state: &mut GridCircle, grid: &GridData) {
     state.alive = true;
     state.just_side_stepped = false;
     state.scale = 3.0;
+    state.opacity = 0.0;
 }
 
-fn schedule_post_respawn(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
+fn schedule_post_respawn(mut circle_sig: CircleSignal, _grid_ctx: GridContext) {
     spawn({
         async move {
             sleep(Duration::from_millis(RESPAWN_DELAY_MS)).await;
-            {
-                let mut circle = circle_sig.write();
-                circle.respawning = false;
-                circle.scale = 1.0;
-            }
-            // Wait for scale-in transition to complete, then start movement
-            sleep(Duration::from_millis(STEP_DURATION_MS as u64)).await;
-            circle_step(circle_sig, grid_ctx);
+            let mut circle = circle_sig.write();
+            circle.respawning = false;
+            circle.scale = 1.0;
+            circle.opacity = 1.0;
+            // ontransitionend will trigger next step when scale-in completes
         }
     });
+}
+
+pub fn handle_transition_end(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
+    let mut circle = circle_sig.write();
+
+    // Phase detection using existing flags:
+    // - respawning=true -> ignore (in instant position change)
+    // - respawning=false, moving=false, scale>1.5 -> just spawned, scaling in (ignore, wait for scale=1.0)
+    // - respawning=false, moving=false, scale<1.5 -> just finished scaling in
+    // - respawning=false, moving=true, scale<1.5 -> just finished moving
+    // - respawning=false, moving=true, scale>1.5 -> just finished scaling out
+
+    if circle.respawning {
+        return; // Still in respawn phase, ignore
+    }
+
+    if circle.scale > 1.5 && circle.moving {
+        // Just finished scaling out -> respawn
+        circle.moving = false;
+        drop(circle);
+
+        // Respawn at new edge
+        {
+            let grid = grid_ctx.grid_data.read();
+            let mut circle = circle_sig.write();
+            respawn_circle_state(&mut circle, &grid);
+        }
+
+        schedule_post_respawn(circle_sig, grid_ctx);
+    } else if circle.scale < 1.5 && !circle.moving {
+        // Just finished scaling in -> start moving
+        drop(circle);
+        circle_step(circle_sig, grid_ctx);
+    } else if circle.moving && circle.scale < 1.5 {
+        // Just finished moving -> continue to next step
+        circle.moving = false;
+        drop(circle);
+        circle_step(circle_sig, grid_ctx);
+    }
 }
 
 fn spawn_circle_state(id: u64, grid: &GridData) -> GridCircle {
@@ -225,6 +244,7 @@ fn spawn_circle_state(id: u64, grid: &GridData) -> GridCircle {
         alive: true,
         just_side_stepped: false,
         scale: 3.0,
+        opacity: 0.0,
     }
 }
 

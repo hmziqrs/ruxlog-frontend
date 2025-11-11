@@ -67,4 +67,5 @@ pub struct GridCircle {
     pub alive: bool,
     pub just_side_stepped: bool,
     pub scale: f64,
+    pub opacity: f64,
 }

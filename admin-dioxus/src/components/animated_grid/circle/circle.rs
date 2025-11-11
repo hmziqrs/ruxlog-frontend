@@ -1,39 +1,48 @@
 use dioxus::prelude::*;
 
-use super::circles::{indices_to_px, CircleSignal, DIAMETER_PX, STEP_DURATION_MS};
+use super::circles::{
+    indices_to_px, CircleSignal, DIAMETER_PX, SCALE_DURATION_MS, STEP_DURATION_MS,
+};
 use crate::components::animated_grid::provider::use_grid_context;
 
 #[component]
 pub fn AnimatedGridCircle(circle: CircleSignal) -> Element {
     let grid_ctx = use_grid_context();
 
-    let (x, y, respawning, scale) = {
+    let (x, y, respawning, scale, opacity) = {
         let circle_state = circle.read();
         let grid = grid_ctx.grid_data.read();
 
         let Some((x, y)) = indices_to_px(circle_state.col, circle_state.row, &grid) else {
             return rsx! {};
         };
-        (x, y, circle_state.respawning, circle_state.scale)
+        (
+            x,
+            y,
+            circle_state.respawning,
+            circle_state.scale,
+            circle_state.opacity,
+        )
     };
 
-    let transition_style = if respawning {
-        "transition: none;"
+    let style = if respawning {
+        // No transition when respawning (instant position change)
+        format!(
+            "transform: translate({x:.2}px, {y:.2}px) scale({scale:.2}); width: {DIAMETER_PX}px; height: {DIAMETER_PX}px; border-radius: 9999px; opacity: {opacity:.2}; transition: none;",
+        )
     } else {
-        "transition: transform linear;"
+        // Separate transitions: fast for scale/opacity, slow for translate
+        format!(
+            "transform: translate({x:.2}px, {y:.2}px) scale({scale:.2}); width: {DIAMETER_PX}px; height: {DIAMETER_PX}px; border-radius: 9999px; opacity: {opacity:.2}; transition: transform {STEP_DURATION_MS}ms linear, opacity {SCALE_DURATION_MS}ms linear;",
+        )
     };
-
-    let style = format!(
-        "transform: translate({x:.2}px, {y:.2}px) scale({scale:.2}); width: {DIAMETER_PX}px; height: {DIAMETER_PX}px; border-radius: 9999px; {transition_style} transition-duration: {STEP_DURATION_MS}ms;",
-    );
 
     rsx! {
         div {
             class: "absolute will-change-transform pointer-events-none bg-primary shadow-[0_0_8px_1px_var(--primary)]",
             style: "{style}",
             ontransitionend: move |_| {
-                circle.write().moving = false;
-                super::circles::circle_step(circle, grid_ctx.clone());
+                super::circles::handle_transition_end(circle, grid_ctx.clone());
             },
         }
     }
