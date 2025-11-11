@@ -30,10 +30,15 @@ pub fn AnimatedGridCircle(circle: CircleSignal) -> Element {
         format!(
             "transform: translate({x:.2}px, {y:.2}px) scale({scale:.2}); width: {DIAMETER_PX}px; height: {DIAMETER_PX}px; border-radius: 9999px; opacity: {opacity:.2}; transition: none;",
         )
-    } else {
-        // Separate transitions: fast for scale/opacity, slow for translate
+    } else if scale != 1.0 {
+        // During scale transitions: only animate scale/opacity with ease-in, keep position fixed
         format!(
-            "transform: translate({x:.2}px, {y:.2}px) scale({scale:.2}); width: {DIAMETER_PX}px; height: {DIAMETER_PX}px; border-radius: 9999px; opacity: {opacity:.2}; transition: transform {STEP_DURATION_MS}ms linear, opacity {SCALE_DURATION_MS}ms linear;",
+            "transform: translate({x:.2}px, {y:.2}px) scale({scale:.2}); width: {DIAMETER_PX}px; height: {DIAMETER_PX}px; border-radius: 9999px; opacity: {opacity:.2}; transition: transform {SCALE_DURATION_MS}ms ease-in, opacity {SCALE_DURATION_MS}ms ease-in;",
+        )
+    } else {
+        // During movement: only animate position with linear, keep scale/opacity fixed
+        format!(
+            "transform: translate({x:.2}px, {y:.2}px) scale({scale:.2}); width: {DIAMETER_PX}px; height: {DIAMETER_PX}px; border-radius: 9999px; opacity: {opacity:.2}; transition: transform {STEP_DURATION_MS}ms linear;",
         )
     };
 
