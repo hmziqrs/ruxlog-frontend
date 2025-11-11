@@ -13,7 +13,7 @@ use crate::components::animated_grid::provider::{use_grid_context, GridContext, 
 const DEFAULT_CIRCLE_COUNT: usize = 16;
 const SIDE_STEP_PERCENT: u8 = 20;
 pub const DIAMETER_PX: f64 = 6.0;
-pub const STEP_DURATION_MS: u32 = 400;
+pub const STEP_DURATION_MS: u32 = 1200;
 const RESPAWN_DELAY_MS: u64 = 48;
 
 static NEXT_CIRCLE_ID: AtomicU64 = AtomicU64::new(0);
