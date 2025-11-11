@@ -13,8 +13,9 @@ pub const DEFAULT_CIRCLE_COUNT: usize = 16;
 const SIDE_STEP_PERCENT: u8 = 20;
 pub const DIAMETER_PX: f64 = 6.0;
 pub const STEP_DURATION_MS: u32 = 1200;
-pub const SCALE_DURATION_MS: u32 = 200;
+pub const SCALE_DURATION_MS: u32 = 300;
 const RESPAWN_DELAY_MS: u64 = 48;
+pub const MAX_SCALE: f64 = 5.5;
 
 pub static NEXT_CIRCLE_ID: AtomicU64 = AtomicU64::new(0);
 static RNG_STATE: AtomicU64 = AtomicU64::new(0x9e3779b97f4a7c15);
@@ -44,7 +45,7 @@ pub fn circle_step(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
             circle.just_side_stepped = did_side_step;
         } else {
             // At goal edge - scale out and fade before respawning
-            circle.scale = 3.0;
+            circle.scale = MAX_SCALE;
             circle.opacity = 0.0;
             circle.moving = true;
             // ontransitionend will handle respawn after scale-out
@@ -118,7 +119,7 @@ fn respawn_circle_state(state: &mut GridCircle, grid: &GridData) {
     state.scaling_in = false;
     state.alive = true;
     state.just_side_stepped = false;
-    state.scale = 3.0;
+    state.scale = MAX_SCALE;
     state.opacity = 0.0;
 }
 
@@ -221,7 +222,7 @@ pub fn spawn_circle_state(id: u64, grid: &GridData) -> GridCircle {
         spawn_edge: edge,
         alive: true,
         just_side_stepped: false,
-        scale: 3.0,
+        scale: MAX_SCALE,
         opacity: 0.0,
     }
 }
@@ -267,7 +268,15 @@ fn random_chance(percent: u8) -> bool {
 pub fn random_u64() -> u64 {
     RNG_STATE
         .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |prev| {
-            Some(prev.wrapping_mul(6364136223846793005).wrapping_add(1))
+            // Initialize with timestamp-based seed on first call
+            let state = if prev == 0x9e3779b97f4a7c15 {
+                // Use current timestamp as seed
+                let now = js_sys::Date::now() as u64;
+                now.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407)
+            } else {
+                prev.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407)
+            };
+            Some(state)
         })
         .unwrap()
 }
