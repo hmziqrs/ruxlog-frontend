@@ -15,6 +15,28 @@ pub struct GridData {
     pub middle_line: f64,
 }
 
+impl GridData {
+    pub fn cols(&self) -> i32 {
+        if self.vertical_lines.len() > 0 {
+            (self.vertical_lines.len() - 1) as i32
+        } else {
+            0
+        }
+    }
+
+    pub fn rows(&self) -> i32 {
+        if self.horizontal_lines.len() > 0 {
+            (self.horizontal_lines.len() - 1) as i32
+        } else {
+            0
+        }
+    }
+
+    pub fn in_bounds(&self, col: i32, row: i32) -> bool {
+        col >= 0 && row >= 0 && col < self.cols() && row < self.rows()
+    }
+}
+
 impl Default for GridData {
     fn default() -> Self {
         Self {

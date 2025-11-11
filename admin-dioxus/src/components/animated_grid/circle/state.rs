@@ -68,33 +68,3 @@ pub struct GridCircle {
     pub spawn_edge: SpawnEdge,
     pub alive: bool,
 }
-
-use crate::components::animated_grid::provider::GridData;
-
-#[derive(Clone, Debug)]
-pub struct GridMetrics {
-    pub cols: i32,
-    pub rows: i32,
-}
-
-impl GridMetrics {
-    pub fn from(grid: &GridData) -> Option<Self> {
-        if grid.vertical_lines.len() < 2 || grid.horizontal_lines.len() < 2 {
-            return None;
-        }
-        if grid.vertical_lines[1] - grid.vertical_lines[0] <= 0.0
-            || grid.horizontal_lines[1] - grid.horizontal_lines[0] <= 0.0
-        {
-            return None;
-        }
-
-        Some(Self {
-            cols: (grid.vertical_lines.len() - 1) as i32,
-            rows: (grid.horizontal_lines.len() - 1) as i32,
-        })
-    }
-
-    pub fn in_bounds(&self, col: i32, row: i32) -> bool {
-        col >= 0 && row >= 0 && col < self.cols && row < self.rows
-    }
-}

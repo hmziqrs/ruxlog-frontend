@@ -7,7 +7,7 @@ use dioxus::prelude::*;
 use dioxus_time::sleep;
 
 use super::circle::AnimatedGridCircle;
-use super::state::{Direction, GridCircle, GridMetrics, SpawnEdge};
+use super::state::{Direction, GridCircle, SpawnEdge};
 use crate::components::animated_grid::provider::{use_grid_context, GridContext, GridData};
 
 const DEFAULT_CIRCLE_COUNT: usize = 16;
@@ -33,9 +33,10 @@ pub fn AnimatedGridCircles(#[props(optional)] count: Option<usize>) -> Element {
         move || {
             let mut circles = circles_signal;
             let grid = ctx.grid_data.peek().clone();
-            let Some(metrics) = GridMetrics::from(&grid) else {
+
+            if grid.vertical_lines.len() < 2 || grid.horizontal_lines.len() < 2 {
                 return;
-            };
+            }
 
             {
                 let mut stored = circles.write();
@@ -45,13 +46,13 @@ pub fn AnimatedGridCircles(#[props(optional)] count: Option<usize>) -> Element {
 
                 while stored.len() < circle_count {
                     let id = NEXT_CIRCLE_ID.fetch_add(1, Ordering::Relaxed);
-                    stored.push(spawn_circle_state(id, &metrics));
+                    stored.push(spawn_circle_state(id, &grid));
                 }
             }
 
             let len = circles.read().len();
             for index in 0..len {
-                enforce_circle_bounds(index, circles, ctx.clone(), &metrics);
+                enforce_circle_bounds(index, circles, ctx.clone(), &grid);
                 circle_step(index, circles, ctx.clone());
             }
         }
@@ -80,9 +81,10 @@ pub fn AnimatedGridCircles(#[props(optional)] count: Option<usize>) -> Element {
 
 pub fn circle_step(index: usize, mut circles: CirclesSignal, grid_ctx: GridContext) {
     let grid = grid_ctx.grid_data.read().clone();
-    let Some(metrics) = GridMetrics::from(&grid) else {
+
+    if grid.vertical_lines.len() < 2 || grid.horizontal_lines.len() < 2 {
         return;
-    };
+    }
 
     let mut schedule_respawn = false;
 
@@ -96,12 +98,12 @@ pub fn circle_step(index: usize, mut circles: CirclesSignal, grid_ctx: GridConte
             return;
         }
 
-        if let Some((next_col, next_row)) = decide_next_move(circle, &metrics) {
+        if let Some((next_col, next_row)) = decide_next_move(circle, &grid) {
             circle.col = next_col;
             circle.row = next_row;
             circle.moving = true;
         } else {
-            respawn_circle_state(circle, &metrics);
+            respawn_circle_state(circle, &grid);
             schedule_respawn = true;
         }
     }
@@ -111,7 +113,7 @@ pub fn circle_step(index: usize, mut circles: CirclesSignal, grid_ctx: GridConte
     }
 }
 
-fn decide_next_move(circle: &GridCircle, metrics: &GridMetrics) -> Option<(i32, i32)> {
+fn decide_next_move(circle: &GridCircle, grid: &GridData) -> Option<(i32, i32)> {
     let (dc, dr) = circle.travel_dir.delta();
     let mut target = (circle.col + dc, circle.row + dr);
 
@@ -124,30 +126,30 @@ fn decide_next_move(circle: &GridCircle, metrics: &GridMetrics) -> Option<(i32, 
         };
         let (sc, sr) = side_choice.delta();
         let side_target = (circle.col + sc, circle.row + sr);
-        if metrics.in_bounds(side_target.0, side_target.1) {
+        if grid.in_bounds(side_target.0, side_target.1) {
             target = side_target;
         }
     }
 
-    if metrics.in_bounds(target.0, target.1) {
+    if grid.in_bounds(target.0, target.1) {
         Some(target)
     } else {
         None
     }
 }
 
-fn respawn_circle_state(state: &mut GridCircle, metrics: &GridMetrics) {
+fn respawn_circle_state(state: &mut GridCircle, grid: &GridData) {
     let edge = SpawnEdge::random();
     let travel_dir: Direction = edge.into();
     let (col, row) = match edge {
-        SpawnEdge::Left => (0, random_i32(metrics.rows)),
-        SpawnEdge::Right => (metrics.cols - 1, random_i32(metrics.rows)),
-        SpawnEdge::Top => (random_i32(metrics.cols), 0),
-        SpawnEdge::Bottom => (random_i32(metrics.cols), metrics.rows - 1),
+        SpawnEdge::Left => (0, random_i32(grid.rows())),
+        SpawnEdge::Right => (grid.cols() - 1, random_i32(grid.rows())),
+        SpawnEdge::Top => (random_i32(grid.cols()), 0),
+        SpawnEdge::Bottom => (random_i32(grid.cols()), grid.rows() - 1),
     };
 
-    state.col = col.clamp(0, metrics.cols.saturating_sub(1));
-    state.row = row.clamp(0, metrics.rows.saturating_sub(1));
+    state.col = col.clamp(0, grid.cols().saturating_sub(1));
+    state.row = row.clamp(0, grid.rows().saturating_sub(1));
     state.travel_dir = travel_dir;
     state.spawn_edge = edge;
     state.step_ms = random_step_duration();
@@ -161,7 +163,7 @@ fn enforce_circle_bounds(
     index: usize,
     mut circles: CirclesSignal,
     grid_ctx: GridContext,
-    metrics: &GridMetrics,
+    grid: &GridData,
 ) {
     let mut needs_respawn = false;
 
@@ -171,8 +173,8 @@ fn enforce_circle_bounds(
             return;
         };
 
-        if !metrics.in_bounds(state.col, state.row) {
-            respawn_circle_state(state, metrics);
+        if !grid.in_bounds(state.col, state.row) {
+            respawn_circle_state(state, grid);
             needs_respawn = true;
         }
     }
@@ -199,20 +201,20 @@ fn schedule_post_respawn(index: usize, mut circles: CirclesSignal, grid_ctx: Gri
     });
 }
 
-fn spawn_circle_state(id: u64, metrics: &GridMetrics) -> GridCircle {
+fn spawn_circle_state(id: u64, grid: &GridData) -> GridCircle {
     let edge = SpawnEdge::random();
     let travel_dir: Direction = edge.into();
     let (col, row) = match edge {
-        SpawnEdge::Left => (0, random_i32(metrics.rows)),
-        SpawnEdge::Right => (metrics.cols - 1, random_i32(metrics.rows)),
-        SpawnEdge::Top => (random_i32(metrics.cols), 0),
-        SpawnEdge::Bottom => (random_i32(metrics.cols), metrics.rows - 1),
+        SpawnEdge::Left => (0, random_i32(grid.rows())),
+        SpawnEdge::Right => (grid.cols() - 1, random_i32(grid.rows())),
+        SpawnEdge::Top => (random_i32(grid.cols()), 0),
+        SpawnEdge::Bottom => (random_i32(grid.cols()), grid.rows() - 1),
     };
 
     GridCircle {
         id,
-        col: col.clamp(0, metrics.cols.saturating_sub(1)),
-        row: row.clamp(0, metrics.rows.saturating_sub(1)),
+        col: col.clamp(0, grid.cols().saturating_sub(1)),
+        row: row.clamp(0, grid.rows().saturating_sub(1)),
         travel_dir,
         moving: false,
         respawning: false,
