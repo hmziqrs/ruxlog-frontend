@@ -191,21 +191,8 @@ pub fn indices_to_px(col: i32, row: i32, grid: &GridData) -> Option<(f64, f64)> 
     let x = *grid.vertical_lines.get(col_idx)?;
     let y = *grid.horizontal_lines.get(row_idx)?;
 
-    let cell_w = if grid.vertical_lines.len() > 1 {
-        grid.vertical_lines[1] - grid.vertical_lines[0]
-    } else {
-        0.0
-    };
-    let cell_h = if grid.horizontal_lines.len() > 1 {
-        grid.horizontal_lines[1] - grid.horizontal_lines[0]
-    } else {
-        0.0
-    };
-
-    Some((
-        x + (cell_w - DIAMETER_PX) / 2.0,
-        y + (cell_h - DIAMETER_PX) / 2.0,
-    ))
+    // Center circle on grid line intersection
+    Some((x - DIAMETER_PX / 2.0, y - DIAMETER_PX / 2.0))
 }
 
 fn random_i32(max: i32) -> i32 {
