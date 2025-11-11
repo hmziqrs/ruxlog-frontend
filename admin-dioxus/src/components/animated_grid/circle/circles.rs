@@ -187,22 +187,15 @@ fn schedule_post_respawn(mut circle_sig: CircleSignal, _grid_ctx: GridContext) {
 pub fn handle_transition_end(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
     let mut circle = circle_sig.write();
 
-    // Phase detection using existing flags:
-    // - respawning=true -> ignore (in instant position change)
-    // - respawning=false, moving=false, scale==1.0 -> just finished scaling in
-    // - respawning=false, moving=true, scale==1.0 -> just finished moving
-    // - respawning=false, moving=true, scale==3.0 -> just finished scaling out
-
     if circle.respawning {
-        return; // Still in respawn phase, ignore
+        return; // Ignore transitions during instant position changes
     }
 
-    if circle.scale == 3.0 && circle.moving {
-        // Just finished scaling out -> respawn
+    if circle.is_scale_out_complete() {
+        // Just finished scaling out at goal edge → respawn
         circle.moving = false;
         drop(circle);
 
-        // Respawn at new edge
         {
             let grid = grid_ctx.grid_data.read();
             let mut circle = circle_sig.write();
@@ -210,12 +203,12 @@ pub fn handle_transition_end(mut circle_sig: CircleSignal, grid_ctx: GridContext
         }
 
         schedule_post_respawn(circle_sig, grid_ctx);
-    } else if circle.scale == 1.0 && !circle.moving {
-        // Just finished scaling in -> start moving
+    } else if circle.is_scale_in_complete() {
+        // Just finished scaling in after spawn → start moving
         drop(circle);
         circle_step(circle_sig, grid_ctx);
-    } else if circle.moving && circle.scale == 1.0 {
-        // Just finished moving -> continue to next step
+    } else if circle.is_movement_complete() {
+        // Just finished moving to next cell → continue
         circle.moving = false;
         drop(circle);
         circle_step(circle_sig, grid_ctx);

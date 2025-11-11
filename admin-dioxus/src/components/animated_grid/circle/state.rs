@@ -69,3 +69,20 @@ pub struct GridCircle {
     pub scale: f64,
     pub opacity: f64,
 }
+
+impl GridCircle {
+    /// Circle just finished scaling in (3x→1x) after spawn/respawn
+    pub fn is_scale_in_complete(&self) -> bool {
+        !self.respawning && !self.moving && self.scale == 1.0
+    }
+
+    /// Circle just finished moving to next cell
+    pub fn is_movement_complete(&self) -> bool {
+        !self.respawning && self.moving && self.scale == 1.0
+    }
+
+    /// Circle just finished scaling out (1x→3x) at goal edge
+    pub fn is_scale_out_complete(&self) -> bool {
+        !self.respawning && self.moving && self.scale == 3.0
+    }
+}
