@@ -1,4 +1,6 @@
 use dioxus::prelude::*;
+use dioxus_time::sleep;
+use std::time::Duration;
 
 use super::*;
 use crate::components::animated_grid::provider::use_grid_context;
@@ -6,6 +8,24 @@ use crate::components::animated_grid::provider::use_grid_context;
 #[component]
 pub fn AnimatedGridCircle(circle: CircleSignal) -> Element {
     let grid_ctx = use_grid_context();
+    let grid_ctx_clone = grid_ctx.clone();
+
+    // Trigger initial scale-in animation when circle is first created
+    use_effect(move || {
+        let is_respawning = circle.read().respawning;
+        if !is_respawning {
+            return;
+        }
+        
+        spawn({
+            let circle_sig = circle;
+            let grid_ctx = grid_ctx_clone.clone();
+            async move {
+                sleep(Duration::from_millis(random_u64() % 200)).await;
+                schedule_post_respawn(circle_sig, grid_ctx);
+            }
+        });
+    });
 
     let (x, y, circle_state, is_scaling_in) = {
         let state = circle.read();
@@ -21,8 +41,8 @@ pub fn AnimatedGridCircle(circle: CircleSignal) -> Element {
     let style = if circle_state.is_respawning() {
         web_sys::console::log_1(
             &format!(
-                "Circle {} RESPAWNING: scale={:.2}, opacity={:.2}, transition=NONE",
-                circle_state.id, circle_state.scale, circle_state.opacity
+                "Circle {} RESPAWNING: scale={:.2}, opacity={:.2}, transition=NONE [respawning=true, scaling_in={}, moving={}]",
+                circle_state.id, circle_state.scale, circle_state.opacity, circle_state.scaling_in, circle_state.moving
             )
             .into(),
         );
@@ -31,10 +51,12 @@ pub fn AnimatedGridCircle(circle: CircleSignal) -> Element {
             circle_state.scale, circle_state.opacity
         )
     } else if is_scaling_in || circle_state.is_scaling_out_active() {
+        let phase = if is_scaling_in { "SCALING_IN" } else { "SCALING_OUT" };
         web_sys::console::log_1(
             &format!(
-                "Circle {} SCALING: scale={:.2}, opacity={:.2}, duration={}ms",
-                circle_state.id, circle_state.scale, circle_state.opacity, SCALE_DURATION_MS
+                "Circle {} {}: scale={:.2}, opacity={:.2}, duration={}ms [respawning={}, scaling_in={}, moving={}]",
+                circle_state.id, phase, circle_state.scale, circle_state.opacity, SCALE_DURATION_MS,
+                circle_state.respawning, circle_state.scaling_in, circle_state.moving
             )
             .into(),
         );
@@ -45,8 +67,9 @@ pub fn AnimatedGridCircle(circle: CircleSignal) -> Element {
     } else {
         web_sys::console::log_1(
             &format!(
-                "Circle {} MOVING: scale={:.2}, opacity={:.2}, duration={}ms",
-                circle_state.id, circle_state.scale, circle_state.opacity, STEP_DURATION_MS
+                "Circle {} MOVING: scale={:.2}, opacity={:.2}, duration={}ms [respawning={}, scaling_in={}, moving={}]",
+                circle_state.id, circle_state.scale, circle_state.opacity, STEP_DURATION_MS,
+                circle_state.respawning, circle_state.scaling_in, circle_state.moving
             )
             .into(),
         );
@@ -55,6 +78,8 @@ pub fn AnimatedGridCircle(circle: CircleSignal) -> Element {
             circle_state.scale, circle_state.opacity
         )
     };
+
+    info!("state: {:?}", circle_state);
 
     rsx! {
         div {

@@ -63,6 +63,7 @@ pub struct GridCircle {
     pub travel_dir: Direction,
     pub moving: bool,
     pub respawning: bool,
+    pub scaling_in: bool,
     pub spawn_edge: SpawnEdge,
     pub alive: bool,
     pub just_side_stepped: bool,
@@ -82,8 +83,8 @@ impl GridCircle {
     }
 
     /// Circle just finished scaling in (3x→1x) after spawn/respawn
-    pub fn is_scale_in_complete(&self, grid: &super::super::provider::GridData) -> bool {
-        !self.respawning && !self.moving && self.is_at_spawn_position(grid) && self.scale == 1.0 && self.opacity == 1.0
+    pub fn is_scale_in_complete(&self, _grid: &super::super::provider::GridData) -> bool {
+        self.scaling_in && self.scale == 1.0 && self.opacity == 1.0
     }
 
     /// Circle just finished moving to next cell
@@ -97,8 +98,8 @@ impl GridCircle {
     }
 
     /// Circle is actively scaling in after spawn (should use scale transition)
-    pub fn is_scaling_in_active(&self, grid: &super::super::provider::GridData) -> bool {
-        !self.respawning && !self.moving && self.is_at_spawn_position(grid) && self.scale != 1.0
+    pub fn is_scaling_in_active(&self, _grid: &super::super::provider::GridData) -> bool {
+        self.scaling_in
     }
 
     /// Circle is actively scaling out at goal (should use scale transition)

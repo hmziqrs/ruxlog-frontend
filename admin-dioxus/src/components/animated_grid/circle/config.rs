@@ -111,6 +111,7 @@ fn respawn_circle_state(state: &mut GridCircle, grid: &GridData) {
     state.spawn_edge = edge;
     state.moving = false;
     state.respawning = true;
+    state.scaling_in = false;
     state.alive = true;
     state.just_side_stepped = false;
     state.scale = 3.0;
@@ -120,12 +121,23 @@ fn respawn_circle_state(state: &mut GridCircle, grid: &GridData) {
 pub fn schedule_post_respawn(mut circle_sig: CircleSignal, _grid_ctx: GridContext) {
     spawn({
         async move {
+            // Step 1: Wait for respawn delay, then disable respawning and enable scaling_in
             sleep(Duration::from_millis(RESPAWN_DELAY_MS)).await;
-            let mut circle = circle_sig.write();
-            circle.respawning = false;
-            circle.scale = 1.0;
-            circle.opacity = 1.0;
-            // ontransitionend will trigger next step when scale-in completes
+            {
+                let mut circle = circle_sig.write();
+                circle.respawning = false;
+                circle.scaling_in = true;
+                // Keep scale at 3.0 and opacity at 0.0 for this frame
+            }
+            
+            // Step 2: Wait for next frame so browser paints with transition CSS applied
+            sleep(Duration::from_millis(500)).await; // 2 frames at 60fps for safety
+            {
+                let mut circle = circle_sig.write();
+                circle.scale = 1.0;
+                circle.opacity = 1.0;
+                // Now transition animates from 3.0→1.0 over 200ms
+            }
         }
     });
 }
@@ -162,6 +174,10 @@ pub fn handle_transition_end(mut circle_sig: CircleSignal, grid_ctx: GridContext
         schedule_post_respawn(circle_sig, grid_ctx);
     } else if is_scale_in {
         // Just finished scaling in after spawn → start moving
+        {
+            let mut circle = circle_sig.write();
+            circle.scaling_in = false;
+        }
         circle_step(circle_sig, grid_ctx);
     } else if is_movement {
         // Just finished moving to next cell → continue
@@ -190,6 +206,7 @@ pub fn spawn_circle_state(id: u64, grid: &GridData) -> GridCircle {
         travel_dir,
         moving: false,
         respawning: true,
+        scaling_in: false,
         spawn_edge: edge,
         alive: true,
         just_side_stepped: false,

@@ -1,10 +1,6 @@
-use std::{
-    sync::atomic::Ordering,
-    time::Duration,
-};
+use std::sync::atomic::Ordering;
 
 use dioxus::prelude::*;
-use dioxus_time::sleep;
 
 use super::circle::AnimatedGridCircle;
 use super::*;
@@ -36,20 +32,6 @@ pub fn AnimatedGridCircles(#[props(optional)] count: Option<usize>) -> Element {
             .collect::<Vec<_>>();
 
         circles.set(new_circles);
-    });
-
-    use_effect(move || {
-        let circle_list = circles.read();
-        for circle_sig in circle_list.iter() {
-            spawn({
-                let circle_sig: CircleSignal = *circle_sig;
-                let grid_ctx = grid_ctx.clone();
-                async move {
-                    sleep(Duration::from_millis(random_u64() % 200)).await;
-                    schedule_post_respawn(circle_sig, grid_ctx);
-                }
-            });
-        }
     });
 
     rsx! {
