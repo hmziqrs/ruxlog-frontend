@@ -60,9 +60,13 @@ fn decide_next_move(circle: &GridCircle, grid: &GridData) -> Option<(i32, i32, b
     // Only allow side-step if:
     // 1. We didn't just side-step on previous turn
     // 2. We haven't reached the goal edge
-    // 3. Random chance triggers
+    // 3. Circle is not at spawn position (first move must be straight)
+    // 4. Random chance triggers
+    let is_at_spawn = circle.is_at_spawn_position(grid);
+    
     if !circle.just_side_stepped
         && !is_at_goal_edge(circle, grid)
+        && !is_at_spawn
         && random_chance(SIDE_STEP_PERCENT)
     {
         let options = circle.travel_dir.perpendicular();
@@ -173,12 +177,19 @@ pub fn handle_transition_end(mut circle_sig: CircleSignal, grid_ctx: GridContext
 
         schedule_post_respawn(circle_sig, grid_ctx);
     } else if is_scale_in {
-        // Just finished scaling in after spawn → start moving
+        // Just finished scaling in after spawn → wait briefly, then start moving
         {
             let mut circle = circle_sig.write();
             circle.scaling_in = false;
         }
-        circle_step(circle_sig, grid_ctx);
+        
+        // Add delay after spawn animation before first move
+        spawn({
+            async move {
+                sleep(Duration::from_millis(300)).await; // Brief pause after spawn
+                circle_step(circle_sig, grid_ctx);
+            }
+        });
     } else if is_movement {
         // Just finished moving to next cell → continue
         {
