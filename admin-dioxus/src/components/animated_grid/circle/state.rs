@@ -34,7 +34,7 @@ pub enum SpawnEdge {
 
 impl SpawnEdge {
     pub fn random() -> Self {
-        use super::circles::random_usize;
+        use super::config::random_usize;
         match random_usize(4) {
             0 => SpawnEdge::Left,
             1 => SpawnEdge::Right,

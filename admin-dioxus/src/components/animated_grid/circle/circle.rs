@@ -1,8 +1,6 @@
 use dioxus::prelude::*;
 
-use super::circles::{
-    indices_to_px, CircleSignal, DIAMETER_PX, SCALE_DURATION_MS, STEP_DURATION_MS,
-};
+use super::*;
 use crate::components::animated_grid::provider::use_grid_context;
 
 #[component]
@@ -63,7 +61,7 @@ pub fn AnimatedGridCircle(circle: CircleSignal) -> Element {
             class: "absolute will-change-transform pointer-events-none bg-primary shadow-[0_0_8px_1px_var(--primary)]",
             style: "{style}",
             ontransitionend: move |_| {
-                super::circles::handle_transition_end(circle, grid_ctx.clone());
+                handle_transition_end(circle, grid_ctx.clone());
             },
         }
     }
