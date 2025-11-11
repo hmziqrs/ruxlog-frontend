@@ -207,6 +207,11 @@ pub fn spawn_circle_state(id: u64, grid: &GridData) -> GridCircle {
 }
 
 pub fn spawn_circle_state_with_edge(id: u64, grid: &GridData, edge_index: u8) -> GridCircle {
+    // Use random position along the edge
+    spawn_circle_state_with_edge_and_position(id, grid, edge_index, random_u64() as u8)
+}
+
+pub fn spawn_circle_state_with_edge_and_position(id: u64, grid: &GridData, edge_index: u8, position_index: u8) -> GridCircle {
     let edge = match edge_index % 4 {
         0 => SpawnEdge::Left,
         1 => SpawnEdge::Right,
@@ -214,11 +219,45 @@ pub fn spawn_circle_state_with_edge(id: u64, grid: &GridData, edge_index: u8) ->
         _ => SpawnEdge::Bottom,
     };
     let travel_dir: Direction = edge.into();
+    
+    // Distribute positions evenly along the edge instead of purely random
     let (col, row) = match edge {
-        SpawnEdge::Left => (0, random_i32(grid.rows())),
-        SpawnEdge::Right => (grid.cols() - 1, random_i32(grid.rows())),
-        SpawnEdge::Top => (random_i32(grid.cols()), 0),
-        SpawnEdge::Bottom => (random_i32(grid.cols()), grid.rows() - 1),
+        SpawnEdge::Left => {
+            let rows = grid.rows();
+            let row = if rows > 1 {
+                ((position_index as i32 * rows) / 4) % rows
+            } else {
+                0
+            };
+            (0, row)
+        }
+        SpawnEdge::Right => {
+            let rows = grid.rows();
+            let row = if rows > 1 {
+                ((position_index as i32 * rows) / 4) % rows
+            } else {
+                0
+            };
+            (grid.cols() - 1, row)
+        }
+        SpawnEdge::Top => {
+            let cols = grid.cols();
+            let col = if cols > 1 {
+                ((position_index as i32 * cols) / 4) % cols
+            } else {
+                0
+            };
+            (col, 0)
+        }
+        SpawnEdge::Bottom => {
+            let cols = grid.cols();
+            let col = if cols > 1 {
+                ((position_index as i32 * cols) / 4) % cols
+            } else {
+                0
+            };
+            (col, grid.rows() - 1)
+        }
     };
 
     GridCircle {
