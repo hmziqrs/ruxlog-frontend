@@ -10,7 +10,7 @@ use super::circle::AnimatedGridCircle;
 use super::state::{Direction, GridCircle, SpawnEdge};
 use crate::components::animated_grid::provider::{use_grid_context, GridContext, GridData};
 
-const DEFAULT_CIRCLE_COUNT: usize = 16;
+const DEFAULT_CIRCLE_COUNT: usize = 2;
 const SIDE_STEP_PERCENT: u8 = 20;
 pub const DIAMETER_PX: f64 = 6.0;
 pub const STEP_DURATION_MS: u32 = 1200;
@@ -108,7 +108,6 @@ pub fn circle_step(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
     }
 }
 
-
 fn decide_next_move(circle: &GridCircle, grid: &GridData) -> Option<(i32, i32, bool)> {
     let (dc, dr) = circle.travel_dir.delta();
     let mut target = (circle.col + dc, circle.row + dr);
@@ -118,7 +117,10 @@ fn decide_next_move(circle: &GridCircle, grid: &GridData) -> Option<(i32, i32, b
     // 1. We didn't just side-step on previous turn
     // 2. We haven't reached the goal edge
     // 3. Random chance triggers
-    if !circle.just_side_stepped && !is_at_goal_edge(circle, grid) && random_chance(SIDE_STEP_PERCENT) {
+    if !circle.just_side_stepped
+        && !is_at_goal_edge(circle, grid)
+        && random_chance(SIDE_STEP_PERCENT)
+    {
         let options = circle.travel_dir.perpendicular();
         let side_choice = if random_bool() {
             options[0]
