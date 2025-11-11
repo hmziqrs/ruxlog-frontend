@@ -94,10 +94,11 @@ pub fn circle_step(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
             return;
         }
 
-        if let Some((next_col, next_row)) = decide_next_move(&circle, &grid) {
+        if let Some((next_col, next_row, did_side_step)) = decide_next_move(&circle, &grid) {
             circle.col = next_col;
             circle.row = next_row;
             circle.moving = true;
+            circle.just_side_stepped = did_side_step;
         } else {
             respawn_circle_state(&mut circle, &grid);
             schedule_respawn = true;
@@ -109,11 +110,13 @@ pub fn circle_step(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
     }
 }
 
-fn decide_next_move(circle: &GridCircle, grid: &GridData) -> Option<(i32, i32)> {
+fn decide_next_move(circle: &GridCircle, grid: &GridData) -> Option<(i32, i32, bool)> {
     let (dc, dr) = circle.travel_dir.delta();
     let mut target = (circle.col + dc, circle.row + dr);
+    let mut did_side_step = false;
 
-    if random_chance(SIDE_STEP_PERCENT) {
+    // Only allow side-step if we didn't just side-step on previous turn
+    if !circle.just_side_stepped && random_chance(SIDE_STEP_PERCENT) {
         let options = circle.travel_dir.perpendicular();
         let side_choice = if random_bool() {
             options[0]
@@ -124,11 +127,12 @@ fn decide_next_move(circle: &GridCircle, grid: &GridData) -> Option<(i32, i32)> 
         let side_target = (circle.col + sc, circle.row + sr);
         if grid.in_bounds(side_target.0, side_target.1) {
             target = side_target;
+            did_side_step = true;
         }
     }
 
     if grid.in_bounds(target.0, target.1) {
-        Some(target)
+        Some((target.0, target.1, did_side_step))
     } else {
         None
     }
@@ -151,6 +155,7 @@ fn respawn_circle_state(state: &mut GridCircle, grid: &GridData) {
     state.moving = false;
     state.respawning = true;
     state.alive = true;
+    state.just_side_stepped = false;
 }
 
 fn schedule_post_respawn(mut circle_sig: CircleSignal, grid_ctx: GridContext) {
@@ -182,6 +187,7 @@ fn spawn_circle_state(id: u64, grid: &GridData) -> GridCircle {
         respawning: false,
         spawn_edge: edge,
         alive: true,
+        just_side_stepped: false,
     }
 }
 
